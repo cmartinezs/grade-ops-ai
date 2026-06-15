@@ -1,0 +1,17 @@
+node_modules/
+.next/
+out/
+coverage/
+
+# Local env contains Firebase config — values are passed as build args instead
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# IDE and OS noise
+.idea/
+.vscode/
+*.iml
+.DS_Store
+Thumbs.db
