@@ -1,0 +1,57 @@
+# ─── IDE and editor ───────────────────────────────────────────────────────────
+
+# JetBrains — ignore entire directory (docs repo; no shared run configs needed)
+.idea/
+
+# VS Code local settings (keep .vscode/extensions.json if shared)
+.vscode/settings.json
+.vscode/launch.json
+.vscode/tasks.json
+
+# Vim / Neovim swap and session files
+*.swp
+*.swo
+*~
+Session.vim
+
+# Emacs
+\#*\#
+.\#*
+
+
+# ─── OS ───────────────────────────────────────────────────────────────────────
+
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+Thumbs.db
+ehthumbs.db
+desktop.ini
+
+
+# ─── AI assistant local state ─────────────────────────────────────────────────
+
+# Claude Code local session config (not project instructions)
+.claude/settings.local.json
+
+# Codex working directory (empty in this repo, kept as safety)
+.codex/
+
+
+# ─── Temporary and working files ──────────────────────────────────────────────
+
+*.tmp
+*.bak
+*.orig
+draft-*/
+wip-*/
+
+
+# ─── Export artifacts ─────────────────────────────────────────────────────────
+
+# Generated PDF or DOCX exports — regenerate from source
+*.pdf
+*.docx
+*.pptx
