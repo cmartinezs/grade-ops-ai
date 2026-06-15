@@ -1,0 +1,58 @@
+name: Deploy agents/ to Cloud Run
+
+on:
+  push:
+    branches: [master]
+    paths:
+      - 'agents/**'
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  build-and-deploy:
+    name: Build and deploy agents/
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Java 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: maven
+          cache-dependency-path: agents/pom.xml
+
+      - name: Run tests
+        run: ./mvnw test
+        working-directory: agents/
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.WIF_PROVIDER }}
+          service_account: ${{ secrets.WIF_SERVICE_ACCOUNT }}
+
+      - name: Configure Docker for Artifact Registry
+        run: gcloud auth configure-docker us-central1-docker.pkg.dev --quiet
+
+      - name: Build container image
+        run: |
+          ./mvnw spring-boot:build-image \
+            -Dspring-boot.build-image.imageName=us-central1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/grade-ops-ai/grade-ops-ai-agents:${{ github.sha }}
+        working-directory: agents/
+
+      - name: Push image to Artifact Registry
+        run: |
+          docker push us-central1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/grade-ops-ai/grade-ops-ai-agents:${{ github.sha }}
+
+      - name: Deploy to Cloud Run
+        run: |
+          gcloud run deploy grade-ops-ai-agents \
+            --image us-central1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/grade-ops-ai/grade-ops-ai-agents:${{ github.sha }} \
+            --region us-central1 \
+            --project ${{ secrets.GCP_PROJECT_ID }}
