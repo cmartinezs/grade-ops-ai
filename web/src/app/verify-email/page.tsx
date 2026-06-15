@@ -1,13 +1,13 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { sendEmailVerification } from "firebase/auth";
 import { auth } from "@/lib/firebase/client";
 
 const RESEND_COOLDOWN_SECONDS = 60;
 
-export default function VerifyEmailPage() {
+function VerifyEmailForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -133,5 +133,13 @@ export default function VerifyEmailPage() {
         </p>
       </div>
     </main>
+  );
+}
+
+export default function VerifyEmailPage() {
+  return (
+    <Suspense>
+      <VerifyEmailForm />
+    </Suspense>
   );
 }

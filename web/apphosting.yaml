@@ -1,0 +1,55 @@
+# apphosting.yaml — Firebase App Hosting configuration for web/
+# Firebase App Hosting reads this file to configure the Next.js runtime.
+# Secrets are read from Secret Manager by name — values are never in this file.
+
+runConfig:
+  cpu: 1
+  memoryMiB: 512
+  minInstances: 0
+  maxInstances: 2
+
+env:
+  # Server-side only — used by Next.js rewrite proxy to forward /api/* to the api Cloud Run service.
+  # Value: https://grade-ops-ai-api-<hash>-uc.a.run.app (set after first terraform apply)
+  - variable: API_BASE_URL
+    secret: API_BASE_URL
+    availability:
+      - RUNTIME
+
+  # Firebase client SDK config — embedded in JS bundle at build time (NEXT_PUBLIC_ prefix).
+  # Secrets created in Secret Manager after terraform apply using terraform output values.
+  - variable: NEXT_PUBLIC_FIREBASE_API_KEY
+    secret: NEXT_PUBLIC_FIREBASE_API_KEY
+    availability:
+      - BUILD
+      - RUNTIME
+
+  - variable: NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN
+    secret: NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN
+    availability:
+      - BUILD
+      - RUNTIME
+
+  - variable: NEXT_PUBLIC_FIREBASE_PROJECT_ID
+    secret: NEXT_PUBLIC_FIREBASE_PROJECT_ID
+    availability:
+      - BUILD
+      - RUNTIME
+
+  - variable: NEXT_PUBLIC_FIREBASE_APP_ID
+    secret: NEXT_PUBLIC_FIREBASE_APP_ID
+    availability:
+      - BUILD
+      - RUNTIME
+
+  - variable: NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID
+    secret: NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID
+    availability:
+      - BUILD
+      - RUNTIME
+
+  - variable: NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET
+    secret: NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET
+    availability:
+      - BUILD
+      - RUNTIME
