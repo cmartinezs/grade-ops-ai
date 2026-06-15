@@ -1,0 +1,185 @@
+---
+import Base from '../layouts/Base.astro';
+import SectionHero from '../components/SectionHero.astro';
+import { useTranslations } from '../utils/i18n';
+
+const lang = 'es';
+const t = useTranslations(lang);
+
+const requirementGroups = [
+  {
+    title: 'Gestión de ciclos de evaluación',
+    color: 'teal',
+    context: 'El ciclo es la unidad operativa central del sistema: define el alcance, la trazabilidad y el estado de cada evaluación desde el objetivo hasta el informe.',
+    items: [
+      'El docente puede crear un ciclo de evaluación asociado a un objetivo de aprendizaje.',
+      'El sistema permite definir si la evaluación es abierta (código/texto) o cerrada (preguntas objetivas).',
+      'El docente puede ver el estado de cada etapa del ciclo: pendiente, en proceso, aprobada.',
+      'El docente puede pausar o cancelar un ciclo en cualquier momento.',
+      'El sistema registra todos los cambios de estado con fecha, hora y autor.',
+    ],
+  },
+  {
+    title: 'Evaluación abierta — actividad y rúbrica',
+    color: 'indigo',
+    context: 'La rúbrica es el contrato de calificación: una vez aprobada por el docente, queda congelada y no puede modificarse sin crear una nueva versión.',
+    items: [
+      'El sistema sugiere una descripción de actividad basada en el objetivo de aprendizaje.',
+      'El sistema sugiere una rúbrica con criterios y niveles de desempeño.',
+      'El docente puede editar, aprobar o rechazar cada sugerencia.',
+      'La rúbrica aprobada queda congelada y no puede modificarse sin crear una nueva versión.',
+      'El docente puede importar rúbricas existentes como punto de partida.',
+    ],
+  },
+  {
+    title: 'Corrección y feedback — evaluación abierta',
+    color: 'coral',
+    context: 'Ningún resultado ni feedback llega al estudiante sin aprobación explícita del docente. Esto no es configurable — es un principio de diseño del sistema.',
+    items: [
+      'El sistema sugiere una corrección por cada entrega estudiantil, alineada a la rúbrica aprobada.',
+      'El sistema genera una sugerencia de feedback personalizado para cada estudiante.',
+      'El docente puede aprobar, modificar o rechazar cada corrección y feedback individual.',
+      'Ningún resultado llega al estudiante sin aprobación explícita del docente.',
+      'El sistema identifica brechas de aprendizaje a nivel de curso y por estudiante.',
+      'El sistema sugiere actividades de recuperación para las brechas detectadas.',
+    ],
+  },
+  {
+    title: 'Evaluación cerrada — banco de preguntas',
+    color: 'teal',
+    context: 'El banco de preguntas es AI-native: los agentes generan, el docente cuura pregunta a pregunta, y el sistema versiona automáticamente cada cambio.',
+    items: [
+      'El sistema genera preguntas de verdadero/falso, selección simple y selección múltiple.',
+      'El sistema genera y evalúa la calidad de los distractores para evitar ambigüedad.',
+      'El sistema detecta preguntas ambiguas o con múltiples respuestas correctas.',
+      'El docente puede aprobar, editar o descartar preguntas individuales.',
+      'El sistema ensambla la evaluación final con las preguntas aprobadas.',
+      'La corrección de evaluaciones cerradas es siempre determinista contra una clave de respuestas congelada.',
+    ],
+  },
+  {
+    title: 'Reportes y evidencia',
+    color: 'indigo',
+    context: 'La evidencia es una entidad de primer orden, no un efecto secundario: AgentExecutionLog, ApprovalEvent y CostEvent son tan centrales como Assessment o Rubric.',
+    items: [
+      'El sistema genera un reporte docente con resumen del ciclo, estadísticas y brechas detectadas.',
+      'El docente puede exportar el reporte en formato descargable.',
+      'El sistema registra cada ejecución de agente: modelo usado, costo estimado, input, output y estado de aprobación.',
+      'El sistema registra eventos de uso y costo para transparencia operacional.',
+      'Los registros de evidencia son de solo lectura y no pueden eliminarse.',
+    ],
+  },
+  {
+    title: 'Acceso estudiantil',
+    color: 'coral',
+    context: 'Los estudiantes acceden mediante un link firmado sin necesidad de cuenta. Mínima fricción, máxima privacidad — LearnerRef es solo una referencia, no un perfil.',
+    items: [
+      'Los estudiantes acceden a evaluaciones y resultados mediante un enlace seguro con token firmado.',
+      'No se requiere registro ni login para estudiantes en el MVP.',
+      'Los resultados solo son visibles para el estudiante correspondiente.',
+      'El estudiante puede ver su corrección y feedback una vez que el docente los haya aprobado.',
+    ],
+  },
+];
+---
+
+<Base
+  title="Requerimientos — GradeOps AI"
+  description="Requerimientos funcionales de GradeOps AI: lo que el sistema debe permitir hacer, sin referencias técnicas."
+  lang={lang}
+  path="/requirements"
+>
+  <div class="fixed inset-0 pointer-events-none select-none" aria-hidden="true"
+       style="background-image: url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40'%3E%3Cpath d='M0 40L40 0M0 0L40 40' stroke='rgba(99,102,241,0.15)' stroke-width='0.8'/%3E%3C/svg%3E\"); background-size: 40px 40px; z-index: 0;">
+  </div>
+
+  <SectionHero
+    title={t('req.title')}
+    subtitle={t('req.sub')}
+    accentColor="teal"
+  />
+
+  <div class="max-w-4xl mx-auto px-4 sm:px-6 py-16 space-y-12">
+    {requirementGroups.map((group, i) => {
+      const colorMap = {
+        teal:   { border: 'border-[var(--teal)]/20',   title: 'text-[var(--teal)]',   dot: 'bg-[var(--teal)]' },
+        indigo: { border: 'border-[var(--indigo)]/20', title: 'text-[var(--indigo)]', dot: 'bg-[var(--indigo)]' },
+        coral:  { border: 'border-[var(--coral)]/20',  title: 'text-[var(--coral)]',  dot: 'bg-[var(--coral)]' },
+      };
+      const c = colorMap[group.color as keyof typeof colorMap];
+      return (
+        <div class={`reveal rounded-2xl border ${c.border} p-6 sm:p-8`} style={`transition-delay: ${i * 80}ms`}>
+          <h2 class={`text-xl font-semibold mb-5 ${c.title}`}>{group.title}</h2>
+          <p class="text-xs text-[var(--indigo)] mb-4 leading-relaxed italic">{group.context}</p>
+          <ul class="space-y-3">
+            {group.items.map((item) => (
+              <li class="flex items-start gap-3 text-[var(--txt-muted)] text-sm leading-relaxed">
+                <span class={`mt-1.5 shrink-0 w-1.5 h-1.5 rounded-full ${c.dot}`}></span>
+                {item}
+              </li>
+            ))}
+          </ul>
+        </div>
+      );
+    })}
+  </div>
+
+  <div class="reveal max-w-4xl mx-auto px-4 sm:px-6 pb-20">
+    <h2 class="text-2xl font-semibold text-[var(--indigo)] mb-6">Modos de Evaluación</h2>
+    <table class="w-full text-sm border-collapse">
+      <thead>
+        <tr>
+          <th class="text-left text-[var(--indigo)] font-semibold py-3 pr-4 border-b border-white/10">Dimensión</th>
+          <th class="text-left text-[var(--indigo)] font-semibold py-3 px-4 border-b border-white/10">Open</th>
+          <th class="text-left text-[var(--indigo)] font-semibold py-3 pl-4 border-b border-white/10">Closed</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="text-[var(--txt-muted)] py-3 pr-4 border-b border-white/10">Tipo de respuesta</td>
+          <td class="text-[var(--txt-muted)] py-3 px-4 border-b border-white/10">Código, texto, archivo</td>
+          <td class="text-[var(--txt-muted)] py-3 pl-4 border-b border-white/10">Alternativas (VF, SC, EM)</td>
+        </tr>
+        <tr>
+          <td class="text-[var(--txt-muted)] py-3 pr-4 border-b border-white/10">Generación</td>
+          <td class="text-[var(--txt-muted)] py-3 px-4 border-b border-white/10">AI genera contexto, instrucciones y rúbrica</td>
+          <td class="text-[var(--txt-muted)] py-3 pl-4 border-b border-white/10">AI genera preguntas, alternativas y clave</td>
+        </tr>
+        <tr>
+          <td class="text-[var(--txt-muted)] py-3 pr-4 border-b border-white/10">Calificación</td>
+          <td class="text-[var(--txt-muted)] py-3 px-4 border-b border-white/10">AI sugiere; docente aprueba</td>
+          <td class="text-[var(--txt-muted)] py-3 pl-4 border-b border-white/10">Determinista contra clave congelada</td>
+        </tr>
+        <tr>
+          <td class="text-[var(--txt-muted)] py-3 pr-4 border-b border-white/10">Punto de control</td>
+          <td class="text-[var(--txt-muted)] py-3 px-4 border-b border-white/10">Aprobación de rúbrica + sugerencias</td>
+          <td class="text-[var(--txt-muted)] py-3 pl-4 border-b border-white/10">Curación de preguntas + clave de respuestas</td>
+        </tr>
+        <tr>
+          <td class="text-[var(--txt-muted)] py-3 pr-4">Mejor uso</td>
+          <td class="text-[var(--txt-muted)] py-3 px-4">Tareas prácticas de programación</td>
+          <td class="text-[var(--txt-muted)] py-3 pl-4">Verificación conceptual y teoría</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+<style>
+  .reveal { opacity: 0; transform: translateY(20px); transition: opacity 0.5s ease, transform 0.5s ease; }
+  .reveal.revealed { opacity: 1; transform: translateY(0); }
+  @media (prefers-reduced-motion: reduce) { .reveal { opacity: 1; transform: none; transition: none; } }
+</style>
+
+<script is:inline>
+(function () {
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  var els = document.querySelectorAll('.reveal');
+  var io = new IntersectionObserver(function (e) {
+    e.forEach(function (entry) {
+      if (entry.isIntersecting) { entry.target.classList.add('revealed'); io.unobserve(entry.target); }
+    });
+  }, { threshold: 0.1 });
+  els.forEach(function (el) { io.observe(el); });
+})();
+</script>
+</Base>

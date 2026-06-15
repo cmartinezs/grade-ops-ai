@@ -1,0 +1,151 @@
+---
+import Base from '../../layouts/Base.astro';
+import SectionHero from '../../components/SectionHero.astro';
+import { useTranslations } from '../../utils/i18n';
+
+const lang = 'en';
+const t = useTranslations(lang);
+
+const profiles = [
+  {
+    label: 'Educator / Pilot',
+    desc: 'A programming teacher or tutor who wants to try GradeOps AI in a real assessment cycle.',
+    need: 'What we need: Run one assessment with your students and give us direct feedback on the workflow.',
+    offer: 'What you get: Free access during the pilot and a direct channel with the team.',
+    icon: 'M12 14l9-5-9-5-9 5 9 5z M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z',
+  },
+  {
+    label: 'Developer',
+    desc: 'A developer interested in Spring Boot 4, AI agents, or Astro / Next.js.',
+    need: 'What we need: Contributions to the agent pipeline, domain API, or teacher workspace.',
+    offer: 'What you get: Participation in a real AI-native project with documented architecture.',
+    icon: 'M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4',
+  },
+  {
+    label: 'Researcher',
+    desc: 'A researcher in education, AI-assisted assessment, or HCI.',
+    need: 'What we need: Collaboration on teacher approval flow design and learning gap detection.',
+    offer: 'What you get: Access to anonymized agent execution data and co-authorship on outputs.',
+    icon: 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01',
+  },
+];
+---
+
+<Base
+  title="Collaborate — GradeOps AI"
+  description="GradeOps AI is in active development. If you are an educator, researcher, or want to contribute, reach out."
+  lang={lang}
+  path="/contact"
+>
+  <!-- Open Door background: noise SVG + radial teal -->
+  <div class="fixed inset-0 pointer-events-none select-none" aria-hidden="true"
+       style="background: radial-gradient(ellipse 60% 40% at 50% 0%, rgba(0,212,200,0.14) 0%, transparent 60%); z-index: 0;">
+  </div>
+  <svg class="fixed inset-0 w-full h-full pointer-events-none select-none" aria-hidden="true"
+       style="opacity: 0.03; z-index: 0;" xmlns="http://www.w3.org/2000/svg">
+    <filter id="contact-noise">
+      <feTurbulence type="fractalNoise" baseFrequency="0.65" numOctaves="3" stitchTiles="stitch"/>
+    </filter>
+    <rect width="100%" height="100%" filter="url(#contact-noise)"/>
+  </svg>
+
+  <SectionHero
+    title={t('contact.title')}
+    subtitle={t('contact.sub')}
+    accentColor="coral"
+  />
+
+  <div class="max-w-2xl mx-auto px-4 sm:px-6 py-16 pb-24" style="position: relative; z-index: 1;">
+    <!-- Vision quote -->
+    <div class="reveal mb-10 rounded-2xl border border-[var(--teal)]/20 bg-[var(--teal)]/5 p-6 sm:p-8">
+      <svg class="w-8 h-8 text-[var(--teal)] mb-4 opacity-50" fill="currentColor" viewBox="0 0 24 24">
+        <path d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151c-2.432.917-3.995 3.638-3.995 5.849h4v10h-9.983zm-14.017 0v-7.391c0-5.704 3.748-9.57 9-10.609l.996 2.151c-2.433.917-3.996 3.638-3.996 5.849h3.983v10h-9.983z"/>
+      </svg>
+      <blockquote class="text-[var(--txt)] text-base sm:text-lg leading-relaxed font-medium mb-3">
+        "We solve the problem for the person who has to turn 30 programming submissions into fair grades, useful feedback, and a clear teaching action for their next class."
+      </blockquote>
+      <p class="text-sm text-[var(--txt-muted)]">
+        GradeOps AI is in active development. We're looking for collaborators who want to shape how AI operates assessment cycles while keeping human control at every stage.
+      </p>
+    </div>
+
+    <!-- Collaboration types -->
+    <div class="grid sm:grid-cols-3 gap-4 mb-12">
+      {profiles.map((item, i) => (
+        <div class="profile-card reveal rounded-xl border border-white/10 bg-white/[0.02] p-5 text-left"
+             style={`transition-delay: ${i * 80}ms`}>
+          <div class="w-10 h-10 rounded-xl bg-[var(--teal)]/10 flex items-center justify-center text-[var(--teal)] mb-4">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d={item.icon}/>
+            </svg>
+          </div>
+          <div class="text-sm font-semibold text-[var(--txt)] mb-2">{item.label}</div>
+          <p class="text-xs text-[var(--txt-muted)] mb-3 leading-relaxed">{item.desc}</p>
+          <p class="text-xs text-[var(--teal)] mb-1">{item.need}</p>
+          <p class="text-xs text-[var(--txt-muted)]">{item.offer}</p>
+        </div>
+      ))}
+    </div>
+
+    <!-- Replace YOUR_FORMSPREE_ID with your actual Formspree form ID -->
+    <form
+      action="https://formspree.io/f/YOUR_FORMSPREE_ID"
+      method="POST"
+      class="space-y-5"
+    >
+      <div>
+        <label for="name" class="block text-sm font-medium text-[var(--txt-muted)] mb-1.5">{t('contact.name')}</label>
+        <input id="name" name="name" type="text" required class="w-full px-4 py-2.5 rounded-xl border border-white/10 bg-white/[0.03] text-[var(--txt)] placeholder:text-[var(--txt-muted)] focus:outline-none focus:border-[var(--teal)]/50 focus:ring-1 focus:ring-[var(--teal)]/30 transition-colors" placeholder="Your name" />
+      </div>
+      <div>
+        <label for="email" class="block text-sm font-medium text-[var(--txt-muted)] mb-1.5">{t('contact.email')}</label>
+        <input id="email" name="email" type="email" required class="w-full px-4 py-2.5 rounded-xl border border-white/10 bg-white/[0.03] text-[var(--txt)] placeholder:text-[var(--txt-muted)] focus:outline-none focus:border-[var(--teal)]/50 focus:ring-1 focus:ring-[var(--teal)]/30 transition-colors" placeholder="you@email.com" />
+      </div>
+      <div>
+        <label for="role" class="block text-sm font-medium text-[var(--txt-muted)] mb-1.5">{t('contact.role')}</label>
+        <select id="role" name="role" class="w-full px-4 py-2.5 rounded-xl border border-white/10 bg-[#07111F] text-[var(--txt)] focus:outline-none focus:border-[var(--teal)]/50 focus:ring-1 focus:ring-[var(--teal)]/30 transition-colors">
+          <option value="teacher">{t('contact.role.teacher')}</option>
+          <option value="developer">{t('contact.role.dev')}</option>
+          <option value="researcher">{t('contact.role.researcher')}</option>
+          <option value="other">{t('contact.role.other')}</option>
+        </select>
+      </div>
+      <div>
+        <label for="message" class="block text-sm font-medium text-[var(--txt-muted)] mb-1.5">{t('contact.message')}</label>
+        <textarea id="message" name="message" rows={5} required class="w-full px-4 py-2.5 rounded-xl border border-white/10 bg-white/[0.03] text-[var(--txt)] placeholder:text-[var(--txt-muted)] focus:outline-none focus:border-[var(--teal)]/50 focus:ring-1 focus:ring-[var(--teal)]/30 transition-colors resize-none" placeholder="Tell us how you'd like to collaborate..."></textarea>
+      </div>
+      <button type="submit" class="w-full py-3 rounded-xl bg-[var(--teal)] hover:bg-[var(--teal)]/80 text-white font-semibold transition-colors shadow-lg shadow-[var(--teal)]/20">
+        {t('contact.send')}
+      </button>
+    </form>
+
+    <p class="mt-8 text-center text-sm text-[var(--txt-muted)]">
+      You can also find us on{' '}
+      <a href="https://devpost.com/software/gradeops-ai" target="_blank" rel="noopener noreferrer" class="text-[var(--teal)] hover:underline">Devpost</a>
+    </p>
+  </div>
+
+<style>
+  .reveal { opacity: 0; transform: translateY(20px); transition: opacity 0.5s ease, transform 0.5s ease; }
+  .reveal.revealed { opacity: 1; transform: translateY(0); }
+  .profile-card { transition: transform 300ms ease, box-shadow 300ms ease; }
+  .profile-card:hover { transform: perspective(600px) rotateY(6deg) translateY(-4px); box-shadow: -6px 8px 20px rgba(0,0,0,0.2); }
+  @media (prefers-reduced-motion: reduce) {
+    .reveal { opacity: 1; transform: none; transition: none; }
+    .profile-card:hover { transform: none; box-shadow: none; }
+  }
+</style>
+
+<script is:inline>
+(function () {
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  var els = document.querySelectorAll('.reveal');
+  var io = new IntersectionObserver(function (e) {
+    e.forEach(function (entry) {
+      if (entry.isIntersecting) { entry.target.classList.add('revealed'); io.unobserve(entry.target); }
+    });
+  }, { threshold: 0.1 });
+  els.forEach(function (el) { io.observe(el); });
+})();
+</script>
+</Base>

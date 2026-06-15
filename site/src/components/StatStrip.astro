@@ -1,0 +1,76 @@
+---
+import { useTranslations } from '../utils/i18n';
+import type { Lang } from '../utils/i18n';
+import { Bot, CalendarClock, Layers, ShieldCheck } from 'lucide-astro';
+
+interface Props {
+  lang: Lang;
+}
+
+const { lang } = Astro.props;
+const t = useTranslations(lang);
+
+const stats = [
+  { value: 13,  suffix: '',    label: t('stat.agents.label'),   Icon: Bot },
+  { value: 17,  suffix: '/08', label: t('stat.deadline.label'), Icon: CalendarClock },
+  { value: 2,   suffix: '',    label: t('stat.modes.label'),    Icon: Layers },
+  { value: 100, suffix: '%',   label: t('stat.approval.label'), Icon: ShieldCheck },
+] as const;
+---
+
+<section class="py-12 border-y border-white/10">
+  <div class="max-w-6xl mx-auto px-4 sm:px-6">
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-8">
+      {stats.map((stat, i) => (
+        <div
+          class="stat-item flex flex-col items-center text-center"
+          data-value={stat.value}
+          data-delay={i * 120}
+        >
+          <div class="mb-3 w-12 h-12 rounded-xl bg-[var(--teal)]/10 border border-[var(--teal)]/20 flex items-center justify-center text-[var(--teal)]">
+            <stat.Icon size={22} />
+          </div>
+          <div class="text-3xl font-bold text-[var(--txt)] tabular-nums">
+            <span class="stat-counter">0</span><span class="text-[var(--teal)]">{stat.suffix}</span>
+          </div>
+          <div class="mt-1 text-sm text-[var(--txt-muted)]">{stat.label}</div>
+        </div>
+      ))}
+    </div>
+  </div>
+</section>
+
+<script is:inline>
+  (function () {
+    function easeOutExpo(t) {
+      return t === 1 ? 1 : 1 - Math.pow(2, -10 * t);
+    }
+
+    function animateCounter(el, target, duration) {
+      var start = null;
+      var counterEl = el.querySelector('.stat-counter');
+      function step(ts) {
+        if (!start) start = ts;
+        var progress = Math.min((ts - start) / duration, 1);
+        counterEl.textContent = Math.round(easeOutExpo(progress) * target);
+        if (progress < 1) requestAnimationFrame(step);
+        else counterEl.textContent = target;
+      }
+      requestAnimationFrame(step);
+    }
+
+    var observer = new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) {
+        if (!entry.isIntersecting) return;
+        var el = entry.target;
+        var delay = parseInt(el.dataset.delay, 10) || 0;
+        setTimeout(function () { animateCounter(el, parseInt(el.dataset.value, 10), 1200); }, delay);
+        observer.unobserve(el);
+      });
+    }, { threshold: 0 });
+
+    document.querySelectorAll('.stat-item').forEach(function (el) {
+      observer.observe(el);
+    });
+  })();
+</script>

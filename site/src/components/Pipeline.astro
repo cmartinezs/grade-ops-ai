@@ -1,0 +1,546 @@
+---
+import { useTranslations } from '../utils/i18n';
+import type { Lang } from '../utils/i18n';
+import {
+  FileText, ListChecks, Star, MessageSquare, TrendingDown,
+  RefreshCw, ClipboardList, ShieldCheck,
+  HelpCircle, Sliders, AlertCircle, Package, BarChart2,
+  X,
+} from 'lucide-astro';
+
+interface Props { lang: Lang; }
+const { lang } = Astro.props;
+const t = useTranslations(lang);
+
+const openAgents = [
+  {
+    name: 'Assessment Agent', Icon: FileText,
+    desc: 'Genera la descripción de la actividad basada en el objetivo de aprendizaje.',
+    detail: 'Recibe el objetivo de aprendizaje y el contexto del curso. Produce una descripción completa: instrucciones, formato de entrega y criterios de evaluación. El docente revisa y aprueba antes de publicar la actividad.',
+    input: 'Objetivo de aprendizaje + contexto del curso',
+    output: 'Descripción de actividad',
+    approval: true,
+  },
+  {
+    name: 'Rubric Agent', Icon: ListChecks,
+    desc: 'Sugiere rúbrica con criterios y niveles de desempeño alineados a la actividad.',
+    detail: 'Analiza la actividad aprobada y genera una rúbrica con criterios ponderados y cuatro niveles de desempeño. El docente puede ajustar cada criterio y su peso antes de aprobar la rúbrica.',
+    input: 'Descripción de actividad aprobada',
+    output: 'Rúbrica con criterios y niveles',
+    approval: true,
+  },
+  {
+    name: 'Grading Agent', Icon: Star,
+    desc: 'Sugiere corrección por entrega contra la rúbrica aprobada. Nunca asigna nota final.',
+    detail: 'Procesa cada entrega estudiantil y sugiere una calificación y justificación por criterio de rúbrica. La nota final requiere aprobación docente explícita — el agente solo propone.',
+    input: 'Entrega estudiantil + rúbrica aprobada',
+    output: 'Sugerencia de calificación por criterio',
+    approval: true,
+  },
+  {
+    name: 'Feedback Agent', Icon: MessageSquare,
+    desc: 'Genera feedback personalizado por estudiante basado en su calificación.',
+    detail: 'Produce un comentario narrativo personalizado para cada estudiante, destacando fortalezas y áreas de mejora según los criterios evaluados. No se entrega al estudiante sin aprobación docente.',
+    input: 'Calificación aprobada + criterios evaluados',
+    output: 'Feedback narrativo personalizado',
+    approval: true,
+  },
+  {
+    name: 'Learning Gap Agent', Icon: TrendingDown,
+    desc: 'Detecta brechas de aprendizaje por estudiante y a nivel del curso completo.',
+    detail: 'Analiza patrones de calificación del grupo y produce un mapa de brechas de aprendizaje con evidencia cuantitativa por criterio, por estudiante y por curso. No requiere aprobación — es informativo.',
+    input: 'Calificaciones aprobadas del curso',
+    output: 'Mapa de brechas por estudiante y curso',
+    approval: false,
+  },
+  {
+    name: 'Recovery Agent', Icon: RefreshCw,
+    desc: 'Propone actividades de recuperación específicas para cada brecha detectada.',
+    detail: 'Para cada brecha del mapa, sugiere una o más actividades de recuperación alineadas al objetivo y calibradas al nivel del estudiante. El docente selecciona y asigna las que considere pertinentes.',
+    input: 'Mapa de brechas de aprendizaje',
+    output: 'Actividades de recuperación sugeridas',
+    approval: true,
+  },
+  {
+    name: 'Teacher Report Agent', Icon: ClipboardList,
+    desc: 'Consolida el ciclo completo en un reporte ejecutivo con estadísticas y acciones.',
+    detail: 'Genera un reporte del ciclo con distribución de notas, brechas detectadas, actividades de recuperación asignadas y próximos pasos. Listo para compartir con dirección académica.',
+    input: 'Todo el ciclo de evaluación aprobado',
+    output: 'Reporte ejecutivo del ciclo',
+    approval: true,
+  },
+  {
+    name: 'Ops Evidence Agent', Icon: ShieldCheck,
+    desc: 'Registra modelo, costo, input, output y aprobación de cada ejecución de agente.',
+    detail: 'Captura un AgentExecutionLog inmutable por cada ejecución: modelo de IA, tokens, costo, input enviado, output recibido y resultado de aprobación. Base para auditoría, billing y evidencia operacional.',
+    input: 'Metadata de cada ejecución',
+    output: 'AgentExecutionLog + CostEvent',
+    approval: false,
+  },
+];
+
+const closedAgents = [
+  {
+    name: 'Question Generation Agent', Icon: HelpCircle,
+    desc: 'Genera preguntas de V/F, selección simple y selección múltiple.',
+    detail: 'Recibe el objetivo de aprendizaje y la dificultad objetivo, y genera ítems en los tres formatos. Cada pregunta incluye respuesta correcta y justificación didáctica. El docente aprueba ítem a ítem.',
+    input: 'Objetivo de aprendizaje + dificultad objetivo',
+    output: 'Ítems con respuesta y justificación',
+    approval: true,
+  },
+  {
+    name: 'Distractor Quality Agent', Icon: Sliders,
+    desc: 'Evalúa y refina distractores para que sean plausibles pero incorrectos.',
+    detail: 'Analiza los distractores de cada ítem. Detecta los que son demasiado obvios o los que podrían confundirse con la respuesta correcta, y propone reemplazos pedagógicamente más efectivos.',
+    input: 'Preguntas con distractores del banco',
+    output: 'Distractores mejorados + evaluación de calidad',
+    approval: true,
+  },
+  {
+    name: 'Ambiguity Review Agent', Icon: AlertCircle,
+    desc: 'Detecta preguntas con más de una respuesta válida o enunciado ambiguo.',
+    detail: 'Revisa cada ítem buscando ambigüedad en el enunciado o casos donde más de un distractor podría considerarse correcto. Marca los problemáticos con explicación y sugiere reformulaciones.',
+    input: 'Banco de preguntas revisado',
+    output: 'Reporte de ambigüedad + reformulaciones',
+    approval: true,
+  },
+  {
+    name: 'Assessment Assembly Agent', Icon: Package,
+    desc: 'Ensambla la evaluación final con los ítems aprobados por el docente.',
+    detail: 'Toma los ítems aprobados del banco y construye la evaluación según los parámetros definidos: cantidad de ítems, distribución por dificultad y formato, orden de presentación al estudiante.',
+    input: 'Banco aprobado + parámetros de la prueba',
+    output: 'Evaluación ensamblada lista para publicar',
+    approval: true,
+  },
+  {
+    name: 'Item Analytics Agent', Icon: BarChart2,
+    desc: 'Analiza desempeño por ítem: dificultad, discriminación y distractores elegidos.',
+    detail: 'Tras la corrección, calcula índice de dificultad y discriminación por ítem, y analiza qué distractores fueron seleccionados con mayor frecuencia. Informa ítems candidatos a revisión en el banco.',
+    input: 'Respuestas estudiantiles + clave de respuestas',
+    output: 'Analítica de ítems por evaluación',
+    approval: false,
+  },
+];
+---
+
+<section class="py-20">
+  <div class="max-w-6xl mx-auto px-4 sm:px-6">
+
+    <!-- Title -->
+    <div class="text-center mb-14" data-reveal>
+      <h2 class="text-3xl font-bold text-[var(--txt)]">{t('pipeline.title')}</h2>
+      <p class="mt-3 text-[var(--txt-muted)] max-w-2xl mx-auto">{t('pipeline.sub')}</p>
+      <p class="mt-2 text-xs text-[var(--txt-muted)]/60 italic">
+        {lang === 'es' ? 'Haz click en un agente para ver su detalle' : 'Click an agent to see its details'}
+      </p>
+    </div>
+
+    <!-- ── Open Assessment ── -->
+    <div class="mb-16" id="open-group">
+      <div class="flex items-center gap-3 mb-6">
+        <span class="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-[var(--teal)] bg-[var(--teal)]/10 px-3 py-1.5 rounded-full border border-[var(--teal)]/20">
+          <FileText size={12} />{t('pipeline.open')}
+        </span>
+        <div class="flex-1 h-px bg-white/10"></div>
+      </div>
+
+      <div class="flex gap-6 items-start">
+
+        <!-- Cards grid (becomes deck on click) -->
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 flex-1" id="open-cards">
+          {openAgents.map((agent, i) => (
+            <button
+              class="agent-card group flex flex-col items-center justify-center text-center p-4 rounded-xl border border-white/10 bg-white/[0.03] hover:bg-[var(--teal)]/5 hover:border-[var(--teal)]/40 transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-[var(--teal)]/40 min-h-[108px]"
+              data-idx={String(i)}
+            >
+              <div class="mb-2 w-10 h-10 rounded-lg bg-[var(--teal)]/10 group-hover:bg-[var(--teal)]/20 flex items-center justify-center text-[var(--teal)] transition-colors shrink-0">
+                <agent.Icon size={18} />
+              </div>
+              <span class="text-xs font-medium text-[var(--txt)] leading-tight">{agent.name}</span>
+            </button>
+          ))}
+        </div>
+
+        <!-- Info slot: pre-renders one panel per agent, shows on click -->
+        <div class="flex-1 min-w-0" id="open-info-slot" style="display:none;">
+          {openAgents.map((agent, i) => (
+            <div
+              class="agent-panel rounded-2xl border border-[var(--teal)]/20 bg-white/[0.02] p-5 relative"
+              id={`open-panel-${i}`}
+              style="display:none;opacity:0;"
+            >
+              <!-- Close / reset -->
+              <button
+                class="close-deck absolute top-4 right-4 w-7 h-7 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center text-[var(--txt-muted)] hover:text-[var(--txt)] transition-colors"
+                data-group="open"
+                aria-label="Cerrar"
+              >
+                <X size={14} />
+              </button>
+
+              <!-- Header -->
+              <div class="flex items-center gap-2 mb-1 text-[var(--teal)]">
+                <agent.Icon size={16} />
+                <span class="text-[10px] font-bold uppercase tracking-widest opacity-70">
+                  {lang === 'es' ? 'Open Assessment' : 'Open Assessment'} · Agent {i + 1}/{openAgents.length}
+                </span>
+              </div>
+              <h3 class="font-bold text-base text-[var(--txt)] mb-1 pr-8">{agent.name}</h3>
+              <p class="text-xs text-[var(--txt-muted)] mb-3 leading-relaxed">{agent.desc}</p>
+              <p class="text-sm text-[var(--txt)] mb-4 leading-relaxed">{agent.detail}</p>
+
+              <!-- Input / Output -->
+              <div class="grid grid-cols-2 gap-2 mb-3">
+                <div class="bg-white/[0.04] rounded-lg p-2.5">
+                  <div class="text-[10px] font-semibold uppercase tracking-wider text-[var(--txt-muted)] mb-1">Input</div>
+                  <div class="text-xs font-medium text-[var(--txt)]">{agent.input}</div>
+                </div>
+                <div class="bg-white/[0.04] rounded-lg p-2.5">
+                  <div class="text-[10px] font-semibold uppercase tracking-wider text-[var(--txt-muted)] mb-1">Output</div>
+                  <div class="text-xs font-medium text-[var(--txt)]">{agent.output}</div>
+                </div>
+              </div>
+
+              <!-- Approval badge -->
+              {agent.approval
+                ? (
+                  <div class="inline-flex items-center gap-1.5 text-[10px] font-semibold bg-[var(--teal)]/10 text-[var(--teal)] px-2.5 py-1 rounded-full border border-[var(--teal)]/20">
+                    <ShieldCheck size={10} />
+                    {lang === 'es' ? 'Requiere aprobación docente' : 'Requires teacher approval'}
+                  </div>
+                ) : (
+                  <div class="inline-flex items-center gap-1.5 text-[10px] font-semibold bg-white/5 text-[var(--txt-muted)] px-2.5 py-1 rounded-full border border-white/10">
+                    {lang === 'es' ? 'Automático — no requiere aprobación' : 'Automatic — no approval required'}
+                  </div>
+                )
+              }
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Closed Assessment ── -->
+    <div id="closed-group">
+      <div class="flex items-center gap-3 mb-6">
+        <span class="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-[var(--indigo)] bg-[var(--indigo)]/10 px-3 py-1.5 rounded-full border border-[var(--indigo)]/20">
+          <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+          </svg>
+          {t('pipeline.closed')}
+        </span>
+        <div class="flex-1 h-px bg-white/10"></div>
+      </div>
+
+      <div class="flex gap-6 items-start">
+
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 flex-1" id="closed-cards">
+          {closedAgents.map((agent, i) => (
+            <button
+              class={`agent-card group flex flex-col items-center justify-center text-center p-4 rounded-xl border border-white/10 bg-white/[0.03] hover:bg-[var(--indigo)]/5 hover:border-[var(--indigo)]/40 transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-[var(--indigo)]/40 min-h-[108px]${i === closedAgents.length - 1 && closedAgents.length % 4 !== 0 ? ' sm:col-start-2' : ''}`}
+              data-idx={String(i)}
+            >
+              <div class="mb-2 w-10 h-10 rounded-lg bg-[var(--indigo)]/10 group-hover:bg-[var(--indigo)]/20 flex items-center justify-center text-[var(--indigo)] transition-colors shrink-0">
+                <agent.Icon size={18} />
+              </div>
+              <span class="text-xs font-medium text-[var(--txt)] leading-tight">{agent.name}</span>
+            </button>
+          ))}
+        </div>
+
+        <div class="flex-1 min-w-0" id="closed-info-slot" style="display:none;">
+          {closedAgents.map((agent, i) => (
+            <div
+              class="agent-panel rounded-2xl border border-[var(--indigo)]/20 bg-white/[0.02] p-5 relative"
+              id={`closed-panel-${i}`}
+              style="display:none;opacity:0;"
+            >
+              <button
+                class="close-deck absolute top-4 right-4 w-7 h-7 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center text-[var(--txt-muted)] hover:text-[var(--txt)] transition-colors"
+                data-group="closed"
+                aria-label="Cerrar"
+              >
+                <X size={14} />
+              </button>
+
+              <div class="flex items-center gap-2 mb-1 text-[var(--indigo)]">
+                <agent.Icon size={16} />
+                <span class="text-[10px] font-bold uppercase tracking-widest opacity-70">
+                  Closed Assessment · Agent {i + 1}/{closedAgents.length}
+                </span>
+              </div>
+              <h3 class="font-bold text-base text-[var(--txt)] mb-1 pr-8">{agent.name}</h3>
+              <p class="text-xs text-[var(--txt-muted)] mb-3 leading-relaxed">{agent.desc}</p>
+              <p class="text-sm text-[var(--txt)] mb-4 leading-relaxed">{agent.detail}</p>
+
+              <div class="grid grid-cols-2 gap-2 mb-3">
+                <div class="bg-white/[0.04] rounded-lg p-2.5">
+                  <div class="text-[10px] font-semibold uppercase tracking-wider text-[var(--txt-muted)] mb-1">Input</div>
+                  <div class="text-xs font-medium text-[var(--txt)]">{agent.input}</div>
+                </div>
+                <div class="bg-white/[0.04] rounded-lg p-2.5">
+                  <div class="text-[10px] font-semibold uppercase tracking-wider text-[var(--txt-muted)] mb-1">Output</div>
+                  <div class="text-xs font-medium text-[var(--txt)]">{agent.output}</div>
+                </div>
+              </div>
+
+              {agent.approval
+                ? (
+                  <div class="inline-flex items-center gap-1.5 text-[10px] font-semibold bg-[var(--indigo)]/10 text-[var(--indigo)] px-2.5 py-1 rounded-full border border-[var(--indigo)]/20">
+                    <ShieldCheck size={10} />
+                    {lang === 'es' ? 'Requiere aprobación docente' : 'Requires teacher approval'}
+                  </div>
+                ) : (
+                  <div class="inline-flex items-center gap-1.5 text-[10px] font-semibold bg-white/5 text-[var(--txt-muted)] px-2.5 py-1 rounded-full border border-white/10">
+                    {lang === 'es' ? 'Automático — no requiere aprobación' : 'Automatic — no approval required'}
+                  </div>
+                )
+              }
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- Section title reveal -->
+<script is:inline>
+  (function () {
+    var obs = new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) {
+        if (!entry.isIntersecting) return;
+        var el = entry.target;
+        el.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+        el.style.opacity = '1';
+        el.style.transform = 'translateY(0)';
+        obs.unobserve(el);
+      });
+    }, { threshold: 0 });
+    document.querySelectorAll('[data-reveal]').forEach(function (el) {
+      el.style.opacity = '0';
+      el.style.transform = 'translateY(16px)';
+      obs.observe(el);
+    });
+  })();
+</script>
+
+<!-- Card deck interaction -->
+<script>
+  import gsap from 'gsap';
+
+  interface GroupState {
+    isStacked: boolean;
+    activeIndex: number;
+    origPos: Array<{ top: number; left: number; width: number; height: number }>;
+    origW: number;
+    origH: number;
+  }
+
+  function setupGroup(cardsId: string, slotId: string, panelPrefix: string) {
+    const wrapper = document.getElementById(cardsId) as HTMLElement | null;
+    const slot    = document.getElementById(slotId)    as HTMLElement | null;
+    if (!wrapper || !slot) return;
+
+    const cards = Array.from(wrapper.querySelectorAll<HTMLElement>('.agent-card'));
+    if (cards.length < 2) return;
+
+    const state: GroupState = {
+      isStacked: false,
+      activeIndex: -1,
+      origPos: [],
+      origW: 0,
+      origH: 0,
+    };
+
+    // ── show / swap panel ──────────────────────────────────────────
+    function showPanel(idx: number) {
+      slot.querySelectorAll<HTMLElement>('.agent-panel').forEach(p => {
+        if (p.id !== `${panelPrefix}-${idx}`) gsap.set(p, { display: 'none', opacity: 0 });
+      });
+      const panel = document.getElementById(`${panelPrefix}-${idx}`);
+      if (!panel) return;
+      gsap.set(panel, { display: 'block', opacity: 0 });
+      gsap.to(panel, { opacity: 1, duration: 0.3, ease: 'power2.out', delay: 0.1 });
+    }
+
+    // ── stack ──────────────────────────────────────────────────────
+    function stack(clickedIdx: number) {
+      // Read positions while grid is still intact
+      const wRect  = wrapper.getBoundingClientRect();
+      const cRects = cards.map(c => c.getBoundingClientRect());
+
+      state.origPos = cRects.map(r => ({
+        top:    r.top    - wRect.top,
+        left:   r.left   - wRect.left,
+        width:  r.width,
+        height: r.height,
+      }));
+      state.origW       = wRect.width;
+      state.origH       = wRect.height;
+      state.activeIndex = clickedIdx;
+      state.isStacked   = true;
+
+      // Deck anchor = always the first card's position
+      const deckTop  = cRects[0].top  - wRect.top;
+      const deckLeft = cRects[0].left - wRect.left;
+      const cardW    = cRects[0].width;
+      const cardH    = cRects[0].height;
+      const n        = cards.length;
+
+      // Pin the flex row height so the info slot (which can be taller than the
+      // card grid) never pushes the section below out of position.
+      const flexRow = wrapper.parentElement as HTMLElement;
+      gsap.set(flexRow, { height: wRect.height });
+
+      // Freeze wrapper size, switch off grid.
+      // flex:'none' overrides the flex-1 class so the info slot can take all remaining space.
+      gsap.set(wrapper, {
+        flex:     'none',
+        width:    wRect.width,
+        height:   wRect.height,
+        display:  'block',
+        position: 'relative',
+        overflow: 'visible',
+      });
+
+      // Read the page background so stacked cards are fully opaque
+      const solidBg = getComputedStyle(document.documentElement)
+        .getPropertyValue('--bg').trim() || '#07111F';
+
+      // Pin each card absolutely at its current grid position
+      cards.forEach((card, i) => {
+        gsap.set(card, {
+          position:        'absolute',
+          top:             state.origPos[i].top,
+          left:            state.origPos[i].left,
+          width:           state.origPos[i].width,
+          height:          state.origPos[i].height,
+          margin:          0,
+          zIndex:          5,
+          backgroundColor: solidBg,
+        });
+      });
+
+      // Deck order: clicked card on top (face), rest in natural order behind
+      const deckOrder = [
+        clickedIdx,
+        ...cards.map((_, i) => i).filter(i => i !== clickedIdx),
+      ];
+
+      const tl = gsap.timeline();
+
+      deckOrder.forEach((cardIdx, pos) => {
+        tl.to(cards[cardIdx], {
+          top:      deckTop  + pos * 4,
+          left:     deckLeft - pos * 2,
+          zIndex:   20 - pos,
+          duration: 0.38,
+          ease:     'power2.out',
+        }, pos * 0.07);
+      });
+
+      // Shrink wrapper WIDTH only — never touch height so the section below
+      // never reflows or jumps during the animation.
+      tl.to(wrapper, {
+        width:    cardW + n * 4 + 16,
+        duration: 0.35,
+        ease:     'power2.inOut',
+      }, (n - 1) * 0.07 + 0.08);
+
+      // Show info slot
+      slot.style.display = 'flex';
+      slot.style.flex    = '1';
+      gsap.set(slot, { opacity: 0 });
+      tl.to(slot, { opacity: 1, duration: 0.35, ease: 'power2.out' },
+            (n - 1) * 0.07 + 0.28);
+
+      showPanel(clickedIdx);
+    }
+
+    // ── reset ──────────────────────────────────────────────────────
+    function reset() {
+      if (!state.isStacked) return;
+      state.isStacked = false;
+
+      const tl = gsap.timeline({
+        onComplete() {
+          cards.forEach(c =>
+            gsap.set(c, { clearProps: 'position,top,left,width,height,margin,zIndex,backgroundColor' })
+          );
+          gsap.set(wrapper, { clearProps: 'flex,width,height,display,position,overflow' });
+          gsap.set(wrapper.parentElement as HTMLElement, { clearProps: 'height' });
+          slot.style.display = 'none';
+          slot.style.flex    = '';
+          slot.querySelectorAll<HTMLElement>('.agent-panel').forEach(p =>
+            gsap.set(p, { display: 'none', opacity: 0 })
+          );
+        },
+      });
+
+      tl.to(slot, { opacity: 0, duration: 0.2 }, 0);
+
+      // Expand wrapper width back (height was never animated, stays at original)
+      tl.to(wrapper, {
+        width:    state.origW,
+        duration: 0.38,
+        ease:     'power2.inOut',
+      }, 0);
+
+      // Return every card to its original grid position
+      cards.forEach((card, i) => {
+        tl.to(card, {
+          top:      state.origPos[i].top,
+          left:     state.origPos[i].left,
+          zIndex:   5,
+          duration: 0.32,
+          ease:     'power2.inOut',
+        }, 0.05 + i * 0.03);
+      });
+    }
+
+    // ── card click handlers ────────────────────────────────────────
+    cards.forEach((card, i) => {
+      card.addEventListener('click', () => {
+        if (state.isStacked) {
+          if (i === state.activeIndex) {
+            // Clicked the face card → reset
+            reset();
+          } else {
+            // Clicked a different card in the deck → bring it to face
+            const deckOrder = [i, ...cards.map((_, j) => j).filter(j => j !== i)];
+            deckOrder.forEach((cardIdx, pos) => {
+              gsap.to(cards[cardIdx], { zIndex: 20 - pos, duration: 0.15 });
+            });
+            state.activeIndex = i;
+            showPanel(i);
+          }
+        } else {
+          stack(i);
+        }
+      });
+    });
+
+    // ── close button handlers ──────────────────────────────────────
+    slot.querySelectorAll<HTMLElement>('.close-deck').forEach(btn => {
+      btn.addEventListener('click', e => { e.stopPropagation(); reset(); });
+    });
+  }
+
+  setupGroup('open-cards',   'open-info-slot',   'open-panel');
+  setupGroup('closed-cards', 'closed-info-slot',  'closed-panel');
+</script>
+
+<style>
+  .agent-card {
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+    transition: box-shadow 0.2s ease;
+  }
+  .agent-card:hover {
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.28);
+  }
+  .agent-panel {
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.18);
+  }
+</style>

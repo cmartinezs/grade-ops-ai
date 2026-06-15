@@ -1,0 +1,114 @@
+---
+import Base from '../layouts/Base.astro';
+import StatStrip from '../components/StatStrip.astro';
+import Pipeline from '../components/Pipeline.astro';
+import Features from '../components/Features.astro';
+import RoadmapPreview from '../components/RoadmapPreview.astro';
+import XprizeBanner from '../components/XprizeBanner.astro';
+import { useTranslations } from '../utils/i18n';
+import { BotMessageSquare, GraduationCap, BookOpenCheck } from 'lucide-astro';
+
+const lang = 'es';
+const t = useTranslations(lang);
+const base = import.meta.env.BASE_URL;
+---
+
+<Base
+  title="GradeOps AI — Assessment operations para docentes de programación"
+  description="GradeOps AI opera el ciclo completo de evaluación con agentes de IA. El docente aprueba; los agentes ejecutan."
+  lang={lang}
+  path="/"
+>
+  <!-- Hero -->
+  <section class="relative min-h-[90vh] flex flex-col items-center justify-center text-center overflow-hidden px-4 py-20">
+    <!-- Background glow -->
+    <div class="absolute inset-0 overflow-hidden pointer-events-none">
+      <div class="absolute top-1/4 left-1/2 -translate-x-1/2 w-[600px] h-[300px] bg-[var(--teal)]/10 rounded-full blur-3xl"></div>
+      <div class="absolute bottom-1/4 left-1/3 w-64 h-64 bg-[var(--indigo)]/5 rounded-full blur-3xl"></div>
+    </div>
+
+    <!-- Hero logomark cluster -->
+    <div class="hero-hidden relative mb-8 flex items-center justify-center gap-3">
+      <div class="w-16 h-16 rounded-2xl bg-[var(--teal)]/15 border border-[var(--teal)]/20 flex items-center justify-center text-[var(--teal)]">
+        <GraduationCap size={32} />
+      </div>
+      <div class="flex flex-col gap-2">
+        <div class="w-10 h-10 rounded-xl bg-[var(--coral)]/15 border border-[var(--coral)]/20 flex items-center justify-center text-[var(--coral)]">
+          <BotMessageSquare size={20} />
+        </div>
+        <div class="w-10 h-10 rounded-xl bg-[var(--indigo)]/15 border border-[var(--indigo)]/20 flex items-center justify-center text-[var(--indigo)]">
+          <BookOpenCheck size={20} />
+        </div>
+      </div>
+    </div>
+
+    <!-- Badge -->
+    <div class="hero-hidden relative mb-6 inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-[var(--teal)]/30 bg-[var(--teal)]/5 text-xs font-medium text-[var(--teal)]">
+      <span class="w-1.5 h-1.5 rounded-full bg-[var(--coral)] animate-pulse"></span>
+      {t('hero.badge')}
+    </div>
+
+    <!-- Headline -->
+    <h1 class="hero-hidden relative max-w-4xl">
+      <span class="block text-5xl sm:text-7xl font-extrabold tracking-tight text-[var(--txt)]">{t('hero.h1')}</span>
+      <span class="block text-5xl sm:text-7xl font-extrabold tracking-tight text-[var(--teal)] mt-1">{t('hero.h2')}</span>
+      <span class="block text-5xl sm:text-7xl font-extrabold tracking-tight text-[var(--coral)] mt-1">{t('hero.h3')}</span>
+    </h1>
+
+    <!-- Sub -->
+    <p class="hero-hidden relative mt-8 max-w-2xl text-lg text-[var(--txt-muted)] leading-relaxed">
+      {t('hero.sub')}
+    </p>
+
+    <!-- CTAs -->
+    <div class="hero-hidden relative mt-10 flex flex-wrap items-center justify-center gap-4">
+      <a
+        href={`${base}/requirements`}
+        class="px-6 py-3 rounded-xl bg-[var(--teal)] hover:bg-[var(--teal)]/80 text-white font-semibold transition-all duration-200 shadow-lg shadow-[var(--teal)]/20"
+      >
+        {t('hero.cta.primary')}
+      </a>
+      <a
+        href={`${base}/development`}
+        class="px-6 py-3 rounded-xl border border-white/20 hover:border-[var(--teal)]/40 text-[var(--txt-muted)] hover:text-[var(--txt)] font-medium transition-all duration-200"
+      >
+        {t('hero.cta.secondary')}
+      </a>
+    </div>
+
+    <!-- Scroll indicator -->
+    <div class="hero-hidden absolute bottom-8 left-1/2 -translate-x-1/2 text-[var(--txt-muted)] animate-bounce">
+      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="6 9 12 15 18 9"/>
+      </svg>
+    </div>
+  </section>
+
+  <StatStrip lang={lang} />
+  <Pipeline lang={lang} />
+  <Features lang={lang} />
+  <div class="max-w-6xl mx-auto px-4 sm:px-6">
+    <XprizeBanner lang={lang} />
+  </div>
+  <RoadmapPreview lang={lang} />
+</Base>
+
+<style>
+  .hero-hidden {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+</style>
+
+<script is:inline>
+  (function () {
+    var els = document.querySelectorAll('.hero-hidden');
+    els.forEach(function (el, i) {
+      setTimeout(function () {
+        el.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+        el.style.opacity = '1';
+        el.style.transform = 'translateY(0)';
+      }, 80 + i * 120);
+    });
+  })();
+</script>

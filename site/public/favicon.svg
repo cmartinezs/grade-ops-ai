@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="none">
+  <rect width="32" height="32" rx="8" fill="#07111F"/>
+  <!-- Graduation cap mortarboard shape -->
+  <polygon points="16,7 28,13 16,19 4,13" fill="#12B8A6"/>
+  <!-- Cap top rectangle -->
+  <rect x="13" y="7" width="6" height="2.5" rx="1" fill="#075E63"/>
+  <!-- Tassel cord -->
+  <line x1="24" y1="13" x2="24" y2="20" stroke="#12B8A6" stroke-width="1.5" stroke-linecap="round"/>
+  <!-- Diploma scroll sides -->
+  <path d="M10 15.5 L10 22 Q16 24.5 22 22 L22 15.5" stroke="#12B8A6" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- Coral accent dot (AI dot) -->
+  <circle cx="24" cy="21" r="2" fill="#F97316"/>
+</svg>

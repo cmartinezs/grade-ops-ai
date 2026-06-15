@@ -1,0 +1,233 @@
+---
+import Base from '../layouts/Base.astro';
+import SectionHero from '../components/SectionHero.astro';
+import { useTranslations } from '../utils/i18n';
+
+const lang = 'es';
+const t = useTranslations(lang);
+const base = import.meta.env.BASE_URL;
+---
+
+<Base
+  title="XPRIZE AI Hackathon — GradeOps AI"
+  description="GradeOps AI participa en XPRIZE AI Hackathon 2026, categoría Education & Human Potential."
+  lang={lang}
+  path="/xprize-hackathon"
+>
+  <!-- Fondo Launch Pad: radial coral -->
+  <div class="fixed inset-0 pointer-events-none select-none" aria-hidden="true"
+       style="background: radial-gradient(ellipse 80% 50% at 50% 0%, rgba(249,115,22,0.18) 0%, transparent 65%); z-index: 0;">
+  </div>
+
+  <SectionHero
+    title={t('xph.title')}
+    subtitle={t('xph.sub')}
+    accentColor="coral"
+  />
+
+  <div class="max-w-3xl mx-auto px-4 sm:px-6 py-16 pb-24 space-y-12">
+
+    <!-- Countdown -->
+    <div class="relative rounded-2xl border border-[var(--coral)]/20 bg-[var(--coral)]/5 p-8 text-center overflow-hidden">
+      <!-- Anillos de pulso -->
+      <div class="pulse-ring absolute inset-0 rounded-2xl border border-[var(--coral)]/30" style="animation-delay: 0s;"></div>
+      <div class="pulse-ring absolute inset-0 rounded-2xl border border-[var(--coral)]/20" style="animation-delay: 0.7s;"></div>
+      <div class="pulse-ring absolute inset-0 rounded-2xl border border-[var(--coral)]/10" style="animation-delay: 1.4s;"></div>
+      <!-- Contenido del countdown -->
+      <div class="relative z-10">
+        <div class="text-sm text-[var(--txt-muted)] mb-4 uppercase tracking-widest text-xs">Tiempo restante · Deadline 17 ago 2026, 13:00 PDT</div>
+        <div id="countdown" class="grid grid-cols-4 gap-4">
+          {['days', 'hours', 'mins', 'secs'].map((unit) => (
+            <div class="flex flex-col items-center">
+              <div id={`cd-${unit}`} class="text-4xl sm:text-5xl font-extrabold text-[var(--coral)] tabular-nums">--</div>
+              <div class="text-xs text-[var(--txt-muted)] mt-1">{t(`xph.countdown.${unit}` as any)}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+
+    <!-- What is XPRIZE -->
+    <div>
+      <h2 class="text-2xl font-bold text-[var(--txt)] mb-4">¿Qué es XPRIZE AI Hackathon?</h2>
+      <p class="text-[var(--txt-muted)] leading-relaxed mb-4">
+        XPRIZE AI Hackathon 2026 es una competencia global organizada por la fundación XPRIZE en colaboración con Google. El objetivo es desarrollar soluciones de IA que aborden desafíos reales en áreas de alto impacto.
+      </p>
+      <p class="text-[var(--txt-muted)] leading-relaxed">
+        GradeOps AI participa en la categoría <span class="text-[var(--coral)] font-medium">Education & Human Potential</span>, buscando resolver la carga operacional que enfrentan los docentes de programación al evaluar y dar feedback a escala.
+      </p>
+    </div>
+
+    <!-- Judging Criteria -->
+    <div>
+      <h2 class="text-2xl font-bold text-[var(--txt)] mb-6">Criterios del Jurado</h2>
+      <div class="grid sm:grid-cols-3 gap-4">
+        {[
+          {
+            criterion: 'Business Viability',
+            what: 'Real business, real users, real revenue, sustainable cost model.',
+            how: 'Pilots con educadores reales, tabla de precios, registro de ingresos, modelo de costos, evidencia de usuarios.',
+          },
+          {
+            criterion: 'AI-Native Operations',
+            what: 'AI executing key workflow decisions in a live product.',
+            how: 'Pipeline de 13 agentes, AgentExecutionLog por cada ejecución, estados de aprobación visibles en el dashboard del docente.',
+          },
+          {
+            criterion: 'Category Impact',
+            what: 'Meaningful improvement in Education & Human Potential.',
+            how: 'Tiempo del docente liberado, feedback personalizado escalable, detección temprana de brechas, capacidad de academia grande para proveedores pequeños.',
+          },
+        ].map((card, i) => (
+          <div class="reveal rounded-xl border border-[var(--coral)]/20 bg-[var(--coral)]/5 p-5" style={`transition-delay: ${i * 150}ms`}>
+            <div class="font-semibold text-sm mb-2" style="color: var(--coral);">{card.criterion}</div>
+            <div class="text-xs italic mb-2" style="color: var(--txt-muted);">Qué evalúan: {card.what}</div>
+            <div class="text-xs" style="color: var(--txt-muted);">GradeOps: {card.how}</div>
+          </div>
+        ))}
+      </div>
+    </div>
+
+    <!-- Evidence We'll Submit -->
+    <div class="reveal">
+      <h2 class="text-2xl font-bold text-[var(--txt)] mb-6">Evidencia que Entregaremos</h2>
+      <div class="rounded-xl border border-white/10 bg-white/[0.02] overflow-hidden">
+        <table class="w-full text-sm">
+          <thead>
+            <tr class="border-b border-white/10">
+              <th class="text-left px-4 py-3 text-xs font-semibold text-[var(--txt-muted)] uppercase tracking-wider">Tipo de evidencia</th>
+              <th class="text-left px-4 py-3 text-xs font-semibold text-[var(--txt-muted)] uppercase tracking-wider">Entidad del sistema</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-white/5">
+            <tr>
+              <td class="px-4 py-3 text-xs text-[var(--txt)]">Agent execution logs</td>
+              <td class="px-4 py-3 text-xs text-[var(--txt-muted)]"><code class="text-[var(--teal)] text-xs font-mono">AgentExecutionLog</code> — modelo, tokens, costo, resumen de input/output</td>
+            </tr>
+            <tr>
+              <td class="px-4 py-3 text-xs text-[var(--txt)]">Teacher approval trail</td>
+              <td class="px-4 py-3 text-xs text-[var(--txt-muted)]"><code class="text-[var(--teal)] text-xs font-mono">ApprovalEvent</code> — cada aprobación/rechazo con timestamp y autor</td>
+            </tr>
+            <tr>
+              <td class="px-4 py-3 text-xs text-[var(--txt)]">Revenue evidence</td>
+              <td class="px-4 py-3 text-xs text-[var(--txt-muted)]"><code class="text-[var(--teal)] text-xs font-mono">RevenueEvent</code> — ingresos reales con indicador <code class="text-[var(--teal)] text-xs font-mono">related_party</code></td>
+            </tr>
+            <tr>
+              <td class="px-4 py-3 text-xs text-[var(--txt)]">Cost transparency</td>
+              <td class="px-4 py-3 text-xs text-[var(--txt-muted)]"><code class="text-[var(--teal)] text-xs font-mono">CostEvent</code> — costo por ejecución de agente y por ciclo</td>
+            </tr>
+            <tr>
+              <td class="px-4 py-3 text-xs text-[var(--txt)]">User evidence</td>
+              <td class="px-4 py-3 text-xs text-[var(--txt-muted)]">Docentes activos, ciclos completados, submissions procesadas</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Our submission -->
+    <div>
+      <h2 class="text-2xl font-bold text-[var(--txt)] mb-6">Nuestra propuesta</h2>
+      <div class="space-y-4">
+        {[
+          { title: 'Problema real', desc: 'Los docentes de programación invierten horas en corrección manual. La escala hace que el feedback personalizado sea inviable sin herramientas de apoyo.', icon: 'M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z' },
+          { title: 'Solución con IA', desc: 'Un pipeline de 13 agentes especializados que opera el ciclo completo: desde la definición de la actividad hasta el reporte docente, con aprobación humana en cada etapa.', icon: 'M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z' },
+          { title: 'El docente manda', desc: 'Los agentes sugieren; el docente aprueba. Nunca se actúa sobre estudiantes sin autorización explícita. El control pedagógico permanece con el humano.', icon: 'M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z M9 12l2 2 4-4' },
+          { title: 'Evidencia verificable', desc: 'Cada ejecución genera un log estructurado con modelo, costo, input, output y estado de aprobación. La evidencia es inmutable y de primera clase.', icon: 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 3h6m-6 4h6m-6 4h4' },
+        ].map((item, i) => (
+          <div class="reveal flex items-start gap-4 p-5 rounded-xl border border-white/10 bg-white/[0.02]" style={`transition-delay: ${i * 120}ms`}>
+            <div class="shrink-0 w-10 h-10 rounded-xl bg-[var(--coral)]/10 flex items-center justify-center text-[var(--coral)]">
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d={item.icon}/>
+              </svg>
+            </div>
+            <div>
+              <h3 class="font-semibold text-[var(--txt)] text-sm mb-1">{item.title}</h3>
+              <p class="text-xs text-[var(--txt-muted)] leading-relaxed">{item.desc}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+
+    <!-- Coming soon / Devpost -->
+    <div class="rounded-2xl border border-[var(--indigo)]/20 bg-[var(--indigo)]/5 p-6 text-center">
+      <div class="text-[var(--indigo)] font-semibold mb-2">{t('xph.soon')}</div>
+      <p class="text-sm text-[var(--txt-muted)]">
+        Video demo, evidencias de ejecución y enlace a la submission de Devpost estarán disponibles antes de la entrega final.
+      </p>
+      <a
+        href="https://devpost.com/software/gradeops-ai"
+        target="_blank"
+        rel="noopener noreferrer"
+        class="inline-flex items-center gap-2 mt-4 text-sm text-[var(--indigo)] hover:underline"
+      >
+        Ver proyecto en Devpost
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6M15 3h6v6M10 14L21 3"/>
+        </svg>
+      </a>
+    </div>
+  </div>
+
+<style>
+  @keyframes pulse-ring {
+    0% { transform: scale(1); opacity: 0.5; }
+    100% { transform: scale(1.15); opacity: 0; }
+  }
+  .pulse-ring {
+    animation: pulse-ring 2.1s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    pointer-events: none;
+  }
+  @media (prefers-reduced-motion: reduce) { .pulse-ring { animation: none; opacity: 0; } }
+
+  .reveal { opacity: 0; transform: translateY(20px); transition: opacity 0.5s ease, transform 0.5s ease; }
+  .reveal.revealed { opacity: 1; transform: translateY(0); }
+  @media (prefers-reduced-motion: reduce) { .reveal { opacity: 1; transform: none; transition: none; } }
+</style>
+
+<script is:inline>
+  (function () {
+    // Deadline: Aug 17, 2026 13:00 PDT = UTC-7 = 20:00 UTC
+    var deadline = new Date('2026-08-17T20:00:00Z').getTime();
+
+    function pad(n) { return String(n).padStart(2, '0'); }
+
+    function tick() {
+      var now = Date.now();
+      var diff = deadline - now;
+      if (diff <= 0) {
+        document.getElementById('cd-days').textContent = '00';
+        document.getElementById('cd-hours').textContent = '00';
+        document.getElementById('cd-mins').textContent = '00';
+        document.getElementById('cd-secs').textContent = '00';
+        return;
+      }
+      var days  = Math.floor(diff / 86400000);
+      var hours = Math.floor((diff % 86400000) / 3600000);
+      var mins  = Math.floor((diff % 3600000) / 60000);
+      var secs  = Math.floor((diff % 60000) / 1000);
+      document.getElementById('cd-days').textContent  = pad(days);
+      document.getElementById('cd-hours').textContent = pad(hours);
+      document.getElementById('cd-mins').textContent  = pad(mins);
+      document.getElementById('cd-secs').textContent  = pad(secs);
+    }
+
+    tick();
+    setInterval(tick, 1000);
+  })();
+</script>
+
+<script is:inline>
+  (function () {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    var els = document.querySelectorAll('.reveal');
+    var io = new IntersectionObserver(function (e) {
+      e.forEach(function (entry) {
+        if (entry.isIntersecting) { entry.target.classList.add('revealed'); io.unobserve(entry.target); }
+      });
+    }, { threshold: 0.1 });
+    els.forEach(function (el) { io.observe(el); });
+  })();
+</script>
+</Base>

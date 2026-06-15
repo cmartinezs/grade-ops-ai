@@ -1,0 +1,185 @@
+---
+import Base from '../../layouts/Base.astro';
+import SectionHero from '../../components/SectionHero.astro';
+import { useTranslations } from '../../utils/i18n';
+
+const lang = 'en';
+const t = useTranslations(lang);
+
+const requirementGroups = [
+  {
+    title: 'Assessment cycle management',
+    color: 'teal',
+    context: 'The cycle is the system\'s central operational unit: it defines the scope, traceability, and status of each assessment from learning goal to report.',
+    items: [
+      'Teachers can create an assessment cycle linked to a learning objective.',
+      'The system supports open (code/text submissions) and closed (objective questions) assessment modes.',
+      'Teachers can view the status of each cycle stage: pending, in progress, approved.',
+      'Teachers can pause or cancel a cycle at any time.',
+      'The system records all state changes with date, time, and author.',
+    ],
+  },
+  {
+    title: 'Open assessment — activity & rubric',
+    color: 'indigo',
+    context: 'The rubric is the grading contract: once approved by the teacher, it is frozen and cannot be changed without creating a new version.',
+    items: [
+      'The system suggests an activity description based on the learning objective.',
+      'The system suggests a rubric with criteria and performance levels.',
+      'Teachers can edit, approve, or reject each suggestion.',
+      'The approved rubric is frozen and cannot be modified without creating a new version.',
+      'Teachers can import existing rubrics as a starting point.',
+    ],
+  },
+  {
+    title: 'Grading & feedback — open assessment',
+    color: 'coral',
+    context: 'No result or feedback reaches the student without explicit teacher approval. This is not a configuration option — it is a design principle.',
+    items: [
+      'The system suggests a grade for each student submission, aligned to the approved rubric.',
+      'The system generates personalized feedback for each student.',
+      'Teachers can approve, modify, or reject each individual grade and feedback item.',
+      'No result reaches students without explicit teacher approval.',
+      'The system identifies learning gaps at course and individual student levels.',
+      'The system suggests recovery activities for detected gaps.',
+    ],
+  },
+  {
+    title: 'Closed assessment — question bank',
+    color: 'teal',
+    context: 'The question bank is AI-native: agents generate, teachers curate question by question, and the system automatically versions every change.',
+    items: [
+      'The system generates true/false, single-choice, and multiple-choice questions.',
+      'The system generates and evaluates distractor quality to avoid ambiguity.',
+      'The system detects ambiguous questions or questions with multiple correct answers.',
+      'Teachers can approve, edit, or discard individual questions.',
+      'The system assembles the final assessment from approved questions.',
+      'Closed assessment grading is always deterministic against a frozen answer key.',
+    ],
+  },
+  {
+    title: 'Reports & evidence',
+    color: 'indigo',
+    context: 'Evidence is a first-class entity, not a side-effect: AgentExecutionLog, ApprovalEvent, and CostEvent are as central to the domain as Assessment or Rubric.',
+    items: [
+      'The system generates a teacher report with cycle summary, statistics, and detected gaps.',
+      'Teachers can export reports in a downloadable format.',
+      'The system logs each agent execution: model used, estimated cost, input, output, and approval state.',
+      'The system records usage and cost events for operational transparency.',
+      'Evidence records are read-only and cannot be deleted.',
+    ],
+  },
+  {
+    title: 'Student access',
+    color: 'coral',
+    context: 'Students access via a signed link with no account required. Minimal friction, maximum privacy — LearnerRef is just a reference, not a profile.',
+    items: [
+      'Students access assessments and results via a secure signed-token link.',
+      'No student registration or login required in the MVP.',
+      'Results are only visible to the corresponding student.',
+      'Students can view their grade and feedback once the teacher has approved them.',
+    ],
+  },
+];
+---
+
+<Base
+  title="Requirements — GradeOps AI"
+  description="Functional requirements for GradeOps AI: what the system must enable, with no technical references."
+  lang={lang}
+  path="/requirements"
+>
+  <div class="fixed inset-0 pointer-events-none select-none" aria-hidden="true"
+       style="background-image: url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40'%3E%3Cpath d='M0 40L40 0M0 0L40 40' stroke='rgba(99,102,241,0.15)' stroke-width='0.8'/%3E%3C/svg%3E\"); background-size: 40px 40px; z-index: 0;">
+  </div>
+
+  <SectionHero
+    title={t('req.title')}
+    subtitle={t('req.sub')}
+    accentColor="teal"
+  />
+
+  <div class="max-w-4xl mx-auto px-4 sm:px-6 py-16 space-y-12">
+    {requirementGroups.map((group, i) => {
+      const colorMap = {
+        teal:   { border: 'border-[var(--teal)]/20',   title: 'text-[var(--teal)]',   dot: 'bg-[var(--teal)]' },
+        indigo: { border: 'border-[var(--indigo)]/20', title: 'text-[var(--indigo)]', dot: 'bg-[var(--indigo)]' },
+        coral:  { border: 'border-[var(--coral)]/20',  title: 'text-[var(--coral)]',  dot: 'bg-[var(--coral)]' },
+      };
+      const c = colorMap[group.color as keyof typeof colorMap];
+      return (
+        <div class={`reveal rounded-2xl border ${c.border} p-6 sm:p-8`} style={`transition-delay: ${i * 80}ms`}>
+          <h2 class={`text-xl font-semibold mb-5 ${c.title}`}>{group.title}</h2>
+          <p class="text-xs text-[var(--indigo)] mb-4 leading-relaxed italic">{group.context}</p>
+          <ul class="space-y-3">
+            {group.items.map((item) => (
+              <li class="flex items-start gap-3 text-[var(--txt-muted)] text-sm leading-relaxed">
+                <span class={`mt-1.5 shrink-0 w-1.5 h-1.5 rounded-full ${c.dot}`}></span>
+                {item}
+              </li>
+            ))}
+          </ul>
+        </div>
+      );
+    })}
+  </div>
+
+  <div class="reveal max-w-4xl mx-auto px-4 sm:px-6 pb-20">
+    <h2 class="text-2xl font-semibold text-[var(--indigo)] mb-6">Assessment Modes</h2>
+    <table class="w-full text-sm border-collapse">
+      <thead>
+        <tr>
+          <th class="text-left text-[var(--indigo)] font-semibold py-3 pr-4 border-b border-white/10">Dimension</th>
+          <th class="text-left text-[var(--indigo)] font-semibold py-3 px-4 border-b border-white/10">Open</th>
+          <th class="text-left text-[var(--indigo)] font-semibold py-3 pl-4 border-b border-white/10">Closed</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="text-[var(--txt-muted)] py-3 pr-4 border-b border-white/10">Response type</td>
+          <td class="text-[var(--txt-muted)] py-3 px-4 border-b border-white/10">Code, text, file</td>
+          <td class="text-[var(--txt-muted)] py-3 pl-4 border-b border-white/10">Multiple choice (TF, SC, MC)</td>
+        </tr>
+        <tr>
+          <td class="text-[var(--txt-muted)] py-3 pr-4 border-b border-white/10">Generation</td>
+          <td class="text-[var(--txt-muted)] py-3 px-4 border-b border-white/10">AI generates context, instructions, and rubric</td>
+          <td class="text-[var(--txt-muted)] py-3 pl-4 border-b border-white/10">AI generates questions, distractors, and answer key</td>
+        </tr>
+        <tr>
+          <td class="text-[var(--txt-muted)] py-3 pr-4 border-b border-white/10">Grading</td>
+          <td class="text-[var(--txt-muted)] py-3 px-4 border-b border-white/10">AI suggests; teacher approves</td>
+          <td class="text-[var(--txt-muted)] py-3 pl-4 border-b border-white/10">Deterministic against frozen answer key</td>
+        </tr>
+        <tr>
+          <td class="text-[var(--txt-muted)] py-3 pr-4 border-b border-white/10">Control point</td>
+          <td class="text-[var(--txt-muted)] py-3 px-4 border-b border-white/10">Rubric approval + grade suggestions</td>
+          <td class="text-[var(--txt-muted)] py-3 pl-4 border-b border-white/10">Question curation + answer key</td>
+        </tr>
+        <tr>
+          <td class="text-[var(--txt-muted)] py-3 pr-4">Best use</td>
+          <td class="text-[var(--txt-muted)] py-3 px-4">Practical programming assignments</td>
+          <td class="text-[var(--txt-muted)] py-3 pl-4">Conceptual verification and theory</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+<style>
+  .reveal { opacity: 0; transform: translateY(20px); transition: opacity 0.5s ease, transform 0.5s ease; }
+  .reveal.revealed { opacity: 1; transform: translateY(0); }
+  @media (prefers-reduced-motion: reduce) { .reveal { opacity: 1; transform: none; transition: none; } }
+</style>
+
+<script is:inline>
+(function () {
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  var els = document.querySelectorAll('.reveal');
+  var io = new IntersectionObserver(function (e) {
+    e.forEach(function (entry) {
+      if (entry.isIntersecting) { entry.target.classList.add('revealed'); io.unobserve(entry.target); }
+    });
+  }, { threshold: 0.1 });
+  els.forEach(function (el) { io.observe(el); });
+})();
+</script>
+</Base>

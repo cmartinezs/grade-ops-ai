@@ -1,0 +1,90 @@
+---
+import { useTranslations } from '../utils/i18n';
+import type { Lang } from '../utils/i18n';
+import { ShieldCheck, Package, ListOrdered } from 'lucide-astro';
+
+interface Props {
+  lang: Lang;
+}
+
+const { lang } = Astro.props;
+const t = useTranslations(lang);
+
+const features = [
+  {
+    titleKey: 'features.f1.title' as const,
+    descKey:  'features.f1.desc' as const,
+    color:    'teal',
+    Icon:     ShieldCheck,
+  },
+  {
+    titleKey: 'features.f2.title' as const,
+    descKey:  'features.f2.desc' as const,
+    color:    'indigo',
+    Icon:     Package,
+  },
+  {
+    titleKey: 'features.f3.title' as const,
+    descKey:  'features.f3.desc' as const,
+    color:    'coral',
+    Icon:     ListOrdered,
+  },
+] as const;
+
+const colorMap = {
+  teal:   { bg: 'bg-[var(--teal)]/10',   text: 'text-[var(--teal)]',   border: 'border-[var(--teal)]/20',   hover: 'hover:border-[var(--teal)]/40' },
+  indigo: { bg: 'bg-[var(--indigo)]/10', text: 'text-[var(--indigo)]', border: 'border-[var(--indigo)]/20', hover: 'hover:border-[var(--indigo)]/40' },
+  coral:  { bg: 'bg-[var(--coral)]/10',  text: 'text-[var(--coral)]',  border: 'border-[var(--coral)]/20',  hover: 'hover:border-[var(--coral)]/40' },
+};
+---
+
+<section class="py-20 features-section">
+  <div class="max-w-6xl mx-auto px-4 sm:px-6">
+    <div class="text-center mb-14" data-reveal>
+      <h2 class="text-3xl font-bold text-[var(--txt)]">{t('features.title')}</h2>
+    </div>
+
+    <div class="grid md:grid-cols-3 gap-6">
+      {features.map((f, i) => {
+        const c = colorMap[f.color];
+        return (
+          <div
+            class={`p-6 rounded-2xl border ${c.border} ${c.hover} bg-white/[0.02] transition-all duration-300`}
+            data-reveal
+            data-delay={i * 120}
+          >
+            <div class={`mb-4 w-12 h-12 rounded-xl ${c.bg} flex items-center justify-center ${c.text}`}>
+              <f.Icon size={22} />
+            </div>
+            <h3 class={`text-lg font-semibold mb-2 ${c.text}`}>{t(f.titleKey)}</h3>
+            <p class="text-sm text-[var(--txt-muted)] leading-relaxed">{t(f.descKey)}</p>
+          </div>
+        );
+      })}
+    </div>
+  </div>
+</section>
+
+<script is:inline>
+  (function () {
+    var observer = new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) {
+        if (!entry.isIntersecting) return;
+        var el = entry.target;
+        var delay = parseInt(el.dataset.delay || '0', 10);
+        setTimeout(function () {
+          el.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+          el.style.opacity = '1';
+          el.style.transform = 'translateY(0)';
+        }, delay);
+        observer.unobserve(el);
+      });
+    }, { threshold: 0 });
+
+    document.querySelectorAll('.features-section [data-reveal]').forEach(function (el) {
+      el.style.opacity = '0';
+      el.style.transform = 'translateY(16px)';
+      observer.observe(el);
+    });
+  })();
+</script>

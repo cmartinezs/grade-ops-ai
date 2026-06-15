@@ -1,0 +1,37 @@
+---
+interface Props {
+  title: string;
+  subtitle: string;
+  accentColor?: 'teal' | 'coral' | 'indigo';
+}
+
+const { title, subtitle, accentColor = 'teal' } = Astro.props;
+
+const colorMap = {
+  teal:   'text-[var(--teal)]',
+  coral:  'text-[var(--coral)]',
+  indigo: 'text-[var(--indigo)]',
+};
+
+const glowMap = {
+  teal:   'bg-[var(--teal)]/5',
+  coral:  'bg-[var(--coral)]/5',
+  indigo: 'bg-[var(--indigo)]/5',
+};
+---
+
+<div class={`relative py-20 overflow-hidden ${glowMap[accentColor]}`}>
+  <!-- Decorative glow blob -->
+  <div class={`absolute top-0 left-1/2 -translate-x-1/2 w-96 h-48 blur-3xl opacity-20 pointer-events-none ${
+    accentColor === 'teal' ? 'bg-[var(--teal)]' : accentColor === 'coral' ? 'bg-[var(--coral)]' : 'bg-[var(--indigo)]'
+  }`}></div>
+
+  <div class="relative max-w-6xl mx-auto px-4 sm:px-6 text-center">
+    <h1 class={`text-4xl sm:text-5xl font-bold mb-4 ${colorMap[accentColor]}`}>
+      {title}
+    </h1>
+    <p class="text-lg text-[var(--txt-muted)] max-w-2xl mx-auto">
+      {subtitle}
+    </p>
+  </div>
+</div>

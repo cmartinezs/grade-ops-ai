@@ -1,0 +1,93 @@
+---
+import { useTranslations } from '../utils/i18n';
+import type { Lang } from '../utils/i18n';
+import type { UIKey } from '../i18n/es';
+import { CheckCircle2, Zap, Circle, ArrowRight } from 'lucide-astro';
+
+interface Props {
+  lang: Lang;
+}
+
+const { lang } = Astro.props;
+const t = useTranslations(lang);
+const base = import.meta.env.BASE_URL;
+const ls = lang === 'en' ? '/en' : '';
+
+const phases = [
+  { key: 'roadmap.p1', done: true,   active: false, Icon: CheckCircle2 },
+  { key: 'roadmap.p2', done: false,  active: true,  Icon: Zap },
+  { key: 'roadmap.p3', done: false,  active: false, Icon: Circle },
+  { key: 'roadmap.p4', done: false,  active: false, Icon: Circle },
+] as const;
+---
+
+<section class="py-20 roadmap-section">
+  <div class="max-w-6xl mx-auto px-4 sm:px-6">
+    <div class="text-center mb-12" data-reveal>
+      <h2 class="text-3xl font-bold text-[var(--txt)]">{t('roadmap.title')}</h2>
+    </div>
+
+    <div class="relative max-w-3xl mx-auto">
+      <div class="absolute top-5 left-0 right-0 h-px bg-white/10 hidden sm:block"></div>
+
+      <div class="grid sm:grid-cols-4 gap-6">
+        {phases.map((phase, i) => (
+          <div
+            class="flex flex-col items-center text-center"
+            data-reveal
+            data-delay={i * 100}
+          >
+            <div class={`relative z-10 w-10 h-10 rounded-full flex items-center justify-center mb-3 ${
+              phase.done
+                ? 'text-[var(--teal)]'
+                : phase.active
+                  ? 'text-[var(--coral)]'
+                  : 'text-[var(--txt-muted)]'
+            }`}>
+              <phase.Icon size={28} class={phase.active ? 'animate-pulse' : ''} />
+            </div>
+            <span class={`text-sm font-medium ${
+              phase.done ? 'text-[var(--teal)]' : phase.active ? 'text-[var(--coral)]' : 'text-[var(--txt-muted)]'
+            }`}>
+              {t(phase.key as UIKey)}
+            </span>
+          </div>
+        ))}
+      </div>
+    </div>
+
+    <div class="text-center mt-10" data-reveal>
+      <a
+        href={`${base}${ls}/development`}
+        class="inline-flex items-center gap-2 text-sm text-[var(--teal)] hover:text-[var(--txt)] transition-colors font-medium"
+      >
+        {t('roadmap.cta')}
+        <ArrowRight size={16} />
+      </a>
+    </div>
+  </div>
+</section>
+
+<script is:inline>
+  (function () {
+    var observer = new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) {
+        if (!entry.isIntersecting) return;
+        var el = entry.target;
+        var delay = parseInt(el.dataset.delay || '0', 10);
+        setTimeout(function () {
+          el.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+          el.style.opacity = '1';
+          el.style.transform = 'translateY(0)';
+        }, delay);
+        observer.unobserve(el);
+      });
+    }, { threshold: 0 });
+
+    document.querySelectorAll('.roadmap-section [data-reveal]').forEach(function (el) {
+      el.style.opacity = '0';
+      el.style.transform = 'translateY(16px)';
+      observer.observe(el);
+    });
+  })();
+</script>

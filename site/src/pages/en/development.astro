@@ -1,0 +1,262 @@
+---
+import Base from '../../layouts/Base.astro';
+import SectionHero from '../../components/SectionHero.astro';
+import { useTranslations } from '../../utils/i18n';
+
+const lang = 'en';
+const t = useTranslations(lang);
+
+const phases = [
+  {
+    name: 'Phase 1 — Foundation',
+    status: 'completed',
+    period: 'Wk 1–2',
+    items: [
+      { label: 'Product and architecture documentation', done: true },
+      { label: 'Repository scaffolding for all projects', done: true },
+      { label: 'Terraform infrastructure (Cloud Run, Cloud SQL, Storage)', done: true },
+      { label: 'Basic CI/CD configuration', done: true },
+      { label: 'Project website (this site)', done: true },
+    ],
+  },
+  {
+    name: 'Phase 2 — MVP',
+    status: 'active',
+    period: 'Wk 3–6',
+    items: [
+      { label: 'Domain API: core entities (Assessment, Rubric, Submission)', done: false },
+      { label: 'Database migrations (Flyway)', done: false },
+      { label: 'Open assessment pipeline (8 agents)', done: false },
+      { label: 'Closed assessment pipeline (5 agents)', done: false },
+      { label: 'Teacher workspace — approval flow', done: false },
+      { label: 'Student access via secure token', done: false },
+      { label: 'Evidence logging (AgentExecutionLog, ApprovalEvent)', done: false },
+    ],
+  },
+  {
+    name: 'Phase 3 — Pilots',
+    status: 'pending',
+    period: 'Wk 7–9',
+    items: [
+      { label: 'Testing with real educators', done: false },
+      { label: 'Iteration based on feedback', done: false },
+      { label: 'Operational metrics dashboard', done: false },
+      { label: 'Report export', done: false },
+    ],
+  },
+  {
+    name: 'Phase 4 — Packaging',
+    status: 'pending',
+    period: 'Wk 10–12',
+    items: [
+      { label: 'XPRIZE submission preparation', done: false },
+      { label: 'End-user documentation', done: false },
+      { label: 'Demo video and evidence', done: false },
+      { label: 'Agent cost optimization', done: false },
+    ],
+  },
+];
+
+const colorMap = {
+  completed: { badge: 'bg-[var(--teal)]/10 text-[var(--teal)] border-[var(--teal)]/20', border: 'border-[var(--teal)]/30', label: 'Completed' },
+  active:    { badge: 'bg-[var(--coral)]/10 text-[var(--coral)] border-[var(--coral)]/20', border: 'border-[var(--coral)]/30', label: 'In progress' },
+  pending:   { badge: 'bg-white/5 text-[var(--txt-muted)] border-white/10', border: 'border-white/10', label: 'Pending' },
+};
+
+const openAgents = ['Assessment', 'Rubric', 'Grading', 'Feedback', 'Learning Gap', 'Recovery', 'Teacher Report', 'Ops Evidence'];
+const closedAgents = ['Question Generation', 'Distractor Quality', 'Ambiguity Review', 'Assessment Assembly', 'Item Analytics'];
+
+const archDecisions = [
+  {
+    title: 'Modular monolith + separate agent runtime',
+    desc: 'API and Agents run as separate services on Cloud Run. The API orchestrates; Agents have no direct database access.',
+  },
+  {
+    title: 'Agents don\'t own data',
+    desc: 'Each agent receives a Command and returns a Result. Persistence is always the API\'s responsibility.',
+  },
+  {
+    title: 'Versioned prompts as files',
+    desc: '.st (StringTemplate) prompts live in resources/prompts/. They are never written inline in Java code.',
+  },
+];
+---
+
+<Base
+  title="Development — GradeOps AI"
+  description="Current development status of GradeOps AI: progress by phase, current week, and hackathon deadline."
+  lang={lang}
+  path="/development"
+>
+  <!-- Dot-grid background -->
+  <div class="fixed inset-0 pointer-events-none select-none" aria-hidden="true"
+       style="background-image: radial-gradient(circle, rgba(0,212,200,0.18) 1px, transparent 1px); background-size: 28px 28px; z-index: 0; opacity: 1;">
+  </div>
+
+  <SectionHero
+    title={t('dev.title')}
+    subtitle={t('dev.sub')}
+    accentColor="coral"
+  />
+
+  <div class="max-w-4xl mx-auto px-4 sm:px-6 mb-12">
+    <div class="flex items-center gap-4 p-4 rounded-xl border border-[var(--coral)]/20 bg-[var(--coral)]/5">
+      <div class="text-[var(--coral)]">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+        </svg>
+      </div>
+      <div class="text-sm text-[var(--txt-muted)]">
+        <span class="font-semibold text-[var(--coral)]">XPRIZE AI Hackathon 2026</span>
+        {' '}— Final submission: <span class="font-medium text-[var(--txt)]">August 17, 2026, 1:00 PM PDT</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="max-w-4xl mx-auto px-4 sm:px-6 py-4 space-y-8 pb-12">
+    {phases.map((phase, i) => {
+      const c = colorMap[phase.status as keyof typeof colorMap];
+      const completedCount = phase.items.filter(item => item.done).length;
+      const progressPct = Math.round((completedCount / phase.items.length) * 100);
+      return (
+        <div
+          class={`reveal rounded-2xl border ${c.border} overflow-hidden`}
+          style={`transition-delay: ${i * 120}ms`}
+        >
+          <div class="flex items-center justify-between px-6 py-4 border-b border-white/5">
+            <div class="flex items-center gap-3">
+              <h2 class="font-semibold text-[var(--txt)]">{phase.name}</h2>
+              <span class={`text-xs font-medium px-2.5 py-0.5 rounded-full border ${c.badge}`}>{c.label}</span>
+            </div>
+            <span class="text-xs text-[var(--txt-muted)]">{phase.period}</span>
+          </div>
+          <div class="px-6 py-3 border-b border-white/5">
+            <div class="flex items-center justify-between mb-1.5">
+              <span class="text-xs text-[var(--txt-muted)]">{completedCount} / {phase.items.length} tasks</span>
+              <span class="text-xs font-medium text-[var(--txt-muted)]">{progressPct}%</span>
+            </div>
+            <div class="h-1.5 bg-white/10 rounded-full overflow-hidden">
+              <div
+                class="h-full rounded-full"
+                style={`width: ${progressPct}%; background-color: ${phase.status === 'completed' ? 'var(--teal)' : phase.status === 'active' ? 'var(--coral)' : 'var(--txt-muted)'}`}
+              ></div>
+            </div>
+          </div>
+          <ul class="px-6 py-4 space-y-2.5">
+            {phase.items.map((item) => (
+              <li class="flex items-start gap-3 text-sm">
+                <span class={`mt-0.5 shrink-0 w-4 h-4 rounded border flex items-center justify-center ${item.done ? 'bg-[var(--teal)] border-[var(--teal)] text-white' : 'border-white/20'}`}>
+                  {item.done && (
+                    <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                      <polyline points="20 6 9 17 4 12"/>
+                    </svg>
+                  )}
+                </span>
+                <span class={item.done ? 'text-[var(--txt-muted)] line-through' : 'text-[var(--txt-muted)]'}>{item.label}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      );
+    })}
+  </div>
+
+  <!-- Agent Pipeline -->
+  <div class="max-w-4xl mx-auto px-4 sm:px-6 pb-12">
+    <h2 class="text-lg font-semibold text-[var(--txt)] mb-6">Agent Pipeline</h2>
+
+    <!-- Open Assessment -->
+    <div class="reveal mb-6">
+      <p class="text-xs font-medium text-[var(--teal)] uppercase tracking-wider mb-3">Open Assessment — 8 agents</p>
+      <!-- Desktop: horizontal chips -->
+      <div class="hidden sm:flex flex-wrap items-center gap-1.5">
+        {openAgents.map((agent, idx) => (
+          <>
+            <span class="px-3 py-1.5 rounded-full border border-[var(--teal)]/30 bg-[var(--teal)]/5 text-xs font-medium text-[var(--teal)] whitespace-nowrap">
+              {agent}
+            </span>
+            {idx < openAgents.length - 1 && (
+              <span class="text-[var(--txt-muted)] text-xs">→</span>
+            )}
+          </>
+        ))}
+      </div>
+      <!-- Mobile: vertical list -->
+      <div class="flex sm:hidden flex-col gap-1.5">
+        {openAgents.map((agent, idx) => (
+          <>
+            <span class="px-3 py-1.5 rounded-full border border-[var(--teal)]/30 bg-[var(--teal)]/5 text-xs font-medium text-[var(--teal)] self-start">
+              {agent}
+            </span>
+            {idx < openAgents.length - 1 && (
+              <span class="text-[var(--txt-muted)] text-xs pl-2">↓</span>
+            )}
+          </>
+        ))}
+      </div>
+    </div>
+
+    <!-- Closed Assessment -->
+    <div class="reveal">
+      <p class="text-xs font-medium text-[var(--indigo)] uppercase tracking-wider mb-3">Closed Assessment — 5 agents</p>
+      <!-- Desktop: horizontal chips -->
+      <div class="hidden sm:flex flex-wrap items-center gap-1.5">
+        {closedAgents.map((agent, idx) => (
+          <>
+            <span class="px-3 py-1.5 rounded-full border border-[var(--indigo)]/30 bg-[var(--indigo)]/5 text-xs font-medium text-[var(--indigo)] whitespace-nowrap">
+              {agent}
+            </span>
+            {idx < closedAgents.length - 1 && (
+              <span class="text-[var(--txt-muted)] text-xs">→</span>
+            )}
+          </>
+        ))}
+      </div>
+      <!-- Mobile: vertical list -->
+      <div class="flex sm:hidden flex-col gap-1.5">
+        {closedAgents.map((agent, idx) => (
+          <>
+            <span class="px-3 py-1.5 rounded-full border border-[var(--indigo)]/30 bg-[var(--indigo)]/5 text-xs font-medium text-[var(--indigo)] self-start">
+              {agent}
+            </span>
+            {idx < closedAgents.length - 1 && (
+              <span class="text-[var(--txt-muted)] text-xs pl-2">↓</span>
+            )}
+          </>
+        ))}
+      </div>
+    </div>
+  </div>
+
+  <!-- Architecture Decisions -->
+  <div class="max-w-4xl mx-auto px-4 sm:px-6 pb-20">
+    <h2 class="text-lg font-semibold text-[var(--txt)] mb-6">Architecture Decisions</h2>
+    <div class="grid gap-4 sm:grid-cols-3">
+      {archDecisions.map((decision) => (
+        <div class="reveal rounded-xl border border-[var(--teal)]/20 bg-white/[0.02] p-5">
+          <h3 class="text-sm font-semibold text-[var(--teal)] mb-2">{decision.title}</h3>
+          <p class="text-xs text-[var(--txt-muted)] leading-relaxed">{decision.desc}</p>
+        </div>
+      ))}
+    </div>
+  </div>
+
+<style>
+  .reveal { opacity: 0; transform: translateY(24px); transition: opacity 0.6s ease, transform 0.6s ease; }
+  .reveal.revealed { opacity: 1; transform: translateY(0); }
+  @media (prefers-reduced-motion: reduce) { .reveal { opacity: 1; transform: none; transition: none; } }
+</style>
+
+<script is:inline>
+(function () {
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  var els = document.querySelectorAll('.reveal');
+  var io = new IntersectionObserver(function (e) {
+    e.forEach(function (entry) {
+      if (entry.isIntersecting) { entry.target.classList.add('revealed'); io.unobserve(entry.target); }
+    });
+  }, { threshold: 0.12 });
+  els.forEach(function (el) { io.observe(el); });
+})();
+</script>
+</Base>

@@ -1,0 +1,265 @@
+---
+import Base from '../../layouts/Base.astro';
+import SectionHero from '../../components/SectionHero.astro';
+import { useTranslations } from '../../utils/i18n';
+
+const lang = 'en';
+const t = useTranslations(lang);
+
+const stack = [
+  {
+    category: 'Frontend',
+    color: 'teal',
+    icon: 'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6',
+    items: [
+      { name: 'Next.js 15', desc: 'App Router, Server Components, proxy rewrites to API' },
+      { name: 'TypeScript', desc: 'Static typing end-to-end; DTOs flow from API to Web' },
+      { name: 'Tailwind CSS', desc: 'Utility-first styling, responsive design' },
+    ],
+  },
+  {
+    category: 'API (domain)',
+    color: 'indigo',
+    icon: 'M5 12h14M12 5l7 7-7 7',
+    items: [
+      { name: 'Spring Boot 4 + Java 21', desc: 'Modular monolith with independent modules per domain' },
+      { name: 'PostgreSQL + Flyway', desc: 'Primary database; versioned migrations' },
+      { name: 'Spring Data JPA', desc: 'Domain entity persistence' },
+      { name: 'OIDC service-to-service', desc: 'Internal auth between API and Agents (Cloud Run)' },
+    ],
+  },
+  {
+    category: 'AI Agents',
+    color: 'coral',
+    icon: 'M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z',
+    items: [
+      { name: 'Spring Boot 4 + Spring AI', desc: 'Agent runtime, separate from the domain API' },
+      { name: 'Vertex AI Gemini', desc: 'Language model powering all agents' },
+      { name: 'StringTemplate (.st)', desc: 'Versioned prompts as files; never inline in Java' },
+      { name: 'AgentExecutionLog', desc: 'Each call generates a structured evidence record' },
+    ],
+  },
+  {
+    category: 'Infrastructure',
+    color: 'teal',
+    icon: 'M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z',
+    items: [
+      { name: 'Google Cloud Run', desc: 'Hosting for Web, API, and Agents (stateless containers)' },
+      { name: 'Cloud SQL (PostgreSQL)', desc: 'Managed database on GCP' },
+      { name: 'Cloud Storage', desc: 'Storage for assessment files and student submissions' },
+      { name: 'Secret Manager', desc: 'Credential and API key management' },
+      { name: 'Terraform', desc: 'Infrastructure as code; demo environment for hackathon' },
+      { name: 'GitHub Actions', desc: 'CI/CD for automatic build, test, and deploy' },
+    ],
+  },
+];
+
+const principles = [
+  { title: 'Types flow from API to Web', desc: 'The frontend mirrors API DTO contracts. No independent shared-type definitions in the frontend.' },
+  { title: 'Agents do not own entities', desc: 'Agents receive a Command, return a Result, and persist nothing directly. Persistence is the API\'s responsibility.' },
+  { title: 'Versioned prompts as files', desc: 'All prompts live in src/main/resources/prompts/ as .st (StringTemplate) files. Never inline in Java code.' },
+  { title: 'Teacher approval is explicit', desc: 'Every AI-generated output that affects grading, feedback, or student content requires an ApprovalEvent before being acted on.' },
+  { title: 'Evidence is core, not a side-effect', desc: 'AgentExecutionLog, ApprovalEvent, UsageEvent, RevenueEvent, and CostEvent are first-class entities.' },
+  { title: 'No student login in MVP', desc: 'Students access via signed token (AssessmentInvitation). LearnerRef is a minimal reference record, not an account.' },
+];
+
+const entities = [
+  { name: 'Assessment', purpose: 'Assessment cycle with mode (Open/Closed), learning objective, and workflow state' },
+  { name: 'Rubric', purpose: 'Teacher-approved criteria and weights; immutable once frozen' },
+  { name: 'StudentSubmission', purpose: 'Work submitted by the student; input for the grading agent' },
+  { name: 'GradeSuggestion', purpose: 'Agent grading suggestion; requires an ApprovalEvent to be finalized' },
+  { name: 'FeedbackDraft', purpose: 'AI-generated feedback; requires approval before delivery to the student' },
+  { name: 'AgentExecutionLog', purpose: 'Record of each execution: model, tokens, cost, approval status' },
+  { name: 'ApprovalEvent', purpose: 'Explicit teacher approval or rejection of any AI output' },
+  { name: 'AssessmentInvitation', purpose: 'Signed link for student access without an account' },
+  { name: 'Question', purpose: 'Question bank entry (Closed); versioned and curated by the teacher' },
+];
+
+const apiGroups = [
+  { group: 'Core assessment', resources: '/assessments, /rubrics, /submissions' },
+  { group: 'AI outputs', resources: '/grading-suggestions, /feedback-drafts, /learning-gaps, /recovery-activities' },
+  { group: 'Reports', resources: '/teacher-reports, /agent-runs, /evidence' },
+  { group: 'Closed assessment', resources: '/questions (bank), /assessment-attempts' },
+  { group: 'Platform', resources: '/auth/me, /organizations, /usage' },
+];
+
+const securityCards = [
+  {
+    title: 'Tenant isolation',
+    desc: 'Each teacher only accesses records from their organization. Violation → 404 response, never 403 (avoids revealing resource existence).',
+  },
+  {
+    title: 'Server-side AI calls only',
+    desc: 'The Gemini API key never reaches the frontend. Only the Agents service calls the model; Web has no access.',
+  },
+  {
+    title: 'Approval as a security control',
+    desc: 'High-impact AI outputs (rubric, grade, feedback) remain in pending state until an explicit ApprovalEvent finalizes them.',
+  },
+];
+---
+
+<Base
+  title="Technical — GradeOps AI"
+  description="Tech stack, design decisions, and system architecture of GradeOps AI."
+  lang={lang}
+  path="/technicals"
+>
+  <div class="fixed inset-0 pointer-events-none select-none" aria-hidden="true"
+       style="background-image: repeating-linear-gradient(0deg, rgba(255,255,255,0.06) 0px, rgba(255,255,255,0.06) 1px, transparent 1px, transparent 48px); z-index: 0;">
+  </div>
+
+  <SectionHero
+    title={t('tech.title')}
+    subtitle={t('tech.sub')}
+    accentColor="indigo"
+  />
+
+  <div class="max-w-4xl mx-auto px-4 sm:px-6 mb-16">
+    <div class="rounded-2xl border border-white/10 bg-white/[0.02] p-6 sm:p-8 font-mono text-sm overflow-x-auto">
+      <div class="text-[var(--txt-muted)] mb-4 text-xs uppercase tracking-widest">Architecture flow</div>
+      <pre class="reveal-lines text-[var(--txt)] leading-7 whitespace-pre"><span class="block">Browser → Web (Next.js)  →  API (Spring Boot)  →  Agents (Spring Boot / Spring AI)</span><span class="block">                                      ↓                          ↓</span><span class="block">                               Cloud SQL (PG)           Vertex AI Gemini</span><span class="block">                               Cloud Storage</span></pre>
+      <div class="mt-4 pt-4 border-t border-white/10 text-[var(--txt-muted)] text-xs leading-6 space-y-1">
+        <div><span class="text-[var(--teal)]">Web</span> — Teacher workspace, student token access, dashboards</div>
+        <div><span class="text-[var(--indigo)]">API</span> — Domain logic, state machine, persistence, billing</div>
+        <div><span class="text-[var(--coral)]">Agents</span> — Internal REST; OIDC service-to-service; not public</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="max-w-4xl mx-auto px-4 sm:px-6 mb-16 space-y-8">
+    <h2 class="text-2xl font-bold text-[var(--txt)]">Tech stack</h2>
+    <div class="grid sm:grid-cols-2 gap-6">
+      {stack.map((layer, i) => {
+        const colorMap = {
+          teal:   { title: 'text-[var(--teal)]',   border: 'border-[var(--teal)]/20',   dot: 'bg-[var(--teal)]' },
+          indigo: { title: 'text-[var(--indigo)]', border: 'border-[var(--indigo)]/20', dot: 'bg-[var(--indigo)]' },
+          coral:  { title: 'text-[var(--coral)]',  border: 'border-[var(--coral)]/20',  dot: 'bg-[var(--coral)]' },
+        };
+        const c = colorMap[layer.color as keyof typeof colorMap];
+        return (
+          <div class={`reveal rounded-2xl border ${c.border} p-5`} style={`transition-delay: ${i * 100}ms`}>
+            <div class={`flex items-center gap-2 mb-4 ${c.title} font-semibold`}>
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d={layer.icon}/>
+              </svg>
+              {layer.category}
+            </div>
+            <ul class="space-y-3">
+              {layer.items.map((item) => (
+                <li>
+                  <div class="flex items-start gap-2">
+                    <span class={`mt-2 shrink-0 w-1.5 h-1.5 rounded-full ${c.dot}`}></span>
+                    <div>
+                      <span class="text-sm font-medium text-[var(--txt)]">{item.name}</span>
+                      <p class="text-xs text-[var(--txt-muted)] mt-0.5">{item.desc}</p>
+                    </div>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </div>
+        );
+      })}
+    </div>
+  </div>
+
+  <!-- Core Domain Entities -->
+  <div class="reveal max-w-4xl mx-auto px-4 sm:px-6 mb-16">
+    <h2 class="text-2xl font-bold text-[var(--txt)] mb-6">Core Domain Entities</h2>
+    <div class="rounded-2xl border border-white/10 bg-white/[0.02] overflow-hidden">
+      <table class="w-full text-sm">
+        <thead>
+          <tr class="border-b border-white/10">
+            <th class="text-left px-5 py-3 text-xs uppercase tracking-widest text-[var(--txt-muted)] font-medium w-48">Entity</th>
+            <th class="text-left px-5 py-3 text-xs uppercase tracking-widest text-[var(--txt-muted)] font-medium">Purpose</th>
+          </tr>
+        </thead>
+        <tbody>
+          {entities.map((e, i) => (
+            <tr class={`border-b border-white/[0.05] ${i % 2 === 0 ? '' : 'bg-white/[0.01]'}`}>
+              <td class="px-5 py-3 font-mono text-sm text-[var(--teal)] whitespace-nowrap">{e.name}</td>
+              <td class="px-5 py-3 text-xs text-[var(--txt-muted)] leading-relaxed">{e.purpose}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- API Resources -->
+  <div class="reveal max-w-4xl mx-auto px-4 sm:px-6 mb-16">
+    <h2 class="text-2xl font-bold text-[var(--txt)] mb-6">API Resources</h2>
+    <div class="rounded-2xl border border-white/10 bg-white/[0.02] overflow-hidden">
+      <table class="w-full text-sm">
+        <thead>
+          <tr class="border-b border-white/10">
+            <th class="text-left px-5 py-3 text-xs uppercase tracking-widest text-[var(--txt-muted)] font-medium w-48">Group</th>
+            <th class="text-left px-5 py-3 text-xs uppercase tracking-widest text-[var(--txt-muted)] font-medium">Resources</th>
+          </tr>
+        </thead>
+        <tbody>
+          {apiGroups.map((g, i) => (
+            <tr class={`border-b border-white/[0.05] ${i % 2 === 0 ? '' : 'bg-white/[0.01]'}`}>
+              <td class="px-5 py-3 text-xs text-[var(--txt)] font-medium whitespace-nowrap">{g.group}</td>
+              <td class="px-5 py-3 font-mono text-xs text-[var(--indigo)]">{g.resources}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Security Principles -->
+  <div class="max-w-4xl mx-auto px-4 sm:px-6 mb-16">
+    <h2 class="text-2xl font-bold text-[var(--txt)] mb-6">Security Principles</h2>
+    <div class="grid sm:grid-cols-3 gap-4">
+      {securityCards.map((card, i) => (
+        <div class="reveal rounded-xl border border-[var(--coral)]/20 bg-white/[0.02] p-5" style={`transition-delay: ${i * 100}ms`}>
+          <h3 class="text-sm font-semibold text-[var(--coral)] mb-2">{card.title}</h3>
+          <p class="text-xs text-[var(--txt-muted)] leading-relaxed">{card.desc}</p>
+        </div>
+      ))}
+    </div>
+  </div>
+
+  <div class="max-w-4xl mx-auto px-4 sm:px-6 pb-20">
+    <h2 class="text-2xl font-bold text-[var(--txt)] mb-8">Design principles</h2>
+    <div class="grid sm:grid-cols-2 gap-4">
+      {principles.map((p) => (
+        <div class="rounded-xl border border-white/10 bg-white/[0.02] p-5">
+          <h3 class="text-sm font-semibold text-[var(--teal)] mb-2">{p.title}</h3>
+          <p class="text-xs text-[var(--txt-muted)] leading-relaxed">{p.desc}</p>
+        </div>
+      ))}
+    </div>
+  </div>
+
+<style>
+  .reveal { opacity: 0; transform: translateY(20px); transition: opacity 0.5s ease, transform 0.5s ease; }
+  .reveal.revealed { opacity: 1; transform: translateY(0); }
+  @media (prefers-reduced-motion: reduce) { .reveal { opacity: 1; transform: none; transition: none; } }
+  .reveal-lines > * { opacity: 0; transition: opacity 0.4s ease; }
+  .reveal-lines.revealed > * { opacity: 1; }
+  .reveal-lines.revealed > *:nth-child(1) { transition-delay: 0ms; }
+  .reveal-lines.revealed > *:nth-child(2) { transition-delay: 150ms; }
+  .reveal-lines.revealed > *:nth-child(3) { transition-delay: 300ms; }
+  .reveal-lines.revealed > *:nth-child(4) { transition-delay: 450ms; }
+  .reveal-lines.revealed > *:nth-child(5) { transition-delay: 600ms; }
+  .reveal-lines.revealed > *:nth-child(6) { transition-delay: 750ms; }
+  @media (prefers-reduced-motion: reduce) { .reveal-lines > * { opacity: 1; } }
+</style>
+
+<script is:inline>
+(function () {
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  var els = document.querySelectorAll('.reveal, .reveal-lines');
+  var io = new IntersectionObserver(function (e) {
+    e.forEach(function (entry) {
+      if (entry.isIntersecting) { entry.target.classList.add('revealed'); io.unobserve(entry.target); }
+    });
+  }, { threshold: 0.1 });
+  els.forEach(function (el) { io.observe(el); });
+})();
+</script>
+</Base>
