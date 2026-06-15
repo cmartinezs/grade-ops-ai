@@ -76,3 +76,31 @@ output "firebase_admin_sa_email" {
   description = "Email of the Firebase Admin SDK service account."
   value       = google_service_account.firebase_admin.email
 }
+
+# ---------------------------------------------------------------------------
+# Cloud Run — api service
+# ---------------------------------------------------------------------------
+
+output "api_url" {
+  description = "Cloud Run URL for the api service. Use as CORS_ALLOWED_ORIGINS source and as API_BASE_URL in Firebase App Hosting."
+  value       = google_cloud_run_v2_service.api.uri
+}
+
+# ---------------------------------------------------------------------------
+# Workload Identity Federation — GitHub Actions
+# ---------------------------------------------------------------------------
+
+output "wif_provider" {
+  description = "Full WIF provider resource name. Set as WIF_PROVIDER GitHub Secret."
+  value       = google_iam_workload_identity_pool_provider.github.name
+}
+
+output "github_actions_sa_email" {
+  description = "Email of the GitHub Actions service account. Set as WIF_SERVICE_ACCOUNT GitHub Secret."
+  value       = google_service_account.github_actions.email
+}
+
+output "artifact_registry_host" {
+  description = "Artifact Registry hostname for Docker push/pull."
+  value       = "${var.region}-docker.pkg.dev"
+}
