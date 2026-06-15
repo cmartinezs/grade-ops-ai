@@ -1,0 +1,75 @@
+# ─── Terraform state ──────────────────────────────────────────────────────────
+
+# Local state — use remote state (Cloud Storage backend) in production
+*.tfstate
+*.tfstate.*
+*.tfstate.backup
+
+# Terraform working directory
+**/.terraform/
+**/.terraform.lock.hcl
+
+# Plan files — may contain secrets; never commit
+*.tfplan
+*.plan
+
+
+# ─── Terraform variables ──────────────────────────────────────────────────────
+
+# tfvars contain project IDs and SA emails — keep out of version control
+terraform.tfvars
+*.auto.tfvars
+
+# Keep the example file so developers know what vars are needed
+!*.tfvars.example
+
+
+# ─── Secrets and credentials ──────────────────────────────────────────────────
+
+# Service account keys downloaded for local use
+*.json
+credentials/
+secrets/
+
+
+# ─── IDE and editor ───────────────────────────────────────────────────────────
+
+.idea/
+*.iml
+
+.vscode/settings.json
+.vscode/launch.json
+.vscode/tasks.json
+
+*.swp
+*.swo
+*~
+Session.vim
+
+\#*\#
+.\#*
+
+
+# ─── OS ───────────────────────────────────────────────────────────────────────
+
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+Thumbs.db
+ehthumbs.db
+desktop.ini
+
+
+# ─── AI assistant local state ─────────────────────────────────────────────────
+
+.claude/settings.local.json
+.codex/
+
+
+# ─── Temporary files ──────────────────────────────────────────────────────────
+
+*.tmp
+*.bak
+*.orig
