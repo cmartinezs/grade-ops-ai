@@ -100,6 +100,20 @@ Agents generate and suggest; they never finalize scores, silently modify approve
 - **Related-party revenue must be flagged.** `RevenueEvent.related_party` is required for hackathon evidence reporting.
 - **Gemini API key is server-side only.** Never expose it to the frontend.
 
+## Planning conventions
+
+Any planning scope that creates or modifies a service in `api/`, `agents/`, or `web/` **must include a corresponding infra task** that provisions the required Terraform resources. This task is never optional and must be DONE before the scope is marked complete.
+
+Minimum infra checklist per service introduced:
+
+| Introduced in | Required Terraform resources |
+|---------------|------------------------------|
+| `api/` | Cloud Run service, Cloud SQL database, Artifact Registry repo, IAM bindings, Secret Manager entries |
+| `agents/` | Cloud Run service, Artifact Registry repo, IAM bindings (Vertex AI, Secret Manager) |
+| `web/` | Cloud Run service (or static hosting), Artifact Registry repo, IAM bindings |
+
+When expanding or deepening a planning, always check `infra/terraform/environments/demo/` to verify that each service referenced in code scopes has a corresponding `.tf` file. If it doesn't, add an infra scope or task explicitly.
+
 ## Google Cloud targets
 
 Primary runtime: Cloud Run (web, api, agents). Database: Cloud SQL PostgreSQL. Files: Cloud Storage. Secrets: Secret Manager. Logs: Cloud Logging.
