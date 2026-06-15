@@ -15,13 +15,19 @@ variable "environment" {
   default     = "demo"
 }
 
-variable "api_cloud_run_sa_email" {
-  description = "Email of the service account attached to the api/ Cloud Run service. Used to grant Secret Manager access."
+variable "github_repo" {
+  description = "GitHub repository in owner/repo format (e.g. cmartinezs/grade-ops-ai)."
   type        = string
 }
 
+variable "db_password" {
+  description = "PostgreSQL password for the gradeops database user."
+  type        = string
+  sensitive   = true
+}
+
 variable "google_oauth_client_id" {
-  description = "OAuth 2.0 client ID for the Google sign-in provider (from GCP Console → APIs & Services → Credentials)."
+  description = "OAuth 2.0 client ID for the Google sign-in provider."
   type        = string
 }
 

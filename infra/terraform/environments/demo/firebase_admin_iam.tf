@@ -69,5 +69,5 @@ resource "google_secret_manager_secret_iam_member" "api_sa_secret_accessor" {
   project   = var.project_id
   secret_id = google_secret_manager_secret.firebase_admin_credentials.secret_id
   role      = "roles/secretmanager.secretAccessor"
-  member    = "serviceAccount:${var.api_cloud_run_sa_email}"
+  member    = "serviceAccount:${google_service_account.api.email}"
 }
