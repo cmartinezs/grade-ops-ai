@@ -1,0 +1,87 @@
+# ─── Build output ─────────────────────────────────────────────────────────────
+
+target/
+!.mvn/wrapper/maven-wrapper.jar
+!**/src/main/**/target/
+!**/src/test/**/target/
+
+
+# ─── IDE and editor ───────────────────────────────────────────────────────────
+
+# IntelliJ IDEA
+.idea/
+*.iws
+*.iml
+*.ipr
+
+# Eclipse
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings/
+.springBeans
+.sts4-cache
+
+# VS Code
+.vscode/settings.json
+.vscode/launch.json
+.vscode/tasks.json
+
+# Vim / Neovim
+*.swp
+*.swo
+*~
+Session.vim
+
+# Emacs
+\#*\#
+.\#*
+
+
+# ─── OS ───────────────────────────────────────────────────────────────────────
+
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+Thumbs.db
+ehthumbs.db
+desktop.ini
+
+
+# ─── Spring Boot / local config ───────────────────────────────────────────────
+
+# Local profile — contains DB credentials and Firebase key path; never commit
+src/main/resources/application-local.yml
+
+# Logs
+*.log
+logs/
+spring.log
+
+
+# ─── Secrets and credentials ──────────────────────────────────────────────────
+
+# Firebase Admin SDK service account key — download via Secret Manager
+*.json
+!**/src/**/*.json
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+
+# ─── AI assistant local state ─────────────────────────────────────────────────
+
+.claude/settings.local.json
+.codex/
+
+
+# ─── Temporary files ──────────────────────────────────────────────────────────
+
+*.tmp
+*.bak
+*.orig

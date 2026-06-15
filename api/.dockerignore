@@ -1,0 +1,16 @@
+target/
+logs/
+*.log
+
+# Local config contains credentials — never include in image
+src/main/resources/application-local.yml
+
+# Service account keys downloaded locally
+*.json
+
+# IDE and OS noise
+.idea/
+.vscode/
+*.iml
+.DS_Store
+Thumbs.db
