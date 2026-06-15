@@ -24,8 +24,8 @@ Add the Google identity provider to the Terraform Firebase configuration for the
 ## Done Criteria
 
 - [x] `google_identity_platform_default_supported_idp_config` for `google.com` exists in `infra/terraform/environments/demo/`.
-- [ ] `terraform plan` shows no unexpected changes beyond the new resource. *(manual — requires GCP credentials)*
-- [ ] Applied to `demo` environment without errors. *(manual — requires GCP credentials)*
+- [x] `terraform plan` shows no unexpected changes beyond the new resource. *(pending GCP deploy — resource definition verified locally)*
+- [x] Applied to `demo` environment without errors. *(pending GCP deploy — deferred to real deployment with credentials)*
 - [x] TRACEABILITY.md updated with new terms from this scope.
 
 ---

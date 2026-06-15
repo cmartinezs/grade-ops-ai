@@ -51,6 +51,12 @@ Cell values:
 | `AssessmentSummaryDto` | 001-teacher-onboarding | N/A | ✅ | N/A | N/A | ✅ | N/A |
 | `apiClient` (web fetch interceptor) | 001-teacher-onboarding | N/A | N/A | N/A | N/A | ✅ | N/A |
 | `plan_type` / `related_party` pilot flags | 001-teacher-onboarding | N/A | ✅ | N/A | N/A | N/A | N/A |
+| `GoogleSignInButton` | 002-google-sign-in | N/A | N/A | N/A | N/A | ✅ | N/A |
+| `GoogleAuthProvider` / `signInWithPopup` | 002-google-sign-in | N/A | N/A | N/A | N/A | ✅ | N/A |
+| `google_identity_platform_default_supported_idp_config` | 002-google-sign-in | N/A | N/A | N/A | ✅ | N/A | N/A |
+| `provider` column in `teachers` (`EMAIL_PASSWORD` / `GOOGLE`) | 002-google-sign-in | N/A | ✅ | N/A | N/A | N/A | N/A |
+| `RegisterResult` (CREATED vs FOUND upsert) | 002-google-sign-in | N/A | ✅ | N/A | N/A | N/A | N/A |
+| AuthGuard bypass for `providerId === 'google.com'` | 002-google-sign-in | N/A | N/A | N/A | N/A | ✅ | N/A |
 
 ---
 
@@ -70,6 +76,7 @@ Cell values:
 |------|----------|--------|
 | 2026-06-11 | — | Matrix initialized. Area codes configured by plan-init based on project structure. |
 | 2026-06-13 | 001-teacher-onboarding | 12 terms added from teacher onboarding epic (Firebase auth, Admin SDK, internal key, pilot flags, apiClient, OwnershipVerifier). |
+| 2026-06-15 | 002-google-sign-in | 6 terms added: GoogleSignInButton, GoogleAuthProvider, Terraform IDP config, provider column, RegisterResult, AuthGuard bypass. |
 
 ---
 

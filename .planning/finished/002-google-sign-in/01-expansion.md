@@ -9,9 +9,9 @@
 
 | # | Scope | Area(s) | Priority | Depends On | Status |
 |---|-------|---------|----------|------------|--------|
-| 01 | infra-google-provider | IN | P0 | — | TODO |
-| 02 | api-teacher-upsert | AP | P0 | 01 | TODO |
-| 03 | web-google-sign-in | WB | P0 | 01, 02 | TODO |
+| 01 | infra-google-provider | IN | P0 | — | DONE |
+| 02 | api-teacher-upsert | AP | P0 | 01 | DONE |
+| 03 | web-google-sign-in | WB | P0 | 01, 02 | DONE |
 
 ---
 

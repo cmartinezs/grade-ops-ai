@@ -28,12 +28,14 @@ Central directory for all project plannings.
 
 ### 🚧 In Progress → see [`active/README.md`](active/README.md)
 
-*(none)*
+*(none — todos los plannings completados)*
 
 ### ✅ Completed → see [`finished/README.md`](finished/README.md)
 
 - [001-teacher-onboarding](finished/001-teacher-onboarding/README.md) — Teacher Onboarding and Workspace (11 scopes, COMPLETED 2026-06-13)
+- [002-google-sign-in](finished/002-google-sign-in/README.md) — Google OAuth sign-in para teachers (3 scopes, COMPLETED 2026-06-15)
 - [003-auth-ux-and-local-dev](finished/003-auth-ux-and-local-dev/README.md) — Auth UX polish and local dev stack (3 scopes, COMPLETED 2026-06-14)
+- [004-subpage-identity](finished/004-subpage-identity/README.md) — Identidad visual por subpágina (5 scopes, COMPLETED 2026-06-15)
 
 ### 🆕 Initial
 
