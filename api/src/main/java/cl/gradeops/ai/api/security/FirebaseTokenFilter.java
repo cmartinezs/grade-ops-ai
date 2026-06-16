@@ -1,7 +1,7 @@
 package cl.gradeops.ai.api.security;
 
-import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.FirebaseToken;
+import cl.gradeops.ai.api.port.AuthPort;
+import cl.gradeops.ai.api.port.TeacherIdentity;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -21,10 +21,10 @@ public class FirebaseTokenFilter extends OncePerRequestFilter {
 
     private static final Logger log = LoggerFactory.getLogger(FirebaseTokenFilter.class);
 
-    private final FirebaseAuth firebaseAuth;
+    private final AuthPort authPort;
 
-    public FirebaseTokenFilter(FirebaseAuth firebaseAuth) {
-        this.firebaseAuth = firebaseAuth;
+    public FirebaseTokenFilter(AuthPort authPort) {
+        this.authPort = authPort;
     }
 
     @Override
@@ -42,21 +42,16 @@ public class FirebaseTokenFilter extends OncePerRequestFilter {
         String token = header.substring(7);
 
         try {
-            FirebaseToken firebaseToken = firebaseAuth.verifyIdToken(token, true);
-            String uid = firebaseToken.getUid();
-            String email = firebaseToken.getEmail();
+            TeacherIdentity identity = authPort.verifyToken(token);
+            // Stored for EmailVerifiedFilter; keyed "teacherIdentity" (was "firebaseToken")
+            request.setAttribute("teacherIdentity", identity);
 
-            // Store the decoded token as a request attribute so downstream filters
-            // (e.g. EmailVerifiedFilter) can read claims without re-verifying the token.
-            request.setAttribute("firebaseToken", firebaseToken);
-
-            AuthenticatedTeacher principal = new AuthenticatedTeacher(uid, email);
+            AuthenticatedTeacher principal = new AuthenticatedTeacher(identity.uid(), identity.email());
             UsernamePasswordAuthenticationToken authentication =
                     new UsernamePasswordAuthenticationToken(principal, null, Collections.emptyList());
-
             SecurityContextHolder.getContext().setAuthentication(authentication);
         } catch (Exception e) {
-            log.debug("Firebase token verification failed: {}", e.getMessage());
+            log.debug("Token verification failed: {}", e.getMessage());
             SecurityContextHolder.clearContext();
         }
 

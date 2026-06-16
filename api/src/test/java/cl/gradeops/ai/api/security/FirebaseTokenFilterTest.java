@@ -14,6 +14,8 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.util.Map;
+
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -25,11 +27,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @Import(FirebaseTestConfig.class)
 class FirebaseTokenFilterTest {
 
-    @Autowired
-    MockMvc mockMvc;
-
-    @Autowired
-    FirebaseAuth firebaseAuth;
+    @Autowired MockMvc mockMvc;
+    @Autowired FirebaseAuth firebaseAuth;
 
     @BeforeEach
     void setUp() {
@@ -39,17 +38,10 @@ class FirebaseTokenFilterTest {
 
     @Test
     void valid_token_sets_authenticated_teacher_principal() throws Exception {
-        FirebaseToken mockToken = mock(FirebaseToken.class);
-        when(mockToken.getUid()).thenReturn("uid-teacher-1");
-        when(mockToken.getEmail()).thenReturn("teacher@school.com");
-        when(mockToken.getName()).thenReturn("Teacher");
-        when(mockToken.isEmailVerified()).thenReturn(true);
+        FirebaseToken mockToken = buildMockToken("uid-teacher-1", "teacher@school.com", true);
         when(firebaseAuth.verifyIdToken("valid-token", true)).thenReturn(mockToken);
         when(firebaseAuth.verifyIdToken("valid-token")).thenReturn(mockToken);
 
-        // Any protected endpoint will return 200 when principal is set
-        // /auth/register is public; use it here to confirm filter does not block valid requests.
-        // The filter sets the principal; the downstream 401 only fires when auth is missing.
         mockMvc.perform(post("/auth/register")
                         .header("Authorization", "Bearer valid-token")
                         .contentType("application/json")
@@ -66,7 +58,6 @@ class FirebaseTokenFilterTest {
         FirebaseAuthException revokedException = mock(FirebaseAuthException.class);
         when(firebaseAuth.verifyIdToken("revoked-token", true)).thenThrow(revokedException);
 
-        // A protected endpoint (anything not in permitAll) must return 401
         mockMvc.perform(get("/some/protected/resource")
                         .header("Authorization", "Bearer revoked-token"))
                 .andExpect(status().isUnauthorized());
@@ -77,13 +68,9 @@ class FirebaseTokenFilterTest {
     @Test
     void missing_authorization_header_public_path_returns_200_and_protected_returns_401()
             throws Exception {
-        FirebaseToken mockToken = mock(FirebaseToken.class);
-        when(mockToken.getUid()).thenReturn("uid-no-header");
-        when(mockToken.getEmail()).thenReturn("noheader@school.com");
-        when(mockToken.getName()).thenReturn("NoHeader");
+        FirebaseToken mockToken = buildMockToken("uid-no-header", "noheader@school.com", true);
         when(firebaseAuth.verifyIdToken("any-token")).thenReturn(mockToken);
 
-        // Public path — no token needed
         mockMvc.perform(post("/auth/register")
                         .contentType("application/json")
                         .content("""
@@ -91,7 +78,6 @@ class FirebaseTokenFilterTest {
                                 """))
                 .andExpect(status().is2xxSuccessful());
 
-        // Protected path — no token → 401
         mockMvc.perform(get("/some/protected/resource"))
                 .andExpect(status().isUnauthorized());
 
@@ -104,11 +90,21 @@ class FirebaseTokenFilterTest {
         when(firebaseAuth.verifyIdToken("malformed", true))
                 .thenThrow(new IllegalArgumentException("bad token format"));
 
-        // Should not throw; context must be cleared → protected endpoint returns 401
         mockMvc.perform(get("/some/protected/resource")
                         .header("Authorization", "Bearer malformed"))
                 .andExpect(status().isUnauthorized());
 
         verify(firebaseAuth).verifyIdToken("malformed", true);
+    }
+
+    private FirebaseToken buildMockToken(String uid, String email, boolean emailVerified) {
+        FirebaseToken token = mock(FirebaseToken.class);
+        when(token.getUid()).thenReturn(uid);
+        when(token.getEmail()).thenReturn(email);
+        when(token.isEmailVerified()).thenReturn(emailVerified);
+        when(token.getName()).thenReturn("Test Teacher");
+        when(token.getClaims()).thenReturn(Map.of(
+                "firebase", Map.of("sign_in_provider", "password")));
+        return token;
     }
 }
