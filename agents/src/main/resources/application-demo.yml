@@ -1,10 +1,12 @@
+# agents/src/main/resources/application-demo.yml
+# Active when SPRING_PROFILES_ACTIVE=demo (Cloud Run + Vertex AI via Google GenAI unified client)
+
 spring:
   ai:
-    vertex:
-      ai:
-        gemini:
-          project-id: ${GOOGLE_CLOUD_PROJECT}
-          location: ${VERTEX_AI_LOCATION:us-central1}
-          chat:
-            options:
-              model: ${AI_MODEL_NAME}
+    google:
+      genai:
+        project-id: ${GOOGLE_CLOUD_PROJECT}
+        location: ${VERTEX_AI_LOCATION:us-central1}
+        chat:
+          options:
+            model: ${AI_MODEL_NAME}
