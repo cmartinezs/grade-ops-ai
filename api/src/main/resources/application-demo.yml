@@ -1,0 +1,7 @@
+# Active when SPRING_PROFILES_ACTIVE=demo (Google Cloud Run)
+
+gcs:
+  bucket: ${GCS_BUCKET:gradeops-demo}
+
+# Cloud SQL connection handled by postgres-socket-factory via DATABASE_URL env var
+# Firebase credentials come from ADC (Cloud Run service account — no extra config needed)
