@@ -2,9 +2,10 @@ FROM eclipse-temurin:21-jdk-jammy AS builder
 WORKDIR /app
 COPY .mvn .mvn
 COPY mvnw pom.xml ./
-RUN ./mvnw dependency:go-offline -q
+ARG MAVEN_PROFILE=beta
+RUN ./mvnw dependency:go-offline -q -P${MAVEN_PROFILE}
 COPY src src
-RUN ./mvnw package -DskipTests -q
+RUN ./mvnw package -DskipTests -q -P${MAVEN_PROFILE}
 
 FROM eclipse-temurin:21-jre-jammy
 WORKDIR /app
