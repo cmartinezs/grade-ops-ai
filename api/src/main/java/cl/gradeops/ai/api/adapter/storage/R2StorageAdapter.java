@@ -13,6 +13,7 @@ import software.amazon.awssdk.services.s3.model.*;
 import software.amazon.awssdk.services.s3.presigner.S3Presigner;
 import software.amazon.awssdk.services.s3.presigner.model.GetObjectPresignRequest;
 
+import jakarta.annotation.PreDestroy;
 import java.net.URI;
 import java.time.Duration;
 
@@ -74,5 +75,11 @@ public class R2StorageAdapter implements StoragePort {
         } catch (java.net.URISyntaxException e) {
             throw new RuntimeException("Failed to build presigned URL", e);
         }
+    }
+
+    @PreDestroy
+    public void close() {
+        s3.close();
+        presigner.close();
     }
 }
