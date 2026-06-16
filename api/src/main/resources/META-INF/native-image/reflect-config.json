@@ -1,0 +1,20 @@
+[
+  {
+    "name": "com.google.firebase.auth.FirebaseToken",
+    "allDeclaredMethods": true,
+    "allDeclaredFields": true,
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "com.google.firebase.auth.internal.GetAccountInfoResponse",
+    "allDeclaredMethods": true,
+    "allDeclaredFields": true,
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "com.google.firebase.auth.internal.GetAccountInfoResponse$User",
+    "allDeclaredMethods": true,
+    "allDeclaredFields": true,
+    "allDeclaredConstructors": true
+  }
+]
