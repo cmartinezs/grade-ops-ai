@@ -1,6 +1,6 @@
 package cl.gradeops.ai.api.security;
 
-import com.google.firebase.auth.FirebaseToken;
+import cl.gradeops.ai.api.port.TeacherIdentity;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -38,8 +38,8 @@ class EmailVerifiedFilterTest {
 
     @Test
     void unverified_token_on_protected_endpoint_returns_401() throws Exception {
-        FirebaseToken token = unverifiedToken();
-        when(request.getAttribute("firebaseToken")).thenReturn(token);
+        TeacherIdentity identity = unverifiedIdentity();
+        when(request.getAttribute("teacherIdentity")).thenReturn(identity);
         when(request.getRequestURI()).thenReturn("/workspace/assessments");
 
         filter.doFilterInternal(request, response, filterChain);
@@ -53,8 +53,8 @@ class EmailVerifiedFilterTest {
 
     @Test
     void verified_token_on_protected_endpoint_proceeds() throws Exception {
-        FirebaseToken token = verifiedToken();
-        when(request.getAttribute("firebaseToken")).thenReturn(token);
+        TeacherIdentity identity = verifiedIdentity();
+        when(request.getAttribute("teacherIdentity")).thenReturn(identity);
         when(request.getRequestURI()).thenReturn("/workspace/assessments");
 
         filter.doFilterInternal(request, response, filterChain);
@@ -68,8 +68,8 @@ class EmailVerifiedFilterTest {
     @ParameterizedTest
     @ValueSource(strings = {"/auth/register", "/auth/verify/resend"})
     void unverified_token_on_whitelisted_path_proceeds(String path) throws Exception {
-        FirebaseToken token = unverifiedToken();
-        when(request.getAttribute("firebaseToken")).thenReturn(token);
+        TeacherIdentity identity = unverifiedIdentity();
+        when(request.getAttribute("teacherIdentity")).thenReturn(identity);
         when(request.getRequestURI()).thenReturn(path);
 
         filter.doFilterInternal(request, response, filterChain);
@@ -82,7 +82,7 @@ class EmailVerifiedFilterTest {
 
     @Test
     void no_token_attribute_filter_skips() throws Exception {
-        when(request.getAttribute("firebaseToken")).thenReturn(null);
+        when(request.getAttribute("teacherIdentity")).thenReturn(null);
         when(request.getRequestURI()).thenReturn("/workspace/assessments");
 
         filter.doFilterInternal(request, response, filterChain);
@@ -93,15 +93,11 @@ class EmailVerifiedFilterTest {
 
     // --- Helpers ---
 
-    private FirebaseToken unverifiedToken() {
-        FirebaseToken token = mock(FirebaseToken.class);
-        when(token.isEmailVerified()).thenReturn(false);
-        return token;
+    private TeacherIdentity unverifiedIdentity() {
+        return new TeacherIdentity("uid-1", "teacher@school.com", false, "Teacher", "EMAIL_PASSWORD");
     }
 
-    private FirebaseToken verifiedToken() {
-        FirebaseToken token = mock(FirebaseToken.class);
-        when(token.isEmailVerified()).thenReturn(true);
-        return token;
+    private TeacherIdentity verifiedIdentity() {
+        return new TeacherIdentity("uid-1", "teacher@school.com", true, "Teacher", "EMAIL_PASSWORD");
     }
 }

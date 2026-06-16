@@ -1,7 +1,7 @@
 package cl.gradeops.ai.api.security;
 
+import cl.gradeops.ai.api.port.TeacherIdentity;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.firebase.auth.FirebaseToken;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -14,20 +14,6 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
-/**
- * Rejects authenticated requests whose Firebase ID token has {@code email_verified = false}.
- *
- * <p>This filter must run <em>after</em> {@code FirebaseTokenFilter} in the filter chain.
- * {@code FirebaseTokenFilter} is responsible for verifying the raw Bearer token and storing the
- * decoded {@link FirebaseToken} as a request attribute named {@code "firebaseToken"} via:
- * <pre>request.setAttribute("firebaseToken", decodedToken);</pre>
- *
- * <p>Whitelisted paths (always allowed regardless of email verification status):
- * <ul>
- *   <li>{@code /auth/register}</li>
- *   <li>{@code /auth/verify/resend}</li>
- * </ul>
- */
 @Component
 public class EmailVerifiedFilter extends OncePerRequestFilter {
 
@@ -43,29 +29,23 @@ public class EmailVerifiedFilter extends OncePerRequestFilter {
                                     HttpServletResponse response,
                                     FilterChain filterChain) throws ServletException, IOException {
 
-        FirebaseToken decodedToken = (FirebaseToken) request.getAttribute("firebaseToken");
+        TeacherIdentity identity = (TeacherIdentity) request.getAttribute("teacherIdentity");
 
-        // No token attribute → unauthenticated request; not this filter's concern.
-        if (decodedToken == null) {
+        if (identity == null) {
             filterChain.doFilter(request, response);
             return;
         }
 
-        String path = request.getRequestURI();
-
-        // Whitelisted paths always proceed.
-        if (isWhitelisted(path)) {
+        if (isWhitelisted(request.getRequestURI())) {
             filterChain.doFilter(request, response);
             return;
         }
 
-        // Reject requests from users who have not verified their email.
-        if (!decodedToken.isEmailVerified()) {
+        if (!identity.emailVerified()) {
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             response.setContentType(MediaType.APPLICATION_JSON_VALUE);
             response.getWriter().write(
-                    OBJECT_MAPPER.writeValueAsString(Map.of("error", "EMAIL_NOT_VERIFIED"))
-            );
+                    OBJECT_MAPPER.writeValueAsString(Map.of("error", "EMAIL_NOT_VERIFIED")));
             return;
         }
 
