@@ -9,14 +9,19 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import java.io.ByteArrayInputStream;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 
 @Configuration
 public class FirebaseConfig {
 
     @Value("${firebase.credentials-path:}")
     private String credentialsPath;
+
+    @Value("${firebase.credentials-json:}")
+    private String credentialsJson;
 
     @Bean
     @ConditionalOnMissingBean(FirebaseAuth.class)
@@ -26,12 +31,17 @@ public class FirebaseConfig {
         }
 
         GoogleCredentials credentials;
-        if (credentialsPath != null && !credentialsPath.isBlank()) {
+        if (credentialsJson != null && !credentialsJson.isBlank()) {
+            // Render / Beta: FIREBASE_ADMIN_CREDENTIALS env var contains JSON string
+            credentials = GoogleCredentials.fromStream(
+                    new ByteArrayInputStream(credentialsJson.getBytes(StandardCharsets.UTF_8)));
+        } else if (credentialsPath != null && !credentialsPath.isBlank()) {
+            // Local dev: path to service account key file
             try (var in = new FileInputStream(credentialsPath)) {
                 credentials = GoogleCredentials.fromStream(in);
             }
         } else {
-            // Production: ADC (Cloud Run service account, GOOGLE_APPLICATION_CREDENTIALS, etc.)
+            // Cloud Run / Demo: Application Default Credentials (service account attached)
             credentials = GoogleCredentials.getApplicationDefault();
         }
 
