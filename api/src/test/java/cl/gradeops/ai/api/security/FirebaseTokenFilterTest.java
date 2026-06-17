@@ -42,7 +42,7 @@ class FirebaseTokenFilterTest {
         when(firebaseAuth.verifyIdToken("valid-token", true)).thenReturn(mockToken);
         when(firebaseAuth.verifyIdToken("valid-token")).thenReturn(mockToken);
 
-        mockMvc.perform(post("/auth/register")
+        mockMvc.perform(post("/api/v1/auth/register")
                         .header("Authorization", "Bearer valid-token")
                         .contentType("application/json")
                         .content("""
@@ -71,7 +71,7 @@ class FirebaseTokenFilterTest {
         FirebaseToken mockToken = buildMockToken("uid-no-header", "noheader@school.com", true);
         when(firebaseAuth.verifyIdToken("any-token")).thenReturn(mockToken);
 
-        mockMvc.perform(post("/auth/register")
+        mockMvc.perform(post("/api/v1/auth/register")
                         .contentType("application/json")
                         .content("""
                                 {"idToken": "any-token", "name": "NoHeader"}

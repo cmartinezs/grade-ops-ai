@@ -57,7 +57,7 @@ class AssessmentControllerTest {
         when(firebaseAuth.verifyIdToken("valid-token", true)).thenReturn(mockToken);
         when(assessmentService.listForTeacher("uid-teacher-1")).thenReturn(List.of());
 
-        mockMvc.perform(get("/assessments")
+        mockMvc.perform(get("/api/v1/assessments")
                         .header("Authorization", "Bearer valid-token"))
                 .andExpect(status().isOk())
                 .andExpect(content().json("[]"));
@@ -65,7 +65,7 @@ class AssessmentControllerTest {
 
     @Test
     void unauthenticated_request_returns_401() throws Exception {
-        mockMvc.perform(get("/assessments"))
+        mockMvc.perform(get("/api/v1/assessments"))
                 .andExpect(status().isUnauthorized());
     }
 
@@ -85,7 +85,7 @@ class AssessmentControllerTest {
 
         when(assessmentService.listForTeacher("uid-teacher-2")).thenReturn(List.of(a1, a2));
 
-        mockMvc.perform(get("/assessments")
+        mockMvc.perform(get("/api/v1/assessments")
                         .header("Authorization", "Bearer valid-token-2"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(2))

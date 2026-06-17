@@ -47,7 +47,7 @@ class AuthControllerTest {
         when(mockToken.getName()).thenReturn("Grace Hopper");
         when(firebaseAuth.verifyIdToken("valid-token")).thenReturn(mockToken);
 
-        mockMvc.perform(post("/auth/register")
+        mockMvc.perform(post("/api/v1/auth/register")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {"idToken": "valid-token", "name": "Grace Hopper"}
@@ -63,7 +63,7 @@ class AuthControllerTest {
         when(firebaseAuth.verifyIdToken(anyString()))
                 .thenThrow(mock(FirebaseAuthException.class));
 
-        mockMvc.perform(post("/auth/register")
+        mockMvc.perform(post("/api/v1/auth/register")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {"idToken": "bad-token", "name": "Nobody"}
@@ -74,7 +74,7 @@ class AuthControllerTest {
 
     @Test
     void blank_idToken_returns_422_with_validation_error() throws Exception {
-        mockMvc.perform(post("/auth/register")
+        mockMvc.perform(post("/api/v1/auth/register")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {"idToken": "  ", "name": "Teacher"}
@@ -85,7 +85,7 @@ class AuthControllerTest {
 
     @Test
     void missing_idToken_returns_422_with_validation_error() throws Exception {
-        mockMvc.perform(post("/auth/register")
+        mockMvc.perform(post("/api/v1/auth/register")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {"name": "Teacher"}
@@ -99,7 +99,7 @@ class AuthControllerTest {
         when(firebaseAuth.verifyIdToken(anyString()))
                 .thenThrow(mock(FirebaseAuthException.class));
 
-        mockMvc.perform(post("/auth/register")
+        mockMvc.perform(post("/api/v1/auth/register")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {"idToken": "bad", "name": "X"}
@@ -117,7 +117,7 @@ class AuthControllerTest {
         when(mockToken.isEmailVerified()).thenReturn(true);
         when(firebaseAuth.verifyIdToken("valid-signout-token", true)).thenReturn(mockToken);
 
-        mockMvc.perform(post("/auth/sign-out")
+        mockMvc.perform(post("/api/v1/auth/sign-out")
                         .header("Authorization", "Bearer valid-signout-token"))
                 .andExpect(status().isNoContent());
 
@@ -126,7 +126,7 @@ class AuthControllerTest {
 
     @Test
     void sign_out_unauthenticated_returns_401() throws Exception {
-        mockMvc.perform(post("/auth/sign-out"))
+        mockMvc.perform(post("/api/v1/auth/sign-out"))
                 .andExpect(status().isUnauthorized());
 
         verify(firebaseAuth, never()).revokeRefreshTokens(anyString());
@@ -140,14 +140,14 @@ class AuthControllerTest {
         when(mockToken.getName()).thenReturn("Grace Hopper");
         when(firebaseAuth.verifyIdToken("valid-token")).thenReturn(mockToken);
 
-        mockMvc.perform(post("/auth/register")
+        mockMvc.perform(post("/api/v1/auth/register")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {"idToken": "valid-token", "name": "Grace Hopper"}
                                 """))
                 .andExpect(status().isCreated());
 
-        mockMvc.perform(post("/auth/register")
+        mockMvc.perform(post("/api/v1/auth/register")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {"idToken": "valid-token", "name": "Grace Hopper"}
@@ -167,7 +167,7 @@ class AuthControllerTest {
                 "firebase", Map.of("sign_in_provider", "google.com")));
         when(firebaseAuth.verifyIdToken("google-token")).thenReturn(mockToken);
 
-        mockMvc.perform(post("/auth/register")
+        mockMvc.perform(post("/api/v1/auth/register")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {"idToken": "google-token", "name": null}
@@ -190,14 +190,14 @@ class AuthControllerTest {
                 "firebase", Map.of("sign_in_provider", "google.com")));
         when(firebaseAuth.verifyIdToken("google-token-2")).thenReturn(mockToken);
 
-        mockMvc.perform(post("/auth/register")
+        mockMvc.perform(post("/api/v1/auth/register")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {"idToken": "google-token-2", "name": null}
                                 """))
                 .andExpect(status().isCreated());
 
-        mockMvc.perform(post("/auth/register")
+        mockMvc.perform(post("/api/v1/auth/register")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {"idToken": "google-token-2", "name": null}
