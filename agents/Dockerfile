@@ -1,14 +1,18 @@
-FROM ghcr.io/graalvm/native-image-community:21 AS builder
+FROM eclipse-temurin:21-jdk-jammy AS builder
 WORKDIR /app
 COPY .mvn .mvn
 COPY mvnw pom.xml ./
 ARG MAVEN_PROFILE=beta
-RUN ./mvnw dependency:go-offline -q -Pnative,${MAVEN_PROFILE}
+RUN ./mvnw dependency:go-offline -q -P${MAVEN_PROFILE}
 COPY src src
-RUN ./mvnw native:compile -DskipTests -q -Pnative,${MAVEN_PROFILE}
+RUN ./mvnw package -DskipTests -q -P${MAVEN_PROFILE}
 
-FROM debian:bookworm-slim
+FROM eclipse-temurin:21-jre-jammy
 WORKDIR /app
-COPY --from=builder /app/target/grade-ops-agents ./app
+COPY --from=builder /app/target/*.jar app.jar
 EXPOSE 8081
-ENTRYPOINT ["./app"]
+ENTRYPOINT ["java", \
+  "-XX:TieredStopAtLevel=1", \
+  "-Dspring.jmx.enabled=false", \
+  "-Dspring.backgroundpreinitializer.ignore=true", \
+  "-jar", "app.jar"]
