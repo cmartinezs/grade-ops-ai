@@ -73,6 +73,28 @@ class AuthControllerTest {
     }
 
     @Test
+    void blank_idToken_returns_422_with_validation_error() throws Exception {
+        mockMvc.perform(post("/auth/register")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"idToken": "  ", "name": "Teacher"}
+                                """))
+                .andExpect(status().isUnprocessableEntity())
+                .andExpect(jsonPath("$.error").value("VALIDATION_ERROR"));
+    }
+
+    @Test
+    void missing_idToken_returns_422_with_validation_error() throws Exception {
+        mockMvc.perform(post("/auth/register")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"name": "Teacher"}
+                                """))
+                .andExpect(status().isUnprocessableEntity())
+                .andExpect(jsonPath("$.error").value("VALIDATION_ERROR"));
+    }
+
+    @Test
     void invalid_token_response_has_error_and_no_message_field() throws Exception {
         when(firebaseAuth.verifyIdToken(anyString()))
                 .thenThrow(mock(FirebaseAuthException.class));

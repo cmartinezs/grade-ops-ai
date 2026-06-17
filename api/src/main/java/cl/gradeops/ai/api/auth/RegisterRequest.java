@@ -1,3 +1,8 @@
 package cl.gradeops.ai.api.auth;
 
-public record RegisterRequest(String idToken, String name) {}
+import jakarta.validation.constraints.NotBlank;
+
+public record RegisterRequest(
+        @NotBlank String idToken,
+        String name
+) {}
