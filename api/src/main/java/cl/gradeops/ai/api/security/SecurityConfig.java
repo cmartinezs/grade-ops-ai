@@ -47,8 +47,8 @@ public class SecurityConfig {
             ))
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/internal/**").permitAll()
-                .requestMatchers("/auth/register").permitAll()
-                .requestMatchers("/auth/verify/resend").permitAll()
+                .requestMatchers("/api/v1/auth/register").permitAll()
+                .requestMatchers("/api/v1/auth/verify/resend").permitAll()
                 .anyRequest().authenticated()
             )
             .addFilterBefore(firebaseTokenFilter, UsernamePasswordAuthenticationFilter.class)
