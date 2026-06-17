@@ -1,3 +1,5 @@
+import { apiClient } from "./client";
+
 export interface RegisterTeacherResponse {
   firebaseUid: string;
 }
@@ -6,9 +8,8 @@ export async function registerTeacher(
   idToken: string,
   name: string
 ): Promise<RegisterTeacherResponse> {
-  const res = await fetch("/api/auth/register", {
+  const res = await apiClient("/auth/register", {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ idToken, name }),
   });
 
@@ -21,7 +22,7 @@ export async function registerTeacher(
 }
 
 export async function signOutApi(token: string): Promise<void> {
-  await fetch("/api/auth/sign-out", {
+  await apiClient("/auth/sign-out", {
     method: "POST",
     headers: { Authorization: `Bearer ${token}` },
   });
