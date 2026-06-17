@@ -52,7 +52,7 @@ describe("RegisterPage", () => {
     fireEvent.click(screen.getByRole("button", { name: /create account/i }));
 
     await waitFor(() => {
-      expect(screen.getByRole("alert")).toHaveTextContent("Email already registered");
+      expect(screen.getByRole("alert")).toHaveTextContent("An account with this email already exists");
     });
   });
 

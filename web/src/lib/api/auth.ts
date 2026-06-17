@@ -8,7 +8,7 @@ export async function registerTeacher(
   idToken: string,
   name: string
 ): Promise<RegisterTeacherResponse> {
-  const res = await apiClient("/auth/register", {
+  const res = await apiClient("/api/v1/auth/register", {
     method: "POST",
     body: JSON.stringify({ idToken, name }),
   });
@@ -22,7 +22,7 @@ export async function registerTeacher(
 }
 
 export async function signOutApi(token: string): Promise<void> {
-  await apiClient("/auth/sign-out", {
+  await apiClient("/api/v1/auth/sign-out", {
     method: "POST",
     headers: { Authorization: `Bearer ${token}` },
   });

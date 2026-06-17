@@ -69,7 +69,7 @@ describe("LoginPage", () => {
     fireEvent.click(screen.getByRole("button", { name: /^sign in$/i }));
 
     await waitFor(() => {
-      expect(screen.getByRole("alert")).toHaveTextContent("Incorrect password");
+      expect(screen.getByRole("alert")).toHaveTextContent("Incorrect email or password");
     });
   });
 
