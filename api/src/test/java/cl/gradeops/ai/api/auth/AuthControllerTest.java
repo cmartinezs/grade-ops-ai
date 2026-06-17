@@ -73,6 +73,21 @@ class AuthControllerTest {
     }
 
     @Test
+    void invalid_token_response_has_error_and_no_message_field() throws Exception {
+        when(firebaseAuth.verifyIdToken(anyString()))
+                .thenThrow(mock(FirebaseAuthException.class));
+
+        mockMvc.perform(post("/auth/register")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"idToken": "bad", "name": "X"}
+                                """))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.error").value("INVALID_TOKEN"))
+                .andExpect(jsonPath("$.message").doesNotExist());
+    }
+
+    @Test
     void sign_out_with_valid_token_returns_204_and_revokes_tokens() throws Exception {
         FirebaseToken mockToken = mock(FirebaseToken.class);
         when(mockToken.getUid()).thenReturn("uid-signout");

@@ -1,31 +1,40 @@
 package cl.gradeops.ai.api.common;
 
 import cl.gradeops.ai.api.auth.InvalidTokenException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
-import java.util.Map;
-
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
+    private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
+
     @ExceptionHandler(DuplicateEmailException.class)
-    public ResponseEntity<Map<String, String>> handleDuplicateEmail(DuplicateEmailException ex) {
+    public ResponseEntity<ApiError> handleDuplicateEmail(DuplicateEmailException ex) {
         return ResponseEntity.status(HttpStatus.CONFLICT)
-                .body(Map.of("error", "EMAIL_ALREADY_EXISTS", "email", ex.getEmail()));
+                .body(ApiError.of("EMAIL_ALREADY_EXISTS", ex.getEmail()));
     }
 
     @ExceptionHandler(ResourceNotFoundException.class)
-    public ResponseEntity<Map<String, String>> handleNotFound(ResourceNotFoundException ex) {
+    public ResponseEntity<ApiError> handleNotFound(ResourceNotFoundException ex) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                .body(Map.of("error", "NOT_FOUND", "resource", ex.getResourceId()));
+                .body(ApiError.of("NOT_FOUND", ex.getResourceId()));
     }
 
     @ExceptionHandler(InvalidTokenException.class)
-    public ResponseEntity<Map<String, String>> handleInvalidToken(InvalidTokenException ex) {
+    public ResponseEntity<ApiError> handleInvalidToken(InvalidTokenException ex) {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                .body(Map.of("error", "INVALID_TOKEN"));
+                .body(ApiError.of("INVALID_TOKEN"));
+    }
+
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<ApiError> handleUnexpected(Exception ex) {
+        log.error("Unexpected error", ex);
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(ApiError.of("INTERNAL_ERROR"));
     }
 }
