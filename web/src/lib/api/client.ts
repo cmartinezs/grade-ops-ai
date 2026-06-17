@@ -1,13 +1,30 @@
 import { auth } from "@/lib/firebase/client";
-import { signOut } from "firebase/auth";
+import { onAuthStateChanged, signOut } from "firebase/auth";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? "";
+
+function getToken(): Promise<string | undefined> {
+  return new Promise((resolve) => {
+    if (auth.currentUser) {
+      auth.currentUser.getIdToken().then(resolve).catch(() => resolve(undefined));
+      return;
+    }
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      unsubscribe();
+      if (user) {
+        user.getIdToken().then(resolve).catch(() => resolve(undefined));
+      } else {
+        resolve(undefined);
+      }
+    });
+  });
+}
 
 export async function apiClient(
   path: string,
   options: RequestInit = {}
 ): Promise<Response> {
-  const token = await auth.currentUser?.getIdToken();
+  const token = await getToken();
 
   const res = await fetch(`${API_BASE}${path}`, {
     ...options,
