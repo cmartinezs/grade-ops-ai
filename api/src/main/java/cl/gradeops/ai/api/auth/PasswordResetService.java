@@ -61,6 +61,10 @@ public class PasswordResetService {
 
     @Transactional
     public void resetPassword(String code, ResetPasswordRequest request) {
+        if (!request.password().equals(request.passwordRepeat())) {
+            throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "PASSWORD_MISMATCH");
+        }
+
         PasswordResetCodeEntity resetCode = codeRepository.findByCode(code)
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "RESET_CODE_NOT_FOUND"));
 
@@ -79,6 +83,7 @@ public class PasswordResetService {
         }
 
         authPort.updatePassword(teacher.getFirebaseUid(), request.password());
+        authPort.revokeRefreshTokens(teacher.getFirebaseUid());
         resetCode.markUsed();
         codeRepository.save(resetCode);
     }

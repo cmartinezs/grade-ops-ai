@@ -183,7 +183,21 @@ class PasswordResetServiceTest {
             new ResetPasswordRequest("pedro@school.cl", "nuevaPass99", "nuevaPass99"));
 
         verify(authPort).updatePassword("uid-ep", "nuevaPass99");
+        verify(authPort).revokeRefreshTokens("uid-ep");
         assertThat(code.isUsed()).isTrue();
         verify(codeRepository).save(code);
+    }
+
+    @Test
+    void resetPassword_passwordMismatch_throws422() {
+        assertThatThrownBy(() ->
+            service.resetPassword("code-xyz",
+                new ResetPasswordRequest("pedro@school.cl", "pass123", "different")))
+            .isInstanceOf(ResponseStatusException.class)
+            .satisfies(e -> {
+                ResponseStatusException rse = (ResponseStatusException) e;
+                assertThat(rse.getStatusCode()).isEqualTo(HttpStatus.UNPROCESSABLE_ENTITY);
+                assertThat(rse.getReason()).isEqualTo("PASSWORD_MISMATCH");
+            });
     }
 }
