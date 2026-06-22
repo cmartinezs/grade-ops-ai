@@ -5,6 +5,10 @@ on:
     branches: [master]
     paths:
       - 'agents/**'
+  pull_request:
+    branches: [master]
+    paths:
+      - 'agents/**'
 
 permissions:
   contents: read
@@ -32,25 +36,30 @@ jobs:
         working-directory: agents/
 
       - name: Authenticate to Google Cloud
+        if: github.event_name == 'push'
         uses: google-github-actions/auth@v2
         with:
           workload_identity_provider: ${{ secrets.WIF_PROVIDER }}
           service_account: ${{ secrets.WIF_SERVICE_ACCOUNT }}
 
       - name: Configure Docker for Artifact Registry
+        if: github.event_name == 'push'
         run: gcloud auth configure-docker us-central1-docker.pkg.dev --quiet
 
       - name: Build container image
+        if: github.event_name == 'push'
         run: |
           ./mvnw spring-boot:build-image \
             -Dspring-boot.build-image.imageName=us-central1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/grade-ops-ai/grade-ops-ai-agents:${{ github.sha }}
         working-directory: agents/
 
       - name: Push image to Artifact Registry
+        if: github.event_name == 'push'
         run: |
           docker push us-central1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/grade-ops-ai/grade-ops-ai-agents:${{ github.sha }}
 
       - name: Deploy to Cloud Run
+        if: github.event_name == 'push'
         run: |
           gcloud run deploy grade-ops-ai-agents \
             --image us-central1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/grade-ops-ai/grade-ops-ai-agents:${{ github.sha }} \
