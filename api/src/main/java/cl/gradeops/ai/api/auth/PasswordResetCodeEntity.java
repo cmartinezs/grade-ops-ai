@@ -15,7 +15,7 @@ public class PasswordResetCodeEntity {
     @Column(name = "teacher_uid", nullable = false)
     private String teacherUid;
 
-    @Column(nullable = false, unique = true)
+    @Column(nullable = false, unique = true, length = 36)
     private String code;
 
     @Column(name = "expires_at", nullable = false)
