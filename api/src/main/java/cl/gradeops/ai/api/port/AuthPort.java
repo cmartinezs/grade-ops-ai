@@ -8,4 +8,6 @@ public interface AuthPort {
     TeacherIdentity verifyTokenUnchecked(String idToken);
 
     void revokeRefreshTokens(String uid);
+
+    void updatePassword(String uid, String newPassword);
 }

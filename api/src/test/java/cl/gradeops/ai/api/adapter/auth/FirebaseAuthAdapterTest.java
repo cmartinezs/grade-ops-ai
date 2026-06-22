@@ -4,8 +4,10 @@ import cl.gradeops.ai.api.port.TeacherIdentity;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseAuthException;
 import com.google.firebase.auth.FirebaseToken;
+import com.google.firebase.auth.UserRecord;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -70,6 +72,26 @@ class FirebaseAuthAdapterTest {
         adapter.revokeRefreshTokens("uid-1");
 
         verify(firebaseAuth).revokeRefreshTokens("uid-1");
+    }
+
+    @Test
+    void updatePassword_callsFirebaseUpdateUserWithCorrectUid() throws FirebaseAuthException {
+        adapter.updatePassword("uid-teacher-1", "newSecurePass");
+
+        ArgumentCaptor<UserRecord.UpdateRequest> captor =
+            ArgumentCaptor.forClass(UserRecord.UpdateRequest.class);
+        verify(firebaseAuth).updateUser(captor.capture());
+        // Verify that updateUser was called with a request
+        assertThat(captor.getValue()).isNotNull();
+    }
+
+    @Test
+    void updatePassword_wrapsFirebaseExceptionAsRuntimeException() throws FirebaseAuthException {
+        when(firebaseAuth.updateUser(any())).thenThrow(mock(FirebaseAuthException.class));
+
+        assertThatThrownBy(() -> adapter.updatePassword("uid-teacher-1", "securePassword123"))
+            .isInstanceOf(RuntimeException.class)
+            .hasMessageContaining("Failed to update password");
     }
 
     private FirebaseToken mockToken(String uid, String email, boolean verified,

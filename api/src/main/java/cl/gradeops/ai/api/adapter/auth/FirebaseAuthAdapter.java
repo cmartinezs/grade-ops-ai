@@ -5,6 +5,7 @@ import cl.gradeops.ai.api.port.TeacherIdentity;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseAuthException;
 import com.google.firebase.auth.FirebaseToken;
+import com.google.firebase.auth.UserRecord;
 import org.springframework.stereotype.Component;
 
 import java.util.Map;
@@ -42,6 +43,15 @@ public class FirebaseAuthAdapter implements AuthPort {
             firebaseAuth.revokeRefreshTokens(uid);
         } catch (FirebaseAuthException e) {
             throw new RuntimeException("Failed to revoke refresh tokens", e);
+        }
+    }
+
+    @Override
+    public void updatePassword(String uid, String newPassword) {
+        try {
+            firebaseAuth.updateUser(new UserRecord.UpdateRequest(uid).setPassword(newPassword));
+        } catch (FirebaseAuthException e) {
+            throw new RuntimeException("Failed to update password for uid " + uid, e);
         }
     }
 
