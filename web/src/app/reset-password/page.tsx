@@ -178,26 +178,12 @@ function ResetPasswordForm() {
 
               <p
                 style={{
-                  margin: "0 0 8px",
                   color: "var(--text-muted)",
-                  fontSize: "var(--text-sm)",
+                  fontSize: "var(--text-md)",
+                  marginBottom: 20,
                 }}
               >
-                Código de restablecimiento:
-              </p>
-              <p
-                style={{
-                  margin: "0 0 20px",
-                  fontFamily: "monospace",
-                  fontSize: "var(--text-sm)",
-                  color: "var(--text-strong)",
-                  background: "var(--surface-subtle)",
-                  padding: "6px 10px",
-                  borderRadius: 6,
-                  wordBreak: "break-all",
-                }}
-              >
-                {code}
+                Ingresa tu correo y elige una nueva contraseña.
               </p>
 
               <form onSubmit={handleSubmit(onSubmit)}>

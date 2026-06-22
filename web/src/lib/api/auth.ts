@@ -41,11 +41,14 @@ export async function signOutApi(token: string): Promise<void> {
 }
 
 export async function forgotPassword(email: string): Promise<void> {
-  await apiClient("/api/v1/auth/forgot-password", {
+  const res = await apiClient("/api/v1/auth/forgot-password", {
     method: "POST",
     body: JSON.stringify({ email }),
   });
-  // Always succeeds — backend returns 200 regardless of whether email is registered
+  if (!res.ok) {
+    throw new Error(`forgot-password failed: ${res.status}`);
+  }
+  // Always returns 200 for valid email addresses — backend never reveals registration status
 }
 
 export async function resetPassword(

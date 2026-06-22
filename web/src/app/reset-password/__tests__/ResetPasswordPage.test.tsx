@@ -35,13 +35,13 @@ describe("ResetPasswordPage", () => {
     expect(screen.getByText(/enlace no es válido/i)).toBeInTheDocument();
   });
 
-  it("shows form with code displayed when code param is present", () => {
+  it("shows form when code param is present", () => {
     setup("550e8400-e29b-41d4-a716-446655440000");
 
     expect(screen.getByLabelText("Correo electrónico")).toBeInTheDocument();
     expect(screen.getByLabelText("Nueva contraseña")).toBeInTheDocument();
     expect(screen.getByLabelText("Confirmar contraseña")).toBeInTheDocument();
-    expect(screen.getByText("550e8400-e29b-41d4-a716-446655440000")).toBeInTheDocument();
+    expect(screen.queryByText("550e8400-e29b-41d4-a716-446655440000")).not.toBeInTheDocument();
   });
 
   it("shows success status after valid submit", async () => {
