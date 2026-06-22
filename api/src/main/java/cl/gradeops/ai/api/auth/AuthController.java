@@ -12,9 +12,11 @@ import org.springframework.web.bind.annotation.*;
 public class AuthController {
 
     private final AuthService authService;
+    private final PasswordResetService passwordResetService;
 
-    public AuthController(AuthService authService) {
+    public AuthController(AuthService authService, PasswordResetService passwordResetService) {
         this.authService = authService;
+        this.passwordResetService = passwordResetService;
     }
 
     @PostMapping("/register")
@@ -30,5 +32,18 @@ public class AuthController {
         AuthenticatedTeacher teacher = (AuthenticatedTeacher)
             SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         authService.signOut(teacher.uid());
+    }
+
+    @PostMapping("/forgot-password")
+    @ResponseStatus(HttpStatus.OK)
+    public void forgotPassword(@Valid @RequestBody ForgotPasswordRequest request) {
+        passwordResetService.sendResetEmail(request);
+    }
+
+    @PutMapping("/reset-password")
+    @ResponseStatus(HttpStatus.OK)
+    public void resetPassword(@RequestParam String code,
+                              @Valid @RequestBody ResetPasswordRequest request) {
+        passwordResetService.resetPassword(code, request);
     }
 }
