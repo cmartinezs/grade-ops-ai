@@ -92,7 +92,11 @@ All errors return JSON. The exact shape depends on the error type:
 | 401 | `EMAIL_NOT_VERIFIED` | Token valid but user has not verified email |
 | 403 | `FORBIDDEN` | `X-Internal-Key` header missing or incorrect |
 | 404 | `NOT_FOUND` | Resource not found, or cross-teacher access denied |
+| 404 | `RESET_CODE_NOT_FOUND` | Password reset code does not exist |
 | 409 | `EMAIL_ALREADY_EXISTS` | Duplicate email on registration or provisioning |
+| 410 | `RESET_CODE_EXPIRED` | Password reset code exists but has expired (30-min TTL) |
+| 410 | `RESET_CODE_USED` | Password reset code was already consumed |
+| 422 | `RESET_CODE_EMAIL_MISMATCH` | Email in reset body does not match the code's owner |
 | 500 | (unhandled exception) | Internal server error |
 
 ---
@@ -148,6 +152,94 @@ curl -X POST http://localhost:8080/auth/register \
   -d '{
     "idToken": "YOUR_FIREBASE_ID_TOKEN",
     "name": "Ana Pérez"
+  }'
+```
+
+---
+
+#### `POST /auth/forgot-password`
+
+Sends a password reset email to the teacher. Generates a one-time UUID code with a 30-minute TTL, stores it in `password_reset_codes`, and sends a Thymeleaf HTML email with a link to `/reset-password?code=<UUID>`.
+
+**Authentication:** None (public endpoint)
+
+**Request body:**
+
+```json
+{ "email": "teacher@example.com" }
+```
+
+| Field | Type | Required | Validation |
+|-------|------|----------|-----------|
+| `email` | string | Yes | Must be a valid email format |
+
+**Response — HTTP 200 OK:** Empty body.
+
+Always returns 200 regardless of whether the email is registered. This prevents user enumeration — the teacher receives the same neutral confirmation on the frontend whether or not an email was sent.
+
+**Behavior for Google-only accounts:** If the teacher registered exclusively via Google Sign-In (`provider = GOOGLE`), the request is silently ignored — no email is sent, 200 is still returned.
+
+**Error responses:**
+
+| Status | Body | Condition |
+|--------|------|-----------|
+| 422 | Spring validation error | `email` field is blank or invalid format |
+
+**curl example:**
+
+```bash
+curl -X POST http://localhost:8080/api/v1/auth/forgot-password \
+  -H "Content-Type: application/json" \
+  -d '{ "email": "teacher@example.com" }'
+```
+
+---
+
+#### `PUT /auth/reset-password`
+
+Validates a password reset code and updates the teacher's password via Firebase Admin SDK.
+
+**Authentication:** None (public endpoint)
+
+**Query parameter:** `code` — the UUID from the email link (required)
+
+**Request body:**
+
+```json
+{
+  "email": "teacher@example.com",
+  "password": "nuevaContraseña123",
+  "passwordRepeat": "nuevaContraseña123"
+}
+```
+
+| Field | Type | Required | Validation |
+|-------|------|----------|-----------|
+| `email` | string | Yes | Valid email format; must match the owner of the code |
+| `password` | string | Yes | Minimum 6 characters |
+| `passwordRepeat` | string | Yes | Not blank (equality check done in service) |
+
+**Response — HTTP 200 OK:** Empty body.
+
+**Error responses:**
+
+| Status | Body | Condition |
+|--------|------|-----------|
+| 404 | `{"error":"RESET_CODE_NOT_FOUND"}` | `code` param does not exist in the database |
+| 410 | `{"error":"RESET_CODE_EXPIRED"}` | Code exists but has passed its 30-minute TTL |
+| 410 | `{"error":"RESET_CODE_USED"}` | Code was already consumed by a previous successful reset |
+| 422 | `{"error":"RESET_CODE_EMAIL_MISMATCH"}` | `body.email` does not match the teacher account linked to this code |
+| 422 | Spring validation error | Any required field fails Bean Validation |
+
+**curl example:**
+
+```bash
+curl -X PUT "http://localhost:8080/api/v1/auth/reset-password?code=550e8400-e29b-41d4-a716-446655440000" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "teacher@example.com",
+    "password": "nuevaContraseña123",
+    "passwordRepeat": "nuevaContraseña123"
   }'
 ```
 
@@ -216,6 +308,16 @@ Returns all assessments for the authenticated teacher.
 | `reportLink` | string or null | Link to generated report, if available |
 
 **Current state:** The endpoint is implemented and secured, but the service returns an empty array `[]`. Assessment data will be populated in Epic 02 when the `assessment` table is added.
+
+**Known DTO gap (tracked):** The teacher dashboard UI (`/dashboard`) expects three additional fields that `AssessmentSummaryDto` does not yet include:
+
+| Missing field | Expected type | Used for |
+|--------------|--------------|----------|
+| `type` | `"OPEN" \| "CLOSED" \| "MIXED"` | Assessment type badge in the row |
+| `average` | `number \| null` | Grade average displayed per assessment |
+| `courseName` | `string \| null` | Course label shown in the row subtitle |
+
+Until these fields are added to the API DTO and Flyway migration, the dashboard renders the assessment list without type badge, average, or course name. The frontend `AssessmentRow` component is already coded to handle their absence gracefully (fields are optional/unused). When the API adds them, update `web/src/types/assessment.ts` to match.
 
 **Error responses:**
 

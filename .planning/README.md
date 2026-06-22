@@ -28,7 +28,8 @@ Central directory for all project plannings.
 
 ### 🚧 In Progress → see [`active/README.md`](active/README.md)
 
-*(none — todos los plannings completados)*
+- [005-design-template](active/005-design-template/README.md) — Aplicación del Design System al portal docente (5 scopes, DEEPENING)
+- [006-password-recovery](active/006-password-recovery/00-initial.md) — Flujo `/forgot-password` para recuperación de contraseña vía Firebase Auth (2 scopes, EXPANSION)
 
 ### ✅ Completed → see [`finished/README.md`](finished/README.md)
 
@@ -39,4 +40,4 @@ Central directory for all project plannings.
 
 ### 🆕 Initial
 
-*(none yet)*
+- [007-password-recovery-custom-email](007-password-recovery-custom-email/00-initial.md) — Reemplazar Firebase email con servicio propio en `api/` (JavaMail + Thymeleaf)
