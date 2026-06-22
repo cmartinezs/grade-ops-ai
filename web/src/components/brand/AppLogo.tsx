@@ -1,58 +1,68 @@
-interface Props {
+/**
+ * AppLogo — componente de marca de GradeOps AI.
+ * Usa el logo-mark SVG del design system (verde Sprout + punto dorado)
+ * y tipografía Bricolage Grotesque via var(--font-display).
+ *
+ * Props:
+ *   className — clase aplicada al contenedor (útil para margin/padding)
+ *   size      — controla el tamaño del mark y del wordmark
+ *   variant   — "mark-wordmark" (default) | "mark-only" | "wordmark-only"
+ */
+
+interface AppLogoProps {
   className?: string;
+  size?: "sm" | "md" | "lg";
+  variant?: "mark-wordmark" | "mark-only" | "wordmark-only";
 }
 
-export default function AppLogo({ className = "" }: Props) {
+const MARK_SIZES = { sm: 28, md: 36, lg: 44 } as const;
+const FONT_SIZES = { sm: 18, md: 22, lg: 27 } as const;
+
+export default function AppLogo({
+  className = "",
+  size = "md",
+  variant = "mark-wordmark",
+}: AppLogoProps) {
+  const markPx = MARK_SIZES[size];
+  const fontPx = FONT_SIZES[size];
+
   return (
-    <div className={`flex flex-col items-center gap-2 ${className}`}>
-      <div className="flex items-center gap-3">
-        {/* Mark: grading approval (checkmark) + AI agents (nodes) */}
-        <svg
-          width="44"
-          height="44"
-          viewBox="0 0 44 44"
-          xmlns="http://www.w3.org/2000/svg"
+    <div
+      className={className}
+      style={{
+        display: "flex",
+        alignItems: "center",
+        gap: 10,
+        userSelect: "none",
+      }}
+    >
+      {variant !== "wordmark-only" && (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src="/brand/logo-mark.svg"
+          alt=""
           aria-hidden="true"
+          width={markPx}
+          height={markPx}
+          style={{ display: "block", flexShrink: 0 }}
+        />
+      )}
+
+      {variant !== "mark-only" && (
+        <span
+          style={{
+            fontFamily: "var(--font-display)",
+            fontWeight: 700,
+            fontSize: fontPx,
+            letterSpacing: "-0.02em",
+            lineHeight: 1,
+            color: "var(--text-strong)",
+          }}
         >
-          <defs>
-            <linearGradient id="go-grad" x1="0" y1="0" x2="1" y2="1">
-              <stop offset="0%" stopColor="#6366f1" />
-              <stop offset="100%" stopColor="#3b82f6" />
-            </linearGradient>
-          </defs>
-          {/* Background */}
-          <rect width="44" height="44" rx="11" fill="url(#go-grad)" />
-          {/* Agent connectors (thin, behind) */}
-          <line x1="12" y1="22" x2="20" y2="30" stroke="white" strokeWidth="1.5" strokeOpacity="0.35" />
-          <line x1="20" y1="30" x2="33" y2="15" stroke="white" strokeWidth="1.5" strokeOpacity="0.35" />
-          <line x1="12" y1="22" x2="33" y2="15" stroke="white" strokeWidth="1" strokeOpacity="0.2" strokeDasharray="2 3" />
-          {/* Checkmark stroke */}
-          <path
-            d="M12 22 L20 30 L33 15"
-            stroke="white"
-            strokeWidth="3.5"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            fill="none"
-          />
-          {/* Agent nodes */}
-          <circle cx="12" cy="22" r="3" fill="white" fillOpacity="0.45" />
-          <circle cx="33" cy="15" r="3" fill="white" fillOpacity="0.45" />
-          {/* Approval node (brightest — teacher's final call) */}
-          <circle cx="20" cy="30" r="3.5" fill="white" />
-        </svg>
-
-        {/* Wordmark */}
-        <div className="leading-none select-none">
-          <span className="text-[26px] font-bold tracking-tight text-gray-900">GradeOps</span>
-          <span className="text-[26px] font-bold tracking-tight text-indigo-600"> AI</span>
-        </div>
-      </div>
-
-      {/* Slogan */}
-      <p className="text-[13px] tracking-widest text-gray-400 uppercase">
-        Grade smarter. Teach better.
-      </p>
+          GradeOps
+          <span style={{ color: "var(--brand)" }}>AI</span>
+        </span>
+      )}
     </div>
   );
 }

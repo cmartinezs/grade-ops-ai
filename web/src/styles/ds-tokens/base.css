@@ -1,0 +1,77 @@
+/* ===========================================================================
+   GradeOps AI — Base element styles & utility primitives
+   Light reset + sensible defaults wired to the tokens. Kept minimal so it
+   never fights product code.
+   =========================================================================== */
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html {
+  -webkit-text-size-adjust: 100%;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: var(--text-md);
+  line-height: var(--leading-normal);
+  color: var(--text-body);
+  background: var(--surface-page);
+  font-weight: var(--weight-regular);
+}
+
+h1, h2, h3, h4, h5 {
+  font-family: var(--font-display);
+  color: var(--text-strong);
+  font-weight: var(--weight-semibold);
+  line-height: var(--leading-tight);
+  letter-spacing: var(--tracking-snug);
+  margin: 0;
+}
+
+p { margin: 0; }
+
+a {
+  color: var(--text-link);
+  text-decoration: none;
+}
+a:hover { text-decoration: underline; }
+
+button { font-family: inherit; }
+
+::selection {
+  background: color-mix(in srgb, var(--sprout-400) 35%, transparent);
+}
+
+code, pre, kbd { font-family: var(--font-mono); }
+
+:focus-visible {
+  outline: none;
+  box-shadow: var(--ring);
+  border-radius: var(--radius-sm);
+}
+
+/* ----- Tiny utility helpers (optional, token-driven) -------------------- */
+.gops-eyebrow {
+  font-family: var(--type-eyebrow-font);
+  font-weight: var(--type-eyebrow-weight);
+  letter-spacing: var(--type-eyebrow-track);
+  text-transform: uppercase;
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+}
+
+.gops-display {
+  font-family: var(--font-display);
+  font-weight: var(--weight-bold);
+  letter-spacing: var(--tracking-tight);
+  line-height: var(--leading-tight);
+  color: var(--text-strong);
+}
+
+.gops-mono {
+  font-family: var(--font-mono);
+  font-variant-ligatures: none;
+}

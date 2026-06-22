@@ -24,15 +24,16 @@ public class ProvisionTeacherService {
     public ProvisionTeacherResponse provision(ProvisionTeacherRequest request) {
         String uid = null;
         try {
+            String displayName = request.firstName() + " " + request.lastName();
             UserRecord.CreateRequest createRequest = new UserRecord.CreateRequest()
                     .setEmail(request.email())
-                    .setDisplayName(request.name())
+                    .setDisplayName(displayName)
                     .setEmailVerified(true);
 
             UserRecord userRecord = firebaseAuth.createUser(createRequest);
             uid = userRecord.getUid();
 
-            TeacherEntity teacher = new TeacherEntity(uid, request.name(), request.email());
+            TeacherEntity teacher = new TeacherEntity(uid, request.firstName(), request.lastName(), request.email());
             teacherRepository.save(teacher);
 
             String inviteLink = firebaseAuth.generatePasswordResetLink(request.email());

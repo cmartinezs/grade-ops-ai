@@ -1,0 +1,19 @@
+<!-- @dsCard group="Colors" viewport="700x150" name="Accent — Gold (achievement)" subtitle="Warm gold: highlights, celebratory CTAs, global badges" -->
+<!DOCTYPE html>
+<html lang="es"><head><meta charset="utf-8"/><link rel="stylesheet" href="../../styles.css"/>
+<style>
+  body { margin:0; padding:18px; background:var(--surface-card); font-family:var(--font-sans); }
+  .scale { display:flex; gap:0; border-radius:var(--radius-md); overflow:hidden; box-shadow:var(--shadow-sm); }
+  .sw { flex:1; height:84px; display:flex; align-items:flex-end; padding:7px; }
+  .sw span { font-family:var(--font-mono); font-size:10px; font-weight:600; }
+  .meta { display:flex; justify-content:space-between; margin-top:10px; font-size:12px; color:var(--text-muted); }
+  .meta b { color:var(--text-strong); font-family:var(--font-display); }
+</style></head>
+<body>
+  <div class="scale" id="s"></div>
+  <div class="meta"><b>Gold</b><span>--accent · --accent-hover · --gold-50…900</span></div>
+  <script>
+    const steps=[['50','#FFF8EB','#663511'],['100','#FDECC8','#663511'],['200','#FBD896','#663511'],['300','#F8BE58','#663511'],['400','#F2A524','#3a2207'],['500','#DE8A0B','#fff'],['600','#BC6C06','#fff'],['700','#96510A','#fff'],['800','#7A4110','#fff'],['900','#663511','#fff']];
+    document.getElementById('s').innerHTML=steps.map(([k,c,t])=>`<div class="sw" style="background:${c};color:${t}"><span>${k}<br>${c}</span></div>`).join('');
+  </script>
+</body></html>

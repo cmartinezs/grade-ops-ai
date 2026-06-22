@@ -1,0 +1,10 @@
+/* ===========================================================================
+   GradeOps AI — Design System global entry
+   Consumers link THIS one file. It is a manifest of @import lines only.
+   =========================================================================== */
+
+@import "./tokens/fonts.css";
+@import "./tokens/colors.css";
+@import "./tokens/typography.css";
+@import "./tokens/spacing.css";
+@import "./tokens/base.css";

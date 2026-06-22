@@ -1,0 +1,19 @@
+<!-- @dsCard group="Colors" viewport="700x150" name="Neutrals — Warm Slate" subtitle="Text, surfaces, borders — warm-tinted gray ramp" -->
+<!DOCTYPE html>
+<html lang="es"><head><meta charset="utf-8"/><link rel="stylesheet" href="../../styles.css"/>
+<style>
+  body { margin:0; padding:18px; background:var(--surface-card); font-family:var(--font-sans); }
+  .scale { display:flex; gap:0; border-radius:var(--radius-md); overflow:hidden; box-shadow:var(--shadow-sm); border:1px solid var(--border-subtle); }
+  .sw { flex:1; height:84px; display:flex; align-items:flex-end; padding:7px; }
+  .sw span { font-family:var(--font-mono); font-size:9.5px; font-weight:600; }
+  .meta { display:flex; justify-content:space-between; margin-top:10px; font-size:12px; color:var(--text-muted); }
+  .meta b { color:var(--text-strong); font-family:var(--font-display); }
+</style></head>
+<body>
+  <div class="scale" id="s"></div>
+  <div class="meta"><b>Slate</b><span>--text-* · --surface-* · --border-* · --slate-0…950</span></div>
+  <script>
+    const steps=[['0','#FFFFFF','#1A1A16'],['50','#F8F8F5','#1A1A16'],['100','#F1F1EC','#1A1A16'],['200','#E5E4DC','#1A1A16'],['300','#D2D1C6','#1A1A16'],['400','#A9A89B','#1A1A16'],['500','#7C7B6F','#fff'],['600','#5A5A50','#fff'],['700','#42423B','#fff'],['800','#2A2A25','#fff'],['900','#1A1A16','#fff'],['950','#100F0C','#fff']];
+    document.getElementById('s').innerHTML=steps.map(([k,c,t])=>`<div class="sw" style="background:${c};color:${t}"><span>${k}<br>${c}</span></div>`).join('');
+  </script>
+</body></html>

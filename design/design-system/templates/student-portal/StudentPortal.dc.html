@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<!-- @template name="Portal Alumno" description="Student magic-link assessment page: sticky header, progress bar, questions (closed + open), and submit action with confirm guard." -->
+<helmet>
+  <script src="./ds-base.js"></script>
+</helmet>
+
+<div style="min-height:100vh;background:var(--surface-page);font-family:var(--font-sans);">
+
+  <!-- ── STICKY TOPBAR ─────────────────────────────────────────────────────── -->
+  <header style="position:sticky;top:0;z-index:var(--z-sticky);background:var(--surface-card);border-bottom:1px solid var(--border-subtle);height:56px;display:flex;align-items:center;justify-content:space-between;padding:0 24px;">
+    <img src="../../assets/logo-wordmark.svg" alt="GradeOps AI" style="height:28px;" />
+    <x-import component-from-global-scope="GradeOpsAIDesignSystem_fcd12b.Badge" tone="info" dot="true" hint-size="auto,24px">En curso · cierra 18:00</x-import>
+  </header>
+
+  <!-- ── ASSESSMENT HEADER ─────────────────────────────────────────────────── -->
+  <div style="max-width:720px;margin:0 auto;padding:40px 24px 24px;">
+    <x-import component-from-global-scope="GradeOpsAIDesignSystem_fcd12b.Badge" tone="brand" hint-size="auto,22px">Mixta</x-import>
+    <h1 style="font-family:var(--font-display);font-weight:700;font-size:clamp(24px,4vw,34px);color:var(--text-strong);margin:10px 0 8px;letter-spacing:-0.02em;line-height:1.1;">
+      Prueba Unidad 3 — Fotosíntesis
+    </h1>
+    <p style="color:var(--text-muted);font-size:15px;margin:0 0 24px;">
+      2°A Biología · Prof. Paula Méndez · 4 preguntas · 50 puntos
+    </p>
+    <x-import component-from-global-scope="GradeOpsAIDesignSystem_fcd12b.ProgressBar" value="25" label="Progreso" show-value="true" hint-size="100%,36px"></x-import>
+  </div>
+
+  <!-- ── QUESTIONS ─────────────────────────────────────────────────────────── -->
+  <div style="max-width:720px;margin:0 auto;padding:0 24px;display:flex;flex-direction:column;gap:14px;">
+
+    <!-- Q1 — Alternativa única (answered) -->
+    <div style="background:var(--surface-card);border:1.5px solid var(--brand);border-radius:var(--radius-lg);box-shadow:var(--shadow-sm);padding:22px;">
+      <div style="display:flex;align-items:flex-start;gap:14px;">
+        <span style="width:26px;height:26px;border-radius:50%;background:var(--brand);color:#fff;font-family:var(--font-display);font-weight:700;font-size:13px;display:flex;align-items:center;justify-content:center;flex:none;margin-top:1px;">1</span>
+        <div style="flex:1;min-width:0;">
+          <p style="font-weight:600;font-size:15px;color:var(--text-strong);margin:0 0 3px;line-height:1.45;">¿Cuál es el principal producto energético de la fase lumínica?</p>
+          <p style="font-size:12.5px;color:var(--text-subtle);margin:0 0 16px;">10 pts · Alternativa única</p>
+          <div style="display:flex;flex-direction:column;gap:10px;">
+            <x-import component-from-global-scope="GradeOpsAIDesignSystem_fcd12b.Radio" name="q1" label="Glucosa" hint-size="100%,22px"></x-import>
+            <x-import component-from-global-scope="GradeOpsAIDesignSystem_fcd12b.Radio" name="q1" label="ATP y NADPH" checked="true" hint-size="100%,22px"></x-import>
+            <x-import component-from-global-scope="GradeOpsAIDesignSystem_fcd12b.Radio" name="q1" label="Dióxido de carbono" hint-size="100%,22px"></x-import>
+            <x-import component-from-global-scope="GradeOpsAIDesignSystem_fcd12b.Radio" name="q1" label="Oxígeno molecular" hint-size="100%,22px"></x-import>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Q2 — Verdadero / Falso -->
+    <div style="background:var(--surface-card);border:1px solid var(--border-subtle);border-radius:var(--radius-lg);box-shadow:var(--shadow-sm);padding:22px;">
+      <div style="display:flex;align-items:flex-start;gap:14px;">
+        <span style="width:26px;height:26px;border-radius:50%;background:var(--slate-200);color:var(--text-muted);font-family:var(--font-display);font-weight:700;font-size:13px;display:flex;align-items:center;justify-content:center;flex:none;margin-top:1px;">2</span>
+        <div style="flex:1;min-width:0;">
+          <p style="font-weight:600;font-size:15px;color:var(--text-strong);margin:0 0 3px;line-height:1.45;">La clorofila absorbe principalmente luz verde.</p>
+          <p style="font-size:12.5px;color:var(--text-subtle);margin:0 0 16px;">10 pts · Verdadero / Falso</p>
+          <div style="display:flex;gap:14px;">
+            <x-import component-from-global-scope="GradeOpsAIDesignSystem_fcd12b.Radio" name="q2" label="Verdadero" hint-size="120px,22px"></x-import>
+            <x-import component-from-global-scope="GradeOpsAIDesignSystem_fcd12b.Radio" name="q2" label="Falso" hint-size="100px,22px"></x-import>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Q3 — Open / Rubric -->
+    <div style="background:var(--surface-card);border:1px solid var(--border-subtle);border-radius:var(--radius-lg);box-shadow:var(--shadow-sm);padding:22px;">
+      <div style="display:flex;align-items:flex-start;gap:14px;">
+        <span style="width:26px;height:26px;border-radius:50%;background:var(--slate-200);color:var(--text-muted);font-family:var(--font-display);font-weight:700;font-size:13px;display:flex;align-items:center;justify-content:center;flex:none;margin-top:1px;">3</span>
+        <div style="flex:1;min-width:0;">
+          <p style="font-weight:600;font-size:15px;color:var(--text-strong);margin:0 0 3px;line-height:1.45;">Explica el proceso de la fotosíntesis y su importancia para los ecosistemas.</p>
+          <p style="font-size:12.5px;color:var(--text-subtle);margin:0 0 16px;">20 pts · Respuesta abierta (rúbrica)</p>
+          <x-import component-from-global-scope="GradeOpsAIDesignSystem_fcd12b.Textarea" placeholder="Escribe tu respuesta aquí…" rows="5" hint-size="100%,110px"></x-import>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── ACTION ROW ────────────────────────────────────────────────────── -->
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0 52px;">
+      <p style="font-size:13px;color:var(--text-subtle);margin:0;">
+        1 de 3 respondidas · guarda antes de salir
+      </p>
+      <div style="display:flex;gap:10px;">
+        <x-import component-from-global-scope="GradeOpsAIDesignSystem_fcd12b.Button" variant="ghost" hint-size="auto,40px">Guardar borrador</x-import>
+        <x-import component-from-global-scope="GradeOpsAIDesignSystem_fcd12b.Button" variant="primary" hint-size="auto,40px">Enviar respuestas</x-import>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+</x-dc>
+</body>
+</html>

@@ -1,0 +1,22 @@
+<!-- @dsCard group="Brand" viewport="700x200" name="Logo" subtitle="Mark, wordmark, and on-color usage" -->
+<!DOCTYPE html>
+<html lang="es"><head><meta charset="utf-8"/><link rel="stylesheet" href="../../styles.css"/>
+<style>
+  body { margin:0; padding:0; font-family:var(--font-sans); }
+  .grid { display:grid; grid-template-columns:1fr 1fr; }
+  .cell { padding:28px; display:flex; align-items:center; gap:18px; min-height:80px; }
+  .light { background:var(--surface-card); }
+  .dark { background:var(--slate-900); }
+  .soft { background:var(--surface-brand-soft); }
+  .gold { background:var(--gold-50); }
+  img.mark { width:48px; height:48px; }
+  img.word { height:38px; }
+</style></head>
+<body>
+  <div class="grid">
+    <div class="cell light"><img class="mark" src="../../assets/logo-mark.svg"/><img class="word" src="../../assets/logo-wordmark.svg"/></div>
+    <div class="cell dark"><img class="mark" src="../../assets/logo-mark.svg"/><img class="word" src="../../assets/logo-wordmark-light.svg"/></div>
+    <div class="cell soft"><img class="mark" src="../../assets/logo-mark.svg"/></div>
+    <div class="cell gold"><img class="word" src="../../assets/logo-wordmark.svg"/></div>
+  </div>
+</body></html>

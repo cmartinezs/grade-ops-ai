@@ -25,12 +25,15 @@ Establish the teacher's authenticated entry point and operational home base. Wit
 | US-009 | Email Verification | P0 | [09-email-verification.md](09-email-verification.md) |
 | US-010 | Postman Collection for Teacher Onboarding Endpoints | P1 | [10-postman-collection.md](10-postman-collection.md) |
 | US-011 | Google Sign-In for Teachers | P0 | [11-google-sign-in.md](11-google-sign-in.md) |
+| US-012 | Password Recovery | P1 | [12-password-recovery.md](12-password-recovery.md) |
 
 ## Scope
 
 **In scope**
 - Teacher authentication (sign-in flow, sign-out, session expiry) via Firebase Authentication
 - Teacher self-registration with email verification (Firebase native link)
+- Google Sign-In for registration and sign-in (OAuth via Firebase)
+- Password recovery via Firebase Auth email reset link
 - Operator-provisioned teacher accounts for pilots (coexists with self-registration)
 - Assessment list with status, submission count, and pending approvals
 - Dashboard empty state for first-time teachers

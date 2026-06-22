@@ -1,0 +1,2 @@
+ALTER TABLE teacher RENAME COLUMN name TO first_name;
+ALTER TABLE teacher ADD COLUMN last_name VARCHAR(255) NOT NULL DEFAULT '';

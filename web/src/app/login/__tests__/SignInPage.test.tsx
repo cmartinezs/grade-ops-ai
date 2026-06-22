@@ -29,9 +29,9 @@ describe("LoginPage", () => {
 
     render(<LoginPage />);
 
-    fireEvent.change(screen.getByLabelText(/email/i), { target: { value: "teacher@school.com" } });
-    fireEvent.change(screen.getByLabelText(/password/i), { target: { value: "secret123" } });
-    fireEvent.click(screen.getByRole("button", { name: /^sign in$/i }));
+    fireEvent.change(screen.getByLabelText("Correo electrónico"), { target: { value: "teacher@school.com" } });
+    fireEvent.change(screen.getByLabelText("Contraseña"), { target: { value: "secret123" } });
+    fireEvent.click(screen.getByRole("button", { name: /iniciar sesión/i }));
 
     await waitFor(() => {
       expect(mockSignIn).toHaveBeenCalledWith({}, "teacher@school.com", "secret123");
@@ -49,27 +49,27 @@ describe("LoginPage", () => {
 
     render(<LoginPage />);
 
-    fireEvent.change(screen.getByLabelText(/email/i), { target: { value: "teacher@school.com" } });
-    fireEvent.change(screen.getByLabelText(/password/i), { target: { value: "secret123" } });
-    fireEvent.click(screen.getByRole("button", { name: /^sign in$/i }));
+    fireEvent.change(screen.getByLabelText("Correo electrónico"), { target: { value: "teacher@school.com" } });
+    fireEvent.change(screen.getByLabelText("Contraseña"), { target: { value: "secret123" } });
+    fireEvent.click(screen.getByRole("button", { name: /iniciar sesión/i }));
 
     await waitFor(() => {
       expect(pushMock).toHaveBeenCalledWith("/verify-email");
     });
   });
 
-  it("shows 'Incorrect password' for auth/wrong-password error", async () => {
+  it("shows Spanish error message for auth/wrong-password", async () => {
     const error = Object.assign(new Error("wrong password"), { code: "auth/wrong-password" });
     mockSignIn.mockRejectedValue(error);
 
     render(<LoginPage />);
 
-    fireEvent.change(screen.getByLabelText(/email/i), { target: { value: "teacher@school.com" } });
-    fireEvent.change(screen.getByLabelText(/password/i), { target: { value: "wrongpass" } });
-    fireEvent.click(screen.getByRole("button", { name: /^sign in$/i }));
+    fireEvent.change(screen.getByLabelText("Correo electrónico"), { target: { value: "teacher@school.com" } });
+    fireEvent.change(screen.getByLabelText("Contraseña"), { target: { value: "wrongpass" } });
+    fireEvent.click(screen.getByRole("button", { name: /iniciar sesión/i }));
 
     await waitFor(() => {
-      expect(screen.getByRole("alert")).toHaveTextContent("Incorrect email or password");
+      expect(screen.getByRole("alert")).toHaveTextContent("Correo o contraseña incorrectos");
     });
   });
 
@@ -80,23 +80,21 @@ describe("LoginPage", () => {
 
     render(<LoginPage />);
 
-    expect(screen.getByRole("alert")).toHaveTextContent(
-      "Your session has expired. Please sign in again."
-    );
+    expect(screen.getByRole("alert")).toHaveTextContent("Tu sesión expiró");
   });
 
-  it("shows 'No account found' for auth/user-not-found error", async () => {
+  it("shows Spanish error message for auth/user-not-found", async () => {
     const error = Object.assign(new Error("user not found"), { code: "auth/user-not-found" });
     mockSignIn.mockRejectedValue(error);
 
     render(<LoginPage />);
 
-    fireEvent.change(screen.getByLabelText(/email/i), { target: { value: "nobody@school.com" } });
-    fireEvent.change(screen.getByLabelText(/password/i), { target: { value: "anypass" } });
-    fireEvent.click(screen.getByRole("button", { name: /^sign in$/i }));
+    fireEvent.change(screen.getByLabelText("Correo electrónico"), { target: { value: "nobody@school.com" } });
+    fireEvent.change(screen.getByLabelText("Contraseña"), { target: { value: "anypass" } });
+    fireEvent.click(screen.getByRole("button", { name: /iniciar sesión/i }));
 
     await waitFor(() => {
-      expect(screen.getByRole("alert")).toHaveTextContent("No account found");
+      expect(screen.getByRole("alert")).toHaveTextContent("No encontramos una cuenta");
     });
   });
 });

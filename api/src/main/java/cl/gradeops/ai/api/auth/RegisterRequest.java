@@ -4,5 +4,6 @@ import jakarta.validation.constraints.NotBlank;
 
 public record RegisterRequest(
         @NotBlank String idToken,
-        String name
+        String firstName,
+        String lastName
 ) {}

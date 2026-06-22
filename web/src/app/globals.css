@@ -1,1 +1,31 @@
 @import "tailwindcss";
+@import "../styles/ds-tokens/colors.css";
+@import "../styles/ds-tokens/typography.css";
+@import "../styles/ds-tokens/spacing.css";
+@import "../styles/ds-tokens/base.css";
+
+/* ─── Override de fuentes DS con las variables inyectadas por next/font ───── */
+/* next/font inyecta --font-bricolage, --font-hanken, --font-jetbrains en <html> */
+/* Aquí las conectamos con los tokens --font-display/sans/mono del DS          */
+:root {
+  --font-display: var(--font-bricolage), "Bricolage Grotesque", system-ui, sans-serif;
+  --font-sans:    var(--font-hanken),    "Hanken Grotesque",    system-ui, sans-serif;
+  --font-mono:    var(--font-jetbrains), "JetBrains Mono", ui-monospace, monospace;
+}
+
+/* ─── DS Input placeholder color ─────────────────────────────────────────── */
+.ds-input::placeholder {
+  color: var(--text-subtle);
+}
+
+/* ─── Login page — responsive right panel ────────────────────────────────── */
+@media (max-width: 768px) {
+  .login-panel-right {
+    display: none !important;
+  }
+}
+
+/* ─── Spinner keyframe (usado por botones en loading y spinners de página) ── */
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}

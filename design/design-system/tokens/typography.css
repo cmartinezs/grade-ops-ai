@@ -1,0 +1,64 @@
+/* ===========================================================================
+   GradeOps AI — Typography tokens
+   Display:  Bricolage Grotesque — characterful, structured, friendly headings
+   Body/UI:  Hanken Grotesque   — calm, highly legible interface + reading text
+   Mono:     JetBrains Mono     — codes, magic-link tokens, answer keys, IDs
+   =========================================================================== */
+
+:root {
+  /* Families */
+  --font-display: "Bricolage Grotesque", "Hanken Grotesque", system-ui, sans-serif;
+  --font-sans:    "Hanken Grotesque", system-ui, -apple-system, Segoe UI, sans-serif;
+  --font-mono:    "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  /* Weights */
+  --weight-regular:  400;
+  --weight-medium:   500;
+  --weight-semibold: 600;
+  --weight-bold:     700;
+  --weight-extra:    800;
+
+  /* Fluid-ish type scale (1.20 minor-third) ------------------------------- */
+  --text-2xs: 0.6875rem; /* 11px — micro labels, table meta */
+  --text-xs:  0.75rem;   /* 12px — captions, badges */
+  --text-sm:  0.8125rem; /* 13px — secondary UI text */
+  --text-md:  0.9375rem; /* 15px — base body / inputs */
+  --text-base:1rem;      /* 16px — comfortable reading */
+  --text-lg:  1.125rem;  /* 18px — lead, card titles */
+  --text-xl:  1.375rem;  /* 22px — section titles */
+  --text-2xl: 1.75rem;   /* 28px — page titles */
+  --text-3xl: 2.25rem;   /* 36px — display small */
+  --text-4xl: 2.875rem;  /* 46px — display */
+  --text-5xl: 3.75rem;   /* 60px — hero */
+
+  /* Line heights */
+  --leading-tight:   1.12;
+  --leading-snug:    1.28;
+  --leading-normal:  1.5;
+  --leading-relaxed: 1.65;
+
+  /* Letter spacing */
+  --tracking-tight:  -0.02em;
+  --tracking-snug:   -0.01em;
+  --tracking-normal: 0em;
+  --tracking-wide:   0.04em;
+  --tracking-caps:   0.08em; /* eyebrows / overlines */
+
+  /* ----- Semantic type roles -------------------------------------------- */
+  --type-display-font:   var(--font-display);
+  --type-display-weight: var(--weight-bold);
+  --type-display-track:  var(--tracking-tight);
+
+  --type-heading-font:   var(--font-display);
+  --type-heading-weight: var(--weight-semibold);
+
+  --type-body-font:      var(--font-sans);
+  --type-body-weight:    var(--weight-regular);
+
+  --type-label-font:     var(--font-sans);
+  --type-label-weight:   var(--weight-semibold);
+
+  --type-eyebrow-font:   var(--font-sans);
+  --type-eyebrow-weight: var(--weight-bold);
+  --type-eyebrow-track:  var(--tracking-caps);
+}

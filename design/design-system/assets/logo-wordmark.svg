@@ -1,0 +1,7 @@
+<svg width="220" height="48" viewBox="0 0 220 48" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="GradeOps AI">
+  <rect x="2" y="2" width="44" height="44" rx="13" fill="#0B9268"></rect>
+  <path d="M14 24.5L21 31L34 16.5" stroke="#FFFFFF" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"></path>
+  <circle cx="34.5" cy="14.5" r="3.2" fill="#F2A524"></circle>
+  <text x="58" y="31.5" font-family="&#39;Bricolage Grotesque&#39;,&#39;Hanken Grotesque&#39;,sans-serif" font-size="23" font-weight="700" letter-spacing="-0.5" fill="#1A1A16">GradeOps</text>
+  <text x="186" y="31.5" font-family="&#39;Bricolage Grotesque&#39;,&#39;Hanken Grotesque&#39;,sans-serif" font-size="23" font-weight="700" letter-spacing="-0.5" fill="#0B9268">AI</text>
+</svg>

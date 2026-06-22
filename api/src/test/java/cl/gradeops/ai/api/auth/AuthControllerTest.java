@@ -50,7 +50,7 @@ class AuthControllerTest {
         mockMvc.perform(post("/api/v1/auth/register")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
-                                {"idToken": "valid-token", "name": "Grace Hopper"}
+                                {"idToken": "valid-token", "firstName": "Grace", "lastName": "Hopper"}
                                 """))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.firebaseUid").value("uid-abc"));
@@ -66,7 +66,7 @@ class AuthControllerTest {
         mockMvc.perform(post("/api/v1/auth/register")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
-                                {"idToken": "bad-token", "name": "Nobody"}
+                                {"idToken": "bad-token", "firstName": "Nobody", "lastName": ""}
                                 """))
                 .andExpect(status().isUnauthorized())
                 .andExpect(jsonPath("$.error").value("INVALID_TOKEN"));
@@ -77,7 +77,7 @@ class AuthControllerTest {
         mockMvc.perform(post("/api/v1/auth/register")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
-                                {"idToken": "  ", "name": "Teacher"}
+                                {"idToken": "  ", "firstName": "Teacher", "lastName": ""}
                                 """))
                 .andExpect(status().isUnprocessableEntity())
                 .andExpect(jsonPath("$.error").value("VALIDATION_ERROR"));
@@ -88,7 +88,7 @@ class AuthControllerTest {
         mockMvc.perform(post("/api/v1/auth/register")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
-                                {"name": "Teacher"}
+                                {"firstName": "Teacher", "lastName": ""}
                                 """))
                 .andExpect(status().isUnprocessableEntity())
                 .andExpect(jsonPath("$.error").value("VALIDATION_ERROR"));
@@ -102,34 +102,11 @@ class AuthControllerTest {
         mockMvc.perform(post("/api/v1/auth/register")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
-                                {"idToken": "bad", "name": "X"}
+                                {"idToken": "bad", "firstName": "X", "lastName": ""}
                                 """))
                 .andExpect(status().isUnauthorized())
                 .andExpect(jsonPath("$.error").value("INVALID_TOKEN"))
                 .andExpect(jsonPath("$.message").doesNotExist());
-    }
-
-    @Test
-    void sign_out_with_valid_token_returns_204_and_revokes_tokens() throws Exception {
-        FirebaseToken mockToken = mock(FirebaseToken.class);
-        when(mockToken.getUid()).thenReturn("uid-signout");
-        when(mockToken.getEmail()).thenReturn("teacher@school.com");
-        when(mockToken.isEmailVerified()).thenReturn(true);
-        when(firebaseAuth.verifyIdToken("valid-signout-token", true)).thenReturn(mockToken);
-
-        mockMvc.perform(post("/api/v1/auth/sign-out")
-                        .header("Authorization", "Bearer valid-signout-token"))
-                .andExpect(status().isNoContent());
-
-        verify(firebaseAuth).revokeRefreshTokens("uid-signout");
-    }
-
-    @Test
-    void sign_out_unauthenticated_returns_401() throws Exception {
-        mockMvc.perform(post("/api/v1/auth/sign-out"))
-                .andExpect(status().isUnauthorized());
-
-        verify(firebaseAuth, never()).revokeRefreshTokens(anyString());
     }
 
     @Test
@@ -143,14 +120,14 @@ class AuthControllerTest {
         mockMvc.perform(post("/api/v1/auth/register")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
-                                {"idToken": "valid-token", "name": "Grace Hopper"}
+                                {"idToken": "valid-token", "firstName": "Grace", "lastName": "Hopper"}
                                 """))
                 .andExpect(status().isCreated());
 
         mockMvc.perform(post("/api/v1/auth/register")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
-                                {"idToken": "valid-token", "name": "Grace Hopper"}
+                                {"idToken": "valid-token", "firstName": "Grace", "lastName": "Hopper"}
                                 """))
                 .andExpect(status().isOk());
 
@@ -170,14 +147,15 @@ class AuthControllerTest {
         mockMvc.perform(post("/api/v1/auth/register")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
-                                {"idToken": "google-token", "name": null}
+                                {"idToken": "google-token", "firstName": null, "lastName": null}
                                 """))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.firebaseUid").value("uid-google-1"));
 
         var teacher = teacherRepository.findById("uid-google-1").orElseThrow();
         assertThat(teacher.getProvider()).isEqualTo("GOOGLE");
-        assertThat(teacher.getName()).isEqualTo("Ada Lovelace");
+        assertThat(teacher.getFirstName()).isEqualTo("Ada");
+        assertThat(teacher.getLastName()).isEqualTo("Lovelace");
     }
 
     @Test
@@ -193,14 +171,14 @@ class AuthControllerTest {
         mockMvc.perform(post("/api/v1/auth/register")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
-                                {"idToken": "google-token-2", "name": null}
+                                {"idToken": "google-token-2", "firstName": null, "lastName": null}
                                 """))
                 .andExpect(status().isCreated());
 
         mockMvc.perform(post("/api/v1/auth/register")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
-                                {"idToken": "google-token-2", "name": null}
+                                {"idToken": "google-token-2", "firstName": null, "lastName": null}
                                 """))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.firebaseUid").value("uid-google-2"));

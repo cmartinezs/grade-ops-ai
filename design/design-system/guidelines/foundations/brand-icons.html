@@ -1,0 +1,20 @@
+<!-- @dsCard group="Brand" viewport="700x180" name="Iconography — Lucide" subtitle="2px rounded stroke, 24px grid" -->
+<!DOCTYPE html>
+<html lang="es"><head><meta charset="utf-8"/><link rel="stylesheet" href="../../styles.css"/>
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<style>
+  body { margin:0; padding:22px; background:var(--surface-card); font-family:var(--font-sans); }
+  .grid { display:grid; grid-template-columns:repeat(10,1fr); gap:18px 10px; }
+  .item { display:flex; flex-direction:column; align-items:center; gap:7px; color:var(--text-body); }
+  .item i { width:26px; height:26px; }
+  .item svg { width:26px; height:26px; stroke-width:2; }
+  .item span { font-family:var(--font-mono); font-size:9px; color:var(--text-subtle); }
+</style></head>
+<body>
+  <div class="grid" id="g"></div>
+  <script>
+    const names=['file-pen-line','list-checks','square-check-big','circle-help','sparkles','clipboard-check','users','book-open','bar-chart-3','calendar-clock','upload','scan-line','mail','link','graduation-cap','target','award','trending-up','clock','settings'];
+    document.getElementById('g').innerHTML=names.map(n=>`<div class="item"><i data-lucide="${n}"></i><span>${n}</span></div>`).join('');
+    lucide.createIcons();
+  </script>
+</body></html>

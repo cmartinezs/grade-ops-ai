@@ -18,6 +18,21 @@ public class AuthService {
         this.teacherRepository = teacherRepository;
     }
 
+    private String[] resolveNames(RegisterRequest request, cl.gradeops.ai.api.port.TeacherIdentity identity) {
+        boolean hasFirst = request.firstName() != null && !request.firstName().isBlank();
+        boolean hasLast  = request.lastName()  != null && !request.lastName().isBlank();
+        if (hasFirst || hasLast) {
+            return new String[]{
+                hasFirst ? request.firstName().trim() : "",
+                hasLast  ? request.lastName().trim()  : ""
+            };
+        }
+        String displayName = identity.name() != null ? identity.name().trim() : identity.email();
+        int space = displayName.indexOf(' ');
+        if (space < 0) return new String[]{displayName, ""};
+        return new String[]{displayName.substring(0, space), displayName.substring(space + 1)};
+    }
+
     public void signOut(String uid) {
         authPort.revokeRefreshTokens(uid);
     }
@@ -31,16 +46,16 @@ public class AuthService {
             throw new InvalidTokenException("Firebase ID token is invalid or expired");
         }
 
-        String name = (request.name() != null && !request.name().isBlank())
-                ? request.name()
-                : (identity.name() != null ? identity.name() : identity.email());
+        String[] names = resolveNames(request, identity);
+        String firstName = names[0];
+        String lastName = names[1];
 
         if (teacherRepository.existsById(identity.uid())) {
             return new RegisterResult(identity.uid(), false);
         }
 
         teacherRepository.save(new TeacherEntity(
-                identity.uid(), name, identity.email(), identity.signInProvider()));
+                identity.uid(), firstName, lastName, identity.email(), identity.signInProvider()));
         return new RegisterResult(identity.uid(), true);
     }
 }

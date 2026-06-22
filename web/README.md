@@ -66,6 +66,7 @@ Browser
 | UI Library | React | 19.1.0 |
 | Language | TypeScript | 5.x |
 | Auth | Firebase JS SDK | 11.x |
+| Form validation | React Hook Form + Zod | 7.x / 4.x |
 | Testing | Jest + Testing Library | 29.x |
 | Linting | ESLint (next config) | 9.x |
 | Containerization | Docker (multi-stage) | — |
@@ -79,40 +80,65 @@ Browser
 web/
 ├── src/
 │   ├── app/                          # Next.js App Router pages
-│   │   ├── layout.tsx                # Root layout
-│   │   ├── login/
-│   │   │   ├── page.tsx              # Sign-in page
-│   │   │   └── __tests__/
-│   │   ├── register/
-│   │   │   ├── page.tsx              # Self-registration page
-│   │   │   └── __tests__/
-│   │   ├── verify-email/
-│   │   │   ├── page.tsx              # Post-registration verification gate
-│   │   │   └── __tests__/
-│   │   └── (protected)/              # Route group — requires AuthGuard
-│   │       ├── layout.tsx            # Injects AuthGuard for all protected routes
-│   │       └── dashboard/
-│   │           └── page.tsx          # Assessment dashboard
+│   │   ├── layout.tsx                # Root layout (fonts, global CSS)
+│   │   ├── globals.css               # DS token imports + global resets
+│   │   ├── page.tsx                  # Root — redirects to /login
+│   │   ├── login/page.tsx            # Sign-in page (email + Google)
+│   │   ├── register/page.tsx         # Self-registration page
+│   │   ├── verify-email/page.tsx     # Post-registration verification gate
+│   │   └── (protected)/              # Route group — AuthGuard + AppShell
+│   │       ├── layout.tsx            # Injects AuthGuard + ShellProvider + AppShell
+│   │       ├── dashboard/page.tsx    # Assessment dashboard (real data)
+│   │       ├── assessments/page.tsx  # Placeholder — Evaluaciones
+│   │       ├── bank/page.tsx         # Placeholder — Banco de preguntas
+│   │       ├── students/page.tsx     # Placeholder — Estudiantes
+│   │       └── reports/page.tsx      # Placeholder — Reportes
 │   ├── components/
 │   │   ├── auth/
 │   │   │   ├── AuthGuard.tsx         # Redirects unauthenticated users to /login
+│   │   │   ├── GoogleSignInButton.tsx # Thin wrapper around ds/GoogleButton
 │   │   │   └── SignOutButton.tsx     # Calls POST /auth/sign-out + clears Firebase session
-│   │   └── dashboard/
-│   │       ├── AssessmentCard.tsx    # Single assessment row with status badge
-│   │       └── EmptyDashboard.tsx    # Zero-state prompt for first-time teachers
+│   │   ├── brand/
+│   │   │   └── AppLogo.tsx           # GradeOps AI wordmark with DS colors
+│   │   ├── dashboard/
+│   │   │   ├── AssessmentRow.tsx     # Assessment list row with DS Badge + status
+│   │   │   └── DashboardEmptyState.tsx # Zero-state for empty dashboard
+│   │   ├── ds/                       # GradeOps AI Design System components
+│   │   │   ├── index.ts              # Re-exports all DS components
+│   │   │   ├── Avatar.tsx            # Initials circle (sm/md)
+│   │   │   ├── Badge.tsx             # Status pill — 7 tones, optional dot
+│   │   │   ├── Button.tsx            # Primary/ghost/outline, sm/md, loading
+│   │   │   ├── Card.tsx              # Compound card (Header/Title/Body/Footer)
+│   │   │   ├── Field.tsx             # Label wrapper for form inputs
+│   │   │   ├── GoogleButton.tsx      # Google sign-in button (Firebase + DS style)
+│   │   │   ├── IconButton.tsx        # Icon-only button with aria-label
+│   │   │   ├── Input.tsx             # Text input — focus ring, icon, inline error
+│   │   │   ├── LucideIcon.tsx        # 18 Lucide icons as inline SVG (no npm dep)
+│   │   │   └── StatCard.tsx          # Metric card (label/value/delta/icon)
+│   │   └── shell/
+│   │       ├── AppShell.tsx          # Sidebar (256px) + topbar (64px) + content slot
+│   │       ├── PlaceholderPage.tsx   # Reusable empty-state for unimplemented routes
+│   │       └── ShellContext.tsx      # Context for per-page title/subtitle/actions
+│   ├── styles/
+│   │   └── ds-tokens/               # CSS custom properties
+│   │       ├── colors.css            # --sprout-*, --gold-*, --slate-*, semantic aliases
+│   │       ├── typography.css        # --font-display/sans, --text-* scale
+│   │       ├── spacing.css           # --space-* scale
+│   │       ├── radius.css            # --radius-sm/md/lg
+│   │       └── shadows.css           # --shadow-sm, --shadow-brand, --ring
 │   ├── lib/
 │   │   ├── api/
-│   │   │   ├── client.ts             # Axios instance — attaches Bearer token, handles 401
-│   │   │   ├── auth.ts               # register(), signOut() API calls
-│   │   │   └── assessments.ts        # listAssessments() API call
+│   │   │   ├── client.ts             # fetch wrapper — attaches Bearer token, handles 401
+│   │   │   ├── auth.ts               # registerTeacher(), signOutApi()
+│   │   │   └── assessments.ts        # getAssessments()
 │   │   └── firebase/
 │   │       └── client.ts             # Firebase app + auth instance (singleton)
 │   ├── types/
-│   │   └── assessment.ts             # AssessmentSummary DTO — mirrors API contract
+│   │   └── assessment.ts             # AssessmentSummaryDto — mirrors API contract
 │   └── test/
 │       └── __mocks__/firebase/       # Jest mocks for firebase/app and firebase/auth
 ├── Dockerfile                        # Multi-stage build (builder → runner)
-├── next.config.ts
+├── next.config.ts                    # Rewrites: /api/* → localhost:8080 (dev)
 ├── tsconfig.json
 └── jest.config.ts
 ```

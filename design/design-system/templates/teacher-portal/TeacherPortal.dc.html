@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<!-- @template name="Portal Docente" description="Teacher portal shell: sidebar nav, topbar, dashboard with stat cards and evaluation list. Uses GradeOps AI DS components." -->
+<helmet>
+  <script src="./ds-base.js"></script>
+</helmet>
+
+<div style="display:flex;height:100vh;font-family:var(--font-sans);background:var(--surface-page);overflow:hidden;">
+
+  <!-- ── SIDEBAR ─────────────────────────────────────────────────────────── -->
+  <aside style="width:256px;flex:none;background:var(--surface-card);border-right:1px solid var(--border-subtle);display:flex;flex-direction:column;padding:18px 14px;">
+
+    <!-- Brand -->
+    <div style="display:flex;align-items:center;gap:10px;padding:4px 8px 20px;">
+      <img src="../../assets/logo-mark.svg" style="width:32px;height:32px;" alt="" />
+      <span style="font-family:var(--font-display);font-weight:700;font-size:19px;letter-spacing:-0.02em;color:var(--text-strong);">GradeOps<span style="color:var(--brand);">AI</span></span>
+    </div>
+
+    <!-- Nav -->
+    <nav style="display:flex;flex-direction:column;gap:2px;">
+      <button style="display:flex;align-items:center;gap:11px;padding:9px 11px;border:none;background:var(--surface-brand-soft);border-radius:var(--radius-md);cursor:pointer;font-family:inherit;font-size:15px;font-weight:600;color:var(--brand);text-align:left;">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>
+        Panel
+      </button>
+      <button style="display:flex;align-items:center;gap:11px;padding:9px 11px;border:none;background:transparent;border-radius:var(--radius-md);cursor:pointer;font-family:inherit;font-size:15px;font-weight:500;color:var(--text-muted);text-align:left;" style-hover="background:var(--surface-sunken);color:var(--text-body);">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+        Evaluaciones
+      </button>
+      <button style="display:flex;align-items:center;gap:11px;padding:9px 11px;border:none;background:transparent;border-radius:var(--radius-md);cursor:pointer;font-family:inherit;font-size:15px;font-weight:500;color:var(--text-muted);text-align:left;" style-hover="background:var(--surface-sunken);color:var(--text-body);">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
+        Banco de preguntas
+      </button>
+      <button style="display:flex;align-items:center;gap:11px;padding:9px 11px;border:none;background:transparent;border-radius:var(--radius-md);cursor:pointer;font-family:inherit;font-size:15px;font-weight:500;color:var(--text-muted);text-align:left;" style-hover="background:var(--surface-sunken);color:var(--text-body);">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+        Estudiantes
+      </button>
+      <button style="display:flex;align-items:center;gap:11px;padding:9px 11px;border:none;background:transparent;border-radius:var(--radius-md);cursor:pointer;font-family:inherit;font-size:15px;font-weight:500;color:var(--text-muted);text-align:left;" style-hover="background:var(--surface-sunken);color:var(--text-body);">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+        Reportes
+      </button>
+    </nav>
+
+    <div style="flex:1;"></div>
+
+    <!-- AI credits -->
+    <div style="background:var(--gold-50);border:1px solid var(--gold-200);border-radius:var(--radius-md);padding:12px 13px;margin:0 2px 14px;">
+      <div style="display:flex;align-items:center;gap:7px;margin-bottom:4px;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--gold-600)" stroke-width="2.5" stroke-linecap="round"><path d="M12 3l1.9 5.8H20l-4.9 3.6 1.9 5.7L12 14.6l-5 3.5 1.9-5.7L4 8.8h6.1L12 3z"/></svg>
+        <span style="font-weight:700;font-size:13px;color:var(--text-strong);">Créditos IA</span>
+      </div>
+      <p style="margin:0;font-size:12px;color:var(--text-muted);line-height:1.5;">742 correcciones restantes este mes.</p>
+    </div>
+
+    <!-- User row -->
+    <div style="border-top:1px solid var(--border-subtle);padding-top:12px;display:flex;align-items:center;gap:10px;">
+      <x-import component-from-global-scope="GradeOpsAIDesignSystem_fcd12b.Avatar" name="Paula Méndez" size="sm" hint-size="32px,32px"></x-import>
+      <div style="flex:1;min-width:0;">
+        <div style="font-weight:600;font-size:13px;color:var(--text-strong);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Paula Méndez</div>
+        <div style="font-size:12px;color:var(--text-subtle);">Liceo Andes</div>
+      </div>
+      <button style="display:flex;align-items:center;justify-content:center;width:30px;height:30px;border:none;background:transparent;border-radius:var(--radius-sm);cursor:pointer;color:var(--text-subtle);" style-hover="background:var(--surface-sunken);color:var(--text-strong);" title="Cerrar sesión">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+      </button>
+    </div>
+  </aside>
+
+  <!-- ── MAIN ─────────────────────────────────────────────────────────────── -->
+  <div style="flex:1;min-width:0;display:flex;flex-direction:column;overflow:hidden;">
+
+    <!-- Topbar -->
+    <header style="height:64px;flex:none;display:flex;align-items:center;justify-content:space-between;gap:16px;padding:0 28px;background:var(--surface-card);border-bottom:1px solid var(--border-subtle);">
+      <div>
+        <h1 style="font-family:var(--font-display);font-weight:600;font-size:22px;color:var(--text-strong);margin:0;letter-spacing:-0.01em;line-height:1.1;">Panel de control</h1>
+        <p style="margin:2px 0 0;font-size:13px;color:var(--text-muted);">Resumen de tus cursos y evaluaciones</p>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <button style="display:flex;align-items:center;justify-content:center;width:40px;height:40px;border:none;background:transparent;border-radius:var(--radius-md);cursor:pointer;color:var(--text-muted);" style-hover="background:var(--surface-sunken);" title="Notificaciones">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
+        </button>
+        <x-import component-from-global-scope="GradeOpsAIDesignSystem_fcd12b.Button" hint-size="180px,40px">+ Nueva evaluación</x-import>
+      </div>
+    </header>
+
+    <!-- Content -->
+    <main style="flex:1;overflow:auto;padding:28px;display:flex;flex-direction:column;gap:22px;">
+
+      <!-- Stat cards -->
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;">
+        <x-import component-from-global-scope="GradeOpsAIDesignSystem_fcd12b.StatCard" label="Promedio del curso" value="5,4" delta="+0,3" hint-size="100%,92px"></x-import>
+        <x-import component-from-global-scope="GradeOpsAIDesignSystem_fcd12b.StatCard" label="Por corregir" value="14" icon-tone="gold" hint-size="100%,92px"></x-import>
+        <x-import component-from-global-scope="GradeOpsAIDesignSystem_fcd12b.StatCard" label="Entregas hoy" value="28" icon-tone="info" hint-size="100%,92px"></x-import>
+        <x-import component-from-global-scope="GradeOpsAIDesignSystem_fcd12b.StatCard" label="En riesgo" value="3" unit="alumnos" icon-tone="danger" delta="-1" delta-dir="down" hint-size="100%,92px"></x-import>
+      </div>
+
+      <!-- Evaluations list -->
+      <div style="background:var(--surface-card);border:1px solid var(--border-subtle);border-radius:var(--radius-lg);box-shadow:var(--shadow-sm);overflow:clip;">
+        <div style="padding:16px 20px;border-bottom:1px solid var(--border-subtle);display:flex;align-items:center;justify-content:space-between;">
+          <span style="font-family:var(--font-display);font-weight:600;font-size:18px;color:var(--text-strong);">Evaluaciones recientes</span>
+          <x-import component-from-global-scope="GradeOpsAIDesignSystem_fcd12b.Button" variant="ghost" size="sm" hint-size="110px,32px">Ver todas →</x-import>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr auto;gap:12px;align-items:center;padding:13px 20px;border-bottom:1px solid var(--border-subtle);">
+          <div>
+            <div style="font-weight:600;font-size:14.5px;color:var(--text-strong);">Prueba Unidad 3 — Fotosíntesis</div>
+            <div style="display:flex;align-items:center;gap:8px;margin-top:4px;">
+              <x-import component-from-global-scope="GradeOpsAIDesignSystem_fcd12b.Badge" tone="brand" hint-size="auto,22px">Cerrada</x-import>
+              <span style="font-size:12.5px;color:var(--text-muted);">Biología · 1°B · 32 estudiantes</span>
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:14px;">
+            <div style="text-align:right;"><div style="font-weight:700;font-size:18px;color:var(--text-strong);">5,4</div><div style="font-size:11.5px;color:var(--text-subtle);">promedio</div></div>
+            <x-import component-from-global-scope="GradeOpsAIDesignSystem_fcd12b.Badge" tone="success" dot="true" hint-size="auto,22px">Corregida</x-import>
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr auto;gap:12px;align-items:center;padding:13px 20px;border-bottom:1px solid var(--border-subtle);">
+          <div>
+            <div style="font-weight:600;font-size:14.5px;color:var(--text-strong);">Ensayo: Revolución Industrial</div>
+            <div style="display:flex;align-items:center;gap:8px;margin-top:4px;">
+              <x-import component-from-global-scope="GradeOpsAIDesignSystem_fcd12b.Badge" tone="gold" hint-size="auto,22px">Abierta</x-import>
+              <span style="font-size:12.5px;color:var(--text-muted);">Historia · 2°A · 28 estudiantes</span>
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:14px;">
+            <div style="text-align:right;"><div style="font-weight:500;font-size:18px;color:var(--text-subtle);">—</div><div style="font-size:11.5px;color:var(--text-subtle);">promedio</div></div>
+            <x-import component-from-global-scope="GradeOpsAIDesignSystem_fcd12b.Badge" tone="warning" dot="true" hint-size="auto,22px">En revisión</x-import>
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr auto;gap:12px;align-items:center;padding:13px 20px;">
+          <div>
+            <div style="font-weight:600;font-size:14.5px;color:var(--text-strong);">Control — Álgebra lineal</div>
+            <div style="display:flex;align-items:center;gap:8px;margin-top:4px;">
+              <x-import component-from-global-scope="GradeOpsAIDesignSystem_fcd12b.Badge" tone="info" hint-size="auto,22px">Mixta</x-import>
+              <span style="font-size:12.5px;color:var(--text-muted);">Matemática · 3°A · 25 estudiantes</span>
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:14px;">
+            <div style="text-align:right;"><div style="font-weight:500;font-size:18px;color:var(--text-subtle);">—</div><div style="font-size:11.5px;color:var(--text-subtle);">promedio</div></div>
+            <x-import component-from-global-scope="GradeOpsAIDesignSystem_fcd12b.Badge" tone="neutral" hint-size="auto,22px">En curso</x-import>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+
+</x-dc>
+</body>
+</html>

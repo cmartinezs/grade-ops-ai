@@ -1,0 +1,42 @@
+<!-- @dsCard group="Spacing" viewport="700x185" name="Motion — Timing & Easing" subtitle="Duration tokens and easing curves in action" -->
+<!DOCTYPE html>
+<html lang="es"><head><meta charset="utf-8"/><link rel="stylesheet" href="../../styles.css"/>
+<style>
+  body { margin:0; padding:20px 22px 18px; background:var(--surface-card); font-family:var(--font-sans); }
+  .lbl { font:700 11px/1 var(--font-sans); letter-spacing:.06em; text-transform:uppercase; color:var(--text-strong); margin:0 0 12px; }
+  .sublbl { font-family:var(--font-mono); font-size:10.5px; color:var(--text-subtle); margin-bottom:6px; }
+  .track { height:6px; background:var(--slate-100); border-radius:var(--radius-pill); overflow:hidden; margin-bottom:10px; }
+  .bar { height:100%; border-radius:inherit; }
+  .dotrow { display:flex; align-items:center; gap:12px; height:20px; overflow:hidden; margin-bottom:12px; }
+  .dot { width:12px; height:12px; border-radius:50%; flex:none; }
+  .monokey { font-family:var(--font-mono); font-size:10.5px; color:var(--text-subtle); width:120px; flex:none; }
+  @keyframes gops-bar { from{width:0} to{width:100%} }
+  @keyframes gops-dot { 0%,100%{transform:translateX(0)} 50%{transform:translateX(100px)} }
+  .anim-fast   { animation: gops-bar var(--dur-fast)   var(--ease-out)    infinite alternate; }
+  .anim-base   { animation: gops-bar var(--dur-base)   var(--ease-out)    infinite alternate; }
+  .anim-slow   { animation: gops-bar var(--dur-slow)   var(--ease-out)    infinite alternate; }
+  .dot-out     { animation: gops-dot 1s var(--ease-out)    infinite alternate; }
+  .dot-inout   { animation: gops-dot 1s var(--ease-inout)  infinite alternate; }
+  .dot-spring  { animation: gops-dot 1s var(--ease-spring) infinite alternate; }
+  @media (prefers-reduced-motion: reduce) { .anim-fast,.anim-base,.anim-slow { animation:none; width:50%; } .dot-out,.dot-inout,.dot-spring { animation:none; } }
+</style>
+</head><body>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:28px;">
+    <div>
+      <p class="lbl">Duration</p>
+      <p class="sublbl">--dur-fast · 120ms</p>
+      <div class="track"><div class="bar anim-fast" style="background:var(--sprout-300)"></div></div>
+      <p class="sublbl">--dur-base · 200ms</p>
+      <div class="track"><div class="bar anim-base" style="background:var(--sprout-500)"></div></div>
+      <p class="sublbl">--dur-slow · 320ms</p>
+      <div class="track"><div class="bar anim-slow" style="background:var(--sprout-700)"></div></div>
+    </div>
+    <div>
+      <p class="lbl">Easing</p>
+      <div class="dotrow"><span class="monokey">--ease-out</span><div class="dot dot-out" style="background:var(--sprout-500)"></div></div>
+      <div class="dotrow"><span class="monokey">--ease-inout</span><div class="dot dot-inout" style="background:var(--sprout-700)"></div></div>
+      <div class="dotrow"><span class="monokey">--ease-spring</span><div class="dot dot-spring" style="background:var(--gold-500)"></div></div>
+      <p style="font-size:11px;color:var(--text-subtle);margin:8px 0 0;">Spring: toasts, badges, checkbox checks.<br>Out/Inout: navigation, panels, overlays.</p>
+    </div>
+  </div>
+</body></html>

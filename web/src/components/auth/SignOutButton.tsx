@@ -3,6 +3,8 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { auth } from "@/lib/firebase/client";
 import { signOut as firebaseSignOut } from "firebase/auth";
+import IconButton from "@/components/ds/IconButton";
+import LucideIcon from "@/components/ds/LucideIcon";
 
 export default function SignOutButton() {
   const router = useRouter();
@@ -27,12 +29,14 @@ export default function SignOutButton() {
   }
 
   return (
-    <button
+    <IconButton
+      label="Cerrar sesión"
+      size="sm"
       onClick={handleSignOut}
       disabled={loading}
-      className="text-sm text-gray-600 hover:text-gray-900 disabled:opacity-50"
+      style={{ opacity: loading ? 0.5 : 1 }}
     >
-      {loading ? "Signing out…" : "Sign out"}
-    </button>
+      <LucideIcon name="log-out" size={16} />
+    </IconButton>
   );
 }

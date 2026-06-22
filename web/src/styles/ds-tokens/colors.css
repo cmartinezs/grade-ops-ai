@@ -1,0 +1,132 @@
+/* ===========================================================================
+   GradeOps AI — Color tokens
+   Brand idea: "growth + achievement". A confident teal-green carries learning
+   and progress; a warm gold marks achievement and highlights. Warm paper
+   neutrals keep long grading sessions calm and readable.
+   =========================================================================== */
+
+:root {
+  /* --- Brand: Sprout (teal-green) ------------------------------------------ */
+  --sprout-50:  #ECFDF5;
+  --sprout-100: #D2F8E5;
+  --sprout-200: #A6F0CE;
+  --sprout-300: #6FE2B4;
+  --sprout-400: #34CB95;
+  --sprout-500: #12B07A; /* base */
+  --sprout-600: #0B9268;
+  --sprout-700: #0A7554;
+  --sprout-800: #0C5E45;
+  --sprout-900: #0B4A38;
+
+  /* --- Accent: Gold (achievement) ------------------------------------------ */
+  --gold-50:  #FFF8EB;
+  --gold-100: #FDECC8;
+  --gold-200: #FBD896;
+  --gold-300: #F8BE58;
+  --gold-400: #F2A524;
+  --gold-500: #DE8A0B; /* base */
+  --gold-600: #BC6C06;
+  --gold-700: #96510A;
+  --gold-800: #7A4110;
+  --gold-900: #663511;
+
+  /* --- Neutrals: warm Slate ------------------------------------------------ */
+  --slate-0:   #FFFFFF;
+  --slate-50:  #F8F8F5;
+  --slate-100: #F1F1EC;
+  --slate-200: #E5E4DC;
+  --slate-300: #D2D1C6;
+  --slate-400: #A9A89B;
+  --slate-500: #7C7B6F;
+  --slate-600: #5A5A50;
+  --slate-700: #42423B;
+  --slate-800: #2A2A25;
+  --slate-900: #1A1A16;
+  --slate-950: #100F0C;
+
+  /* --- Semantic hues -------------------------------------------------------- */
+  --success-50:  #ECFDF3;
+  --success-200: #A3E6C8;
+  --success-500: #12A05F;
+  --success-600: #0B7E4A;
+  --success-700: #0A6440;
+
+  --warning-50:  #FFF7E8;
+  --warning-200: #FDD9A0;
+  --warning-500: #E8920C;
+  --warning-600: #B96E08;
+  --warning-700: #8F5407;
+
+  --danger-50:   #FEF1F1;
+  --danger-200:  #F9ADAD;
+  --danger-500:  #E04A4A;
+  --danger-600:  #C5343A;
+  --danger-700:  #A12830;
+
+  --info-50:     #EEF5FF;
+  --info-200:    #AACBF6;
+  --info-500:    #2E7CE8;
+  --info-600:    #1F61C2;
+  --info-700:    #1A4E9C;
+
+  /* Rubric performance ladder (open assessments) ---------------------------- */
+  --perf-exceeds:    #0B9268; /* logrado destacado */
+  --perf-meets:      #34CB95; /* logrado */
+  --perf-developing: #F2A524; /* en desarrollo */
+  --perf-beginning:  #E8920C; /* inicial */
+  --perf-notmet:     #E04A4A; /* no logrado */
+
+  /* =========================================================================
+     SEMANTIC ALIASES — reach for these in product code, not raw scales above
+     ========================================================================= */
+
+  /* Text */
+  --text-strong:    var(--slate-900);
+  --text-body:      var(--slate-800);
+  --text-muted:     var(--slate-600);
+  --text-subtle:    var(--slate-500);
+  --text-disabled:  var(--slate-400);
+  --text-on-brand:  #FFFFFF;
+  --text-on-gold:   var(--slate-900);
+  --text-link:      var(--sprout-700);
+
+  /* Surfaces */
+  --surface-page:    var(--slate-50);
+  --surface-card:    var(--slate-0);
+  --surface-sunken:  var(--slate-100);
+  --surface-raised:  var(--slate-0);
+  --surface-inverse: var(--slate-900);
+  --surface-brand-soft: var(--sprout-50);
+  --surface-gold-soft:  var(--gold-50);
+
+  /* Borders */
+  --border-subtle:  var(--slate-200);
+  --border-default: var(--slate-300);
+  --border-strong:  var(--slate-400);
+  --border-brand:   var(--sprout-500);
+  --border-focus:   var(--sprout-500);
+
+  /* Brand actions */
+  --brand:          var(--sprout-600);
+  --brand-hover:    var(--sprout-700);
+  --brand-active:   var(--sprout-800);
+  --brand-soft:     var(--sprout-50);
+  --brand-soft-hover: var(--sprout-100);
+
+  --accent:         var(--gold-400);
+  --accent-hover:   var(--gold-500);
+  --accent-soft:    var(--gold-50);
+
+  /* Status surfaces + text */
+  --status-success-bg:   var(--success-50);
+  --status-success-fg:   var(--success-700);
+  --status-warning-bg:   var(--warning-50);
+  --status-warning-fg:   var(--warning-700);
+  --status-danger-bg:    var(--danger-50);
+  --status-danger-fg:    var(--danger-700);
+  --status-info-bg:      var(--info-50);
+  --status-info-fg:      var(--info-700);
+
+  /* Focus ring */
+  --ring: 0 0 0 3px color-mix(in srgb, var(--sprout-500) 35%, transparent);
+}

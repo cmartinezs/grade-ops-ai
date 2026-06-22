@@ -1,0 +1,12 @@
+<svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="GradeOps AI">
+  <rect x="2" y="2" width="44" height="44" rx="13" fill="#0B9268"></rect>
+  <rect x="2" y="2" width="44" height="44" rx="13" fill="url(#gops_g)" fill-opacity="0.18"></rect>
+  <path d="M14 24.5L21 31L34 16.5" stroke="#FFFFFF" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"></path>
+  <circle cx="34.5" cy="14.5" r="3.2" fill="#F2A524"></circle>
+  <defs>
+    <linearGradient id="gops_g" x1="6" y1="6" x2="42" y2="42" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFFFFF"></stop>
+      <stop offset="1" stop-color="#FFFFFF" stop-opacity="0"></stop>
+    </linearGradient>
+  </defs>
+</svg>

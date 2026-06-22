@@ -1,0 +1,20 @@
+<!-- @dsCard group="Spacing" viewport="700x170" name="Radius" subtitle="Friendly, rounded — not pill-everything" -->
+<!DOCTYPE html>
+<html lang="es"><head><meta charset="utf-8"/><link rel="stylesheet" href="../../styles.css"/>
+<style>
+  body { margin:0; padding:22px; background:var(--surface-card); font-family:var(--font-sans); }
+  .row { display:flex; gap:18px; align-items:flex-end; }
+  .item { text-align:center; }
+  .box { width:78px; height:62px; background:var(--sprout-50); border:1.5px solid var(--sprout-400); }
+  .k { font-family:var(--font-mono); font-size:11px; color:var(--text-muted); margin-top:8px; display:block; }
+</style></head>
+<body>
+  <div class="row">
+    <div class="item"><div class="box" style="border-radius:var(--radius-sm)"></div><span class="k">sm · 6</span></div>
+    <div class="item"><div class="box" style="border-radius:var(--radius-md)"></div><span class="k">md · 10</span></div>
+    <div class="item"><div class="box" style="border-radius:var(--radius-lg)"></div><span class="k">lg · 14</span></div>
+    <div class="item"><div class="box" style="border-radius:var(--radius-xl)"></div><span class="k">xl · 20</span></div>
+    <div class="item"><div class="box" style="border-radius:var(--radius-2xl)"></div><span class="k">2xl · 28</span></div>
+    <div class="item"><div class="box" style="border-radius:var(--radius-pill);width:100px"></div><span class="k">pill</span></div>
+  </div>
+</body></html>

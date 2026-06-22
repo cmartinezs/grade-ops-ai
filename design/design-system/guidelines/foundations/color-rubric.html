@@ -1,0 +1,19 @@
+<!-- @dsCard group="Colors" viewport="700x150" name="Rubric — Performance ladder" subtitle="5-step achievement scale for open assessments" -->
+<!DOCTYPE html>
+<html lang="es"><head><meta charset="utf-8"/><link rel="stylesheet" href="../../styles.css"/>
+<style>
+  body { margin:0; padding:18px; background:var(--surface-card); font-family:var(--font-sans); }
+  .grid { display:flex; gap:10px; }
+  .step { flex:1; border-radius:var(--radius-md); padding:12px; color:#fff; min-height:78px; display:flex; flex-direction:column; justify-content:space-between; }
+  .step b { font-family:var(--font-display); font-size:13.5px; line-height:1.15; }
+  .step span { font-family:var(--font-mono); font-size:10px; opacity:.9; }
+</style></head>
+<body>
+  <div class="grid">
+    <div class="step" style="background:var(--perf-exceeds)"><b>Logrado destacado</b><span>--perf-exceeds</span></div>
+    <div class="step" style="background:var(--perf-meets)"><b>Logrado</b><span>--perf-meets</span></div>
+    <div class="step" style="background: var(--perf-developing); color: var(--slate-900); background-color: rgb(242, 227, 36)"><b>En desarrollo</b><span>--perf-developing</span></div>
+    <div class="step" style="background: var(--perf-beginning); color: var(--slate-900); background-color: rgb(232, 122, 12)"><b>Inicial</b><span>--perf-beginning</span></div>
+    <div class="step" style="background:var(--perf-notmet)"><b>No logrado</b><span>--perf-notmet</span></div>
+  </div>
+</body></html>

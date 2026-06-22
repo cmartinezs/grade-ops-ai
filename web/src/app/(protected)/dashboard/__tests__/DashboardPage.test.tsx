@@ -13,7 +13,7 @@ describe("DashboardPage", () => {
     jest.clearAllMocks();
   });
 
-  it("renders 3 assessment cards when API returns 3 assessments", async () => {
+  it("renders 3 assessment rows when API returns 3 assessments", async () => {
     const assessments: AssessmentSummaryDto[] = [
       {
         id: "a1",
@@ -52,15 +52,14 @@ describe("DashboardPage", () => {
     expect(screen.getByText("Algorithms")).toBeInTheDocument();
   });
 
-  it("renders EmptyDashboard when API returns empty array", async () => {
+  it("renders DashboardEmptyState when API returns empty array", async () => {
     mockGetAssessments.mockResolvedValue([]);
 
     await act(async () => {
       render(<DashboardPage />);
     });
 
-    expect(screen.getByText("No assessments yet")).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Create assessment" })).toBeInTheDocument();
-    expect(screen.queryByText("Your Assessments")).not.toBeInTheDocument();
+    expect(screen.getByText("Aún no tienes evaluaciones")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /nueva evaluación/i })).toBeInTheDocument();
   });
 });

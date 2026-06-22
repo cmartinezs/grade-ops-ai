@@ -1,0 +1,19 @@
+<!-- @dsCard group="Brand" viewport="700x150" name="Iconography — Lucide" subtitle="Lucide outline set · 1.8px stroke · rounded caps" -->
+<!DOCTYPE html>
+<html lang="es"><head><meta charset="utf-8"/><link rel="stylesheet" href="../../styles.css"/>
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<style>
+  body { margin:0; padding:22px; background:var(--surface-card); font-family:var(--font-sans); }
+  .row { display:flex; flex-wrap:wrap; gap:18px; color:var(--text-strong); }
+  .ic { display:flex; flex-direction:column; align-items:center; gap:6px; width:64px; }
+  .ic svg { width:26px; height:26px; stroke-width:1.8; }
+  .ic span { font-family:var(--font-mono); font-size:9.5px; color:var(--text-subtle); }
+</style></head>
+<body>
+  <div class="row" id="r"></div>
+  <script>
+    const names=['file-pen-line','list-checks','library','sparkles','scan-line','upload','users','bar-chart-3','clock','link','check-circle-2','message-square-text'];
+    document.getElementById('r').innerHTML=names.map(n=>`<div class="ic"><i data-lucide="${n}"></i><span>${n}</span></div>`).join('');
+    lucide.createIcons();
+  </script>
+</body></html>

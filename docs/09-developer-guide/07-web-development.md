@@ -120,9 +120,148 @@ Set these in `.env.local` for local development. Terraform outputs them for the 
 
 `.env.local` is gitignored and must never be committed. The values come from the Firebase console or from `terraform output`.
 
-### 7. Styling
+### 7. Styling and Design System
 
-Use Tailwind CSS utility classes for all styling. Do not create custom CSS files unless Tailwind cannot handle the requirement (e.g., a complex animation that requires `@keyframes`). Do not use CSS modules or `styled-components`.
+The web frontend uses a **two-layer styling model**:
+
+| Layer | What it handles | How |
+|-------|----------------|-----|
+| GradeOps AI Design System | All branded UI — buttons, inputs, cards, badges, shell chrome | CSS custom property tokens + inline styles in TSX components |
+| Tailwind CSS | Generic layout utilities where DS tokens are not applicable | Utility classes |
+
+**Always prefer DS components over raw HTML or Tailwind for any branded UI element.** Tailwind is still available for structural utilities (e.g., `flex`, `gap-*`, `w-full`) when a DS component does not cover the need.
+
+#### Design System tokens
+
+Tokens are defined in `src/styles/ds-tokens/` and loaded into the global cascade via `src/app/globals.css`:
+
+| File | Tokens |
+|------|--------|
+| `colors.css` | `--sprout-*`, `--gold-*`, `--slate-*`, `--success-*`, `--warning-*`, `--danger-*`, `--info-*` + semantic aliases (`--brand`, `--surface-card`, `--border-default`, etc.) |
+| `typography.css` | `--font-display` (Bricolage Grotesque), `--font-sans` (Hanken Grotesque), `--text-xs` … `--text-3xl` |
+| `spacing.css` | `--space-*` scale |
+| `radius.css` | `--radius-sm`, `--radius-md`, `--radius-lg` |
+| `shadows.css` | `--shadow-sm`, `--shadow-brand`, `--ring` |
+
+Reference tokens by name in `style={{}}` props: `style={{ color: "var(--text-strong)" }}`.
+
+#### DS component library
+
+All DS components live in `src/components/ds/` and are re-exported from `src/components/ds/index.ts`.
+
+| Component | Description |
+|-----------|-------------|
+| `Button` | `variant` primary/ghost/outline, `size` sm/md, `loading`, `block` |
+| `Avatar` | Initials circle, `size` sm/md |
+| `IconButton` | Icon-only button with `label` for aria/tooltip |
+| `LucideIcon` | 18 Lucide icons as inline SVG (no npm dependency). `name`, `size`, `color` |
+| `Input` | Text input with focus ring, icon prefix, optional password-toggle (`showToggle`), and inline error message |
+| `Field` | Label wrapper for any input slot (`label`, `htmlFor`) |
+| `FieldWithHelper` | Same as `Field` plus an inline `?` button that shows a tooltip explaining the field on hover/focus |
+| `GoogleButton` | Google sign-in button with Firebase popup logic, loading state, and error display |
+| `Badge` | Status/tone pill. `tone`: brand/gold/success/warning/danger/info/neutral. `dot` for pulsing indicator |
+| `StatCard` | Metric card with label, value, optional unit, delta, and icon |
+| `Card` | Compound card: `Card.Header`, `Card.Title`, `Card.Body`, `Card.Footer` |
+
+Do not add CSS classes, Tailwind utilities, or `style={{}}` overrides that override DS token values on these components. Extend the DS component instead.
+
+#### Shell layout
+
+Protected pages run inside `AppShell` (sidebar 256 px + topbar 64 px), which is injected by `(protected)/layout.tsx`. Each page declares its topbar content via the `useShellConfig` hook:
+
+```typescript
+import { useShellConfig } from "@/components/shell/ShellContext";
+import { Button } from "@/components/ds";
+
+export default function MyPage() {
+  useShellConfig({
+    title: "Nombre de la sección",
+    subtitle: "Descripción breve",
+    actions: <Button variant="primary">+ Acción</Button>,
+  });
+  // ...
+}
+```
+
+The sidebar nav item is highlighted automatically based on `usePathname()`. No prop needs to be passed.
+
+#### Placeholder pages
+
+Routes that are not yet implemented should render `PlaceholderPage` from `src/components/shell/PlaceholderPage.tsx`:
+
+```typescript
+import PlaceholderPage from "@/components/shell/PlaceholderPage";
+import LucideIcon from "@/components/ds/LucideIcon";
+
+<PlaceholderPage
+  icon={<LucideIcon name="file-pen-line" size={40} color="var(--text-subtle)" />}
+  title="Nombre de la sección"
+  description="Descripción orientativa de la funcionalidad futura."
+  badge="Próximamente"
+/>
+```
+
+### 8. Form validation
+
+All forms must use **React Hook Form + Zod**. Do not use HTML native validation attributes (`required`, `minLength`, `pattern`, `type="email"` as a validator, etc.).
+
+```typescript
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+
+const schema = z.object({
+  email: z.string().min(1, "Ingresa tu correo.").email("Formato de correo inválido."),
+  password: z.string().min(8, "Mínimo 8 caracteres."),
+});
+
+type Fields = z.infer<typeof schema>;
+
+export default function MyForm() {
+  const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<Fields>({
+    resolver: zodResolver(schema),
+  });
+
+  async function onSubmit(data: Fields) { /* API call */ }
+
+  return (
+    <form onSubmit={handleSubmit(onSubmit)}>
+      <Field label="Correo" htmlFor="email">
+        <Input id="email" type="email" error={errors.email?.message} {...register("email")} />
+      </Field>
+      <Button type="submit" loading={isSubmitting}>Enviar</Button>
+    </form>
+  );
+}
+```
+
+- Field-level errors come from `errors.<field>.message` and are passed to `<Input error={...}>`, which renders them inline below the input.
+- Server-side errors (API responses) are managed with separate `useState` and rendered as a `<p role="alert">`.
+- `isSubmitting` from RHF replaces manual `loading` state for the submit button.
+
+### Field help tooltips — design rule
+
+**Every form field that a user must complete must have a contextual help tooltip** unless the field label is entirely self-explanatory (e.g., "Email"). Use `FieldWithHelper` instead of `Field` whenever the field purpose, format, or constraints benefit from a short explanation.
+
+```typescript
+import { FieldWithHelper, Input } from "@/components/ds";
+
+<FieldWithHelper
+  label="Correo electrónico"
+  htmlFor="email"
+  helper="Usamos tu correo solo para enviarte el enlace de acceso y notificaciones del sistema. No se comparte con terceros."
+>
+  <Input id="email" type="email" error={errors.email?.message} {...register("email")} />
+</FieldWithHelper>
+```
+
+Rules for the `helper` text:
+- One or two sentences maximum. Write for a non-technical user.
+- Explain **why** the field exists or **what format** is expected — not just what the label already says.
+- Do not repeat the label verbatim.
+- Language must match the product language (Spanish for teacher-facing UI).
+
+The `?` button is 15 px, uses `--text-subtle` for color, shows a dark tooltip above on hover and keyboard focus, and carries an accessible `aria-label`. It must not be removed or hidden even if the field appears obvious — the rule exists to reduce abandonment in registration and configuration flows.
 
 ---
 
@@ -134,9 +273,14 @@ Use Tailwind CSS utility classes for all styling. Do not create custom CSS files
    ```
    src/app/(protected)/your-page/page.tsx
    ```
-   Add `"use client"` at the top if the page uses state, effects, or event handlers.
+   Add `"use client"` at the top (required — protected pages use hooks).
 
-2. Fetch data using an API wrapper (do not call `apiClient` directly in page components — keep data fetching in `src/lib/api/`):
+2. Declare the shell config at the top of the component:
+   ```typescript
+   useShellConfig({ title: "Mi página", subtitle: "Descripción", actions: <Button>Acción</Button> });
+   ```
+
+3. Fetch data using an API wrapper (do not call `apiClient` directly in page components):
    ```typescript
    // src/lib/api/your-resource.ts
    export async function getYourResource(): Promise<YourResource[]> {
@@ -146,19 +290,19 @@ Use Tailwind CSS utility classes for all styling. Do not create custom CSS files
    }
    ```
 
-3. Add TypeScript interfaces:
+4. Add TypeScript interfaces:
    ```
    src/types/your-resource.ts
    ```
 
-4. Add components:
+5. Add domain components:
    ```
    src/components/your-domain/YourComponent.tsx
    ```
 
 ### Public page (no auth required)
 
-Create the page under `src/app/your-page/page.tsx` (outside the `(protected)` route group). Public pages do not get `AuthGuard` automatically.
+Create the page under `src/app/your-page/page.tsx` (outside the `(protected)` route group). Public pages do not get `AuthGuard` or `AppShell` automatically.
 
 ---
 

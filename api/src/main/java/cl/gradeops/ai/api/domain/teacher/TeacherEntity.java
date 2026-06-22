@@ -11,8 +11,11 @@ public class TeacherEntity {
     @Column(name = "firebase_uid", length = 128, nullable = false)
     private String firebaseUid;
 
-    @Column(name = "name", nullable = false)
-    private String name;
+    @Column(name = "first_name", nullable = false)
+    private String firstName;
+
+    @Column(name = "last_name", nullable = false)
+    private String lastName;
 
     @Column(name = "email", nullable = false, unique = true)
     private String email;
@@ -47,13 +50,14 @@ public class TeacherEntity {
 
     protected TeacherEntity() {}
 
-    public TeacherEntity(String firebaseUid, String name, String email) {
-        this(firebaseUid, name, email, "EMAIL_PASSWORD");
+    public TeacherEntity(String firebaseUid, String firstName, String lastName, String email) {
+        this(firebaseUid, firstName, lastName, email, "EMAIL_PASSWORD");
     }
 
-    public TeacherEntity(String firebaseUid, String name, String email, String provider) {
+    public TeacherEntity(String firebaseUid, String firstName, String lastName, String email, String provider) {
         this.firebaseUid = firebaseUid;
-        this.name = name;
+        this.firstName = firstName;
+        this.lastName = lastName;
         this.email = email;
         this.provider = provider;
         OffsetDateTime now = OffsetDateTime.now();
@@ -62,7 +66,8 @@ public class TeacherEntity {
     }
 
     public String getFirebaseUid() { return firebaseUid; }
-    public String getName() { return name; }
+    public String getFirstName() { return firstName; }
+    public String getLastName() { return lastName; }
     public String getEmail() { return email; }
     public String getProvider() { return provider; }
     public OffsetDateTime getCreatedAt() { return createdAt; }
