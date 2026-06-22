@@ -16,6 +16,7 @@ import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -81,8 +82,21 @@ class FirebaseAuthAdapterTest {
         ArgumentCaptor<UserRecord.UpdateRequest> captor =
             ArgumentCaptor.forClass(UserRecord.UpdateRequest.class);
         verify(firebaseAuth).updateUser(captor.capture());
-        // Verify that updateUser was called with a request
-        assertThat(captor.getValue()).isNotNull();
+        // Verify that updateUser was called with a request containing the correct uid
+        UserRecord.UpdateRequest request = captor.getValue();
+        assertThat(request).isNotNull();
+        // Verify uid was set correctly via reflection
+        assertThat(getUidFromRequest(request)).isEqualTo("uid-teacher-1");
+    }
+
+    private String getUidFromRequest(UserRecord.UpdateRequest request) {
+        try {
+            java.lang.reflect.Method method = request.getClass().getDeclaredMethod("getUid");
+            method.setAccessible(true);
+            return (String) method.invoke(request);
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to access uid from UpdateRequest", e);
+        }
     }
 
     @Test
