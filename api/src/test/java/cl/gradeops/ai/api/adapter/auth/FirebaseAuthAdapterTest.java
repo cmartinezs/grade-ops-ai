@@ -82,20 +82,17 @@ class FirebaseAuthAdapterTest {
         ArgumentCaptor<UserRecord.UpdateRequest> captor =
             ArgumentCaptor.forClass(UserRecord.UpdateRequest.class);
         verify(firebaseAuth).updateUser(captor.capture());
-        // Verify that updateUser was called with a request containing the correct uid
-        UserRecord.UpdateRequest request = captor.getValue();
-        assertThat(request).isNotNull();
-        // Verify uid was set correctly via reflection
-        assertThat(getUidFromRequest(request)).isEqualTo("uid-teacher-1");
+        // getUid() is package-private in Firebase SDK; reflection is the only external access path
+        assertThat(uidOf(captor.getValue())).isEqualTo("uid-teacher-1");
     }
 
-    private String getUidFromRequest(UserRecord.UpdateRequest request) {
+    private static String uidOf(UserRecord.UpdateRequest request) {
         try {
-            java.lang.reflect.Method method = request.getClass().getDeclaredMethod("getUid");
+            var method = UserRecord.UpdateRequest.class.getDeclaredMethod("getUid");
             method.setAccessible(true);
             return (String) method.invoke(request);
         } catch (Exception e) {
-            throw new RuntimeException("Failed to access uid from UpdateRequest", e);
+            throw new AssertionError("Could not read uid from UpdateRequest", e);
         }
     }
 
