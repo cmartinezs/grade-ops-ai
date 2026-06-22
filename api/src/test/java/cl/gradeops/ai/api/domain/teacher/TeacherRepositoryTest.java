@@ -26,17 +26,17 @@ class TeacherRepositoryTest {
 
     @Test
     void findByPlanType_returns_only_matching_accounts() {
-        TeacherEntity pilot1 = new TeacherEntity("uid-pilot-1", "Pilot One", "pilot1@example.com");
+        TeacherEntity pilot1 = new TeacherEntity("uid-pilot-1", "Pilot", "One", "pilot1@example.com");
         pilot1.setPlanType("pilot");
         pilot1.setRelatedParty(true);
 
-        TeacherEntity pilot2 = new TeacherEntity("uid-pilot-2", "Pilot Two", "pilot2@example.com");
+        TeacherEntity pilot2 = new TeacherEntity("uid-pilot-2", "Pilot", "Two", "pilot2@example.com");
         pilot2.setPlanType("pilot");
 
-        TeacherEntity free1 = new TeacherEntity("uid-free-1", "Free One", "free1@example.com");
+        TeacherEntity free1 = new TeacherEntity("uid-free-1", "Free", "One", "free1@example.com");
         free1.setPlanType("free");
 
-        TeacherEntity noFlag = new TeacherEntity("uid-noflag-1", "No Flag", "noflag@example.com");
+        TeacherEntity noFlag = new TeacherEntity("uid-noflag-1", "No", "Flag", "noflag@example.com");
 
         teacherRepository.saveAll(List.of(pilot1, pilot2, free1, noFlag));
 
@@ -53,15 +53,15 @@ class TeacherRepositoryTest {
 
     @Test
     void findByRelatedParty_returns_only_matching_accounts() {
-        TeacherEntity related1 = new TeacherEntity("uid-rel-1", "Related One", "rel1@example.com");
+        TeacherEntity related1 = new TeacherEntity("uid-rel-1", "Related", "One", "rel1@example.com");
         related1.setPlanType("pilot");
         related1.setRelatedParty(true);
 
-        TeacherEntity related2 = new TeacherEntity("uid-rel-2", "Related Two", "rel2@example.com");
+        TeacherEntity related2 = new TeacherEntity("uid-rel-2", "Related", "Two", "rel2@example.com");
         related2.setPlanType("paid");
         related2.setRelatedParty(true);
 
-        TeacherEntity notRelated = new TeacherEntity("uid-norel-1", "Not Related", "norel@example.com");
+        TeacherEntity notRelated = new TeacherEntity("uid-norel-1", "Not", "Related", "norel@example.com");
         notRelated.setPlanType("free");
         // relatedParty defaults to false
 

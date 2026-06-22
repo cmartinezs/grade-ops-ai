@@ -48,7 +48,7 @@ class ProvisionTeacherControllerTest {
                         .header("X-Internal-Key", "test-internal-secret")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
-                                {"name": "Ada Lovelace", "email": "teacher@example.com"}
+                                {"firstName": "Ada", "lastName": "Lovelace", "email": "teacher@example.com"}
                                 """))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.firebaseUid").value("uid-123"))
@@ -68,7 +68,7 @@ class ProvisionTeacherControllerTest {
                         .header("X-Internal-Key", "test-internal-secret")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
-                                {"name": "Ada Lovelace", "email": "dup@example.com"}
+                                {"firstName": "Ada", "lastName": "Lovelace", "email": "dup@example.com"}
                                 """))
                 .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.error").value("EMAIL_ALREADY_EXISTS"));
@@ -81,7 +81,7 @@ class ProvisionTeacherControllerTest {
         mockMvc.perform(post("/internal/teachers")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
-                                {"name": "Ada Lovelace", "email": "teacher@example.com"}
+                                {"firstName": "Ada", "lastName": "Lovelace", "email": "teacher@example.com"}
                                 """))
                 .andExpect(status().isForbidden());
     }

@@ -31,7 +31,7 @@ class PilotFlagControllerTest {
     @BeforeEach
     void setUp() {
         teacherRepository.deleteAll();
-        TeacherEntity teacher = new TeacherEntity(EXISTING_UID, "Pilot Teacher", "pilot@example.com");
+        TeacherEntity teacher = new TeacherEntity(EXISTING_UID, "Pilot", "Teacher", "pilot@example.com");
         teacherRepository.save(teacher);
     }
 
