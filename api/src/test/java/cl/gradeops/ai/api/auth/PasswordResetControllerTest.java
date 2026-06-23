@@ -52,7 +52,7 @@ class PasswordResetControllerTest {
                     {"email": ""}
                     """))
             .andExpect(status().isUnprocessableEntity())
-            .andExpect(jsonPath("$[0].field").exists())
+            .andExpect(jsonPath("$[*].field", org.hamcrest.Matchers.hasItem("email")))
             .andExpect(jsonPath("$[0].message").exists());
     }
 
@@ -64,7 +64,7 @@ class PasswordResetControllerTest {
                     {"email": "not-an-email"}
                     """))
             .andExpect(status().isUnprocessableEntity())
-            .andExpect(jsonPath("$[0].field").exists())
+            .andExpect(jsonPath("$[*].field", org.hamcrest.Matchers.hasItem("email")))
             .andExpect(jsonPath("$[0].message").exists());
     }
 
@@ -152,7 +152,7 @@ class PasswordResetControllerTest {
                     {"email":"teacher@school.cl","password":"abc","passwordRepeat":"abc"}
                     """))
             .andExpect(status().isUnprocessableEntity())
-            .andExpect(jsonPath("$[0].field").exists())
+            .andExpect(jsonPath("$[*].field", org.hamcrest.Matchers.hasItem("password")))
             .andExpect(jsonPath("$[0].message").exists());
     }
 

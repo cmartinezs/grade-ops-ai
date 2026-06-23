@@ -80,7 +80,7 @@ class AuthControllerTest {
                                 {"idToken": "  ", "firstName": "Teacher", "lastName": ""}
                                 """))
                 .andExpect(status().isUnprocessableEntity())
-                .andExpect(jsonPath("$[0].field").exists())
+                .andExpect(jsonPath("$[*].field", org.hamcrest.Matchers.hasItem("idToken")))
                 .andExpect(jsonPath("$[0].message").exists());
     }
 
@@ -92,7 +92,7 @@ class AuthControllerTest {
                                 {"firstName": "Teacher", "lastName": ""}
                                 """))
                 .andExpect(status().isUnprocessableEntity())
-                .andExpect(jsonPath("$[0].field").exists())
+                .andExpect(jsonPath("$[*].field", org.hamcrest.Matchers.hasItem("idToken")))
                 .andExpect(jsonPath("$[0].message").exists());
     }
 
