@@ -98,13 +98,11 @@
             <groupId>software.amazon.awssdk</groupId>
             <artifactId>s3</artifactId>
             <version>2.26.27</version>
-            <optional>true</optional>
         </dependency>
         <dependency>
             <groupId>software.amazon.awssdk</groupId>
             <artifactId>auth</artifactId>
             <version>2.26.27</version>
-            <optional>true</optional>
         </dependency>
     </dependencies>
 
