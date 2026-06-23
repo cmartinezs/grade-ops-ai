@@ -1,7 +1,7 @@
 package cl.gradeops.ai.api.assessment;
 
 import cl.gradeops.ai.api.config.FirebaseTestConfig;
-import cl.gradeops.ai.api.security.AuthenticatedTeacher;
+import cl.gradeops.ai.api.shared.infrastructure.config.security.AuthenticatedTeacher;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseToken;
 import org.junit.jupiter.api.BeforeEach;
