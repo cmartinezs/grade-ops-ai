@@ -9,7 +9,7 @@
 
 | # | Story | Area | Depends On | Status |
 |---|-------|------|------------|--------|
-| 01 | Shared Kernel + ArchUnit Setup | AP | — | TODO |
+| 01 | Shared Kernel + ArchUnit Setup | AP | — | DONE |
 | 02 | Auth Bounded Context | AP | 01 | TODO |
 | 03 | Teacher Bounded Context | AP | 01, 02 | TODO |
 | 04 | Assessment Bounded Context (stub) | AP | 01 | TODO |

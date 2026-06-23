@@ -2,7 +2,6 @@ package cl.gradeops.ai.api.shared.domain.model;
 
 import cl.gradeops.ai.api.shared.domain.event.DomainEvent;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 public abstract class AggregateRoot<ID> {

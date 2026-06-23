@@ -1,4 +1,4 @@
-# 🔗 Traceability: [Planning Name]
+# 🔗 Traceability: 001-hexagonal-refactor
 
 > [← planning/README.md](../../README.md)
 
