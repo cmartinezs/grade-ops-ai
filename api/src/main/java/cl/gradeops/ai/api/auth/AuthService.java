@@ -4,6 +4,7 @@ import cl.gradeops.ai.api.domain.teacher.TeacherEntity;
 import cl.gradeops.ai.api.domain.teacher.TeacherRepository;
 import cl.gradeops.ai.api.port.AuthPort;
 import cl.gradeops.ai.api.port.TeacherIdentity;
+import cl.gradeops.ai.api.shared.infrastructure.adapter.in.web.InvalidTokenException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 

@@ -3,7 +3,7 @@ package cl.gradeops.ai.api.internal.teacher;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseAuthException;
 import com.google.firebase.auth.UserRecord;
-import cl.gradeops.ai.api.common.DuplicateEmailException;
+import cl.gradeops.ai.api.shared.domain.exception.DuplicateEmailException;
 import cl.gradeops.ai.api.domain.teacher.TeacherEntity;
 import cl.gradeops.ai.api.domain.teacher.TeacherRepository;
 import org.springframework.stereotype.Service;

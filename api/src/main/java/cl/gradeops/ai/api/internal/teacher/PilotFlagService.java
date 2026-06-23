@@ -1,6 +1,6 @@
 package cl.gradeops.ai.api.internal.teacher;
 
-import cl.gradeops.ai.api.common.ResourceNotFoundException;
+import cl.gradeops.ai.api.shared.domain.exception.ResourceNotFoundException;
 import cl.gradeops.ai.api.domain.teacher.TeacherEntity;
 import cl.gradeops.ai.api.domain.teacher.TeacherRepository;
 import org.springframework.stereotype.Service;

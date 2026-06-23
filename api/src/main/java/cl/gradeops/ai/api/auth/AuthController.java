@@ -1,6 +1,6 @@
 package cl.gradeops.ai.api.auth;
 
-import cl.gradeops.ai.api.security.AuthenticatedTeacher;
+import cl.gradeops.ai.api.shared.infrastructure.config.security.AuthenticatedTeacher;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

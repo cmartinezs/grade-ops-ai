@@ -1,6 +1,6 @@
 package cl.gradeops.ai.api.assessment;
 
-import cl.gradeops.ai.api.security.AuthenticatedTeacher;
+import cl.gradeops.ai.api.shared.infrastructure.config.security.AuthenticatedTeacher;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;

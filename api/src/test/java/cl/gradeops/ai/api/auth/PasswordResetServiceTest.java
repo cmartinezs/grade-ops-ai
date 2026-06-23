@@ -1,10 +1,10 @@
 package cl.gradeops.ai.api.auth;
 
-import cl.gradeops.ai.api.config.GradeOpsEmailProperties;
-import cl.gradeops.ai.api.config.GradeOpsWebProperties;
+import cl.gradeops.ai.api.shared.infrastructure.config.GradeOpsEmailProperties;
+import cl.gradeops.ai.api.shared.infrastructure.config.GradeOpsWebProperties;
 import cl.gradeops.ai.api.domain.teacher.TeacherEntity;
 import cl.gradeops.ai.api.domain.teacher.TeacherRepository;
-import cl.gradeops.ai.api.email.EmailService;
+import cl.gradeops.ai.api.shared.infrastructure.adapter.out.email.JavaMailEmailService;
 import cl.gradeops.ai.api.port.AuthPort;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -31,7 +31,7 @@ class PasswordResetServiceTest {
 
     @Mock TeacherRepository teacherRepository;
     @Mock PasswordResetCodeRepository codeRepository;
-    @Mock EmailService emailService;
+    @Mock JavaMailEmailService emailService;
     @Mock AuthPort authPort;
 
     PasswordResetService service;

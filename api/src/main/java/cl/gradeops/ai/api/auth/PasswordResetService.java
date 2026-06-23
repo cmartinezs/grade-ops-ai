@@ -1,10 +1,10 @@
 package cl.gradeops.ai.api.auth;
 
-import cl.gradeops.ai.api.config.GradeOpsEmailProperties;
-import cl.gradeops.ai.api.config.GradeOpsWebProperties;
+import cl.gradeops.ai.api.shared.infrastructure.config.GradeOpsEmailProperties;
+import cl.gradeops.ai.api.shared.infrastructure.config.GradeOpsWebProperties;
 import cl.gradeops.ai.api.domain.teacher.TeacherEntity;
 import cl.gradeops.ai.api.domain.teacher.TeacherRepository;
-import cl.gradeops.ai.api.email.EmailService;
+import cl.gradeops.ai.api.shared.infrastructure.adapter.out.email.JavaMailEmailService;
 import cl.gradeops.ai.api.port.AuthPort;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -21,14 +21,14 @@ public class PasswordResetService {
 
     private final TeacherRepository teacherRepository;
     private final PasswordResetCodeRepository codeRepository;
-    private final EmailService emailService;
+    private final JavaMailEmailService emailService;
     private final AuthPort authPort;
     private final GradeOpsEmailProperties emailProperties;
     private final GradeOpsWebProperties webProperties;
 
     public PasswordResetService(TeacherRepository teacherRepository,
                                 PasswordResetCodeRepository codeRepository,
-                                EmailService emailService,
+                                JavaMailEmailService emailService,
                                 AuthPort authPort,
                                 GradeOpsEmailProperties emailProperties,
                                 GradeOpsWebProperties webProperties) {

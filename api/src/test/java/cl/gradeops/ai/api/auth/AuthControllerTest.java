@@ -80,7 +80,8 @@ class AuthControllerTest {
                                 {"idToken": "  ", "firstName": "Teacher", "lastName": ""}
                                 """))
                 .andExpect(status().isUnprocessableEntity())
-                .andExpect(jsonPath("$.error").value("VALIDATION_ERROR"));
+                .andExpect(jsonPath("$[*].field", org.hamcrest.Matchers.hasItem("idToken")))
+                .andExpect(jsonPath("$[0].message").exists());
     }
 
     @Test
@@ -91,7 +92,8 @@ class AuthControllerTest {
                                 {"firstName": "Teacher", "lastName": ""}
                                 """))
                 .andExpect(status().isUnprocessableEntity())
-                .andExpect(jsonPath("$.error").value("VALIDATION_ERROR"));
+                .andExpect(jsonPath("$[*].field", org.hamcrest.Matchers.hasItem("idToken")))
+                .andExpect(jsonPath("$[0].message").exists());
     }
 
     @Test
