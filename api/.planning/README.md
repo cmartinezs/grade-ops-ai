@@ -1,0 +1,37 @@
+# 📋 Planning — grade-ops-api
+
+Central directory for all project plannings.
+
+> For detailed structure, lifecycle, and naming conventions, see [`GUIDE.md`](GUIDE.md).
+> For step-by-step guides, see [`TUTORIAL/`](TUTORIAL/README.md).
+
+---
+
+## 🚨 Fundamental Rule
+
+> **Nothing is executed without being inside a planning.**
+
+### Bypass Parameters
+
+| Parameter | Behavior |
+|-----------|----------|
+| `--no-plan` | Ask for confirmation before executing without a planning entry |
+| `--no-plan-force` | Execute directly without asking |
+
+---
+
+## 📂 Plannings
+
+> **In progress** (EXPANSION / DEEPENING): [`active/`](active/README.md) · **Completed**: [`finished/`](finished/README.md)
+
+### 🚧 In Progress → see [`active/README.md`](active/README.md)
+
+*(none)*
+
+### ✅ Completed → see [`finished/README.md`](finished/README.md)
+
+*(none yet)*
+
+### 🆕 Initial
+
+*(none)*

@@ -46,16 +46,16 @@ As a teacher who signed up with email and password, I want to reset my password 
 - [ ] All Firebase SDK imports for password reset removed from this page.
 
 ### API (`api/`)
-- [ ] `POST /api/v1/auth/forgot-password` implemented and publicly accessible (no auth required).
-- [ ] `PUT /api/v1/auth/reset-password?code=<UUID>` implemented and publicly accessible.
-- [ ] `V5__add_password_reset_codes.sql` migration applied cleanly.
-- [ ] Token TTL: 30 minutes. Upsert semantics: new request replaces existing code for the same teacher.
-- [ ] Google-only teachers silently skipped (no email, no error, same 200 response).
-- [ ] Error codes `RESET_CODE_NOT_FOUND` (404), `RESET_CODE_EXPIRED` (410), `RESET_CODE_USED` (410), `RESET_CODE_EMAIL_MISMATCH` (422) all verified end-to-end.
-- [ ] Firebase Admin SDK `updateUser(uid, {password})` called on successful reset.
-- [ ] Custom Thymeleaf HTML email template rendered and sent via JavaMail (SMTP).
-- [ ] Unit tests for `PasswordResetService` and `EmailService` pass.
-- [ ] Integration tests in `AuthControllerTest` for both endpoints pass.
+- [x] `POST /api/v1/auth/forgot-password` implemented and publicly accessible (no auth required).
+- [x] `POST /api/v1/auth/reset-password` implemented with code in request body — **⚠️ discrepancy**: DoD and web client expect `PUT /api/v1/auth/reset-password?code=<UUID>`; needs alignment before end-to-end acceptance.
+- [x] `V5__add_password_reset_codes.sql` migration applied cleanly.
+- [x] Token TTL: 30 minutes. Upsert semantics: new request replaces existing code for the same teacher.
+- [x] Google-only teachers silently skipped (no email, no error, same 204 response).
+- [ ] Error codes verified end-to-end — **⚠️ discrepancy**: current implementation returns `INVALID_RESET_CODE` (422) for all code failures; DoD specifies `RESET_CODE_NOT_FOUND` (404), `RESET_CODE_EXPIRED` (410), `RESET_CODE_USED` (410), `RESET_CODE_EMAIL_MISMATCH` (422). Requires `InvalidResetCodeException` subtypes or explicit error mapping.
+- [x] Firebase Admin SDK `updateUser(uid, {password})` called on successful reset.
+- [x] Custom Thymeleaf HTML email template rendered and sent via JavaMail (SMTP).
+- [x] Unit tests for handlers and orchestrators pass (hexagonal architecture — `PasswordResetService` superseded).
+- [x] Controller tests in `AuthControllerTest` for both endpoints pass.
 
 ### Infra
 - [ ] SMTP secrets (`SMTP_HOST`, `SMTP_PORT`, `SMTP_USERNAME`, `SMTP_PASSWORD`) provisioned in Secret Manager for `demo` environment.

@@ -7,32 +7,29 @@ import cl.gradeops.ai.api.auth.application.port.in.RegisterUseCase;
 import cl.gradeops.ai.api.auth.application.port.in.ResetPasswordUseCase;
 import cl.gradeops.ai.api.auth.application.port.in.SendPasswordResetEmailUseCase;
 import cl.gradeops.ai.api.auth.application.port.in.SignOutUseCase;
-import cl.gradeops.ai.api.auth.application.port.out.AuthPort;
 import cl.gradeops.ai.api.auth.application.result.RegisterResult;
 import cl.gradeops.ai.api.auth.domain.exception.InvalidResetCodeException;
-import cl.gradeops.ai.api.config.FirebaseTestConfig;
-import cl.gradeops.ai.api.domain.teacher.TeacherRepository;
+import cl.gradeops.ai.api.shared.infrastructure.config.security.AuthenticatedTeacher;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
-import org.springframework.context.annotation.Import;
+import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.http.MediaType;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.util.Collections;
+
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@SpringBootTest
-@AutoConfigureMockMvc
+@WebMvcTest(AuthController.class)
 @ActiveProfiles("test")
-@Import(FirebaseTestConfig.class)
 class AuthControllerTest {
 
     @Autowired MockMvc mockMvc;
@@ -40,13 +37,16 @@ class AuthControllerTest {
     @MockitoBean SignOutUseCase signOutUseCase;
     @MockitoBean SendPasswordResetEmailUseCase sendPasswordResetEmailUseCase;
     @MockitoBean ResetPasswordUseCase resetPasswordUseCase;
-    @MockitoBean AuthPort authPort;
-    @MockitoBean TeacherRepository teacherRepository;
+
+    @AfterEach
+    void clearSecurityContext() {
+        SecurityContextHolder.clearContext();
+    }
 
     // ─── POST /register ──────────────────────────────────────────────────────
 
     @Test
-    void register_existingTeacher_returns200CreatedFalse() throws Exception {
+    void shouldReturn200CreatedFalseWhenTeacherAlreadyExists() throws Exception {
         when(registerUseCase.execute(any(RegisterCommand.class)))
                 .thenReturn(new RegisterResult("uid-1", false));
 
@@ -61,7 +61,7 @@ class AuthControllerTest {
     }
 
     @Test
-    void register_newTeacher_returns200CreatedTrue() throws Exception {
+    void shouldReturn200CreatedTrueWhenNewTeacherRegisters() throws Exception {
         when(registerUseCase.execute(any(RegisterCommand.class)))
                 .thenReturn(new RegisterResult("uid-2", true));
 
@@ -78,13 +78,12 @@ class AuthControllerTest {
     // ─── POST /sign-out ──────────────────────────────────────────────────────
 
     @Test
-    void signOut_authenticatedUser_returns204() throws Exception {
-        cl.gradeops.ai.api.auth.domain.model.TeacherIdentity identity =
-                new cl.gradeops.ai.api.auth.domain.model.TeacherIdentity("uid-1", "t@school.com", true, "Teacher", "EMAIL_PASSWORD");
-        when(authPort.verifyToken("valid-token")).thenReturn(identity);
+    void shouldReturn204WhenAuthenticatedUserSignsOut() throws Exception {
+        AuthenticatedTeacher principal = new AuthenticatedTeacher("uid-1", "t@school.com");
+        SecurityContextHolder.getContext().setAuthentication(
+                new UsernamePasswordAuthenticationToken(principal, null, Collections.emptyList()));
 
-        mockMvc.perform(post("/api/v1/auth/sign-out")
-                        .header("Authorization", "Bearer valid-token"))
+        mockMvc.perform(post("/api/v1/auth/sign-out"))
                 .andExpect(status().isNoContent());
 
         verify(signOutUseCase).execute("uid-1");
@@ -93,7 +92,7 @@ class AuthControllerTest {
     // ─── POST /forgot-password ───────────────────────────────────────────────
 
     @Test
-    void forgotPassword_validEmail_returns204() throws Exception {
+    void shouldReturn204WhenValidEmailSubmittedForPasswordReset() throws Exception {
         mockMvc.perform(post("/api/v1/auth/forgot-password")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
@@ -107,7 +106,7 @@ class AuthControllerTest {
     // ─── POST /reset-password ────────────────────────────────────────────────
 
     @Test
-    void resetPassword_validCode_returns204() throws Exception {
+    void shouldReturn204WhenPasswordResetWithValidCode() throws Exception {
         mockMvc.perform(post("/api/v1/auth/reset-password")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
@@ -119,7 +118,7 @@ class AuthControllerTest {
     }
 
     @Test
-    void resetPassword_invalidCode_returns422() throws Exception {
+    void shouldReturn422WhenPasswordResetWithInvalidCode() throws Exception {
         doThrow(new InvalidResetCodeException("code not found"))
                 .when(resetPasswordUseCase).execute(any(ResetPasswordCommand.class));
 

@@ -4,12 +4,14 @@ import cl.gradeops.ai.api.auth.application.command.IssuePasswordResetCodeCommand
 import cl.gradeops.ai.api.auth.application.port.out.PasswordResetCodeRepositoryPort;
 import cl.gradeops.ai.api.auth.application.result.IssuePasswordResetCodeResult;
 import cl.gradeops.ai.api.auth.domain.model.PasswordResetCode;
+import cl.gradeops.ai.api.auth.domain.model.SignInProvider;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 
 import java.time.Instant;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.*;
 
 class IssuePasswordResetCodeHandlerTest {
@@ -18,9 +20,9 @@ class IssuePasswordResetCodeHandlerTest {
     private final IssuePasswordResetCodeHandler handler = new IssuePasswordResetCodeHandler(codeRepository);
 
     @Test
-    void happy_path_deletes_existing_and_saves_new_code() {
+    void shouldDeleteExistingAndSaveNewCodeWhenExecuted() {
         IssuePasswordResetCodeCommand command = IssuePasswordResetCodeCommand.builder()
-                .teacherUid("teacher-1").ttlMinutes(30).build();
+                .teacherUid("teacher-1").ttlMinutes(30).provider(SignInProvider.EMAIL_PASSWORD).build();
 
         IssuePasswordResetCodeResult result = handler.execute(command);
 
@@ -31,20 +33,30 @@ class IssuePasswordResetCodeHandlerTest {
 
         PasswordResetCode saved = captor.getValue();
         assertThat(saved.getTeacherUid()).isEqualTo("teacher-1");
-        assertThat(saved.getRawCode()).isNotBlank();
-        assertThat(result.rawCode()).isEqualTo(saved.getRawCode());
+        assertThat(saved.getRawCode().value()).isNotBlank();
+        assertThat(result.rawCode()).isEqualTo(saved.getRawCode().value());
         assertThat(result.expiresAt()).isAfter(Instant.now());
     }
 
     @Test
-    void delete_is_called_before_save() {
+    void shouldCallDeleteBeforeSaveWhenExecuted() {
         IssuePasswordResetCodeCommand command = IssuePasswordResetCodeCommand.builder()
-                .teacherUid("teacher-2").ttlMinutes(15).build();
+                .teacherUid("teacher-2").ttlMinutes(15).provider(SignInProvider.EMAIL_PASSWORD).build();
 
         handler.execute(command);
 
         var inOrder = inOrder(codeRepository);
         inOrder.verify(codeRepository).deleteByTeacherUid("teacher-2");
         inOrder.verify(codeRepository).save(any(PasswordResetCode.class));
+    }
+
+    @Test
+    void shouldThrowWhenProviderIsNotEmailPassword() {
+        IssuePasswordResetCodeCommand command = IssuePasswordResetCodeCommand.builder()
+                .teacherUid("teacher-3").ttlMinutes(30).provider(SignInProvider.GOOGLE).build();
+
+        assertThatThrownBy(() -> handler.execute(command))
+                .isInstanceOf(IllegalArgumentException.class);
+        verifyNoInteractions(codeRepository);
     }
 }

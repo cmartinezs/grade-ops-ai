@@ -39,4 +39,15 @@ public class HexagonalArchitectureTest {
             .should().accessClassesThat()
             .resideInAPackage("..adapter.out.persistence..")
             .allowEmptyShould(true);
+
+    @ArchTest
+    static final ArchRule application_has_no_spring_web_or_jpa_imports =
+        noClasses().that().resideInAPackage("..application..")
+            .should().dependOnClassesThat()
+            .resideInAnyPackage(
+                "org.springframework.web..",
+                "org.springframework.data..",
+                "jakarta.persistence.."
+            )
+            .allowEmptyShould(true);
 }

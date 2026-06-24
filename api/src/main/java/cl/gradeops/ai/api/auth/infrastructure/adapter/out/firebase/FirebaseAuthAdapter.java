@@ -1,6 +1,7 @@
 package cl.gradeops.ai.api.auth.infrastructure.adapter.out.firebase;
 
 import cl.gradeops.ai.api.auth.application.port.out.AuthPort;
+import cl.gradeops.ai.api.auth.domain.model.SignInProvider;
 import cl.gradeops.ai.api.auth.domain.model.TeacherIdentity;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseAuthException;
@@ -55,12 +56,12 @@ public class FirebaseAuthAdapter implements AuthPort {
 
     @SuppressWarnings("unchecked")
     private TeacherIdentity toIdentity(FirebaseToken token) {
-        String provider = "EMAIL_PASSWORD";
+        SignInProvider provider = SignInProvider.EMAIL_PASSWORD;
         Map<String, Object> claims = token.getClaims();
         if (claims != null) {
             Map<String, Object> firebase = (Map<String, Object>) claims.get("firebase");
             if (firebase != null && "google.com".equals(firebase.get("sign_in_provider"))) {
-                provider = "GOOGLE";
+                provider = SignInProvider.GOOGLE;
             }
         }
         return new TeacherIdentity(

@@ -1,5 +1,6 @@
 package cl.gradeops.ai.api.auth.infrastructure.adapter.out.firebase;
 
+import cl.gradeops.ai.api.auth.domain.model.SignInProvider;
 import cl.gradeops.ai.api.auth.domain.model.TeacherIdentity;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseAuthException;
@@ -36,7 +37,7 @@ class FirebaseAuthAdapterTest {
         assertThat(identity.email()).isEqualTo("t@school.com");
         assertThat(identity.emailVerified()).isTrue();
         assertThat(identity.name()).isEqualTo("Teacher");
-        assertThat(identity.signInProvider()).isEqualTo("GOOGLE");
+        assertThat(identity.signInProvider()).isEqualTo(SignInProvider.GOOGLE);
     }
 
     @Test
@@ -46,7 +47,7 @@ class FirebaseAuthAdapterTest {
 
         TeacherIdentity identity = adapter.verifyToken("tok");
 
-        assertThat(identity.signInProvider()).isEqualTo("EMAIL_PASSWORD");
+        assertThat(identity.signInProvider()).isEqualTo(SignInProvider.EMAIL_PASSWORD);
     }
 
     @Test

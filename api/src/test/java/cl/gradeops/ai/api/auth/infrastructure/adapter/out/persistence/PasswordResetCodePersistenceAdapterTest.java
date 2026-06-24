@@ -1,6 +1,7 @@
 package cl.gradeops.ai.api.auth.infrastructure.adapter.out.persistence;
 
 import cl.gradeops.ai.api.auth.domain.model.PasswordResetCode;
+import cl.gradeops.ai.api.auth.domain.valueobject.RawCode;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -25,7 +26,7 @@ class PasswordResetCodePersistenceAdapterTest {
 
     @Test
     void save_mapsDomainToEntity_thenPersists() {
-        PasswordResetCode domain = PasswordResetCode.issue("uid-1", "raw-code", Instant.now().plus(1, ChronoUnit.HOURS));
+        PasswordResetCode domain = PasswordResetCode.issue("uid-1", new RawCode("raw-code"), Instant.now().plus(1, ChronoUnit.HOURS));
         PasswordResetCodeJpaEntity entity = new PasswordResetCodeJpaEntity();
         entity.setTeacherUid("uid-1");
         entity.setRawCode("raw-code");
@@ -46,7 +47,7 @@ class PasswordResetCodePersistenceAdapterTest {
         entity.setCreatedAt(Instant.now());
         when(jpaRepository.findByRawCode("raw-code")).thenReturn(Optional.of(entity));
 
-        PasswordResetCode domain = PasswordResetCode.restore("uid-1", "raw-code",
+        PasswordResetCode domain = PasswordResetCode.restore("uid-1", new RawCode("raw-code"),
             entity.getExpiresAt(), entity.getCreatedAt(), null);
         when(mapper.toDomain(entity)).thenReturn(domain);
 

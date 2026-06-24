@@ -40,98 +40,27 @@ Delete all remaining old flat-package source files in `auth/` that have been sup
 
 ## Implementation Steps
 
-1. Create `src/main/java/cl/gradeops/ai/api/auth/infrastructure/config/AuthConfig.java`:
+1. Create `src/main/java/cl/gradeops/ai/api/auth/infrastructure/config/AuthConfig.java` (actual implementation — `TeacherRepositoryPort` used directly, pulled forward from Story 03):
    ```java
-   package cl.gradeops.ai.api.auth.infrastructure.config;
-
-   import cl.gradeops.ai.api.auth.application.orchestrator.ResetPasswordOrchestrator;
-   import cl.gradeops.ai.api.auth.application.orchestrator.SendPasswordResetEmailOrchestrator;
-   import cl.gradeops.ai.api.auth.application.port.in.*;
-   import cl.gradeops.ai.api.auth.application.port.out.*;
-   import cl.gradeops.ai.api.auth.application.usecase.*;
-   import cl.gradeops.ai.api.auth.infrastructure.adapter.out.email.ThymeleafEmailNotificationAdapter;
-   import cl.gradeops.ai.api.auth.infrastructure.adapter.out.firebase.FirebaseAuthAdapter;
-   import cl.gradeops.ai.api.auth.infrastructure.adapter.out.persistence.*;
-   import cl.gradeops.ai.api.domain.teacher.TeacherRepository;
-   import cl.gradeops.ai.api.shared.infrastructure.adapter.out.email.JavaMailEmailService;
-   import cl.gradeops.ai.api.shared.infrastructure.config.GradeOpsEmailProperties;
-   import com.google.firebase.auth.FirebaseAuth;
-   import lombok.RequiredArgsConstructor;
-   import org.springframework.beans.factory.annotation.Value;
-   import org.springframework.context.annotation.Bean;
-   import org.springframework.context.annotation.Configuration;
-
    @Configuration
    @RequiredArgsConstructor
    class AuthConfig {
-
        private final GradeOpsEmailProperties emailProperties;
 
-       @Bean
-       FirebaseAuthAdapter firebaseAuthAdapter(FirebaseAuth firebaseAuth) {
-           return new FirebaseAuthAdapter(firebaseAuth);
-       }
-
-       @Bean
-       PasswordResetCodePersistenceMapper passwordResetCodePersistenceMapper() {
-           return new PasswordResetCodePersistenceMapper();
-       }
-
-       @Bean
-       PasswordResetCodePersistenceAdapter passwordResetCodePersistenceAdapter(
-               PasswordResetCodeJpaRepository jpaRepository,
-               PasswordResetCodePersistenceMapper mapper) {
-           return new PasswordResetCodePersistenceAdapter(jpaRepository, mapper);
-       }
-
-       @Bean
-       ThymeleafEmailNotificationAdapter thymeleafEmailNotificationAdapter(
-               JavaMailEmailService javaMailEmailService,
-               @Value("${gradeops.web.base-url}") String webBaseUrl) {
-           return new ThymeleafEmailNotificationAdapter(javaMailEmailService, webBaseUrl);
-       }
-
-       @Bean
-       RevokeRefreshTokensHandler revokeRefreshTokensHandler(AuthPort authPort) {
-           return new RevokeRefreshTokensHandler(authPort);
-       }
-
-       @Bean
-       SignOutHandler signOutHandler(RevokeRefreshTokensUseCase revokeRefreshTokensUseCase) {
-           return new SignOutHandler(revokeRefreshTokensUseCase);
-       }
-
-       @Bean
-       RegisterHandler registerHandler(AuthPort authPort, TeacherRepository teacherRepository) {
-           return new RegisterHandler(authPort, teacherRepository);
-       }
-
-       @Bean
-       IssuePasswordResetCodeHandler issuePasswordResetCodeHandler(
-               PasswordResetCodeRepositoryPort codeRepository) {
-           return new IssuePasswordResetCodeHandler(codeRepository);
-       }
-
-       @Bean
-       SendPasswordResetEmailOrchestrator sendPasswordResetEmailOrchestrator(
-               TeacherRepository teacherRepository,
-               IssuePasswordResetCodeUseCase issuePasswordResetCodeUseCase,
-               EmailNotificationPort emailNotificationPort) {
-           int ttlMinutes = emailProperties.getResetPassword().getTtlMinutes();
-           return new SendPasswordResetEmailOrchestrator(teacherRepository, issuePasswordResetCodeUseCase, emailNotificationPort, ttlMinutes);
-       }
-
-       @Bean
-       ResetPasswordOrchestrator resetPasswordOrchestrator(
-               PasswordResetCodeRepositoryPort codeRepository,
-               AuthPort authPort,
-               RevokeRefreshTokensUseCase revokeRefreshTokensUseCase,
-               TeacherRepository teacherRepository) {
-           return new ResetPasswordOrchestrator(codeRepository, authPort, revokeRefreshTokensUseCase, teacherRepository);
-       }
+       @Bean FirebaseAuthAdapter firebaseAuthAdapter(FirebaseAuth firebaseAuth) { ... }
+       @Bean TeacherJpaRepositoryAdapter teacherJpaRepositoryAdapter(TeacherRepository repo) { ... }
+       @Bean PasswordResetCodePersistenceMapper passwordResetCodePersistenceMapper() { ... }
+       @Bean PasswordResetCodePersistenceAdapter passwordResetCodePersistenceAdapter(...) { ... }
+       @Bean ThymeleafEmailNotificationAdapter thymeleafEmailNotificationAdapter(...) { ... }
+       @Bean RevokeRefreshTokensHandler revokeRefreshTokensHandler(AuthPort authPort) { ... }
+       @Bean SignOutHandler signOutHandler(RevokeRefreshTokensUseCase ...) { ... }
+       @Bean RegisterHandler registerHandler(AuthPort authPort, TeacherRepositoryPort repo) { ... }
+       @Bean IssuePasswordResetCodeHandler issuePasswordResetCodeHandler(PasswordResetCodeRepositoryPort ...) { ... }
+       @Bean SendPasswordResetEmailOrchestrator sendPasswordResetEmailOrchestrator(TeacherRepositoryPort ...) { ... }
+       @Bean ResetPasswordOrchestrator resetPasswordOrchestrator(PasswordResetCodeRepositoryPort ..., TeacherRepositoryPort ...) { ... }
    }
    ```
-   Note: `TeacherRepository` references here are temporary — Story 03 replaces them with `TeacherRepositoryPort`.
+   11 `@Bean` methods total (includes `TeacherJpaRepositoryAdapter`). No `TeacherRepository` references outside `teacherJpaRepositoryAdapter` bean method.
 
 2. Run `./mvnw compile -q` to confirm the codebase compiles cleanly before making any deletions.
 3. Verify each replacement file exists before deleting the original:
@@ -182,15 +111,14 @@ Delete all remaining old flat-package source files in `auth/` that have been sup
 
 ## Done Criteria
 
-- [ ] `auth/infrastructure/config/AuthConfig.java` created with `@Bean` for all 10 auth beans (adapters, handlers, orchestrators, mapper)
-- [ ] All 7 listed source files in `auth/` flat package are deleted
-- [ ] All 4 listed superseded test files are deleted (or were already deleted in task-11)
-- [ ] `src/main/java/cl/gradeops/ai/api/auth/` contains only subdirectories (`domain/`, `application/`, `infrastructure/`)
-- [ ] `./mvnw compile -q` exits 0 after deletions
-- [ ] `./mvnw test` exits 0 — full test suite green
-- [ ] `TeacherRepository.java` still exists (not deleted — Story 03 dependency)
-- [ ] Story 02 status updated to `DONE` in `story-02-auth-bounded-context.md`
-- [ ] No scope creep: the task satisfies `[CHECK-ATOMICITY]`
+- [x] `auth/infrastructure/config/AuthConfig.java` created with `@Bean` for all 11 auth beans (adapters including `TeacherJpaRepositoryAdapter`, handlers, orchestrators, mapper)
+- [x] All 7 listed source files in `auth/` flat package are deleted
+- [x] All 4 listed superseded test files are deleted (or were already deleted in task-11)
+- [x] `src/main/java/cl/gradeops/ai/api/auth/` contains only subdirectories (`domain/`, `application/`, `infrastructure/`)
+- [x] `./mvnw compile -q` exits 0 after deletions
+- [x] `./mvnw test` exits 0 — 72/72 pass
+- [x] `TeacherRepository.java` still exists (wrapped by `TeacherJpaRepositoryAdapter` — application layer no longer imports it)
+- [x] Story 02 status is `DONE` in `story-02-auth-bounded-context.md`
 
 ---
 
