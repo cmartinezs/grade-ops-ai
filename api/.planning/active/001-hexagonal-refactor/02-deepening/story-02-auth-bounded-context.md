@@ -1,6 +1,6 @@
 # 🔍 DEEPENING: Story 02 — Auth Bounded Context
 
-> **Status:** TODO
+> **Status:** DONE
 > [← 01-expansion.md](../01-expansion.md) | [← planning/README.md](../../README.md)
 
 ---
@@ -17,18 +17,18 @@ Depends on **Story 01** (AggregateRoot, DomainEvent, shared exceptions must exis
 
 | # | Task | Workflow | Status | Output |
 |---|------|----------|--------|--------|
-| 01 | [Move port types (AuthPort, TeacherIdentity)](story-02-auth-bounded-context/task-01-move-port-types.md) | REFACTOR | TODO | `auth.application.port.out.AuthPort`, `auth.domain.model.TeacherIdentity`; `port/` deleted |
-| 02 | [Create PasswordResetCode aggregate + InvalidResetCodeException + test](story-02-auth-bounded-context/task-02-create-domain-model.md) | IMPLEMENT | TODO | `PasswordResetCode.java`, `InvalidResetCodeException.java`, `PasswordResetCodeTest.java` |
-| 03 | [Create auth commands and results](story-02-auth-bounded-context/task-03-create-commands-and-results.md) | IMPLEMENT | TODO | 4 command records + 2 result records with `@Builder` |
-| 04 | [Create application port interfaces (6 port.in + 2 port.out)](story-02-auth-bounded-context/task-04-create-application-ports.md) | IMPLEMENT | TODO | 6 port.in interfaces + `PasswordResetCodeRepositoryPort` + `EmailNotificationPort` |
-| 05 | [Create RegisterHandler + SignOutHandler + RevokeRefreshTokensHandler + tests](story-02-auth-bounded-context/task-05-create-simple-handlers.md) | IMPLEMENT | TODO | 3 handler classes + 3 `*Test.java` files |
-| 06 | [Create IssuePasswordResetCodeHandler + test](story-02-auth-bounded-context/task-06-create-issue-code-handler.md) | IMPLEMENT | TODO | `IssuePasswordResetCodeHandler.java` + `IssuePasswordResetCodeHandlerTest.java` |
-| 07 | [Create SendPasswordResetEmailOrchestrator + ResetPasswordOrchestrator + tests](story-02-auth-bounded-context/task-07-create-orchestrators.md) | IMPLEMENT | TODO | 2 orchestrator classes + 2 `*Test.java` files |
-| 08 | [Move FirebaseAuthAdapter to auth.infrastructure.adapter.out.firebase](story-02-auth-bounded-context/task-08-move-firebase-auth-adapter.md) | REFACTOR | TODO | `FirebaseAuthAdapter` at new path; `adapter/auth/` deleted |
-| 09 | [Create PasswordResetCode persistence stack](story-02-auth-bounded-context/task-09-create-persistence-stack.md) | IMPLEMENT | TODO | `PasswordResetCodeJpaEntity`, `PasswordResetCodeJpaRepository`, `PasswordResetCodePersistenceAdapter`, `PasswordResetCodePersistenceMapper` + adapter test |
-| 10 | [Create ThymeleafEmailNotificationAdapter](story-02-auth-bounded-context/task-10-create-email-notification-adapter.md) | IMPLEMENT | TODO | `ThymeleafEmailNotificationAdapter.java` + test |
-| 11 | [Create AuthController + request/response DTOs + migrate controller tests](story-02-auth-bounded-context/task-11-create-auth-controller.md) | IMPLEMENT | TODO | `AuthController` + 4 DTO records in `auth.infrastructure.adapter.in.web` |
-| 12 | [Delete old auth flat-package files and verify full test suite](story-02-auth-bounded-context/task-12-cleanup-and-verify.md) | CLEANUP | TODO | 0 flat-package files remain in `auth/`; `./mvnw test` exits 0 |
+| 01 | [Move port types (AuthPort, TeacherIdentity)](story-02-auth-bounded-context/task-01-move-port-types.md) | REFACTOR | DONE | `auth.application.port.out.AuthPort`, `auth.domain.model.TeacherIdentity`; `port/` deleted |
+| 02 | [Create PasswordResetCode aggregate + InvalidResetCodeException + test](story-02-auth-bounded-context/task-02-create-domain-model.md) | IMPLEMENT | DONE | `PasswordResetCode.java`, `InvalidResetCodeException.java`, `PasswordResetCodeTest.java` |
+| 03 | [Create auth commands and results](story-02-auth-bounded-context/task-03-create-commands-and-results.md) | IMPLEMENT | DONE | 4 command records + 2 result records with `@Builder` |
+| 04 | [Create application port interfaces (6 port.in + 2 port.out)](story-02-auth-bounded-context/task-04-create-application-ports.md) | IMPLEMENT | DONE | 6 port.in interfaces + `PasswordResetCodeRepositoryPort` + `EmailNotificationPort` |
+| 05 | [Create RegisterHandler + SignOutHandler + RevokeRefreshTokensHandler + tests](story-02-auth-bounded-context/task-05-create-simple-handlers.md) | IMPLEMENT | DONE | 3 handler classes + 3 `*Test.java` files |
+| 06 | [Create IssuePasswordResetCodeHandler + test](story-02-auth-bounded-context/task-06-create-issue-code-handler.md) | IMPLEMENT | DONE | `IssuePasswordResetCodeHandler.java` + `IssuePasswordResetCodeHandlerTest.java` |
+| 07 | [Create SendPasswordResetEmailOrchestrator + ResetPasswordOrchestrator + tests](story-02-auth-bounded-context/task-07-create-orchestrators.md) | IMPLEMENT | DONE | 2 orchestrator classes + 2 `*Test.java` files |
+| 08 | [Move FirebaseAuthAdapter to auth.infrastructure.adapter.out.firebase](story-02-auth-bounded-context/task-08-move-firebase-auth-adapter.md) | REFACTOR | DONE | `FirebaseAuthAdapter` at new path; `adapter/auth/` deleted |
+| 09 | [Create PasswordResetCode persistence stack](story-02-auth-bounded-context/task-09-create-persistence-stack.md) | IMPLEMENT | DONE | `PasswordResetCodeJpaEntity`, `PasswordResetCodeJpaRepository`, `PasswordResetCodePersistenceAdapter`, `PasswordResetCodePersistenceMapper` + adapter test |
+| 10 | [Create ThymeleafEmailNotificationAdapter](story-02-auth-bounded-context/task-10-create-email-notification-adapter.md) | IMPLEMENT | DONE | `ThymeleafEmailNotificationAdapter.java` + test |
+| 11 | [Create AuthController + request/response DTOs + migrate controller tests](story-02-auth-bounded-context/task-11-create-auth-controller.md) | IMPLEMENT | DONE | `AuthController` + 4 DTO records in `auth.infrastructure.adapter.in.web` |
+| 12 | [Delete old auth flat-package files and verify full test suite](story-02-auth-bounded-context/task-12-cleanup-and-verify.md) | CLEANUP | DONE | 0 flat-package files remain in `auth/`; `./mvnw test` exits 0 |
 
 ---
 

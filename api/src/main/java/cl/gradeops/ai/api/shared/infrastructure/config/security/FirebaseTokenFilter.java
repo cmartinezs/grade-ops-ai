@@ -1,7 +1,7 @@
 package cl.gradeops.ai.api.shared.infrastructure.config.security;
 
-import cl.gradeops.ai.api.port.AuthPort;
-import cl.gradeops.ai.api.port.TeacherIdentity;
+import cl.gradeops.ai.api.auth.application.port.out.AuthPort;
+import cl.gradeops.ai.api.auth.domain.model.TeacherIdentity;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;

@@ -1,6 +1,8 @@
 package cl.gradeops.ai.api.shared.infrastructure.adapter.in.web;
 
+import cl.gradeops.ai.api.auth.domain.exception.InvalidResetCodeException;
 import cl.gradeops.ai.api.shared.domain.exception.DuplicateEmailException;
+import cl.gradeops.ai.api.shared.domain.exception.InvalidTokenException;
 import cl.gradeops.ai.api.shared.domain.exception.ResourceNotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,6 +37,12 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiErrorResponse> handleInvalidToken(InvalidTokenException ex) {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                 .body(ApiErrorResponse.of("INVALID_TOKEN"));
+    }
+
+    @ExceptionHandler(InvalidResetCodeException.class)
+    public ResponseEntity<ApiErrorResponse> handleInvalidResetCode(InvalidResetCodeException ex) {
+        return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY)
+                .body(ApiErrorResponse.of("INVALID_RESET_CODE"));
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)

@@ -1,6 +1,6 @@
 # ⚛️ TASK 12 — Delete old auth flat-package files and verify full test suite
 
-> **Status:** TODO
+> **Status:** DONE
 > **Workflow:** CLEANUP
 > **Depends On:** task-05, task-06, task-07, task-08, task-09, task-10, task-11
 > [← story file](../story-02-auth-bounded-context.md)

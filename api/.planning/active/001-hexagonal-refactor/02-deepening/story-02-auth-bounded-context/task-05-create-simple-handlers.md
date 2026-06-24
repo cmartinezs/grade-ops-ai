@@ -1,6 +1,6 @@
 # ⚛️ TASK 05 — Create RegisterHandler + SignOutHandler + RevokeRefreshTokensHandler + unit tests
 
-> **Status:** TODO
+> **Status:** DONE
 > **Workflow:** IMPLEMENT
 > **Depends On:** task-01, task-03, task-04
 > [← story file](../story-02-auth-bounded-context.md)

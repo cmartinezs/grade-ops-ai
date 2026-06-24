@@ -1,6 +1,6 @@
 # ⚛️ TASK 10 — Create ThymeleafEmailNotificationAdapter
 
-> **Status:** TODO
+> **Status:** DONE
 > **Workflow:** IMPLEMENT
 > **Depends On:** task-04
 > [← story file](../story-02-auth-bounded-context.md)

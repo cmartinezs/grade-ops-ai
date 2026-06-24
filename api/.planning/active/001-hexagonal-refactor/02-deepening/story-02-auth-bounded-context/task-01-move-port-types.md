@@ -1,6 +1,6 @@
 # ⚛️ TASK 01 — Move TeacherIdentity + AuthPort from port/ to auth packages; delete port/
 
-> **Status:** TODO
+> **Status:** DONE
 > **Workflow:** REFACTOR
 > **Depends On:** —
 > [← story file](../story-02-auth-bounded-context.md)
