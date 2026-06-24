@@ -1,8 +1,11 @@
 package cl.gradeops.ai.api.auth.domain.model;
 
 import cl.gradeops.ai.api.shared.domain.model.AggregateRoot;
+import lombok.Getter;
+
 import java.time.Instant;
 
+@Getter
 public class PasswordResetCode extends AggregateRoot<String> {
 
     private final String rawCode;
@@ -33,8 +36,4 @@ public class PasswordResetCode extends AggregateRoot<String> {
     public void markUsed()     { this.usedAt = Instant.now(); }
 
     public String getTeacherUid() { return getId(); }
-    public String getRawCode()    { return rawCode; }
-    public Instant getExpiresAt() { return expiresAt; }
-    public Instant getCreatedAt() { return createdAt; }
-    public Instant getUsedAt()    { return usedAt; }
 }
