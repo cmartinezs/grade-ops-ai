@@ -4,9 +4,10 @@ import cl.gradeops.ai.api.auth.application.command.IssuePasswordResetCodeCommand
 import cl.gradeops.ai.api.auth.application.command.SendPasswordResetEmailCommand;
 import cl.gradeops.ai.api.auth.application.port.in.IssuePasswordResetCodeUseCase;
 import cl.gradeops.ai.api.auth.application.port.out.EmailNotificationPort;
+import cl.gradeops.ai.api.auth.application.port.out.TeacherRepositoryPort;
 import cl.gradeops.ai.api.auth.application.result.IssuePasswordResetCodeResult;
+import cl.gradeops.ai.api.auth.domain.model.SignInProvider;
 import cl.gradeops.ai.api.domain.teacher.TeacherEntity;
-import cl.gradeops.ai.api.domain.teacher.TeacherRepository;
 import org.junit.jupiter.api.Test;
 
 import java.time.Instant;
@@ -16,14 +17,14 @@ import static org.mockito.Mockito.*;
 
 class SendPasswordResetEmailOrchestratorTest {
 
-    private final TeacherRepository teacherRepository = mock(TeacherRepository.class);
+    private final TeacherRepositoryPort teacherRepository = mock(TeacherRepositoryPort.class);
     private final IssuePasswordResetCodeUseCase issuePasswordResetCodeUseCase = mock(IssuePasswordResetCodeUseCase.class);
     private final EmailNotificationPort emailNotificationPort = mock(EmailNotificationPort.class);
     private final SendPasswordResetEmailOrchestrator orchestrator =
             new SendPasswordResetEmailOrchestrator(teacherRepository, issuePasswordResetCodeUseCase, emailNotificationPort, 30);
 
     @Test
-    void unknown_email_no_interactions() {
+    void shouldNotInteractWithUseCaseWhenEmailIsUnknown() {
         SendPasswordResetEmailCommand command = SendPasswordResetEmailCommand.builder().email("unknown@test.com").build();
         when(teacherRepository.findByEmail("unknown@test.com")).thenReturn(Optional.empty());
 
@@ -33,7 +34,7 @@ class SendPasswordResetEmailOrchestratorTest {
     }
 
     @Test
-    void google_provider_no_interactions() {
+    void shouldNotInteractWithUseCaseWhenProviderIsGoogle() {
         TeacherEntity teacher = new TeacherEntity("uid-1", "Grace", "Hopper", "g@test.com", "GOOGLE");
         SendPasswordResetEmailCommand command = SendPasswordResetEmailCommand.builder().email("g@test.com").build();
         when(teacherRepository.findByEmail("g@test.com")).thenReturn(Optional.of(teacher));
@@ -44,7 +45,7 @@ class SendPasswordResetEmailOrchestratorTest {
     }
 
     @Test
-    void email_password_teacher_triggers_code_and_email() {
+    void shouldIssueCodeAndSendEmailWhenTeacherUsesEmailPassword() {
         TeacherEntity teacher = new TeacherEntity("uid-2", "Ada", "Lovelace", "a@test.com", "EMAIL_PASSWORD");
         SendPasswordResetEmailCommand command = SendPasswordResetEmailCommand.builder().email("a@test.com").build();
         when(teacherRepository.findByEmail("a@test.com")).thenReturn(Optional.of(teacher));
@@ -54,7 +55,8 @@ class SendPasswordResetEmailOrchestratorTest {
         orchestrator.execute(command);
 
         verify(issuePasswordResetCodeUseCase).execute(argThat(c ->
-                c.teacherUid().equals("uid-2") && c.ttlMinutes() == 30));
+                c.teacherUid().equals("uid-2") && c.ttlMinutes() == 30
+                && c.provider() == SignInProvider.EMAIL_PASSWORD));
         verify(emailNotificationPort).sendPasswordResetEmail("a@test.com", "Ada", "raw-123");
     }
 }

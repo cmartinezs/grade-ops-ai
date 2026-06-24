@@ -1,6 +1,8 @@
 package cl.gradeops.ai.api.shared.infrastructure.adapter.in.web;
 
 import cl.gradeops.ai.api.auth.domain.exception.InvalidResetCodeException;
+import cl.gradeops.ai.api.auth.domain.exception.PasswordMismatchException;
+import cl.gradeops.ai.api.auth.domain.exception.ResetCodeEmailMismatchException;
 import cl.gradeops.ai.api.shared.domain.exception.DuplicateEmailException;
 import cl.gradeops.ai.api.shared.domain.exception.InvalidTokenException;
 import cl.gradeops.ai.api.shared.domain.exception.ResourceNotFoundException;
@@ -41,8 +43,20 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(InvalidResetCodeException.class)
     public ResponseEntity<ApiErrorResponse> handleInvalidResetCode(InvalidResetCodeException ex) {
-        return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY)
+        return ResponseEntity.status(HttpStatus.UNPROCESSABLE_CONTENT)
                 .body(ApiErrorResponse.of("INVALID_RESET_CODE"));
+    }
+
+    @ExceptionHandler(PasswordMismatchException.class)
+    public ResponseEntity<ApiErrorResponse> handlePasswordMismatch(PasswordMismatchException ex) {
+        return ResponseEntity.status(HttpStatus.UNPROCESSABLE_CONTENT)
+                .body(ApiErrorResponse.of("PASSWORD_MISMATCH"));
+    }
+
+    @ExceptionHandler(ResetCodeEmailMismatchException.class)
+    public ResponseEntity<ApiErrorResponse> handleResetCodeEmailMismatch(ResetCodeEmailMismatchException ex) {
+        return ResponseEntity.status(HttpStatus.UNPROCESSABLE_CONTENT)
+                .body(ApiErrorResponse.of("RESET_CODE_EMAIL_MISMATCH"));
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
@@ -50,7 +64,7 @@ public class GlobalExceptionHandler {
         List<FieldErrorResponse> errors = ex.getBindingResult().getFieldErrors().stream()
                 .map(e -> new FieldErrorResponse(e.getField(), e.getDefaultMessage()))
                 .toList();
-        return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(errors);
+        return ResponseEntity.status(HttpStatus.UNPROCESSABLE_CONTENT).body(errors);
     }
 
     @ExceptionHandler(MissingServletRequestParameterException.class)

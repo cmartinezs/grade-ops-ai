@@ -2,9 +2,10 @@ package cl.gradeops.ai.api.auth.application.usecase;
 
 import cl.gradeops.ai.api.auth.application.command.RegisterCommand;
 import cl.gradeops.ai.api.auth.application.port.out.AuthPort;
+import cl.gradeops.ai.api.auth.application.port.out.TeacherRepositoryPort;
 import cl.gradeops.ai.api.auth.application.result.RegisterResult;
+import cl.gradeops.ai.api.auth.domain.model.SignInProvider;
 import cl.gradeops.ai.api.auth.domain.model.TeacherIdentity;
-import cl.gradeops.ai.api.domain.teacher.TeacherRepository;
 import cl.gradeops.ai.api.shared.domain.exception.InvalidTokenException;
 import org.junit.jupiter.api.Test;
 
@@ -16,12 +17,12 @@ import static org.mockito.Mockito.*;
 class RegisterHandlerTest {
 
     private final AuthPort authPort = mock(AuthPort.class);
-    private final TeacherRepository teacherRepository = mock(TeacherRepository.class);
+    private final TeacherRepositoryPort teacherRepository = mock(TeacherRepositoryPort.class);
     private final RegisterHandler handler = new RegisterHandler(authPort, teacherRepository);
 
     @Test
-    void existing_teacher_returns_created_false() {
-        TeacherIdentity identity = new TeacherIdentity("uid-1", "t@school.com", true, "Grace Hopper", "GOOGLE");
+    void shouldReturnCreatedFalseWhenTeacherAlreadyExists() {
+        TeacherIdentity identity = new TeacherIdentity("uid-1", "t@school.com", true, "Grace Hopper", SignInProvider.GOOGLE);
         when(authPort.verifyTokenUnchecked("token-1")).thenReturn(identity);
         when(teacherRepository.existsById("uid-1")).thenReturn(true);
 
@@ -34,8 +35,8 @@ class RegisterHandlerTest {
     }
 
     @Test
-    void new_teacher_saves_and_returns_created_true() {
-        TeacherIdentity identity = new TeacherIdentity("uid-2", "a@school.com", true, "Ada Lovelace", "GOOGLE");
+    void shouldSaveAndReturnCreatedTrueWhenNewTeacher() {
+        TeacherIdentity identity = new TeacherIdentity("uid-2", "a@school.com", true, "Ada Lovelace", SignInProvider.GOOGLE);
         when(authPort.verifyTokenUnchecked("token-2")).thenReturn(identity);
         when(teacherRepository.existsById("uid-2")).thenReturn(false);
 
@@ -48,7 +49,7 @@ class RegisterHandlerTest {
     }
 
     @Test
-    void invalid_token_throws_InvalidTokenException() {
+    void shouldThrowInvalidTokenExceptionWhenTokenIsInvalid() {
         when(authPort.verifyTokenUnchecked("bad-token")).thenThrow(new IllegalArgumentException("bad"));
 
         assertThatThrownBy(() -> handler.execute(

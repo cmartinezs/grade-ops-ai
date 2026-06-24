@@ -5,26 +5,30 @@ import cl.gradeops.ai.api.auth.application.port.in.RevokeRefreshTokensUseCase;
 import cl.gradeops.ai.api.auth.application.port.in.ResetPasswordUseCase;
 import cl.gradeops.ai.api.auth.application.port.out.AuthPort;
 import cl.gradeops.ai.api.auth.application.port.out.PasswordResetCodeRepositoryPort;
+import cl.gradeops.ai.api.auth.application.port.out.TeacherRepositoryPort;
 import cl.gradeops.ai.api.auth.domain.exception.InvalidResetCodeException;
+import cl.gradeops.ai.api.auth.domain.exception.PasswordMismatchException;
+import cl.gradeops.ai.api.auth.domain.exception.ResetCodeEmailMismatchException;
 import cl.gradeops.ai.api.auth.domain.model.PasswordResetCode;
 import cl.gradeops.ai.api.domain.teacher.TeacherEntity;
-import cl.gradeops.ai.api.domain.teacher.TeacherRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
-import org.springframework.web.server.ResponseStatusException;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.transaction.annotation.Transactional;
 
+@Slf4j
 @RequiredArgsConstructor
 public class ResetPasswordOrchestrator implements ResetPasswordUseCase {
 
     private final PasswordResetCodeRepositoryPort codeRepository;
     private final AuthPort authPort;
     private final RevokeRefreshTokensUseCase revokeRefreshTokensUseCase;
-    private final TeacherRepository teacherRepository;
+    private final TeacherRepositoryPort teacherRepository;
 
     @Override
+    @Transactional
     public void execute(ResetPasswordCommand command) {
         if (!command.password().equals(command.passwordRepeat())) {
-            throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "PASSWORD_MISMATCH");
+            throw new PasswordMismatchException();
         }
 
         PasswordResetCode code = codeRepository.findByRawCode(command.rawCode())
@@ -41,12 +45,14 @@ public class ResetPasswordOrchestrator implements ResetPasswordUseCase {
                 .orElseThrow(() -> new InvalidResetCodeException("teacher not found"));
 
         if (!teacher.getEmail().equalsIgnoreCase(command.email())) {
-            throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "RESET_CODE_EMAIL_MISMATCH");
+            throw new ResetCodeEmailMismatchException();
         }
 
         authPort.updatePassword(teacher.getFirebaseUid(), command.password());
         revokeRefreshTokensUseCase.execute(teacher.getFirebaseUid());
         code.markUsed();
         codeRepository.save(code);
+        log.debug("Password reset completed for uid={}, events={}", teacher.getFirebaseUid(),
+                code.pullDomainEvents().size());
     }
 }

@@ -15,7 +15,7 @@ Create `SendPasswordResetEmailOrchestrator` and `ResetPasswordOrchestrator` — 
 
 ## Technical Design
 
-- **Approach:** Orchestrators coordinate atomic use cases (port.in interfaces) and output ports — they never contain business logic themselves. Both orchestrators temporarily inject `domain.teacher.TeacherRepository` (old JPA interface) to access teacher data because `TeacherRepositoryPort` does not yet exist — Story 03 will replace these injections. The reset link URL is the adapter's responsibility: orchestrators pass the raw code to `EmailNotificationPort` and the adapter builds the URL. TTL for code generation: `SendPasswordResetEmailOrchestrator` receives `ttlMinutes` as a constructor parameter (a plain `int`) — the value is supplied via `AuthConfig` which reads it from `GradeOpsEmailProperties`. This way the orchestrator has no Spring or config import at all. Neither orchestrator carries any Spring stereotype annotation (`@Component`, `@Service`); both are declared as `@Bean` in `AuthConfig` (created in task-12).
+- **Approach:** Orchestrators coordinate atomic use cases (port.in interfaces) and output ports — they never contain business logic themselves. Both orchestrators inject `TeacherRepositoryPort` (pulled forward from Story 03 as part of a post-review fix — see story Inconsistency #4). The reset link URL is the adapter's responsibility: orchestrators pass the raw code to `EmailNotificationPort` and the adapter builds the URL. TTL for code generation: `SendPasswordResetEmailOrchestrator` receives `ttlMinutes` as a constructor parameter (a plain `int`) — the value is supplied via `AuthConfig` which reads it from `GradeOpsEmailProperties`. This way the orchestrator has no Spring or config import at all. Neither orchestrator carries any Spring stereotype annotation (`@Component`, `@Service`); both are declared as `@Bean` in `AuthConfig`.
 - **Affected files / components:**
   - `src/main/java/cl/gradeops/ai/api/auth/application/orchestrator/SendPasswordResetEmailOrchestrator.java` ← NEW
   - `src/main/java/cl/gradeops/ai/api/auth/application/orchestrator/ResetPasswordOrchestrator.java` ← NEW
@@ -25,17 +25,18 @@ Create `SendPasswordResetEmailOrchestrator` and `ResetPasswordOrchestrator` — 
   - `SendPasswordResetEmailOrchestrator` implements `SendPasswordResetEmailUseCase`; receives `ttlMinutes` as a plain `int` constructor parameter (no config imports).
   - `ResetPasswordOrchestrator` implements `ResetPasswordUseCase`.
 - **Design notes on ResetPasswordOrchestrator:**
-  - The orchestrator checks `passwordRepeat` match before any port call (early validation).
+  - IS `@Transactional` — owns the password-update + code-save unit of work (post-review correction; original design said NOT transactional).
+  - The orchestrator checks `passwordRepeat` match first, throwing `PasswordMismatchException` (domain exception — not `ResponseStatusException`).
   - Calls `PasswordResetCodeRepositoryPort.findByRawCode(command.rawCode())`.
   - Throws `InvalidResetCodeException` if not found, expired, or used.
-  - Then loads teacher via `TeacherRepository.findById(code.getTeacherUid())` (temporary — Story 03 updates this).
-  - Validates `teacher.getEmail().equalsIgnoreCase(command.email())`.
+  - Then loads teacher via `TeacherRepositoryPort.findById(code.getTeacherUid())`.
+  - Email mismatch throws `ResetCodeEmailMismatchException` (domain exception).
   - Calls `AuthPort.updatePassword`, then `RevokeRefreshTokensUseCase.execute`, then `code.markUsed()` + `PasswordResetCodeRepositoryPort.save(code)`.
-  - NOT `@Transactional` — orchestrators don't own transactions. The `save(code)` call in the repository adapter IS transactional via its own `@Transactional`.
+  - Calls `code.pullDomainEvents()` after save (to drain the event list and avoid silent event loss).
 - **Design notes on SendPasswordResetEmailOrchestrator:**
-  - Loads teacher by email via `TeacherRepository.findByEmail(command.email())`. Returns silently if not found.
-  - Returns silently if teacher is not `"EMAIL_PASSWORD"` provider.
-  - Calls `IssuePasswordResetCodeUseCase.execute(...)` with `ttlMinutes` from `GradeOpsEmailProperties`.
+  - Loads teacher by email via `TeacherRepositoryPort.findByEmail(command.email())`. Returns silently if not found.
+  - Parses provider via `SignInProvider.valueOf(teacher.getProvider())`; returns silently for unknown or non-`EMAIL_PASSWORD` providers.
+  - Passes `provider` field in `IssuePasswordResetCodeCommand` (required by handler's provider guard).
   - Calls `EmailNotificationPort.sendPasswordResetEmail(email, firstName, result.rawCode())`.
 
 ---
@@ -87,16 +88,17 @@ Create `SendPasswordResetEmailOrchestrator` and `ResetPasswordOrchestrator` — 
 
 ## Done Criteria
 
-- [ ] `SendPasswordResetEmailOrchestrator` and `ResetPasswordOrchestrator` exist in `auth/application/orchestrator/`
-- [ ] Both are `@RequiredArgsConstructor` with NO `@Component`/`@Service` — declared as `@Bean` in `AuthConfig`
-- [ ] Neither orchestrator is `@Transactional` and neither imports Spring or config classes
-- [ ] `SendPasswordResetEmailOrchestrator` receives `int ttlMinutes` as a constructor field (no `GradeOpsEmailProperties` import)
-- [ ] Neither orchestrator contains business logic — only coordination of collaborator calls
-- [ ] `ResetPasswordOrchestrator` throws `InvalidResetCodeException` for invalid/expired/used codes
-- [ ] `SendPasswordResetEmailOrchestrator` does NOT build the reset URL — passes `rawCode` to `EmailNotificationPort`
-- [ ] Both test classes pass all cases
-- [ ] `./mvnw test -Dtest=SendPasswordResetEmailOrchestratorTest,ResetPasswordOrchestratorTest -q` exits 0
-- [ ] No scope creep: the task satisfies `[CHECK-ATOMICITY]`
+- [x] `SendPasswordResetEmailOrchestrator` and `ResetPasswordOrchestrator` exist in `auth/application/orchestrator/`
+- [x] Both are `@RequiredArgsConstructor` with NO `@Component`/`@Service` — declared as `@Bean` in `AuthConfig`
+- [x] `SendPasswordResetEmailOrchestrator` is NOT `@Transactional` and imports no Spring/config classes; `ResetPasswordOrchestrator` IS `@Transactional` (owns password-update + code-save unit of work)
+- [x] `SendPasswordResetEmailOrchestrator` receives `int ttlMinutes` as a constructor field (no `GradeOpsEmailProperties` import)
+- [x] Both orchestrators inject `TeacherRepositoryPort` (not `domain.teacher.TeacherRepository`)
+- [x] `ResetPasswordOrchestrator` throws domain exceptions: `PasswordMismatchException` for password mismatch, `InvalidResetCodeException` for invalid/expired/used codes, `ResetCodeEmailMismatchException` for email mismatch
+- [x] `ResetPasswordOrchestrator` calls `code.pullDomainEvents()` after `codeRepository.save(code)` to drain domain events
+- [x] `SendPasswordResetEmailOrchestrator` passes `provider` field in `IssuePasswordResetCodeCommand`
+- [x] `SendPasswordResetEmailOrchestrator` does NOT build the reset URL — passes `rawCode` to `EmailNotificationPort`
+- [x] Both test classes pass all cases; methods follow `should...When...` convention
+- [x] `./mvnw test -Dtest=SendPasswordResetEmailOrchestratorTest,ResetPasswordOrchestratorTest -q` exits 0
 
 ---
 

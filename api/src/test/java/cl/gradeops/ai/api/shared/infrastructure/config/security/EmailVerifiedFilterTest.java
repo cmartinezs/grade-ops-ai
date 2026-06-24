@@ -1,5 +1,6 @@
 package cl.gradeops.ai.api.shared.infrastructure.config.security;
 
+import cl.gradeops.ai.api.auth.domain.model.SignInProvider;
 import cl.gradeops.ai.api.auth.domain.model.TeacherIdentity;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.http.HttpServletRequest;
@@ -35,7 +36,7 @@ class EmailVerifiedFilterTest {
     }
 
     @Test
-    void unverified_token_on_protected_endpoint_returns_401() throws Exception {
+    void shouldReturn401WhenUnverifiedTokenOnProtectedEndpoint() throws Exception {
         TeacherIdentity identity = unverifiedIdentity();
         when(request.getAttribute("teacherIdentity")).thenReturn(identity);
         when(request.getRequestURI()).thenReturn("/workspace/assessments");
@@ -48,7 +49,7 @@ class EmailVerifiedFilterTest {
     }
 
     @Test
-    void verified_token_on_protected_endpoint_proceeds() throws Exception {
+    void shouldProceedWhenVerifiedTokenOnProtectedEndpoint() throws Exception {
         TeacherIdentity identity = verifiedIdentity();
         when(request.getAttribute("teacherIdentity")).thenReturn(identity);
         when(request.getRequestURI()).thenReturn("/workspace/assessments");
@@ -61,7 +62,7 @@ class EmailVerifiedFilterTest {
 
     @ParameterizedTest
     @ValueSource(strings = {"/auth/register", "/auth/verify/resend"})
-    void unverified_token_on_whitelisted_path_proceeds(String path) throws Exception {
+    void shouldProceedWhenUnverifiedTokenOnWhitelistedPath(String path) throws Exception {
         TeacherIdentity identity = unverifiedIdentity();
         when(request.getAttribute("teacherIdentity")).thenReturn(identity);
         when(request.getRequestURI()).thenReturn(path);
@@ -73,7 +74,7 @@ class EmailVerifiedFilterTest {
     }
 
     @Test
-    void no_token_attribute_filter_skips() throws Exception {
+    void shouldSkipWhenNoTokenAttribute() throws Exception {
         when(request.getAttribute("teacherIdentity")).thenReturn(null);
         when(request.getRequestURI()).thenReturn("/workspace/assessments");
 
@@ -84,10 +85,10 @@ class EmailVerifiedFilterTest {
     }
 
     private TeacherIdentity unverifiedIdentity() {
-        return new TeacherIdentity("uid-1", "teacher@school.com", false, "Teacher", "EMAIL_PASSWORD");
+        return new TeacherIdentity("uid-1", "teacher@school.com", false, "Teacher", SignInProvider.EMAIL_PASSWORD);
     }
 
     private TeacherIdentity verifiedIdentity() {
-        return new TeacherIdentity("uid-1", "teacher@school.com", true, "Teacher", "EMAIL_PASSWORD");
+        return new TeacherIdentity("uid-1", "teacher@school.com", true, "Teacher", SignInProvider.EMAIL_PASSWORD);
     }
 }
