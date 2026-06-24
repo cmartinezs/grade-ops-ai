@@ -1,5 +1,8 @@
 package cl.gradeops.ai.api.shared.domain.exception;
 
+import lombok.Getter;
+
+@Getter
 public class ResourceNotFoundException extends DomainException {
 
     private final String resourceId;
@@ -8,6 +11,4 @@ public class ResourceNotFoundException extends DomainException {
         super("Resource not found: " + resourceId);
         this.resourceId = resourceId;
     }
-
-    public String getResourceId() { return resourceId; }
 }

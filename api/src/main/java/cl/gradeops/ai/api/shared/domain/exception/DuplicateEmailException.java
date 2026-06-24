@@ -1,5 +1,8 @@
 package cl.gradeops.ai.api.shared.domain.exception;
 
+import lombok.Getter;
+
+@Getter
 public class DuplicateEmailException extends DomainException {
 
     private final String email;
@@ -8,6 +11,4 @@ public class DuplicateEmailException extends DomainException {
         super("Teacher with email already exists: " + email);
         this.email = email;
     }
-
-    public String getEmail() { return email; }
 }
