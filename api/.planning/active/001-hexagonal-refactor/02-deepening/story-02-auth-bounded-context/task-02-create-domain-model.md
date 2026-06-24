@@ -1,6 +1,6 @@
 # ⚛️ TASK 02 — Create PasswordResetCode aggregate + InvalidResetCodeException + PasswordResetCodeTest
 
-> **Status:** TODO
+> **Status:** DONE
 > **Workflow:** IMPLEMENT
 > **Depends On:** —
 > [← story file](../story-02-auth-bounded-context.md)

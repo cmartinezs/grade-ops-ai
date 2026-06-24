@@ -1,6 +1,6 @@
 # ⚛️ TASK 06 — Create IssuePasswordResetCodeHandler + unit test
 
-> **Status:** TODO
+> **Status:** DONE
 > **Workflow:** IMPLEMENT
 > **Depends On:** task-02, task-03, task-04
 > [← story file](../story-02-auth-bounded-context.md)
