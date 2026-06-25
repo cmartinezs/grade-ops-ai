@@ -1,6 +1,6 @@
 # ⚛️ TASK 03 — Create auth.application.command and auth.application.result records
 
-> **Status:** TODO
+> **Status:** DONE
 > **Workflow:** IMPLEMENT
 > **Depends On:** —
 > [← story file](../story-02-auth-bounded-context.md)

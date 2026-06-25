@@ -1,6 +1,6 @@
 # ⚛️ TASK 04 — Create auth application port interfaces (6 port.in + 2 port.out)
 
-> **Status:** TODO
+> **Status:** DONE
 > **Workflow:** IMPLEMENT
 > **Depends On:** task-03
 > [← story file](../story-02-auth-bounded-context.md)

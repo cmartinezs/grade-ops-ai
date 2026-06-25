@@ -1,6 +1,6 @@
 # ⚛️ TASK 08 — Move FirebaseAuthAdapter to auth.infrastructure.adapter.out.firebase
 
-> **Status:** TODO
+> **Status:** DONE
 > **Workflow:** REFACTOR
 > **Depends On:** task-01
 > [← story file](../story-02-auth-bounded-context.md)

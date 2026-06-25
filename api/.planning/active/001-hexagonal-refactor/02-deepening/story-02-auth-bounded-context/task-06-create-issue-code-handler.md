@@ -1,6 +1,6 @@
 # ⚛️ TASK 06 — Create IssuePasswordResetCodeHandler + unit test
 
-> **Status:** TODO
+> **Status:** DONE
 > **Workflow:** IMPLEMENT
 > **Depends On:** task-02, task-03, task-04
 > [← story file](../story-02-auth-bounded-context.md)
@@ -20,7 +20,7 @@ Create `IssuePasswordResetCodeHandler` — the atomic use case that deletes any 
   - `src/main/java/cl/gradeops/ai/api/auth/application/usecase/IssuePasswordResetCodeHandler.java` ← NEW
   - `src/test/java/cl/gradeops/ai/api/auth/application/usecase/IssuePasswordResetCodeHandlerTest.java` ← NEW
 - **Interfaces / contracts:** `IssuePasswordResetCodeHandler` implements `IssuePasswordResetCodeUseCase`. Method: `execute(IssuePasswordResetCodeCommand) → IssuePasswordResetCodeResult`. Result contains `rawCode` (UUID string) and `expiresAt`.
-- **Design notes:** `rawCode` is generated internally as `UUID.randomUUID().toString()` — not passed in the command, since generation is the handler's responsibility. `expiresAt = Instant.now().plus(command.ttlMinutes(), ChronoUnit.MINUTES)`. `deleteByTeacherUid` is called before `save` to enforce the one-active-code-per-teacher invariant. The `@Transactional` annotation ensures delete + save are atomic.
+- **Design notes:** `rawCode` is generated internally as a `RawCode` value object (`RawCode.generate()` wraps `UUID.randomUUID()`) — not passed in the command, since generation is the handler's responsibility. `expiresAt = Instant.now().plus(command.ttlMinutes(), ChronoUnit.MINUTES)`. `deleteByTeacherUid` is called before `save` to enforce the one-active-code-per-teacher invariant. The `@Transactional` annotation ensures delete + save are atomic. **Post-review addition:** `IssuePasswordResetCodeCommand` includes a `SignInProvider provider` field; the handler guards against non-`EMAIL_PASSWORD` providers and throws `IllegalArgumentException` before touching the repository.
 
 ---
 
@@ -87,13 +87,13 @@ Create `IssuePasswordResetCodeHandler` — the atomic use case that deletes any 
 
 ## Done Criteria
 
-- [ ] `IssuePasswordResetCodeHandler` exists, implements `IssuePasswordResetCodeUseCase`, is `@RequiredArgsConstructor` with NO `@Service` — declared as `@Bean` in `AuthConfig`
-- [ ] Handler injects `PasswordResetCodeRepositoryPort` only (no JPA repo, no `GradeOpsEmailProperties`)
-- [ ] `rawCode` is generated internally (UUID), not received from command
-- [ ] `deleteByTeacherUid` is always called before `save`
-- [ ] `IssuePasswordResetCodeHandlerTest` passes all test cases
-- [ ] `./mvnw test -Dtest=IssuePasswordResetCodeHandlerTest -q` exits 0
-- [ ] No scope creep: the task satisfies `[CHECK-ATOMICITY]`
+- [x] `IssuePasswordResetCodeHandler` exists, implements `IssuePasswordResetCodeUseCase`, is `@RequiredArgsConstructor` with NO `@Service` — declared as `@Bean` in `AuthConfig`
+- [x] Handler injects `PasswordResetCodeRepositoryPort` only (no JPA repo, no `GradeOpsEmailProperties`)
+- [x] `IssuePasswordResetCodeCommand` includes `SignInProvider provider` field; handler throws `IllegalArgumentException` for non-`EMAIL_PASSWORD` before any repository interaction
+- [x] `rawCode` is generated internally as `RawCode` value object (`RawCode.generate()`), not received from command
+- [x] `deleteByTeacherUid` is always called before `save`
+- [x] `IssuePasswordResetCodeHandlerTest` passes all test cases including `shouldThrowWhenProviderIsNotEmailPassword`; methods follow `should...When...` convention
+- [x] `./mvnw test -Dtest=IssuePasswordResetCodeHandlerTest -q` exits 0
 
 ---
 

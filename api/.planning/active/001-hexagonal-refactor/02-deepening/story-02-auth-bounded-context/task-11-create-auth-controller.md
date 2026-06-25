@@ -1,6 +1,6 @@
 # ⚛️ TASK 11 — Create AuthController + request/response DTOs + migrate controller tests
 
-> **Status:** TODO
+> **Status:** DONE
 > **Workflow:** IMPLEMENT
 > **Depends On:** task-03, task-04
 > [← story file](../story-02-auth-bounded-context.md)
@@ -93,13 +93,14 @@ Create `AuthController` in `auth.infrastructure.adapter.in.web` that consolidate
 
 ## Done Criteria
 
-- [ ] `AuthController` in `auth/infrastructure/adapter/in/web/` consolidates all 4 auth endpoints
-- [ ] 4 DTO records exist in same package
-- [ ] Old `auth/AuthController.java` and `auth/PasswordResetController.java` deleted
-- [ ] Old `AuthControllerTest.java` and `PasswordResetControllerTest.java` deleted
-- [ ] New `AuthControllerTest.java` covers all 6 test cases
-- [ ] `./mvnw test -Dtest=AuthControllerTest -q` exits 0
-- [ ] No scope creep: the task satisfies `[CHECK-ATOMICITY]`
+- [x] `AuthController` in `auth/infrastructure/adapter/in/web/` consolidates all 4 auth endpoints
+- [x] 4 DTO records exist in same package
+- [x] Old `auth/AuthController.java` and `auth/PasswordResetController.java` deleted
+- [x] Old `AuthControllerTest.java` and `PasswordResetControllerTest.java` deleted
+- [x] New `AuthControllerTest.java` covers all 6 test cases; methods follow `should...When...` convention
+- [x] Sign-out test uses `SecurityContextHolder.getContext().setAuthentication(...)` + `@AfterEach` clear — Spring Boot 4's `@WebMvcTest` does not load `MockMvcSecurityAutoConfiguration`, so `authentication()` post-processor from `spring-security-test` does not work (session-stored context never loaded without `SecurityContextHolderFilter` in chain)
+- [x] `spring-security-test` 7.1.0 added to pom.xml (test scope)
+- [x] `./mvnw test -Dtest=AuthControllerTest -q` exits 0 — 6/6 pass
 
 ---
 

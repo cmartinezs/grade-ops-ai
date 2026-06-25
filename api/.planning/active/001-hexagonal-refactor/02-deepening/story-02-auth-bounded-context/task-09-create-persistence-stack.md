@@ -1,6 +1,6 @@
 # ⚛️ TASK 09 — Create PasswordResetCode persistence stack (JPA entity + adapter + mapper)
 
-> **Status:** TODO
+> **Status:** DONE
 > **Workflow:** IMPLEMENT
 > **Depends On:** task-02, task-03
 > [← story file](../story-02-auth-bounded-context.md)

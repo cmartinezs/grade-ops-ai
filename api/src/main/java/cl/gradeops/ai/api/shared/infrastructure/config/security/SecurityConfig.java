@@ -1,5 +1,6 @@
 package cl.gradeops.ai.api.shared.infrastructure.config.security;
 
+import cl.gradeops.ai.api.auth.application.port.out.AuthPort;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -23,20 +24,29 @@ public class SecurityConfig {
     @Value("${app.cors.allowed-origins}")
     private String allowedOrigins;
 
-    private final InternalAuthFilter internalAuthFilter;
-    private final FirebaseTokenFilter firebaseTokenFilter;
-    private final EmailVerifiedFilter emailVerifiedFilter;
+    @Value("${app.internal.secret}")
+    private String internalSecret;
 
-    public SecurityConfig(InternalAuthFilter internalAuthFilter,
-                          FirebaseTokenFilter firebaseTokenFilter,
-                          EmailVerifiedFilter emailVerifiedFilter) {
-        this.internalAuthFilter = internalAuthFilter;
-        this.firebaseTokenFilter = firebaseTokenFilter;
-        this.emailVerifiedFilter = emailVerifiedFilter;
+    @Bean
+    FirebaseTokenFilter firebaseTokenFilter(AuthPort authPort) {
+        return new FirebaseTokenFilter(authPort);
     }
 
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+    EmailVerifiedFilter emailVerifiedFilter() {
+        return new EmailVerifiedFilter();
+    }
+
+    @Bean
+    InternalAuthFilter internalAuthFilter() {
+        return new InternalAuthFilter(internalSecret);
+    }
+
+    @Bean
+    public SecurityFilterChain filterChain(HttpSecurity http,
+                                           InternalAuthFilter internalAuthFilter,
+                                           FirebaseTokenFilter firebaseTokenFilter,
+                                           EmailVerifiedFilter emailVerifiedFilter) throws Exception {
         http
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .csrf(AbstractHttpConfigurer::disable)

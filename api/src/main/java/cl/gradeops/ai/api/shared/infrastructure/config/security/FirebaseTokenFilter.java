@@ -1,7 +1,7 @@
 package cl.gradeops.ai.api.shared.infrastructure.config.security;
 
-import cl.gradeops.ai.api.port.AuthPort;
-import cl.gradeops.ai.api.port.TeacherIdentity;
+import cl.gradeops.ai.api.auth.application.port.out.AuthPort;
+import cl.gradeops.ai.api.auth.domain.model.TeacherIdentity;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -10,13 +10,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 import java.util.Collections;
 
-@Component
 public class FirebaseTokenFilter extends OncePerRequestFilter {
 
     private static final Logger log = LoggerFactory.getLogger(FirebaseTokenFilter.class);
@@ -49,6 +47,7 @@ public class FirebaseTokenFilter extends OncePerRequestFilter {
             UsernamePasswordAuthenticationToken authentication =
                     new UsernamePasswordAuthenticationToken(principal, null, Collections.emptyList());
             SecurityContextHolder.getContext().setAuthentication(authentication);
+            log.debug("Token verified successfully for uid={}", identity.uid());
         } catch (Exception e) {
             log.debug("Token verification failed: {}", e.getMessage());
             SecurityContextHolder.clearContext();

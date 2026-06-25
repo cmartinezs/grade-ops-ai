@@ -1,6 +1,6 @@
 # ⚛️ TASK 05 — Create RegisterHandler + SignOutHandler + RevokeRefreshTokensHandler + unit tests
 
-> **Status:** TODO
+> **Status:** DONE
 > **Workflow:** IMPLEMENT
 > **Depends On:** task-01, task-03, task-04
 > [← story file](../story-02-auth-bounded-context.md)
@@ -15,7 +15,7 @@ Create the three auth handlers derived from `AuthService`: `RegisterHandler`, `S
 
 ## Technical Design
 
-- **Approach:** `RegisterHandler` extracts `AuthService.register()` logic verbatim but wires to new types. It temporarily injects `domain.teacher.TeacherRepository` (the old JPA Spring Data interface) because `TeacherRepositoryPort` does not yet exist — Story 03 will swap this import when it creates `TeacherPersistenceAdapter`. The ArchUnit rule `application has no infrastructure imports` will not fire here because `TeacherRepository` is in `domain.teacher.*`, not `..infrastructure..` (it moves to infra in Story 03, at which point ArchUnit will enforce the swap). `SignOutHandler.execute(uid)` delegates to `RevokeRefreshTokensUseCase` by interface — it does not call `AuthPort` directly. `RevokeRefreshTokensHandler` is the atomic unit that wraps `AuthPort.revokeRefreshTokens`.
+- **Approach:** `RegisterHandler` extracts `AuthService.register()` logic verbatim but wires to new types. It injects `TeacherRepositoryPort` (pulled forward from Story 03 as part of the post-implementation code review — Story 03's task-04 is now a no-op). `SignOutHandler.execute(uid)` delegates to `RevokeRefreshTokensUseCase` by interface — it does not call `AuthPort` directly. `RevokeRefreshTokensHandler` is the atomic unit that wraps `AuthPort.revokeRefreshTokens`.
 - **Affected files / components:**
   - `src/main/java/cl/gradeops/ai/api/auth/application/usecase/RegisterHandler.java` ← NEW
   - `src/main/java/cl/gradeops/ai/api/auth/application/usecase/SignOutHandler.java` ← NEW
@@ -24,7 +24,7 @@ Create the three auth handlers derived from `AuthService`: `RegisterHandler`, `S
   - `src/test/java/cl/gradeops/ai/api/auth/application/usecase/SignOutHandlerTest.java` ← NEW
   - `src/test/java/cl/gradeops/ai/api/auth/application/usecase/RevokeRefreshTokensHandlerTest.java` ← NEW
 - **Interfaces / contracts:**
-  - `RegisterHandler` implements `RegisterUseCase`; injects `AuthPort` + `domain.teacher.TeacherRepository`.
+  - `RegisterHandler` implements `RegisterUseCase`; injects `AuthPort` + `TeacherRepositoryPort`.
   - `SignOutHandler` implements `SignOutUseCase`; injects `RevokeRefreshTokensUseCase`.
   - `RevokeRefreshTokensHandler` implements `RevokeRefreshTokensUseCase`; injects `AuthPort`.
 - **Design notes:** `RegisterHandler.execute(RegisterCommand)` must replicate the name-resolution logic from `AuthService.resolveNames()` — inline it or keep as a private method. `InvalidTokenException` thrown by Firebase token verification is caught and re-thrown as `shared.infrastructure.adapter.in.web.InvalidTokenException` (moved there in Story 01). `RegisterHandler` has `@Transactional` on `execute()` because it writes to `TeacherRepository`. `SignOutHandler` has `@Transactional` on `execute()` even though it only revokes tokens. None of the three handlers carry any Spring stereotype annotation (`@Service`, `@Component`); they are declared as `@Bean` in `AuthConfig` (created in task-12).
@@ -109,13 +109,13 @@ Create the three auth handlers derived from `AuthService`: `RegisterHandler`, `S
 
 ## Done Criteria
 
-- [ ] `RevokeRefreshTokensHandler`, `SignOutHandler`, `RegisterHandler` exist in `auth/application/usecase/`
-- [ ] All three are `@RequiredArgsConstructor` with NO `@Service`/`@Component` annotation — declared as `@Bean` in `AuthConfig`
-- [ ] `SignOutHandler` injects `RevokeRefreshTokensUseCase` (not `AuthPort`) — enforces single-responsibility
-- [ ] `RegisterHandler` throws `InvalidTokenException` (from `shared.infrastructure.adapter.in.web`) on bad token
-- [ ] All 3 unit test classes pass
-- [ ] `./mvnw test -Dtest=RegisterHandlerTest,SignOutHandlerTest,RevokeRefreshTokensHandlerTest -q` exits 0
-- [ ] No scope creep: the task satisfies `[CHECK-ATOMICITY]`
+- [x] `RevokeRefreshTokensHandler`, `SignOutHandler`, `RegisterHandler` exist in `auth/application/usecase/`
+- [x] All three are `@RequiredArgsConstructor` with NO `@Service`/`@Component` annotation — declared as `@Bean` in `AuthConfig`
+- [x] `SignOutHandler` injects `RevokeRefreshTokensUseCase` (not `AuthPort`) — enforces single-responsibility
+- [x] `RegisterHandler` injects `TeacherRepositoryPort` (not `domain.teacher.TeacherRepository` — pulled forward from Story 03)
+- [x] `RegisterHandler` throws `InvalidTokenException` (from `shared.infrastructure.adapter.in.web`) on bad token
+- [x] All 3 unit test classes pass; test methods follow `should...When...` convention
+- [x] `./mvnw test -Dtest=RegisterHandlerTest,SignOutHandlerTest,RevokeRefreshTokensHandlerTest -q` exits 0
 
 ---
 

@@ -1,20 +1,18 @@
 package cl.gradeops.ai.api.shared.infrastructure.config.security;
 
-import cl.gradeops.ai.api.port.TeacherIdentity;
+import cl.gradeops.ai.api.auth.domain.model.TeacherIdentity;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.http.MediaType;
-import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
-@Component
 public class EmailVerifiedFilter extends OncePerRequestFilter {
 
     private static final List<String> WHITELIST = List.of(
