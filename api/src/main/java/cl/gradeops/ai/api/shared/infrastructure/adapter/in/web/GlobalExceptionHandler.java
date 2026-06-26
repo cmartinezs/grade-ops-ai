@@ -4,6 +4,7 @@ import cl.gradeops.ai.api.auth.domain.exception.InvalidResetCodeException;
 import cl.gradeops.ai.api.auth.domain.exception.PasswordMismatchException;
 import cl.gradeops.ai.api.auth.domain.exception.ResetCodeEmailMismatchException;
 import cl.gradeops.ai.api.shared.application.exception.ApplicationException;
+import cl.gradeops.ai.api.shared.application.exception.InvalidCommandException;
 import cl.gradeops.ai.api.shared.domain.exception.DomainInvariantViolationException;
 import cl.gradeops.ai.api.shared.domain.exception.DuplicateEmailException;
 import cl.gradeops.ai.api.shared.domain.exception.InvalidTokenException;
@@ -66,6 +67,12 @@ public class GlobalExceptionHandler {
     }
 
     // ── Raíces de jerarquía propia ────────────────────────────────────────────
+
+    @ExceptionHandler(InvalidCommandException.class)
+    public ResponseEntity<ApiErrorResponse> handleInvalidCommand(InvalidCommandException ex) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(ApiErrorResponse.of("INVALID_COMMAND", ex.getMessage()));
+    }
 
     @ExceptionHandler(DomainInvariantViolationException.class)
     public ResponseEntity<ApiErrorResponse> handleDomainInvariant(DomainInvariantViolationException ex) {
