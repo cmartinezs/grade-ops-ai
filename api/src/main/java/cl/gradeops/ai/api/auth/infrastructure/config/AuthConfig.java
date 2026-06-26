@@ -7,7 +7,6 @@ import cl.gradeops.ai.api.auth.application.port.in.RevokeRefreshTokensUseCase;
 import cl.gradeops.ai.api.auth.application.port.out.AuthPort;
 import cl.gradeops.ai.api.auth.application.port.out.EmailNotificationPort;
 import cl.gradeops.ai.api.auth.application.port.out.PasswordResetCodeRepositoryPort;
-import cl.gradeops.ai.api.auth.application.port.out.TeacherRepositoryPort;
 import cl.gradeops.ai.api.auth.application.usecase.IssuePasswordResetCodeHandler;
 import cl.gradeops.ai.api.auth.application.usecase.RegisterHandler;
 import cl.gradeops.ai.api.auth.application.usecase.RevokeRefreshTokensHandler;
@@ -17,10 +16,9 @@ import cl.gradeops.ai.api.auth.infrastructure.adapter.out.firebase.FirebaseAuthA
 import cl.gradeops.ai.api.auth.infrastructure.adapter.out.persistence.PasswordResetCodeJpaRepository;
 import cl.gradeops.ai.api.auth.infrastructure.adapter.out.persistence.PasswordResetCodePersistenceAdapter;
 import cl.gradeops.ai.api.auth.infrastructure.adapter.out.persistence.PasswordResetCodePersistenceMapper;
-import cl.gradeops.ai.api.auth.infrastructure.adapter.out.persistence.TeacherJpaRepositoryAdapter;
-import cl.gradeops.ai.api.domain.teacher.TeacherRepository;
 import cl.gradeops.ai.api.shared.infrastructure.adapter.out.email.JavaMailEmailService;
 import cl.gradeops.ai.api.shared.infrastructure.config.GradeOpsEmailProperties;
+import cl.gradeops.ai.api.teacher.application.port.out.TeacherRepositoryPort;
 import com.google.firebase.auth.FirebaseAuth;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -36,11 +34,6 @@ class AuthConfig {
     @Bean
     FirebaseAuthAdapter firebaseAuthAdapter(FirebaseAuth firebaseAuth) {
         return new FirebaseAuthAdapter(firebaseAuth);
-    }
-
-    @Bean
-    TeacherJpaRepositoryAdapter teacherJpaRepositoryAdapter(TeacherRepository teacherRepository) {
-        return new TeacherJpaRepositoryAdapter(teacherRepository);
     }
 
     @Bean

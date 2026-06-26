@@ -5,10 +5,11 @@ import cl.gradeops.ai.api.auth.application.command.SendPasswordResetEmailCommand
 import cl.gradeops.ai.api.auth.application.port.in.IssuePasswordResetCodeUseCase;
 import cl.gradeops.ai.api.auth.application.port.in.SendPasswordResetEmailUseCase;
 import cl.gradeops.ai.api.auth.application.port.out.EmailNotificationPort;
-import cl.gradeops.ai.api.auth.application.port.out.TeacherRepositoryPort;
 import cl.gradeops.ai.api.auth.application.result.IssuePasswordResetCodeResult;
 import cl.gradeops.ai.api.auth.domain.model.SignInProvider;
-import cl.gradeops.ai.api.domain.teacher.TeacherEntity;
+import cl.gradeops.ai.api.teacher.application.port.out.TeacherRepositoryPort;
+import cl.gradeops.ai.api.teacher.domain.model.AuthProvider;
+import cl.gradeops.ai.api.teacher.domain.model.Teacher;
 import lombok.RequiredArgsConstructor;
 
 import java.util.Optional;
@@ -23,23 +24,17 @@ public class SendPasswordResetEmailOrchestrator implements SendPasswordResetEmai
 
     @Override
     public void execute(SendPasswordResetEmailCommand command) {
-        Optional<TeacherEntity> maybeTeacher = teacherRepository.findByEmail(command.email());
+        Optional<Teacher> maybeTeacher = teacherRepository.findByEmail(command.email());
         if (maybeTeacher.isEmpty()) return;
 
-        TeacherEntity teacher = maybeTeacher.get();
-        SignInProvider provider;
-        try {
-            provider = SignInProvider.valueOf(teacher.getProvider());
-        } catch (IllegalArgumentException e) {
-            return;
-        }
-        if (provider != SignInProvider.EMAIL_PASSWORD) return;
+        Teacher teacher = maybeTeacher.get();
+        if (teacher.getAuthProvider() != AuthProvider.EMAIL_PASSWORD) return;
 
         IssuePasswordResetCodeResult result = issuePasswordResetCodeUseCase.execute(
                 IssuePasswordResetCodeCommand.builder()
                         .teacherUid(teacher.getFirebaseUid())
                         .ttlMinutes(ttlMinutes)
-                        .provider(provider)
+                        .provider(SignInProvider.EMAIL_PASSWORD)
                         .build());
 
         emailNotificationPort.sendPasswordResetEmail(

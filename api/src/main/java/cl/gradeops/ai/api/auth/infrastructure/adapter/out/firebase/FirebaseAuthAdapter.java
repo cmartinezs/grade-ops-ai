@@ -3,6 +3,8 @@ package cl.gradeops.ai.api.auth.infrastructure.adapter.out.firebase;
 import cl.gradeops.ai.api.auth.application.port.out.AuthPort;
 import cl.gradeops.ai.api.auth.domain.model.SignInProvider;
 import cl.gradeops.ai.api.auth.domain.model.TeacherIdentity;
+import cl.gradeops.ai.api.shared.domain.exception.DuplicateEmailException;
+import com.google.firebase.auth.AuthErrorCode;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseAuthException;
 import com.google.firebase.auth.FirebaseToken;
@@ -51,6 +53,31 @@ public class FirebaseAuthAdapter implements AuthPort {
             firebaseAuth.updateUser(new UserRecord.UpdateRequest(uid).setPassword(newPassword));
         } catch (FirebaseAuthException e) {
             throw new RuntimeException("Failed to update password for uid " + uid, e);
+        }
+    }
+
+    @Override
+    public String createUser(String email, String displayName) {
+        try {
+            UserRecord.CreateRequest req = new UserRecord.CreateRequest()
+                .setEmail(email)
+                .setDisplayName(displayName)
+                .setEmailVerified(true);
+            return firebaseAuth.createUser(req).getUid();
+        } catch (FirebaseAuthException ex) {
+            if (AuthErrorCode.EMAIL_ALREADY_EXISTS.equals(ex.getAuthErrorCode())) {
+                throw new DuplicateEmailException(email);
+            }
+            throw new RuntimeException("Firebase user creation failed", ex);
+        }
+    }
+
+    @Override
+    public void deleteUser(String uid) {
+        try {
+            firebaseAuth.deleteUser(uid);
+        } catch (FirebaseAuthException ex) {
+            throw new RuntimeException("Failed to delete Firebase user: " + uid, ex);
         }
     }
 

@@ -14,7 +14,7 @@ Plannings currently in EXPANSION or DEEPENING phase.
 |---|-------|--------|
 | 01 | [Shared Kernel + ArchUnit Setup](001-hexagonal-refactor/02-deepening/story-01-shared-kernel.md) | DONE |
 | 02 | [Auth Bounded Context](001-hexagonal-refactor/02-deepening/story-02-auth-bounded-context.md) | DONE |
-| 03 | [Teacher Bounded Context](001-hexagonal-refactor/02-deepening/story-03-teacher-bounded-context.md) | IN PROGRESS |
+| 03 | [Teacher Bounded Context](001-hexagonal-refactor/02-deepening/story-03-teacher-bounded-context.md) | DONE |
 | 04 | [Assessment Bounded Context (stub)](001-hexagonal-refactor/02-deepening/story-04-assessment-bounded-context.md) | TODO |
 | 05 | [Legacy Package Cleanup + Final Verification](001-hexagonal-refactor/02-deepening/story-05-final-cleanup.md) | TODO |
 
