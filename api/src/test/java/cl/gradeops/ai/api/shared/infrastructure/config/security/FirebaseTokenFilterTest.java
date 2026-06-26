@@ -1,10 +1,9 @@
-package cl.gradeops.ai.api.security;
+package cl.gradeops.ai.api.shared.infrastructure.config.security;
 
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseAuthException;
 import com.google.firebase.auth.FirebaseToken;
 import cl.gradeops.ai.api.config.FirebaseTestConfig;
-import cl.gradeops.ai.api.shared.infrastructure.config.security.FirebaseTokenFilter;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
