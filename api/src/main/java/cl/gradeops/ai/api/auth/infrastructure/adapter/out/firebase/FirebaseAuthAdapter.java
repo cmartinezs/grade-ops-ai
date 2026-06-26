@@ -3,7 +3,9 @@ package cl.gradeops.ai.api.auth.infrastructure.adapter.out.firebase;
 import cl.gradeops.ai.api.auth.application.port.out.AuthPort;
 import cl.gradeops.ai.api.auth.domain.model.SignInProvider;
 import cl.gradeops.ai.api.auth.domain.model.TeacherIdentity;
+import cl.gradeops.ai.api.auth.infrastructure.exception.AuthProviderException;
 import cl.gradeops.ai.api.shared.domain.exception.DuplicateEmailException;
+import cl.gradeops.ai.api.shared.domain.exception.InvalidTokenException;
 import com.google.firebase.auth.AuthErrorCode;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseAuthException;
@@ -25,7 +27,7 @@ public class FirebaseAuthAdapter implements AuthPort {
         try {
             return toIdentity(firebaseAuth.verifyIdToken(idToken, true));
         } catch (FirebaseAuthException e) {
-            throw new IllegalArgumentException("Invalid or revoked token", e);
+            throw new InvalidTokenException("Invalid or revoked token");
         }
     }
 
@@ -34,7 +36,7 @@ public class FirebaseAuthAdapter implements AuthPort {
         try {
             return toIdentity(firebaseAuth.verifyIdToken(idToken));
         } catch (FirebaseAuthException e) {
-            throw new IllegalArgumentException("Invalid token", e);
+            throw new InvalidTokenException("Invalid token");
         }
     }
 
@@ -43,7 +45,7 @@ public class FirebaseAuthAdapter implements AuthPort {
         try {
             firebaseAuth.revokeRefreshTokens(uid);
         } catch (FirebaseAuthException e) {
-            throw new RuntimeException("Failed to revoke refresh tokens", e);
+            throw new AuthProviderException("Failed to revoke refresh tokens for uid=" + uid, e);
         }
     }
 
@@ -52,7 +54,7 @@ public class FirebaseAuthAdapter implements AuthPort {
         try {
             firebaseAuth.updateUser(new UserRecord.UpdateRequest(uid).setPassword(newPassword));
         } catch (FirebaseAuthException e) {
-            throw new RuntimeException("Failed to update password for uid " + uid, e);
+            throw new AuthProviderException("Failed to update password for uid=" + uid, e);
         }
     }
 
@@ -68,7 +70,7 @@ public class FirebaseAuthAdapter implements AuthPort {
             if (AuthErrorCode.EMAIL_ALREADY_EXISTS.equals(ex.getAuthErrorCode())) {
                 throw new DuplicateEmailException(email);
             }
-            throw new RuntimeException("Firebase user creation failed", ex);
+            throw new AuthProviderException("Firebase user creation failed for email=" + email, ex);
         }
     }
 
@@ -77,7 +79,7 @@ public class FirebaseAuthAdapter implements AuthPort {
         try {
             firebaseAuth.deleteUser(uid);
         } catch (FirebaseAuthException ex) {
-            throw new RuntimeException("Failed to delete Firebase user: " + uid, ex);
+            throw new AuthProviderException("Failed to delete Firebase user: uid=" + uid, ex);
         }
     }
 

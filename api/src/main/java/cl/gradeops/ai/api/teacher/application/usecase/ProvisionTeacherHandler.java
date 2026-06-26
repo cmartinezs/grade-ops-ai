@@ -33,6 +33,7 @@ public class ProvisionTeacherHandler implements ProvisionTeacherUseCase {
         }
 
         String firebaseUid = null;
+        boolean committed = false;
         try {
             String displayName = command.firstName() + " " + command.lastName();
             firebaseUid = authPort.createUser(command.email(), displayName);
@@ -51,21 +52,20 @@ public class ProvisionTeacherHandler implements ProvisionTeacherUseCase {
                     .build()
             );
 
+            committed = true;
             return ProvisionTeacherResult.builder()
                 .firebaseUid(firebaseUid)
                 .rawCode(codeResult.rawCode())
                 .build();
 
-        } catch (Exception ex) {
-            if (firebaseUid != null) {
+        } finally {
+            if (!committed && firebaseUid != null) {
                 try {
                     authPort.deleteUser(firebaseUid);
                 } catch (Exception compensationEx) {
                     log.warn("Firebase compensation failed: uid={} cause={}", firebaseUid, compensationEx.getMessage());
                 }
             }
-            if (ex instanceof RuntimeException rte) throw rte;
-            throw new RuntimeException(ex);
         }
     }
 }

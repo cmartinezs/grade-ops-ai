@@ -2,6 +2,7 @@ package cl.gradeops.ai.api.auth.domain.model;
 
 import cl.gradeops.ai.api.auth.domain.event.PasswordResetCodeIssuedEvent;
 import cl.gradeops.ai.api.auth.domain.event.PasswordResetCodeUsedEvent;
+import cl.gradeops.ai.api.auth.domain.exception.InvalidResetCodeException;
 import cl.gradeops.ai.api.auth.domain.valueobject.RawCode;
 import cl.gradeops.ai.api.shared.domain.model.AggregateRoot;
 import lombok.Getter;
@@ -47,7 +48,7 @@ public class PasswordResetCode extends AggregateRoot<String> {
 
     public void markUsed() {
         if (isUsed()) {
-            throw new IllegalStateException("Password reset code already used");
+            throw new InvalidResetCodeException("already used");
         }
         this.usedAt = Instant.now();
         registerEvent(new PasswordResetCodeUsedEvent(teacherUid));

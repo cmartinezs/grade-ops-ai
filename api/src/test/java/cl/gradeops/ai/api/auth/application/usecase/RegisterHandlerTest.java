@@ -58,7 +58,7 @@ class RegisterHandlerTest {
 
     @Test
     void shouldThrowInvalidTokenExceptionWhenTokenIsInvalid() {
-        when(authPort.verifyTokenUnchecked("bad-token")).thenThrow(new IllegalArgumentException("bad"));
+        when(authPort.verifyTokenUnchecked("bad-token")).thenThrow(new InvalidTokenException("bad token"));
 
         assertThatThrownBy(() -> handler.execute(
                 RegisterCommand.builder().idToken("bad-token").firstName("X").lastName("Y").build()))
