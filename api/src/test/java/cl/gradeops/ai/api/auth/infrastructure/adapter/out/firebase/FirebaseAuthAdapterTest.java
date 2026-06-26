@@ -2,6 +2,8 @@ package cl.gradeops.ai.api.auth.infrastructure.adapter.out.firebase;
 
 import cl.gradeops.ai.api.auth.domain.model.SignInProvider;
 import cl.gradeops.ai.api.auth.domain.model.TeacherIdentity;
+import cl.gradeops.ai.api.shared.domain.exception.DuplicateEmailException;
+import com.google.firebase.auth.AuthErrorCode;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseAuthException;
 import com.google.firebase.auth.FirebaseToken;
@@ -103,6 +105,34 @@ class FirebaseAuthAdapterTest {
         assertThatThrownBy(() -> adapter.updatePassword("uid-teacher-1", "securePassword123"))
             .isInstanceOf(RuntimeException.class)
             .hasMessageContaining("Failed to update password");
+    }
+
+    @Test
+    void createUser_happy_path_returns_uid() throws Exception {
+        UserRecord userRecord = mock(UserRecord.class);
+        when(userRecord.getUid()).thenReturn("uid-abc");
+        when(firebaseAuth.createUser(any(UserRecord.CreateRequest.class))).thenReturn(userRecord);
+
+        String uid = adapter.createUser("new@x.com", "New Teacher");
+
+        assertThat(uid).isEqualTo("uid-abc");
+    }
+
+    @Test
+    void createUser_duplicate_email_throws_DuplicateEmailException() throws Exception {
+        FirebaseAuthException ex = mock(FirebaseAuthException.class);
+        when(ex.getAuthErrorCode()).thenReturn(AuthErrorCode.EMAIL_ALREADY_EXISTS);
+        when(firebaseAuth.createUser(any(UserRecord.CreateRequest.class))).thenThrow(ex);
+
+        assertThatThrownBy(() -> adapter.createUser("dup@x.com", "Dup Teacher"))
+                .isInstanceOf(DuplicateEmailException.class);
+    }
+
+    @Test
+    void deleteUser_delegates_to_firebase() throws Exception {
+        adapter.deleteUser("uid-abc");
+
+        verify(firebaseAuth).deleteUser("uid-abc");
     }
 
     private FirebaseToken mockToken(String uid, String email, boolean verified,

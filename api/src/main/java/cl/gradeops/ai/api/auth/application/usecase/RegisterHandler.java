@@ -3,11 +3,12 @@ package cl.gradeops.ai.api.auth.application.usecase;
 import cl.gradeops.ai.api.auth.application.command.RegisterCommand;
 import cl.gradeops.ai.api.auth.application.port.in.RegisterUseCase;
 import cl.gradeops.ai.api.auth.application.port.out.AuthPort;
-import cl.gradeops.ai.api.auth.application.port.out.TeacherRepositoryPort;
 import cl.gradeops.ai.api.auth.application.result.RegisterResult;
 import cl.gradeops.ai.api.auth.domain.model.TeacherIdentity;
-import cl.gradeops.ai.api.domain.teacher.TeacherEntity;
 import cl.gradeops.ai.api.shared.domain.exception.InvalidTokenException;
+import cl.gradeops.ai.api.teacher.application.port.out.TeacherRepositoryPort;
+import cl.gradeops.ai.api.teacher.domain.model.AuthProvider;
+import cl.gradeops.ai.api.teacher.domain.model.Teacher;
 import lombok.RequiredArgsConstructor;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -31,12 +32,14 @@ public class RegisterHandler implements RegisterUseCase {
         String firstName = names[0];
         String lastName = names[1];
 
-        if (teacherRepository.existsById(identity.uid())) {
+        if (teacherRepository.findById(identity.uid()).isPresent()) {
             return new RegisterResult(identity.uid(), false);
         }
 
-        teacherRepository.save(new TeacherEntity(
-                identity.uid(), firstName, lastName, identity.email(), identity.signInProvider().name()));
+        teacherRepository.save(Teacher.provision(
+            identity.uid(), firstName, lastName, identity.email(),
+            AuthProvider.valueOf(identity.signInProvider().name())
+        ));
         return new RegisterResult(identity.uid(), true);
     }
 

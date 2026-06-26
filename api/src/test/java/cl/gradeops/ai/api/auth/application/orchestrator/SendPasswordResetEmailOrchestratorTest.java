@@ -4,13 +4,15 @@ import cl.gradeops.ai.api.auth.application.command.IssuePasswordResetCodeCommand
 import cl.gradeops.ai.api.auth.application.command.SendPasswordResetEmailCommand;
 import cl.gradeops.ai.api.auth.application.port.in.IssuePasswordResetCodeUseCase;
 import cl.gradeops.ai.api.auth.application.port.out.EmailNotificationPort;
-import cl.gradeops.ai.api.auth.application.port.out.TeacherRepositoryPort;
 import cl.gradeops.ai.api.auth.application.result.IssuePasswordResetCodeResult;
 import cl.gradeops.ai.api.auth.domain.model.SignInProvider;
-import cl.gradeops.ai.api.domain.teacher.TeacherEntity;
+import cl.gradeops.ai.api.teacher.application.port.out.TeacherRepositoryPort;
+import cl.gradeops.ai.api.teacher.domain.model.AuthProvider;
+import cl.gradeops.ai.api.teacher.domain.model.Teacher;
 import org.junit.jupiter.api.Test;
 
 import java.time.Instant;
+import java.time.OffsetDateTime;
 import java.util.Optional;
 
 import static org.mockito.Mockito.*;
@@ -35,7 +37,9 @@ class SendPasswordResetEmailOrchestratorTest {
 
     @Test
     void shouldNotInteractWithUseCaseWhenProviderIsGoogle() {
-        TeacherEntity teacher = new TeacherEntity("uid-1", "Grace", "Hopper", "g@test.com", "GOOGLE");
+        Teacher teacher = Teacher.restore("uid-1", "Grace", "Hopper", "g@test.com",
+                AuthProvider.GOOGLE, OffsetDateTime.now(), OffsetDateTime.now(),
+                null, false, null, null, null, null);
         SendPasswordResetEmailCommand command = SendPasswordResetEmailCommand.builder().email("g@test.com").build();
         when(teacherRepository.findByEmail("g@test.com")).thenReturn(Optional.of(teacher));
 
@@ -46,7 +50,9 @@ class SendPasswordResetEmailOrchestratorTest {
 
     @Test
     void shouldIssueCodeAndSendEmailWhenTeacherUsesEmailPassword() {
-        TeacherEntity teacher = new TeacherEntity("uid-2", "Ada", "Lovelace", "a@test.com", "EMAIL_PASSWORD");
+        Teacher teacher = Teacher.restore("uid-2", "Ada", "Lovelace", "a@test.com",
+                AuthProvider.EMAIL_PASSWORD, OffsetDateTime.now(), OffsetDateTime.now(),
+                null, false, null, null, null, null);
         SendPasswordResetEmailCommand command = SendPasswordResetEmailCommand.builder().email("a@test.com").build();
         when(teacherRepository.findByEmail("a@test.com")).thenReturn(Optional.of(teacher));
         when(issuePasswordResetCodeUseCase.execute(any(IssuePasswordResetCodeCommand.class)))
