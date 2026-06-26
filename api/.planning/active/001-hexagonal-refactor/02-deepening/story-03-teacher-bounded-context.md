@@ -1,6 +1,6 @@
 # 🔍 DEEPENING: Story 03 — Teacher Bounded Context
 
-> **Status:** TODO
+> **Status:** IN PROGRESS
 > [← 01-expansion.md](../01-expansion.md) | [← planning/README.md](../../README.md)
 
 ---
