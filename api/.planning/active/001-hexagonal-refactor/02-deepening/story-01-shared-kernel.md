@@ -33,18 +33,18 @@ This story must be completed before any bounded-context story (02–04) begins.
 
 ## Done Criteria
 
-- [ ] Package `cl.gradeops.ai.api.shared.domain.model` contains `AggregateRoot<ID>` (abstract class with `pullDomainEvents()`)
-- [ ] Package `cl.gradeops.ai.api.shared.domain.event` contains `DomainEvent` interface (`eventId`, `occurredAt`, `eventType`, `aggregateId`)
-- [ ] Package `cl.gradeops.ai.api.shared.domain.exception` contains `DomainException`, `ResourceNotFoundException`, `DuplicateEmailException`
-- [ ] `HexagonalArchitectureTest` exists in `src/test/java/` with 4 ArchUnit assertions (all green)
-- [ ] Packages `common/`, `config/`, `email/`, `security/` are fully deleted
-- [ ] `port/StoragePort` and `adapter/storage/` are fully deleted
-- [ ] `shared.infrastructure.config.security` contains all 6 security classes
-- [ ] `shared.infrastructure.config` contains all 4 config classes
-- [ ] `shared.infrastructure.adapter.out.email.JavaMailEmailService` exists
-- [ ] `shared.infrastructure.adapter.out.storage` contains `StoragePort`, `GcsStorageAdapter`, `R2StorageAdapter`
-- [ ] `./mvnw test` passes with 0 failures
-- [ ] TRACEABILITY.md updated with new terms: `AggregateRoot`, `DomainEvent`, `DomainException`, `shared` package, `HexagonalArchitectureTest`
+- [x] Package `cl.gradeops.ai.api.shared.domain.model` contains `AggregateRoot<ID>` (abstract class with `pullDomainEvents()`)
+- [x] Package `cl.gradeops.ai.api.shared.domain.event` contains `DomainEvent` interface (`eventId`, `occurredAt`, `eventType`, `aggregateId`)
+- [x] Package `cl.gradeops.ai.api.shared.domain.exception` contains `DomainException`, `ResourceNotFoundException`, `DuplicateEmailException`
+- [x] `HexagonalArchitectureTest` exists in `src/test/java/` with 4 ArchUnit assertions (all green)
+- [x] Packages `common/`, `config/`, `email/`, `security/` are fully deleted
+- [x] `port/StoragePort` and `adapter/storage/` are fully deleted
+- [x] `shared.infrastructure.config.security` contains all 6 security classes
+- [x] `shared.infrastructure.config` contains all 4 config classes
+- [x] `shared.infrastructure.adapter.out.email.JavaMailEmailService` exists
+- [x] `shared.infrastructure.adapter.out.storage` contains `StoragePort`, `GcsStorageAdapter`, `R2StorageAdapter`
+- [x] `./mvnw test` passes with 0 failures
+- [x] TRACEABILITY.md updated with new terms: `AggregateRoot`, `DomainEvent`, `DomainException`, `shared` package, `HexagonalArchitectureTest`
 
 ---
 
