@@ -1,4 +1,4 @@
-package cl.gradeops.ai.api.security;
+package cl.gradeops.ai.api.shared.infrastructure.config.security;
 
 import cl.gradeops.ai.api.shared.infrastructure.adapter.in.web.GlobalExceptionHandler;
 import cl.gradeops.ai.api.shared.infrastructure.config.security.OwnershipVerifier;

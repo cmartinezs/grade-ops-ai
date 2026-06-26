@@ -1,4 +1,4 @@
-package cl.gradeops.ai.api.email;
+package cl.gradeops.ai.api.shared.infrastructure.adapter.out.email;
 
 import cl.gradeops.ai.api.shared.infrastructure.adapter.out.email.JavaMailEmailService;
 import cl.gradeops.ai.api.shared.infrastructure.config.GradeOpsEmailProperties;
