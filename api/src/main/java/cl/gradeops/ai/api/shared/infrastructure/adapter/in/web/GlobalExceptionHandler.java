@@ -3,9 +3,13 @@ package cl.gradeops.ai.api.shared.infrastructure.adapter.in.web;
 import cl.gradeops.ai.api.auth.domain.exception.InvalidResetCodeException;
 import cl.gradeops.ai.api.auth.domain.exception.PasswordMismatchException;
 import cl.gradeops.ai.api.auth.domain.exception.ResetCodeEmailMismatchException;
+import cl.gradeops.ai.api.shared.application.exception.ApplicationException;
+import cl.gradeops.ai.api.shared.application.exception.InvalidCommandException;
+import cl.gradeops.ai.api.shared.domain.exception.DomainInvariantViolationException;
 import cl.gradeops.ai.api.shared.domain.exception.DuplicateEmailException;
 import cl.gradeops.ai.api.shared.domain.exception.InvalidTokenException;
 import cl.gradeops.ai.api.shared.domain.exception.ResourceNotFoundException;
+import cl.gradeops.ai.api.shared.infrastructure.exception.InfrastructureException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -23,6 +27,8 @@ import java.util.List;
 public class GlobalExceptionHandler {
 
     private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
+
+    // ── Excepciones de dominio específicas ────────────────────────────────────
 
     @ExceptionHandler(DuplicateEmailException.class)
     public ResponseEntity<ApiErrorResponse> handleDuplicateEmail(DuplicateEmailException ex) {
@@ -60,6 +66,35 @@ public class GlobalExceptionHandler {
                 .body(ApiErrorResponse.of("RESET_CODE_EMAIL_MISMATCH"));
     }
 
+    // ── Raíces de jerarquía propia ────────────────────────────────────────────
+
+    @ExceptionHandler(InvalidCommandException.class)
+    public ResponseEntity<ApiErrorResponse> handleInvalidCommand(InvalidCommandException ex) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(ApiErrorResponse.of("INVALID_COMMAND", ex.getMessage()));
+    }
+
+    @ExceptionHandler(DomainInvariantViolationException.class)
+    public ResponseEntity<ApiErrorResponse> handleDomainInvariant(DomainInvariantViolationException ex) {
+        return ResponseEntity.status(HttpStatus.UNPROCESSABLE_CONTENT)
+                .body(ApiErrorResponse.of("DOMAIN_INVARIANT_VIOLATION", ex.getMessage()));
+    }
+
+    @ExceptionHandler(ApplicationException.class)
+    public ResponseEntity<ApiErrorResponse> handleApplication(ApplicationException ex) {
+        return ResponseEntity.status(HttpStatus.UNPROCESSABLE_CONTENT)
+                .body(ApiErrorResponse.of("APPLICATION_ERROR", ex.getMessage()));
+    }
+
+    @ExceptionHandler(InfrastructureException.class)
+    public ResponseEntity<ApiErrorResponse> handleInfrastructure(InfrastructureException ex) {
+        log.warn("Infrastructure failure: {}", ex.getMessage(), ex);
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(ApiErrorResponse.of("INFRASTRUCTURE_ERROR"));
+    }
+
+    // ── Validación HTTP ───────────────────────────────────────────────────────
+
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public ResponseEntity<ApiErrorResponse> handleUnreadableBody(HttpMessageNotReadableException ex) {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
@@ -85,6 +120,8 @@ public class GlobalExceptionHandler {
         String errorCode = ex.getReason() != null ? ex.getReason() : ex.getStatusCode().toString();
         return ResponseEntity.status(ex.getStatusCode()).body(ApiErrorResponse.of(errorCode));
     }
+
+    // ── Catch-all para errores no previstos ───────────────────────────────────
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiErrorResponse> handleUnexpected(Exception ex) {

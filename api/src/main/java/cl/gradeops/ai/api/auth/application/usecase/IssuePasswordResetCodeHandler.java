@@ -1,6 +1,7 @@
 package cl.gradeops.ai.api.auth.application.usecase;
 
 import cl.gradeops.ai.api.auth.application.command.IssuePasswordResetCodeCommand;
+import cl.gradeops.ai.api.auth.application.exception.UnsupportedProviderException;
 import cl.gradeops.ai.api.auth.application.port.in.IssuePasswordResetCodeUseCase;
 import cl.gradeops.ai.api.auth.application.port.out.PasswordResetCodeRepositoryPort;
 import cl.gradeops.ai.api.auth.application.result.IssuePasswordResetCodeResult;
@@ -22,7 +23,7 @@ public class IssuePasswordResetCodeHandler implements IssuePasswordResetCodeUseC
     @Transactional
     public IssuePasswordResetCodeResult execute(IssuePasswordResetCodeCommand command) {
         if (command.provider() != SignInProvider.EMAIL_PASSWORD) {
-            throw new IllegalArgumentException(
+            throw new UnsupportedProviderException(
                     "Reset codes can only be issued for EMAIL_PASSWORD providers, got: " + command.provider());
         }
 

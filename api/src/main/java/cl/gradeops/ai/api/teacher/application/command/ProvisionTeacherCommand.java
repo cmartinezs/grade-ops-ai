@@ -1,14 +1,13 @@
 package cl.gradeops.ai.api.teacher.application.command;
 
+import cl.gradeops.ai.api.shared.application.exception.InvalidCommandException;
 import lombok.Builder;
-
-import java.util.Objects;
 
 @Builder
 public record ProvisionTeacherCommand(String firstName, String lastName, String email) {
     public ProvisionTeacherCommand {
-        Objects.requireNonNull(firstName, "firstName must not be null");
-        Objects.requireNonNull(lastName,  "lastName must not be null");
-        Objects.requireNonNull(email,     "email must not be null");
+        if (firstName == null) throw new InvalidCommandException("firstName");
+        if (lastName == null)  throw new InvalidCommandException("lastName");
+        if (email == null)     throw new InvalidCommandException("email");
     }
 }

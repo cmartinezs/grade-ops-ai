@@ -1,5 +1,6 @@
 package cl.gradeops.ai.api.shared.infrastructure.adapter.out.storage;
 
+import cl.gradeops.ai.api.shared.infrastructure.exception.StorageException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
@@ -72,7 +73,7 @@ public class R2StorageAdapter implements StoragePort {
                             .build())
                     .url().toURI();
         } catch (java.net.URISyntaxException e) {
-            throw new RuntimeException("Failed to build presigned URL", e);
+            throw new StorageException("Failed to build presigned URL for key=" + key, e);
         }
     }
 

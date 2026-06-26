@@ -3,6 +3,7 @@ package cl.gradeops.ai.api.auth.infrastructure.adapter.out.firebase;
 import cl.gradeops.ai.api.auth.domain.model.SignInProvider;
 import cl.gradeops.ai.api.auth.domain.model.TeacherIdentity;
 import cl.gradeops.ai.api.shared.domain.exception.DuplicateEmailException;
+import cl.gradeops.ai.api.shared.domain.exception.InvalidTokenException;
 import com.google.firebase.auth.AuthErrorCode;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseAuthException;
@@ -53,11 +54,11 @@ class FirebaseAuthAdapterTest {
     }
 
     @Test
-    void verifyToken_throws_illegal_argument_on_firebase_exception() throws Exception {
+    void shouldThrowInvalidTokenExceptionWhenFirebaseThrowsAuthException() throws Exception {
         when(firebaseAuth.verifyIdToken("bad", true)).thenThrow(mock(FirebaseAuthException.class));
 
         assertThatThrownBy(() -> adapter.verifyToken("bad"))
-                .isInstanceOf(IllegalArgumentException.class);
+                .isInstanceOf(InvalidTokenException.class);
     }
 
     @Test

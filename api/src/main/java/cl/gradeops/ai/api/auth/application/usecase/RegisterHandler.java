@@ -5,7 +5,6 @@ import cl.gradeops.ai.api.auth.application.port.in.RegisterUseCase;
 import cl.gradeops.ai.api.auth.application.port.out.AuthPort;
 import cl.gradeops.ai.api.auth.application.result.RegisterResult;
 import cl.gradeops.ai.api.auth.domain.model.TeacherIdentity;
-import cl.gradeops.ai.api.shared.domain.exception.InvalidTokenException;
 import cl.gradeops.ai.api.teacher.application.port.out.TeacherRepositoryPort;
 import cl.gradeops.ai.api.teacher.domain.model.AuthProvider;
 import cl.gradeops.ai.api.teacher.domain.model.Teacher;
@@ -21,12 +20,7 @@ public class RegisterHandler implements RegisterUseCase {
     @Override
     @Transactional
     public RegisterResult execute(RegisterCommand command) {
-        TeacherIdentity identity;
-        try {
-            identity = authPort.verifyTokenUnchecked(command.idToken());
-        } catch (IllegalArgumentException ex) {
-            throw new InvalidTokenException("Firebase ID token is invalid or expired");
-        }
+        TeacherIdentity identity = authPort.verifyTokenUnchecked(command.idToken());
 
         String[] names = resolveNames(command, identity);
         String firstName = names[0];
