@@ -1,9 +1,9 @@
 package cl.gradeops.ai.api.teacher.domain.model;
 
+import cl.gradeops.ai.api.shared.domain.exception.DomainInvariantViolationException;
 import cl.gradeops.ai.api.shared.domain.model.AggregateRoot;
 
 import java.time.OffsetDateTime;
-import java.util.Objects;
 
 public class Teacher extends AggregateRoot<TeacherId> {
 
@@ -25,10 +25,10 @@ public class Teacher extends AggregateRoot<TeacherId> {
 
     public static Teacher provision(String firebaseUid, String firstName, String lastName,
                                     String email, AuthProvider authProvider) {
-        if (firstName == null || firstName.isBlank()) throw new IllegalArgumentException("firstName must not be blank");
-        if (lastName == null || lastName.isBlank())   throw new IllegalArgumentException("lastName must not be blank");
-        if (email == null || email.isBlank())         throw new IllegalArgumentException("email must not be blank");
-        Objects.requireNonNull(authProvider, "authProvider must not be null");
+        if (firstName == null || firstName.isBlank()) throw new DomainInvariantViolationException("firstName must not be blank");
+        if (lastName == null || lastName.isBlank())   throw new DomainInvariantViolationException("lastName must not be blank");
+        if (email == null || email.isBlank())         throw new DomainInvariantViolationException("email must not be blank");
+        if (authProvider == null)                     throw new DomainInvariantViolationException("authProvider must not be null");
         Teacher t = new Teacher();
         t.id = new TeacherId(firebaseUid);
         t.firstName = firstName;
@@ -47,10 +47,10 @@ public class Teacher extends AggregateRoot<TeacherId> {
                                   OffsetDateTime createdAt, OffsetDateTime updatedAt,
                                   String planType, boolean relatedParty, String offerDetails,
                                   String evidenceLink, String flagSetBy, OffsetDateTime flagSetAt) {
-        if (firstName == null || firstName.isBlank()) throw new IllegalArgumentException("firstName must not be blank");
-        if (lastName == null || lastName.isBlank())   throw new IllegalArgumentException("lastName must not be blank");
-        if (email == null || email.isBlank())         throw new IllegalArgumentException("email must not be blank");
-        Objects.requireNonNull(authProvider, "authProvider must not be null");
+        if (firstName == null || firstName.isBlank()) throw new DomainInvariantViolationException("firstName must not be blank");
+        if (lastName == null || lastName.isBlank())   throw new DomainInvariantViolationException("lastName must not be blank");
+        if (email == null || email.isBlank())         throw new DomainInvariantViolationException("email must not be blank");
+        if (authProvider == null)                     throw new DomainInvariantViolationException("authProvider must not be null");
         Teacher t = new Teacher();
         t.id = new TeacherId(firebaseUid);
         t.firstName = firstName;

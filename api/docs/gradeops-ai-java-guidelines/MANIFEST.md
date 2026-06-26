@@ -1,0 +1,19 @@
+# MANIFEST
+
+- README.md
+- 00-principios-rectores.md
+- 01-arquitectura-hexagonal-y-paquetes.md
+- 02-ddd-tactico.md
+- 03-use-cases-orquestadores-y-pasos.md
+- 04-solid-dry-kiss.md
+- 05-patrones-gof.md
+- 06-nomenclatura-java.md
+- 07-lombok.md
+- 08-persistencia-jpa.md
+- 09-api-rest-dtos-validacion.md
+- 10-testing-calidad-y-automatizacion.md
+- 11-seguridad-observabilidad-y-auditoria.md
+- 12-excepciones-y-manejo-de-errores.md
+- 13-guia-ai-assisted-development.md
+- 14-checklists.md
+- 15-keygo-a-gradeops-mejoras.md

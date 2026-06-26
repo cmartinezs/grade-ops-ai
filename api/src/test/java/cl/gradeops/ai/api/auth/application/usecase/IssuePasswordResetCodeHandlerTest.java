@@ -1,6 +1,7 @@
 package cl.gradeops.ai.api.auth.application.usecase;
 
 import cl.gradeops.ai.api.auth.application.command.IssuePasswordResetCodeCommand;
+import cl.gradeops.ai.api.auth.application.exception.UnsupportedProviderException;
 import cl.gradeops.ai.api.auth.application.port.out.PasswordResetCodeRepositoryPort;
 import cl.gradeops.ai.api.auth.application.result.IssuePasswordResetCodeResult;
 import cl.gradeops.ai.api.auth.domain.model.PasswordResetCode;
@@ -56,7 +57,7 @@ class IssuePasswordResetCodeHandlerTest {
                 .teacherUid("teacher-3").ttlMinutes(30).provider(SignInProvider.GOOGLE).build();
 
         assertThatThrownBy(() -> handler.execute(command))
-                .isInstanceOf(IllegalArgumentException.class);
+                .isInstanceOf(UnsupportedProviderException.class);
         verifyNoInteractions(codeRepository);
     }
 }

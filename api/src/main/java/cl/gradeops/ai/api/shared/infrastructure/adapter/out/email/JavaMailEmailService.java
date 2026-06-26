@@ -1,6 +1,7 @@
 package cl.gradeops.ai.api.shared.infrastructure.adapter.out.email;
 
 import cl.gradeops.ai.api.shared.infrastructure.config.GradeOpsEmailProperties;
+import cl.gradeops.ai.api.shared.infrastructure.exception.EmailDeliveryException;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import org.springframework.mail.javamail.JavaMailSender;
@@ -46,7 +47,7 @@ public class JavaMailEmailService {
             helper.setText(html, true);
             mailSender.send(msg);
         } catch (MessagingException | java.io.UnsupportedEncodingException e) {
-            throw new RuntimeException("Failed to send email to " + to, e);
+            throw new EmailDeliveryException("Failed to send email to " + to, e);
         }
     }
 }

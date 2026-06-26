@@ -1,5 +1,6 @@
 package cl.gradeops.ai.api.teacher.domain.model;
 
+import cl.gradeops.ai.api.shared.domain.exception.DomainInvariantViolationException;
 import org.junit.jupiter.api.Test;
 
 import java.time.OffsetDateTime;
@@ -75,47 +76,47 @@ class TeacherTest {
     @Test
     void shouldRejectBlankValueWhenCreatingTeacherId() {
         assertThatThrownBy(() -> new TeacherId(""))
-                .isInstanceOf(IllegalArgumentException.class);
+                .isInstanceOf(DomainInvariantViolationException.class);
     }
 
     @Test
     void shouldRejectNullValueWhenCreatingTeacherId() {
         assertThatThrownBy(() -> new TeacherId(null))
-                .isInstanceOf(NullPointerException.class);
+                .isInstanceOf(DomainInvariantViolationException.class);
     }
 
     @Test
     void shouldRejectNullFirstNameWhenProvisioningTeacher() {
         assertThatThrownBy(() -> Teacher.provision("uid", null, "Soto", "a@x.com", AuthProvider.EMAIL_PASSWORD))
-                .isInstanceOf(IllegalArgumentException.class)
+                .isInstanceOf(DomainInvariantViolationException.class)
                 .hasMessageContaining("firstName");
     }
 
     @Test
     void shouldRejectBlankFirstNameWhenProvisioningTeacher() {
         assertThatThrownBy(() -> Teacher.provision("uid", "  ", "Soto", "a@x.com", AuthProvider.EMAIL_PASSWORD))
-                .isInstanceOf(IllegalArgumentException.class)
+                .isInstanceOf(DomainInvariantViolationException.class)
                 .hasMessageContaining("firstName");
     }
 
     @Test
     void shouldRejectNullLastNameWhenProvisioningTeacher() {
         assertThatThrownBy(() -> Teacher.provision("uid", "Ana", null, "a@x.com", AuthProvider.EMAIL_PASSWORD))
-                .isInstanceOf(IllegalArgumentException.class)
+                .isInstanceOf(DomainInvariantViolationException.class)
                 .hasMessageContaining("lastName");
     }
 
     @Test
     void shouldRejectBlankEmailWhenProvisioningTeacher() {
         assertThatThrownBy(() -> Teacher.provision("uid", "Ana", "Soto", "", AuthProvider.EMAIL_PASSWORD))
-                .isInstanceOf(IllegalArgumentException.class)
+                .isInstanceOf(DomainInvariantViolationException.class)
                 .hasMessageContaining("email");
     }
 
     @Test
     void shouldRejectNullAuthProviderWhenProvisioningTeacher() {
         assertThatThrownBy(() -> Teacher.provision("uid", "Ana", "Soto", "a@x.com", null))
-                .isInstanceOf(NullPointerException.class)
+                .isInstanceOf(DomainInvariantViolationException.class)
                 .hasMessageContaining("authProvider");
     }
 
@@ -124,7 +125,7 @@ class TeacherTest {
         assertThatThrownBy(() -> Teacher.restore("uid", "", "Soto", "a@x.com",
                 AuthProvider.EMAIL_PASSWORD, OffsetDateTime.now(), OffsetDateTime.now(),
                 null, false, null, null, null, null))
-                .isInstanceOf(IllegalArgumentException.class)
+                .isInstanceOf(DomainInvariantViolationException.class)
                 .hasMessageContaining("firstName");
     }
 
@@ -133,7 +134,7 @@ class TeacherTest {
         assertThatThrownBy(() -> Teacher.restore("uid", "Ana", null, "a@x.com",
                 AuthProvider.EMAIL_PASSWORD, OffsetDateTime.now(), OffsetDateTime.now(),
                 null, false, null, null, null, null))
-                .isInstanceOf(IllegalArgumentException.class)
+                .isInstanceOf(DomainInvariantViolationException.class)
                 .hasMessageContaining("lastName");
     }
 
@@ -142,7 +143,7 @@ class TeacherTest {
         assertThatThrownBy(() -> Teacher.restore("uid", "Ana", "Soto", "  ",
                 AuthProvider.EMAIL_PASSWORD, OffsetDateTime.now(), OffsetDateTime.now(),
                 null, false, null, null, null, null))
-                .isInstanceOf(IllegalArgumentException.class)
+                .isInstanceOf(DomainInvariantViolationException.class)
                 .hasMessageContaining("email");
     }
 
@@ -151,7 +152,7 @@ class TeacherTest {
         assertThatThrownBy(() -> Teacher.restore("uid", "Ana", "Soto", "a@x.com",
                 null, OffsetDateTime.now(), OffsetDateTime.now(),
                 null, false, null, null, null, null))
-                .isInstanceOf(NullPointerException.class)
+                .isInstanceOf(DomainInvariantViolationException.class)
                 .hasMessageContaining("authProvider");
     }
 }
