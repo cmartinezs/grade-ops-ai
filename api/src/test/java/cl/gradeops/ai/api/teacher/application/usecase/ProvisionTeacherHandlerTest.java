@@ -36,7 +36,7 @@ class ProvisionTeacherHandlerTest {
     }
 
     @Test
-    void duplicate_email_pre_check_throws_and_does_not_call_firebase() {
+    void shouldThrowDuplicateEmailExceptionAndSkipFirebaseWhenEmailAlreadyRegistered() {
         when(teacherRepository.existsByEmail("dup@x.com")).thenReturn(true);
 
         assertThatThrownBy(() -> handler().execute(command("dup@x.com")))
@@ -46,7 +46,7 @@ class ProvisionTeacherHandlerTest {
     }
 
     @Test
-    void happy_path_returns_firebaseUid_and_rawCode() {
+    void shouldReturnFirebaseUidAndRawCodeWhenProvisioningSucceeds() {
         when(teacherRepository.existsByEmail("new@x.com")).thenReturn(false);
         when(authPort.createUser("new@x.com", "Ana Soto")).thenReturn("uid-123");
         when(issuePasswordResetCodeUseCase.execute(any()))
@@ -60,7 +60,7 @@ class ProvisionTeacherHandlerTest {
     }
 
     @Test
-    void db_save_failure_triggers_firebase_compensation() {
+    void shouldDeleteFirebaseUserWhenDbSaveFails() {
         when(teacherRepository.existsByEmail("fail@x.com")).thenReturn(false);
         when(authPort.createUser("fail@x.com", "Ana Soto")).thenReturn("uid-123");
         doThrow(new RuntimeException("db down")).when(teacherRepository).save(any());
@@ -72,7 +72,7 @@ class ProvisionTeacherHandlerTest {
     }
 
     @Test
-    void firebase_createUser_failure_does_not_call_deleteUser() {
+    void shouldNotCallDeleteUserWhenFirebaseCreateUserFails() {
         when(teacherRepository.existsByEmail("err@x.com")).thenReturn(false);
         when(authPort.createUser(eq("err@x.com"), any()))
             .thenThrow(new DuplicateEmailException("err@x.com"));
@@ -81,5 +81,18 @@ class ProvisionTeacherHandlerTest {
                 .isInstanceOf(DuplicateEmailException.class);
 
         verify(authPort, never()).deleteUser(any());
+    }
+
+    @Test
+    void shouldDeleteFirebaseUserWhenIssuePasswordResetCodeFails() {
+        when(teacherRepository.existsByEmail("code@x.com")).thenReturn(false);
+        when(authPort.createUser("code@x.com", "Ana Soto")).thenReturn("uid-456");
+        when(issuePasswordResetCodeUseCase.execute(any()))
+            .thenThrow(new RuntimeException("code service down"));
+
+        assertThatThrownBy(() -> handler().execute(command("code@x.com")))
+                .isInstanceOf(RuntimeException.class);
+
+        verify(authPort).deleteUser("uid-456");
     }
 }

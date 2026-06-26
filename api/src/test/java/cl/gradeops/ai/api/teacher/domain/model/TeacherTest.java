@@ -9,20 +9,20 @@ import static org.assertj.core.api.Assertions.*;
 class TeacherTest {
 
     @Test
-    void provision_sets_default_relatedParty_false() {
+    void shouldSetRelatedPartyToFalseWhenProvisioningNewTeacher() {
         Teacher t = Teacher.provision("uid-1", "Ana", "Soto", "a@x.com", AuthProvider.EMAIL_PASSWORD);
         assertThat(t.isRelatedParty()).isFalse();
     }
 
     @Test
-    void provision_sets_createdAt_and_updatedAt() {
+    void shouldSetTimestampsWhenProvisioningNewTeacher() {
         Teacher t = Teacher.provision("uid-1", "Ana", "Soto", "a@x.com", AuthProvider.EMAIL_PASSWORD);
         assertThat(t.getCreatedAt()).isNotNull();
         assertThat(t.getUpdatedAt()).isNotNull();
     }
 
     @Test
-    void restore_sets_all_fields_verbatim() {
+    void shouldRestoreAllFieldsVerbatimWhenRestoringFromPersistence() {
         OffsetDateTime created = OffsetDateTime.now().minusDays(1);
         OffsetDateTime updated = OffsetDateTime.now().minusHours(1);
         OffsetDateTime flagAt  = OffsetDateTime.now().minusMinutes(30);
@@ -47,7 +47,7 @@ class TeacherTest {
     }
 
     @Test
-    void updatePilotFlags_updates_non_null_fields_and_refreshes_timestamps() {
+    void shouldUpdateNonNullFieldsAndRefreshTimestampsWhenUpdatingPilotFlags() {
         Teacher t = Teacher.provision("uid-3", "Ada", "L", "a@x.com", AuthProvider.EMAIL_PASSWORD);
 
         t.updatePilotFlags("pilot", true, "offer", "http://ev", "admin");
@@ -62,7 +62,7 @@ class TeacherTest {
     }
 
     @Test
-    void updatePilotFlags_null_relatedParty_leaves_original_value() {
+    void shouldPreserveRelatedPartyWhenUpdatingWithNullValue() {
         Teacher t = Teacher.restore("uid-4", "X", "Y", "x@y.com",
                 AuthProvider.EMAIL_PASSWORD, OffsetDateTime.now(), OffsetDateTime.now(),
                 null, true, null, null, null, null);
@@ -73,14 +73,85 @@ class TeacherTest {
     }
 
     @Test
-    void teacherId_rejects_blank_value() {
+    void shouldRejectBlankValueWhenCreatingTeacherId() {
         assertThatThrownBy(() -> new TeacherId(""))
                 .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
-    void teacherId_rejects_null_value() {
+    void shouldRejectNullValueWhenCreatingTeacherId() {
         assertThatThrownBy(() -> new TeacherId(null))
                 .isInstanceOf(NullPointerException.class);
+    }
+
+    @Test
+    void shouldRejectNullFirstNameWhenProvisioningTeacher() {
+        assertThatThrownBy(() -> Teacher.provision("uid", null, "Soto", "a@x.com", AuthProvider.EMAIL_PASSWORD))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("firstName");
+    }
+
+    @Test
+    void shouldRejectBlankFirstNameWhenProvisioningTeacher() {
+        assertThatThrownBy(() -> Teacher.provision("uid", "  ", "Soto", "a@x.com", AuthProvider.EMAIL_PASSWORD))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("firstName");
+    }
+
+    @Test
+    void shouldRejectNullLastNameWhenProvisioningTeacher() {
+        assertThatThrownBy(() -> Teacher.provision("uid", "Ana", null, "a@x.com", AuthProvider.EMAIL_PASSWORD))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("lastName");
+    }
+
+    @Test
+    void shouldRejectBlankEmailWhenProvisioningTeacher() {
+        assertThatThrownBy(() -> Teacher.provision("uid", "Ana", "Soto", "", AuthProvider.EMAIL_PASSWORD))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("email");
+    }
+
+    @Test
+    void shouldRejectNullAuthProviderWhenProvisioningTeacher() {
+        assertThatThrownBy(() -> Teacher.provision("uid", "Ana", "Soto", "a@x.com", null))
+                .isInstanceOf(NullPointerException.class)
+                .hasMessageContaining("authProvider");
+    }
+
+    @Test
+    void shouldRejectBlankFirstNameWhenRestoringFromPersistence() {
+        assertThatThrownBy(() -> Teacher.restore("uid", "", "Soto", "a@x.com",
+                AuthProvider.EMAIL_PASSWORD, OffsetDateTime.now(), OffsetDateTime.now(),
+                null, false, null, null, null, null))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("firstName");
+    }
+
+    @Test
+    void shouldRejectNullLastNameWhenRestoringFromPersistence() {
+        assertThatThrownBy(() -> Teacher.restore("uid", "Ana", null, "a@x.com",
+                AuthProvider.EMAIL_PASSWORD, OffsetDateTime.now(), OffsetDateTime.now(),
+                null, false, null, null, null, null))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("lastName");
+    }
+
+    @Test
+    void shouldRejectBlankEmailWhenRestoringFromPersistence() {
+        assertThatThrownBy(() -> Teacher.restore("uid", "Ana", "Soto", "  ",
+                AuthProvider.EMAIL_PASSWORD, OffsetDateTime.now(), OffsetDateTime.now(),
+                null, false, null, null, null, null))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("email");
+    }
+
+    @Test
+    void shouldRejectNullAuthProviderWhenRestoringFromPersistence() {
+        assertThatThrownBy(() -> Teacher.restore("uid", "Ana", "Soto", "a@x.com",
+                null, OffsetDateTime.now(), OffsetDateTime.now(),
+                null, false, null, null, null, null))
+                .isInstanceOf(NullPointerException.class)
+                .hasMessageContaining("authProvider");
     }
 }
