@@ -4,17 +4,19 @@ import cl.gradeops.ai.api.auth.application.command.ResetPasswordCommand;
 import cl.gradeops.ai.api.auth.application.port.in.RevokeRefreshTokensUseCase;
 import cl.gradeops.ai.api.auth.application.port.out.AuthPort;
 import cl.gradeops.ai.api.auth.application.port.out.PasswordResetCodeRepositoryPort;
-import cl.gradeops.ai.api.auth.application.port.out.TeacherRepositoryPort;
 import cl.gradeops.ai.api.auth.domain.exception.InvalidResetCodeException;
 import cl.gradeops.ai.api.auth.domain.exception.PasswordMismatchException;
 import cl.gradeops.ai.api.auth.domain.exception.ResetCodeEmailMismatchException;
 import cl.gradeops.ai.api.auth.domain.model.PasswordResetCode;
 import cl.gradeops.ai.api.auth.domain.valueobject.RawCode;
-import cl.gradeops.ai.api.domain.teacher.TeacherEntity;
+import cl.gradeops.ai.api.teacher.application.port.out.TeacherRepositoryPort;
+import cl.gradeops.ai.api.teacher.domain.model.AuthProvider;
+import cl.gradeops.ai.api.teacher.domain.model.Teacher;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.time.Instant;
+import java.time.OffsetDateTime;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -38,6 +40,12 @@ class ResetPasswordOrchestratorTest {
     private ResetPasswordCommand command(String code, String email, String password) {
         return ResetPasswordCommand.builder()
                 .rawCode(code).email(email).password(password).passwordRepeat(password).build();
+    }
+
+    private Teacher teacher(String uid, String email) {
+        return Teacher.restore(uid, "Grace", "Hopper", email,
+                AuthProvider.EMAIL_PASSWORD, OffsetDateTime.now(), OffsetDateTime.now(),
+                null, false, null, null, null, null);
     }
 
     @Test
@@ -82,8 +90,7 @@ class ResetPasswordOrchestratorTest {
         PasswordResetCode code = PasswordResetCode.restore("uid-1", new RawCode("code-3"),
                 Instant.now().plusSeconds(3600), Instant.now().minusSeconds(100), null);
         when(codeRepository.findByRawCode("code-3")).thenReturn(Optional.of(code));
-        TeacherEntity teacher = new TeacherEntity("uid-1", "Grace", "Hopper", "other@test.com", "EMAIL_PASSWORD");
-        when(teacherRepository.findById("uid-1")).thenReturn(Optional.of(teacher));
+        when(teacherRepository.findById("uid-1")).thenReturn(Optional.of(teacher("uid-1", "other@test.com")));
 
         assertThatThrownBy(() -> orchestrator.execute(command("code-3", "mismatch@test.com", "pass123")))
                 .isInstanceOf(ResetCodeEmailMismatchException.class);
@@ -94,8 +101,7 @@ class ResetPasswordOrchestratorTest {
         PasswordResetCode code = PasswordResetCode.restore("uid-1", new RawCode("code-4"),
                 Instant.now().plusSeconds(3600), Instant.now().minusSeconds(100), null);
         when(codeRepository.findByRawCode("code-4")).thenReturn(Optional.of(code));
-        TeacherEntity teacher = new TeacherEntity("uid-1", "Grace", "Hopper", "g@test.com", "EMAIL_PASSWORD");
-        when(teacherRepository.findById("uid-1")).thenReturn(Optional.of(teacher));
+        when(teacherRepository.findById("uid-1")).thenReturn(Optional.of(teacher("uid-1", "g@test.com")));
 
         orchestrator.execute(command("code-4", "g@test.com", "newpass123"));
 

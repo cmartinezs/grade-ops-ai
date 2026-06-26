@@ -7,4 +7,6 @@ public interface AuthPort {
     TeacherIdentity verifyTokenUnchecked(String idToken);
     void revokeRefreshTokens(String uid);
     void updatePassword(String uid, String newPassword);
+    String createUser(String email, String displayName);
+    void deleteUser(String uid);
 }

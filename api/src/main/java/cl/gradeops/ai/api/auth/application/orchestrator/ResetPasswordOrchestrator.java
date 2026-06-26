@@ -5,12 +5,12 @@ import cl.gradeops.ai.api.auth.application.port.in.RevokeRefreshTokensUseCase;
 import cl.gradeops.ai.api.auth.application.port.in.ResetPasswordUseCase;
 import cl.gradeops.ai.api.auth.application.port.out.AuthPort;
 import cl.gradeops.ai.api.auth.application.port.out.PasswordResetCodeRepositoryPort;
-import cl.gradeops.ai.api.auth.application.port.out.TeacherRepositoryPort;
 import cl.gradeops.ai.api.auth.domain.exception.InvalidResetCodeException;
 import cl.gradeops.ai.api.auth.domain.exception.PasswordMismatchException;
 import cl.gradeops.ai.api.auth.domain.exception.ResetCodeEmailMismatchException;
 import cl.gradeops.ai.api.auth.domain.model.PasswordResetCode;
-import cl.gradeops.ai.api.domain.teacher.TeacherEntity;
+import cl.gradeops.ai.api.teacher.application.port.out.TeacherRepositoryPort;
+import cl.gradeops.ai.api.teacher.domain.model.Teacher;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.transaction.annotation.Transactional;
@@ -41,7 +41,7 @@ public class ResetPasswordOrchestrator implements ResetPasswordUseCase {
             throw new InvalidResetCodeException("code already used");
         }
 
-        TeacherEntity teacher = teacherRepository.findById(code.getTeacherUid())
+        Teacher teacher = teacherRepository.findById(code.getTeacherUid())
                 .orElseThrow(() -> new InvalidResetCodeException("teacher not found"));
 
         if (!teacher.getEmail().equalsIgnoreCase(command.email())) {
