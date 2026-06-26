@@ -8,9 +8,11 @@ import cl.gradeops.ai.api.teacher.infrastructure.adapter.in.web.request.Provisio
 import cl.gradeops.ai.api.teacher.infrastructure.adapter.in.web.request.UpdatePilotFlagsRequest;
 import cl.gradeops.ai.api.teacher.infrastructure.adapter.in.web.response.ProvisionTeacherResponse;
 import cl.gradeops.ai.api.teacher.infrastructure.adapter.in.web.response.UpdatePilotFlagsResponse;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.util.UriComponentsBuilder;
 
 @RestController
 @RequestMapping("/internal/teachers")
@@ -31,7 +33,7 @@ public class InternalTeacherController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public ProvisionTeacherResponse provision(@RequestBody ProvisionTeacherRequest request) {
+    public ProvisionTeacherResponse provision(@Valid @RequestBody ProvisionTeacherRequest request) {
         var result = provisionTeacherUseCase.execute(
             ProvisionTeacherCommand.builder()
                 .firstName(request.firstName())
@@ -39,14 +41,17 @@ public class InternalTeacherController {
                 .email(request.email())
                 .build()
         );
-        String inviteLink = webBaseUrl + "/reset-password?code=" + result.rawCode();
+        String inviteLink = UriComponentsBuilder.fromUriString(webBaseUrl)
+            .path("/reset-password")
+            .queryParam("code", result.rawCode())
+            .build().toUriString();
         return new ProvisionTeacherResponse(result.firebaseUid(), inviteLink);
     }
 
     @PatchMapping("/{uid}/flags")
     public UpdatePilotFlagsResponse updateFlags(
             @PathVariable String uid,
-            @RequestBody UpdatePilotFlagsRequest request) {
+            @Valid @RequestBody UpdatePilotFlagsRequest request) {
         var result = updatePilotFlagsUseCase.execute(
             UpdatePilotFlagsCommand.builder()
                 .uid(uid)

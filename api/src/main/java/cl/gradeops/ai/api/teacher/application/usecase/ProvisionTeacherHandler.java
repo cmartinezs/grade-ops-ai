@@ -12,9 +12,11 @@ import cl.gradeops.ai.api.teacher.application.result.ProvisionTeacherResult;
 import cl.gradeops.ai.api.teacher.domain.model.AuthProvider;
 import cl.gradeops.ai.api.teacher.domain.model.Teacher;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.transaction.annotation.Transactional;
 
 // NO @Service — declared as @Bean in TeacherConfig
+@Slf4j
 @RequiredArgsConstructor
 public class ProvisionTeacherHandler implements ProvisionTeacherUseCase {
 
@@ -56,7 +58,11 @@ public class ProvisionTeacherHandler implements ProvisionTeacherUseCase {
 
         } catch (Exception ex) {
             if (firebaseUid != null) {
-                try { authPort.deleteUser(firebaseUid); } catch (Exception ignored) {}
+                try {
+                    authPort.deleteUser(firebaseUid);
+                } catch (Exception compensationEx) {
+                    log.warn("Firebase compensation failed: uid={} cause={}", firebaseUid, compensationEx.getMessage());
+                }
             }
             if (ex instanceof RuntimeException rte) throw rte;
             throw new RuntimeException(ex);

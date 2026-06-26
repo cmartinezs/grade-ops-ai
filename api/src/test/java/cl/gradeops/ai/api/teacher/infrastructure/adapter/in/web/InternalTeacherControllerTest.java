@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -22,6 +23,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @WebMvcTest(InternalTeacherController.class)
 @ActiveProfiles("test")
+@TestPropertySource(properties = "gradeops.web.base-url=http://localhost:3000/")
 class InternalTeacherControllerTest {
 
     @Autowired MockMvc mockMvc;
@@ -29,7 +31,7 @@ class InternalTeacherControllerTest {
     @MockitoBean UpdatePilotFlagsUseCase updatePilotFlagsUseCase;
 
     @Test
-    void provision_happy_path_returns_201_with_inviteLink() throws Exception {
+    void shouldReturn201WithInviteLinkWhenProvisioningSucceeds() throws Exception {
         when(provisionTeacherUseCase.execute(any()))
             .thenReturn(ProvisionTeacherResult.builder()
                 .firebaseUid("uid-1").rawCode("code-abc").build());
@@ -47,7 +49,7 @@ class InternalTeacherControllerTest {
     }
 
     @Test
-    void provision_duplicate_email_returns_409() throws Exception {
+    void shouldReturn409WhenEmailAlreadyExists() throws Exception {
         when(provisionTeacherUseCase.execute(any()))
             .thenThrow(new DuplicateEmailException("a@x.com"));
 
@@ -61,7 +63,7 @@ class InternalTeacherControllerTest {
     }
 
     @Test
-    void updateFlags_happy_path_returns_200_with_updated_fields() throws Exception {
+    void shouldReturn200WithUpdatedFieldsWhenUpdatingPilotFlags() throws Exception {
         when(updatePilotFlagsUseCase.execute(any()))
             .thenReturn(UpdatePilotFlagsResult.builder()
                 .firebaseUid("uid-1").planType("pilot").relatedParty(true).flagSetAt("2026-06-26T00:00:00Z")
@@ -79,7 +81,7 @@ class InternalTeacherControllerTest {
     }
 
     @Test
-    void updateFlags_unknown_uid_returns_404() throws Exception {
+    void shouldReturn404WhenTeacherNotFound() throws Exception {
         when(updatePilotFlagsUseCase.execute(any()))
             .thenThrow(new TeacherNotFoundException("uid-x"));
 
@@ -90,5 +92,65 @@ class InternalTeacherControllerTest {
                         {"planType":"pilot"}
                         """))
             .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void shouldReturn422WhenEmailIsMissing() throws Exception {
+        mockMvc.perform(post("/internal/teachers")
+                .header("X-Internal-Key", "test-internal-secret")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("""
+                        {"firstName":"Ana","lastName":"Soto"}
+                        """))
+            .andExpect(status().isUnprocessableEntity());
+    }
+
+    @Test
+    void shouldReturn422WhenFirstNameIsBlank() throws Exception {
+        mockMvc.perform(post("/internal/teachers")
+                .header("X-Internal-Key", "test-internal-secret")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("""
+                        {"firstName":"","lastName":"Soto","email":"a@x.com"}
+                        """))
+            .andExpect(status().isUnprocessableEntity());
+    }
+
+    @Test
+    void shouldReturn422WhenEmailFormatIsInvalid() throws Exception {
+        mockMvc.perform(post("/internal/teachers")
+                .header("X-Internal-Key", "test-internal-secret")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("""
+                        {"firstName":"Ana","lastName":"Soto","email":"not-an-email"}
+                        """))
+            .andExpect(status().isUnprocessableEntity());
+    }
+
+    @Test
+    void shouldReturn400WhenRequestBodyIsMissing() throws Exception {
+        mockMvc.perform(post("/internal/teachers")
+                .header("X-Internal-Key", "test-internal-secret")
+                .contentType(MediaType.APPLICATION_JSON))
+            .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void shouldBuildWellFormedInviteLinkWhenBaseUrlHasTrailingSlash() throws Exception {
+        when(provisionTeacherUseCase.execute(any()))
+            .thenReturn(ProvisionTeacherResult.builder()
+                .firebaseUid("uid-2").rawCode("code-xyz").build());
+
+        mockMvc.perform(post("/internal/teachers")
+                .header("X-Internal-Key", "test-internal-secret")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("""
+                        {"firstName":"Ana","lastName":"Soto","email":"a@x.com"}
+                        """))
+            .andExpect(status().isCreated())
+            .andExpect(jsonPath("$.inviteLink").value(
+                org.hamcrest.Matchers.allOf(
+                    org.hamcrest.Matchers.containsString("/reset-password?code=code-xyz"),
+                    org.hamcrest.Matchers.not(org.hamcrest.Matchers.containsString("//reset-password")))));
     }
 }

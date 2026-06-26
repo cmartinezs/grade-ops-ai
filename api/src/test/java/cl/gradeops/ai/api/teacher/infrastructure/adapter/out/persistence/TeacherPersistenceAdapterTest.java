@@ -4,6 +4,7 @@ import cl.gradeops.ai.api.teacher.domain.model.AuthProvider;
 import cl.gradeops.ai.api.teacher.domain.model.Teacher;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -40,13 +41,18 @@ class TeacherPersistenceAdapterTest {
     }
 
     @Test
-    void save_delegates_to_jpa_repository() {
+    void shouldMapDomainToEntityAndDelegateToJpaRepositoryWhenSaving() {
         adapter().save(sampleTeacher());
-        verify(jpaRepository).save(any(TeacherJpaEntity.class));
+
+        ArgumentCaptor<TeacherJpaEntity> captor = ArgumentCaptor.forClass(TeacherJpaEntity.class);
+        verify(jpaRepository).save(captor.capture());
+        assertThat(captor.getValue().getFirebaseUid()).isEqualTo("uid-1");
+        assertThat(captor.getValue().getEmail()).isEqualTo("a@x.com");
+        assertThat(captor.getValue().getProvider()).isEqualTo("EMAIL_PASSWORD");
     }
 
     @Test
-    void findById_maps_entity_to_domain_when_found() {
+    void shouldMapEntityToDomainWhenTeacherFoundById() {
         when(jpaRepository.findById("uid-1")).thenReturn(Optional.of(sampleJpaEntity()));
 
         Optional<Teacher> result = adapter().findById("uid-1");
@@ -57,14 +63,14 @@ class TeacherPersistenceAdapterTest {
     }
 
     @Test
-    void findById_returns_empty_when_not_found() {
+    void shouldReturnEmptyWhenTeacherNotFoundById() {
         when(jpaRepository.findById("missing")).thenReturn(Optional.empty());
 
         assertThat(adapter().findById("missing")).isEmpty();
     }
 
     @Test
-    void findByEmail_maps_entity_to_domain_when_found() {
+    void shouldMapEntityToDomainWhenTeacherFoundByEmail() {
         when(jpaRepository.findByEmail("a@x.com")).thenReturn(Optional.of(sampleJpaEntity()));
 
         Optional<Teacher> result = adapter().findByEmail("a@x.com");
@@ -74,7 +80,7 @@ class TeacherPersistenceAdapterTest {
     }
 
     @Test
-    void existsByEmail_delegates_to_jpa_repository() {
+    void shouldReturnTrueWhenEmailExistsInRepository() {
         when(jpaRepository.existsByEmail("a@x.com")).thenReturn(true);
 
         assertThat(adapter().existsByEmail("a@x.com")).isTrue();

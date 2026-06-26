@@ -28,7 +28,7 @@ class UpdatePilotFlagsHandlerTest {
     }
 
     @Test
-    void teacher_not_found_throws_TeacherNotFoundException() {
+    void shouldThrowTeacherNotFoundExceptionWhenTeacherDoesNotExist() {
         when(teacherRepository.findById("unknown")).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> handler().execute(
@@ -39,7 +39,7 @@ class UpdatePilotFlagsHandlerTest {
     }
 
     @Test
-    void happy_path_saves_and_returns_updated_result() {
+    void shouldSaveAndReturnUpdatedResultWhenTeacherExists() {
         Teacher teacher = Teacher.restore("uid-1", "Ana", "Soto", "a@x.com",
                 AuthProvider.EMAIL_PASSWORD, OffsetDateTime.now(), OffsetDateTime.now(),
                 null, false, null, null, null, null);
@@ -56,7 +56,7 @@ class UpdatePilotFlagsHandlerTest {
     }
 
     @Test
-    void null_relatedParty_does_not_overwrite_existing_value() {
+    void shouldPreserveRelatedPartyWhenNullValueProvided() {
         Teacher teacher = Teacher.restore("uid-2", "X", "Y", "x@y.com",
                 AuthProvider.EMAIL_PASSWORD, OffsetDateTime.now(), OffsetDateTime.now(),
                 null, true, null, null, null, null);

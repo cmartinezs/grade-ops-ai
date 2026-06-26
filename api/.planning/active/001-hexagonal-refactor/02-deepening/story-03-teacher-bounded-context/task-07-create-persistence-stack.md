@@ -9,17 +9,19 @@
 
 ## Objective
 
-Create `TeacherJpaEntity` (renamed from `TeacherEntity`), `TeacherJpaRepository` (package-private), `TeacherPersistenceMapper`, `TeacherPersistenceAdapter` (implements `TeacherRepositoryPort`), and `TeacherPersistenceAdapterTest`. In the same task, update `RegisterHandler`, `SendPasswordResetEmailOrchestrator`, and `ResetPasswordOrchestrator` (all Story 02 files) to inject `TeacherRepositoryPort` instead of the old `domain.teacher.TeacherRepository`. Update `AuthConfig` accordingly.
+Create `TeacherJpaEntity` (renamed from `TeacherEntity`), `TeacherJpaRepository` (**public** — ver nota de inconsistencia abajo), `TeacherPersistenceMapper`, `TeacherPersistenceAdapter` (implements `TeacherRepositoryPort`), y `TeacherPersistenceAdapterTest`. En el mismo task, actualizar `RegisterHandler`, `SendPasswordResetEmailOrchestrator`, y `ResetPasswordOrchestrator` (Story 02) para inyectar `TeacherRepositoryPort` en vez del antiguo `domain.teacher.TeacherRepository`. Actualizar `AuthConfig` en consecuencia.
+
+> **Nota de inconsistencia (code review post-impl):** Este task pedía `TeacherJpaRepository` package-private, pero la done criteria de la story principal (línea 41) la requería **public** porque `TeacherConfig` está en el paquete `teacher.infrastructure.config` y necesita referenciar el tipo al momento de compilación. La story tiene precedencia; el task era inconsistente. Se documenta en `story-03-teacher-bounded-context.md § Inconsistencies Found`.
 
 ---
 
 ## Technical Design
 
-- **Approach:** `TeacherJpaEntity` is a direct rename of `domain/teacher/TeacherEntity` — same table name (`teacher`), same column names, same 13 fields; JPA annotations untouched. No business logic on the JPA entity. `TeacherJpaRepository` is package-private (only `TeacherPersistenceAdapter` uses it). `TeacherPersistenceMapper.toDomain()` calls `Teacher.restore(...)` with all 13 fields. `TeacherPersistenceMapper.toEntity()` maps from aggregate getters. `TeacherPersistenceAdapter` is a plain class with `@RequiredArgsConstructor` — declared as `@Bean` in `TeacherConfig` (task-09).
+- **Approach:** `TeacherJpaEntity` is a direct rename of `domain/teacher/TeacherEntity` — same table name (`teacher`), same column names, same 13 fields; JPA annotations untouched. No business logic on the JPA entity. `TeacherJpaRepository` es **public** (ver nota en Objective). `TeacherPersistenceMapper.toDomain()` calls `Teacher.restore(...)` with all 13 fields. `TeacherPersistenceMapper.toEntity()` maps from aggregate getters. `TeacherPersistenceAdapter` is a plain class with `@RequiredArgsConstructor` — declared as `@Bean` in `TeacherConfig` (task-09).
 - **Cross-context update:** `RegisterHandler`, `SendPasswordResetEmailOrchestrator`, and `ResetPasswordOrchestrator` in the auth bounded context currently inject `domain.teacher.TeacherRepository` (old JPA Spring Data interface). This task replaces those injections with `TeacherRepositoryPort`. This update is safe now because `TeacherPersistenceAdapter` implements the port and will be available in the Spring context when `TeacherConfig` is created in task-09. `AuthConfig` must also be updated: the `@Bean` declarations for those three beans replace the `TeacherRepository` parameter with `TeacherRepositoryPort`.
 - **Affected files / components (new):**
   - `src/main/java/cl/gradeops/ai/api/teacher/infrastructure/adapter/out/persistence/TeacherJpaEntity.java` ← NEW
-  - `src/main/java/cl/gradeops/ai/api/teacher/infrastructure/adapter/out/persistence/TeacherJpaRepository.java` ← NEW (package-private)
+  - `src/main/java/cl/gradeops/ai/api/teacher/infrastructure/adapter/out/persistence/TeacherJpaRepository.java` ← NEW (public — ver nota en Objective)
   - `src/main/java/cl/gradeops/ai/api/teacher/infrastructure/adapter/out/persistence/TeacherPersistenceMapper.java` ← NEW
   - `src/main/java/cl/gradeops/ai/api/teacher/infrastructure/adapter/out/persistence/TeacherPersistenceAdapter.java` ← NEW
   - `src/test/java/cl/gradeops/ai/api/teacher/infrastructure/adapter/out/persistence/TeacherPersistenceAdapterTest.java` ← NEW
