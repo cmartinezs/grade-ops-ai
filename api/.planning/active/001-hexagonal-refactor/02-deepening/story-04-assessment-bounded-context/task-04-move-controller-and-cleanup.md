@@ -1,6 +1,6 @@
 # ⚛️ TASK 04 — Move AssessmentController + AssessmentSummaryResponse + update test + delete old flat package
 
-> **Status:** TODO
+> **Status:** DONE
 > **Workflow:** REFACTOR+IMPLEMENT
 > **Depends On:** task-02, task-03
 > [← story file](../story-04-assessment-bounded-context.md)

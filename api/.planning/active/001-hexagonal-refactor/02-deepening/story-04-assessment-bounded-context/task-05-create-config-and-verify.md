@@ -1,6 +1,6 @@
 # ⚛️ TASK 05 — Create StubAssessmentPersistenceAdapter + AssessmentConfig + final verification
 
-> **Status:** TODO
+> **Status:** DONE
 > **Workflow:** CLEANUP+VERIFY
 > **Depends On:** task-03, task-04
 > [← story file](../story-04-assessment-bounded-context.md)

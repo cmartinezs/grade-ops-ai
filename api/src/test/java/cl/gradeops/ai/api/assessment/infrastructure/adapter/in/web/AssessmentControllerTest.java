@@ -1,5 +1,8 @@
-package cl.gradeops.ai.api.assessment;
+package cl.gradeops.ai.api.assessment.infrastructure.adapter.in.web;
 
+import cl.gradeops.ai.api.assessment.application.port.in.ListAssessmentsUseCase;
+import cl.gradeops.ai.api.assessment.application.result.AssessmentSummaryResult;
+import cl.gradeops.ai.api.assessment.domain.model.AssessmentStatus;
 import cl.gradeops.ai.api.config.FirebaseTestConfig;
 import cl.gradeops.ai.api.shared.infrastructure.config.security.AuthenticatedTeacher;
 import com.google.firebase.auth.FirebaseAuth;
@@ -32,7 +35,7 @@ class AssessmentControllerTest {
 
     @Autowired MockMvc mockMvc;
     @Autowired FirebaseAuth firebaseAuth;
-    @MockitoBean AssessmentService assessmentService;
+    @MockitoBean ListAssessmentsUseCase listAssessmentsUseCase;
 
     @BeforeEach
     void setUp() {
@@ -55,7 +58,7 @@ class AssessmentControllerTest {
         when(mockToken.getEmail()).thenReturn("teacher@school.com");
         when(mockToken.isEmailVerified()).thenReturn(true);
         when(firebaseAuth.verifyIdToken("valid-token", true)).thenReturn(mockToken);
-        when(assessmentService.listForTeacher("uid-teacher-1")).thenReturn(List.of());
+        when(listAssessmentsUseCase.execute("uid-teacher-1")).thenReturn(List.of());
 
         mockMvc.perform(get("/api/v1/assessments")
                         .header("Authorization", "Bearer valid-token"))
@@ -77,13 +80,14 @@ class AssessmentControllerTest {
         when(mockToken.isEmailVerified()).thenReturn(true);
         when(firebaseAuth.verifyIdToken("valid-token-2", true)).thenReturn(mockToken);
 
-        AssessmentSummaryDto a1 = new AssessmentSummaryDto(
-                "assess-1", "Java Basics", AssessmentStatus.OPEN, 10, 3, null);
-        AssessmentSummaryDto a2 = new AssessmentSummaryDto(
-                "assess-2", "Data Structures", AssessmentStatus.GRADING, 25, 0,
-                "https://reports.example.com/assess-2");
-
-        when(assessmentService.listForTeacher("uid-teacher-2")).thenReturn(List.of(a1, a2));
+        AssessmentSummaryResult r1 = AssessmentSummaryResult.builder()
+                .id("assess-1").title("Java Basics").status(AssessmentStatus.OPEN)
+                .submissionCount(10).pendingApprovals(3).reportLink(null).build();
+        AssessmentSummaryResult r2 = AssessmentSummaryResult.builder()
+                .id("assess-2").title("Data Structures").status(AssessmentStatus.GRADING)
+                .submissionCount(25).pendingApprovals(0)
+                .reportLink("https://reports.example.com/assess-2").build();
+        when(listAssessmentsUseCase.execute("uid-teacher-2")).thenReturn(List.of(r1, r2));
 
         mockMvc.perform(get("/api/v1/assessments")
                         .header("Authorization", "Bearer valid-token-2"))
