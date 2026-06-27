@@ -1,6 +1,6 @@
 # ⚛️ TASK 02 — Create AssessmentSummaryResult + port interfaces
 
-> **Status:** TODO
+> **Status:** DONE
 > **Workflow:** IMPLEMENT
 > **Depends On:** task-01
 > [← story file](../story-04-assessment-bounded-context.md)

@@ -1,6 +1,6 @@
 # ⚛️ TASK 03 — Create ListAssessmentsHandler + ListAssessmentsHandlerTest
 
-> **Status:** TODO
+> **Status:** DONE
 > **Workflow:** IMPLEMENT
 > **Depends On:** task-02
 > [← story file](../story-04-assessment-bounded-context.md)

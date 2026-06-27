@@ -1,6 +1,6 @@
 # ⚛️ TASK 01 — Move AssessmentStatus to assessment.domain.model
 
-> **Status:** TODO
+> **Status:** DONE
 > **Workflow:** REFACTOR
 > **Depends On:** (none)
 > [← story file](../story-04-assessment-bounded-context.md)
