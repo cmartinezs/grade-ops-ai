@@ -30,7 +30,7 @@ Central directory for all project plannings.
 
 ### ✅ Completed → see [`finished/README.md`](finished/README.md)
 
-*(none yet)*
+- [001-hexagonal-refactor](finished/001-hexagonal-refactor/README.md) — Hexagonal refactor (COMPLETED 2026-06-28)
 
 ### 🆕 Initial
 
