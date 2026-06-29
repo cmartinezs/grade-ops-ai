@@ -3,7 +3,7 @@ package cl.gradeops.ai.api.assessment.infrastructure.adapter.in.web;
 import cl.gradeops.ai.api.assessment.application.port.in.ListAssessmentsUseCase;
 import cl.gradeops.ai.api.assessment.application.result.AssessmentSummaryResult;
 import cl.gradeops.ai.api.assessment.domain.model.AssessmentStatus;
-import cl.gradeops.ai.api.config.FirebaseTestConfig;
+import cl.gradeops.ai.api.shared.infrastructure.config.FirebaseTestConfig;
 import cl.gradeops.ai.api.shared.infrastructure.config.security.AuthenticatedTeacher;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseToken;

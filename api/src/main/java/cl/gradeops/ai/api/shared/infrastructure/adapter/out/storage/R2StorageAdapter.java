@@ -1,9 +1,6 @@
 package cl.gradeops.ai.api.shared.infrastructure.adapter.out.storage;
 
 import cl.gradeops.ai.api.shared.infrastructure.exception.StorageException;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Profile;
-import org.springframework.stereotype.Component;
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
 import software.amazon.awssdk.core.sync.RequestBody;
@@ -17,19 +14,13 @@ import jakarta.annotation.PreDestroy;
 import java.net.URI;
 import java.time.Duration;
 
-@Component
-@Profile("beta")
 public class R2StorageAdapter implements StoragePort {
 
     private final S3Client s3;
     private final S3Presigner presigner;
     private final String bucket;
 
-    public R2StorageAdapter(
-            @Value("${r2.account-id}") String accountId,
-            @Value("${r2.access-key}") String accessKey,
-            @Value("${r2.secret-key}") String secretKey,
-            @Value("${r2.bucket}") String bucket) {
+    public R2StorageAdapter(String accountId, String accessKey, String secretKey, String bucket) {
         this.bucket = bucket;
         URI endpoint = URI.create("https://" + accountId + ".r2.cloudflarestorage.com");
         StaticCredentialsProvider creds = StaticCredentialsProvider.create(

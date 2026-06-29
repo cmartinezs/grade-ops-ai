@@ -1,4 +1,4 @@
-package cl.gradeops.ai.api.config;
+package cl.gradeops.ai.api.shared.infrastructure.config;
 
 import com.google.firebase.auth.FirebaseAuth;
 import org.springframework.boot.test.context.TestConfiguration;

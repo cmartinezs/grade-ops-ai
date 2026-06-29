@@ -1,6 +1,6 @@
 # ⚛️ TASK 01 — Verify no legacy source files or stale imports remain
 
-> **Status:** TODO
+> **Status:** DONE
 > **Workflow:** CLEANUP+VERIFY
 > **Depends On:** (none — run after Stories 01–04 are all DONE)
 > [← story file](../story-05-final-cleanup.md)

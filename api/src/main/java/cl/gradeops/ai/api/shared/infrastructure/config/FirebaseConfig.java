@@ -1,11 +1,14 @@
 package cl.gradeops.ai.api.shared.infrastructure.config;
 
+import cl.gradeops.ai.api.shared.infrastructure.config.GradeOpsEmailProperties;
+import cl.gradeops.ai.api.shared.infrastructure.config.GradeOpsWebProperties;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.FirebaseOptions;
 import com.google.firebase.auth.FirebaseAuth;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -15,6 +18,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 
 @Configuration
+@EnableConfigurationProperties({GradeOpsEmailProperties.class, GradeOpsWebProperties.class})
 public class FirebaseConfig {
 
     @Value("${firebase.credentials-path:}")
