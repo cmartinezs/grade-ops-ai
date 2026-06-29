@@ -1,6 +1,6 @@
 # ⚛️ TASK 02 — Run full test suite + verify all 4 ArchUnit constraints
 
-> **Status:** TODO
+> **Status:** DONE
 > **Workflow:** TEST
 > **Depends On:** (none — can run concurrently with task-01)
 > [← story file](../story-05-final-cleanup.md)

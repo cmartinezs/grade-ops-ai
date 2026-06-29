@@ -36,6 +36,27 @@ Cell values:
 | Planning System | framework bootstrap | N/A | N/A | ✅ |
 | Workflow (meta) | framework bootstrap | N/A | N/A | ✅ |
 | Fundamental Rule | framework bootstrap | N/A | N/A | ✅ |
+| `AggregateRoot` | 001-hexagonal-refactor | ✅ | N/A | ✅ |
+| `DomainEvent` | 001-hexagonal-refactor | ✅ | N/A | ✅ |
+| `DomainException` | 001-hexagonal-refactor | ✅ | N/A | ✅ |
+| `HexagonalArchitectureTest` | 001-hexagonal-refactor | ✅ | N/A | ✅ |
+| `PasswordResetCode` | 001-hexagonal-refactor | ✅ | N/A | ✅ |
+| `RawCode` | 001-hexagonal-refactor | ✅ | N/A | ✅ |
+| `TeacherIdentity` | 001-hexagonal-refactor | ✅ | N/A | ✅ |
+| `SignInProvider` | 001-hexagonal-refactor | ✅ | N/A | ✅ |
+| `AuthPort` | 001-hexagonal-refactor | ✅ | N/A | ✅ |
+| `TeacherRepositoryPort` | 001-hexagonal-refactor | ✅ | N/A | ✅ |
+| `PasswordResetCodeRepositoryPort` | 001-hexagonal-refactor | ✅ | N/A | ✅ |
+| `EmailNotificationPort` | 001-hexagonal-refactor | ✅ | N/A | ✅ |
+| `Teacher` | 001-hexagonal-refactor | ✅ | N/A | ✅ |
+| `TeacherId` | 001-hexagonal-refactor | ✅ | N/A | ✅ |
+| `AuthProvider` | 001-hexagonal-refactor | ✅ | N/A | ✅ |
+| `ProvisionTeacherUseCase` | 001-hexagonal-refactor | ✅ | N/A | ✅ |
+| `UpdatePilotFlagsUseCase` | 001-hexagonal-refactor | ✅ | N/A | ✅ |
+| `AssessmentStatus` | 001-hexagonal-refactor | ✅ | N/A | ✅ |
+| `ListAssessmentsUseCase` | 001-hexagonal-refactor | ✅ | N/A | ✅ |
+| `AssessmentRepositoryPort` | 001-hexagonal-refactor | ✅ | N/A | ✅ |
+| `AssessmentSummaryResult` | 001-hexagonal-refactor | ✅ | N/A | ✅ |
 
 ---
 
@@ -54,6 +75,7 @@ Cell values:
 | Date | Planning | Change |
 |------|----------|--------|
 | 2026-06-11 | — | Matrix initialized. Area codes configured by plan-init based on project structure. |
+| 2026-06-26 | 001-hexagonal-refactor | Planning DONE — 5 stories completed; 21 domain terms registered (shared kernel, auth BC, teacher BC, assessment BC stub, cleanup). |
 
 ---
 

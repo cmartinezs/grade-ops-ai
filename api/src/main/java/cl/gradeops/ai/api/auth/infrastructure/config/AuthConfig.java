@@ -24,12 +24,21 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.mail.javamail.JavaMailSender;
+import org.thymeleaf.TemplateEngine;
 
 @Configuration
 @RequiredArgsConstructor
 class AuthConfig {
 
     private final GradeOpsEmailProperties emailProperties;
+
+    @Bean
+    JavaMailEmailService javaMailEmailService(
+            JavaMailSender mailSender,
+            TemplateEngine templateEngine) {
+        return new JavaMailEmailService(mailSender, templateEngine, emailProperties);
+    }
 
     @Bean
     FirebaseAuthAdapter firebaseAuthAdapter(FirebaseAuth firebaseAuth) {

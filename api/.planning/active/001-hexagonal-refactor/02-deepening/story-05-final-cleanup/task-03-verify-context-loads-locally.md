@@ -1,6 +1,6 @@
 # ⚛️ TASK 03 — Verify Spring context loads cleanly with local profile
 
-> **Status:** TODO
+> **Status:** DONE
 > **Workflow:** TEST
 > **Depends On:** task-01, task-02
 > [← story file](../story-05-final-cleanup.md)

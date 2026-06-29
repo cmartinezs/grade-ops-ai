@@ -1,6 +1,6 @@
 # ⚛️ TASK 04 — Final code quality assertions + traceability update
 
-> **Status:** TODO
+> **Status:** DONE
 > **Workflow:** CLEANUP+VERIFY
 > **Depends On:** task-01, task-02
 > [← story file](../story-05-final-cleanup.md)
