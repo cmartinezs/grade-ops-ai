@@ -1,22 +1,17 @@
 package cl.gradeops.ai.api.shared.infrastructure.adapter.out.storage;
 
 import com.google.cloud.storage.*;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Profile;
-import org.springframework.stereotype.Component;
 
 import java.net.URI;
 import java.time.Duration;
 import java.util.concurrent.TimeUnit;
 
-@Component
-@Profile("demo")
 public class GcsStorageAdapter implements StoragePort {
 
     private final Storage storage;
     private final String bucket;
 
-    public GcsStorageAdapter(Storage storage, @Value("${gcs.bucket}") String bucket) {
+    public GcsStorageAdapter(Storage storage, String bucket) {
         this.storage = storage;
         this.bucket = bucket;
     }

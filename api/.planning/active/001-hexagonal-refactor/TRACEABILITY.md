@@ -56,6 +56,15 @@ Term and concept traceability for this planning. For global consolidated view, s
 | `ResetCodeEmailMismatchException` | ✅ | N/A | ✅ | `auth.domain.exception`; → HTTP 422 `RESET_CODE_EMAIL_MISMATCH`; Story 02 code review |
 | `HexagonalArchitectureTest` | ✅ | N/A | ✅ | 5 ArchUnit rules; application layer isolated from Spring Web, Spring Data, JPA; Story 01 + Story 02 |
 | `AuthConfig` | ✅ | N/A | ✅ | `auth.infrastructure.config`; 11 `@Bean` methods; Story 02 |
+| `Teacher` | ✅ | N/A | ✅ | `teacher.domain.model.Teacher`; extends `AggregateRoot<TeacherId>`; Story 03 |
+| `TeacherId` | ✅ | N/A | ✅ | `teacher.domain.model.TeacherId`; value object wrapping String uid; Story 03 |
+| `AuthProvider` | ✅ | N/A | ✅ | `teacher.domain.model.AuthProvider`; enum `GOOGLE`, `EMAIL_PASSWORD`; Story 03 |
+| `ProvisionTeacherUseCase` | ✅ | N/A | ✅ | `teacher.application.port.in`; Story 03 |
+| `UpdatePilotFlagsUseCase` | ✅ | N/A | ✅ | `teacher.application.port.in`; Story 03 |
+| `AssessmentStatus` | ✅ | N/A | ✅ | `assessment.domain.model.AssessmentStatus`; enum `DRAFT`, `OPEN`, `GRADING`, `CLOSED`; Story 04 |
+| `ListAssessmentsUseCase` | ✅ | N/A | ✅ | `assessment.application.port.in`; Story 04 |
+| `AssessmentRepositoryPort` | ✅ | N/A | ✅ | `assessment.application.port.out`; stub returning empty list; Story 04 |
+| `AssessmentSummaryResult` | ✅ | N/A | ✅ | `assessment.application.result`; `@Builder` record; Story 04 |
 
 ---
 
@@ -74,7 +83,7 @@ Term and concept traceability for this planning. For global consolidated view, s
 
 | ID | Term / Issue | Blocker | Status | Target Resolution |
 |----|-------------|---------|--------|------------------|
-| R-01 | Story 03 task-04 (`TeacherRepositoryPort`) is a no-op — already implemented in Story 02 | None | OPEN | Remove or mark SKIP in Story 03 task-04 when Story 03 is planned |
+| R-01 | Story 03 task-04 (`TeacherRepositoryPort`) is a no-op — already implemented in Story 02 | None | CLOSED | `TeacherRepositoryPort` already present from Story 02 pull-forward; Story 03 task-04 verified as no-op |
 | R-02 | `GlobalExceptionHandler` maps all reset-code errors to `INVALID_RESET_CODE` (422); US-012 DoD specifies `RESET_CODE_NOT_FOUND` (404) / `RESET_CODE_EXPIRED` (410) / `RESET_CODE_USED` (410) — HTTP status and error code mismatch | US-012 backlog alignment | OPEN | Align with product during Story 02 / US-012 acceptance; may require `InvalidResetCodeException` subtypes |
 
 ---
