@@ -14,7 +14,11 @@ public class PasswordResetCodePersistenceAdapter implements PasswordResetCodeRep
 
     @Override
     public void save(PasswordResetCode code) {
-        jpaRepository.save(mapper.toEntity(code));
+        PasswordResetCodeJpaEntity entity = jpaRepository
+                .findByTeacherUid(code.getTeacherUid())
+                .map(existing -> { mapper.updateEntity(existing, code); return existing; })
+                .orElseGet(() -> mapper.toEntity(code));
+        jpaRepository.save(entity);
     }
 
     @Override

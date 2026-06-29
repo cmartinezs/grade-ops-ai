@@ -24,4 +24,8 @@ public class PasswordResetCodePersistenceMapper {
         entity.setUsedAt(code.getUsedAt());
         return entity;
     }
+
+    void updateEntity(PasswordResetCodeJpaEntity entity, PasswordResetCode code) {
+        entity.setUsedAt(code.getUsedAt());
+    }
 }
