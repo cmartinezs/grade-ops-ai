@@ -1,6 +1,6 @@
 # ⚛️ TASK 02 — Flyway V8: índice en `password_reset_codes.created_at`
 
-> **Status:** TODO
+> **Status:** DONE
 > **Workflow:** GENERATE-DOCUMENT
 > **Depends On:** —
 > [← story file](../story-01-cleanup-job.md)
@@ -46,9 +46,9 @@ Crear la migración `V8__add_index_prc_created_at.sql` que añade un índice en 
 
 ## Done Criteria
 
-- [ ] Archivo `V8__add_index_prc_created_at.sql` existe en `src/main/resources/db/migration/`
-- [ ] El SQL crea exactamente un índice en `created_at` sin operaciones destructivas
-- [ ] `./mvnw test` pasa (Flyway valida el checksum del archivo al arrancar el contexto de test)
+- [x] Archivo `V8__add_index_prc_created_at.sql` existe en `src/main/resources/db/migration/`
+- [x] El SQL crea exactamente un índice en `created_at` sin operaciones destructivas
+- [x] `./mvnw test` pasa (Flyway valida el checksum del archivo al arrancar el contexto de test)
 
 ---
 
