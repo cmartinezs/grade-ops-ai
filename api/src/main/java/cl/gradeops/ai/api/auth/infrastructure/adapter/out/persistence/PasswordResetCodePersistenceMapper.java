@@ -26,6 +26,11 @@ public class PasswordResetCodePersistenceMapper {
     }
 
     void updateEntity(PasswordResetCodeJpaEntity entity, PasswordResetCode code) {
+        entity.setRawCode(code.getRawCode().value());
+        entity.setExpiresAt(code.getExpiresAt());
+        entity.setCreatedAt(code.getCreatedAt());
         entity.setUsedAt(code.getUsedAt());
+        // teacherUid is the business key — not mutated on update
+        // id is managed by JPA — not touched
     }
 }
