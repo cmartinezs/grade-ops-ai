@@ -6,6 +6,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.Instant;
+import java.util.UUID;
 
 @Entity
 @Table(name = "password_reset_codes")
@@ -15,7 +16,11 @@ import java.time.Instant;
 public class PasswordResetCodeJpaEntity {
 
     @Id
-    @Column(name = "teacher_uid", nullable = false)
+    @GeneratedValue(strategy = GenerationType.UUID)
+    @Column(name = "id", nullable = false, updatable = false)
+    private UUID id;
+
+    @Column(name = "teacher_uid", nullable = false, unique = true)
     private String teacherUid;
 
     @Column(name = "raw_code", nullable = false, unique = true)

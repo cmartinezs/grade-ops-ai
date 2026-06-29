@@ -25,17 +25,35 @@ class PasswordResetCodePersistenceAdapterTest {
     @InjectMocks PasswordResetCodePersistenceAdapter adapter;
 
     @Test
-    void save_mapsDomainToEntity_thenPersists() {
+    void save_newCode_createsEntity() {
         PasswordResetCode domain = PasswordResetCode.issue("uid-1", new RawCode("raw-code"), Instant.now().plus(1, ChronoUnit.HOURS));
         PasswordResetCodeJpaEntity entity = new PasswordResetCodeJpaEntity();
         entity.setTeacherUid("uid-1");
         entity.setRawCode("raw-code");
+        when(jpaRepository.findByTeacherUid("uid-1")).thenReturn(Optional.empty());
         when(mapper.toEntity(domain)).thenReturn(entity);
 
         adapter.save(domain);
 
+        verify(jpaRepository).findByTeacherUid("uid-1");
         verify(mapper).toEntity(domain);
+        verify(mapper, never()).updateEntity(any(), any());
         verify(jpaRepository).save(entity);
+    }
+
+    @Test
+    void save_existingCode_updatesEntity() {
+        PasswordResetCode domain = PasswordResetCode.issue("uid-1", new RawCode("raw-code"), Instant.now().plus(1, ChronoUnit.HOURS));
+        PasswordResetCodeJpaEntity existing = new PasswordResetCodeJpaEntity();
+        existing.setTeacherUid("uid-1");
+        when(jpaRepository.findByTeacherUid("uid-1")).thenReturn(Optional.of(existing));
+
+        adapter.save(domain);
+
+        verify(jpaRepository).findByTeacherUid("uid-1");
+        verify(mapper).updateEntity(existing, domain);
+        verify(mapper, never()).toEntity(any());
+        verify(jpaRepository).save(existing);
     }
 
     @Test
