@@ -27,16 +27,16 @@ Depends on **Story 01** (shared domain exceptions, AggregateRoot foundation). Ca
 
 ## Done Criteria
 
-- [ ] `assessment.domain.model.AssessmentStatus` exists (moved, no Spring/JPA annotations)
-- [ ] `ListAssessmentsUseCase` exists in `assessment.application.port.in`
-- [ ] `AssessmentRepositoryPort` exists in `assessment.application.port.out` as a stub interface
-- [ ] `AssessmentSummaryResult` is a `record` with `@Builder`
-- [ ] `ListAssessmentsHandler` is `@RequiredArgsConstructor` (NO `@Service`) `@Transactional(readOnly = true)`, injects `AssessmentRepositoryPort` only; declared as `@Bean` in `AssessmentConfig`
-- [ ] `AssessmentController` is in `assessment.infrastructure.adapter.in.web`, injects `ListAssessmentsUseCase` by interface
-- [ ] `AssessmentSummaryResponse` replaces the old `AssessmentSummaryDto` in the web response layer
-- [ ] Old flat `assessment.*` classes (`AssessmentController`, `AssessmentService`, `AssessmentStatus`, `AssessmentSummaryDto`) fully deleted
-- [ ] `./mvnw test` passes with 0 failures; `HexagonalArchitectureTest` still passes
-- [ ] TRACEABILITY.md updated: `AssessmentStatus`, `ListAssessmentsUseCase`, `AssessmentRepositoryPort`, `AssessmentSummaryResult`, `AssessmentSummaryResponse`
+- [x] `assessment.domain.model.AssessmentStatus` exists (moved, no Spring/JPA annotations)
+- [x] `ListAssessmentsUseCase` exists in `assessment.application.port.in`
+- [x] `AssessmentRepositoryPort` exists in `assessment.application.port.out` as a stub interface
+- [x] `AssessmentSummaryResult` is a `record` with `@Builder`
+- [x] `ListAssessmentsHandler` is `@RequiredArgsConstructor` (NO `@Service`) `@Transactional(readOnly = true)`, injects `AssessmentRepositoryPort` only; declared as `@Bean` in `AssessmentConfig`
+- [x] `AssessmentController` is in `assessment.infrastructure.adapter.in.web`, injects `ListAssessmentsUseCase` by interface
+- [x] `AssessmentSummaryResponse` replaces the old `AssessmentSummaryDto` in the web response layer
+- [x] Old flat `assessment.*` classes (`AssessmentController`, `AssessmentService`, `AssessmentStatus`, `AssessmentSummaryDto`) fully deleted
+- [x] `./mvnw test` passes with 0 failures; `HexagonalArchitectureTest` still passes
+- [x] TRACEABILITY.md updated: `AssessmentStatus`, `ListAssessmentsUseCase`, `AssessmentRepositoryPort`, `AssessmentSummaryResult`, `AssessmentSummaryResponse`
 
 ---
 
