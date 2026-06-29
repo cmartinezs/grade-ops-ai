@@ -16,7 +16,7 @@ Implementar un `@Scheduled` job diario en Spring Boot que elimine registros de `
 | # | Task | Workflow | Status | Output |
 |---|------|----------|--------|--------|
 | 1 | [Fix JPA entity PK: `@Id UUID id`](story-01-cleanup-job/task-01-fix-jpa-entity-pk.md) | GENERATE-DOCUMENT | DONE | entidad JPA consistente con el PK real de la tabla |
-| 2 | [Flyway V8: índice en `created_at`](story-01-cleanup-job/task-02-flyway-v8-index.md) | GENERATE-DOCUMENT | TODO | `V8__add_index_prc_created_at.sql` |
+| 2 | [Flyway V8: índice en `created_at`](story-01-cleanup-job/task-02-flyway-v8-index.md) | GENERATE-DOCUMENT | DONE | `V8__add_index_prc_created_at.sql` |
 | 3 | [Configurar `app.auth.reset-code-retention-days`](story-01-cleanup-job/task-03-configure-retention-property.md) | GENERATE-DOCUMENT | TODO | propiedad en `application.yml` y `application-local.yml` |
 | 4 | [Validación estática JPA y Flyway](story-01-cleanup-job/task-04-static-jpa-flyway-validation.md) | GENERATE-DOCUMENT | TODO | regla ArchUnit + checklist V8 |
 | 5 | [Port + adapter: `deleteAllClosedCreatedBefore`](story-01-cleanup-job/task-05-port-adapter-delete-method.md) | GENERATE-DOCUMENT | TODO | extensión del port + `@Modifying @Query` en adapter |
