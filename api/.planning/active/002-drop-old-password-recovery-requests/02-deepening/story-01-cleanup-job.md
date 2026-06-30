@@ -23,7 +23,7 @@ Implementar un `@Scheduled` job diario en Spring Boot que elimine registros de `
 | 6 | [`CleanupPasswordResetCodesHandler` con `Clock`](story-01-cleanup-job/task-06-cleanup-use-case.md) | GENERATE-DOCUMENT | DONE | use case + bean `Clock` + test unitario |
 | 7 | [`PasswordResetCodeCleanupJob` con `@Scheduled`](story-01-cleanup-job/task-07-cleanup-job.md) | GENERATE-DOCUMENT | DONE | job en `adapter/in/scheduler/` con logging |
 | 8 | [Tests de integración del repositorio](story-01-cleanup-job/task-08-integration-tests-repository.md) | GENERATE-DOCUMENT | DONE | 6 casos + idempotencia |
-| 9 | [Tests de no-regresión](story-01-cleanup-job/task-09-no-regression-tests.md) | GENERATE-DOCUMENT | TODO | flujos `IssuePasswordResetCode` y `ResetPassword` intactos |
+| 9 | [Tests de no-regresión](story-01-cleanup-job/task-09-no-regression-tests.md) | GENERATE-DOCUMENT | DONE | flujos `IssuePasswordResetCode` y `ResetPassword` intactos |
 | 10 | [Smoke test: arranque local y endpoints](story-01-cleanup-job/task-10-smoke-test.md) | GENERATE-DOCUMENT | TODO | app arranca + V1–V8 aplican + endpoints responden |
 
 ---
