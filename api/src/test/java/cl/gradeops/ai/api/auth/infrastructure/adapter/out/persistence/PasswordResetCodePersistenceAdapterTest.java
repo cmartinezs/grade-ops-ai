@@ -129,4 +129,31 @@ class PasswordResetCodePersistenceAdapterTest {
         // then
         verify(jpaRepository).deleteByTeacherUid("uid-1");
     }
+
+    @Test
+    void shouldDelegateToBulkDeleteAndReturnLongCount() {
+        // given
+        Instant threshold = Instant.now().minus(90, java.time.temporal.ChronoUnit.DAYS);
+        when(jpaRepository.bulkDeleteClosedCreatedBefore(threshold)).thenReturn(3);
+
+        // when
+        long result = adapter.deleteAllClosedCreatedBefore(threshold);
+
+        // then
+        verify(jpaRepository).bulkDeleteClosedCreatedBefore(threshold);
+        assertThat(result).isEqualTo(3L);
+    }
+
+    @Test
+    void shouldReturnZeroWhenNothingDeleted() {
+        // given
+        Instant threshold = Instant.now().minus(90, java.time.temporal.ChronoUnit.DAYS);
+        when(jpaRepository.bulkDeleteClosedCreatedBefore(threshold)).thenReturn(0);
+
+        // when
+        long result = adapter.deleteAllClosedCreatedBefore(threshold);
+
+        // then
+        assertThat(result).isEqualTo(0L);
+    }
 }
