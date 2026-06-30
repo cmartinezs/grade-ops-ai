@@ -150,6 +150,23 @@ class PasswordResetCodeJpaRepositoryIntegrationTest {
         assertThat(repository.findByTeacherUid(TEACHER_UID)).isEmpty();
     }
 
+    @Test
+    void shouldHaveIndexOnCreatedAt() {
+        // given — V8 migration creates idx_prc_created_at on password_reset_codes(created_at)
+        String sql = """
+                SELECT indexdef FROM pg_indexes
+                WHERE tablename = 'password_reset_codes'
+                  AND indexname  = 'idx_prc_created_at'
+                """;
+
+        // when
+        String indexDef = jdbcTemplate.queryForObject(sql, String.class);
+
+        // then
+        assertThat(indexDef).isNotNull();
+        assertThat(indexDef).containsIgnoringCase("created_at");
+    }
+
     private PasswordResetCodeJpaEntity entityWith(String rawCode) {
         PasswordResetCodeJpaEntity e = new PasswordResetCodeJpaEntity();
         e.setTeacherUid(TEACHER_UID);
