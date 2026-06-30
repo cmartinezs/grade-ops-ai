@@ -1,6 +1,6 @@
 # 🔍 DEEPENING: Story 01 — Cleanup job para `password_reset_codes`
 
-> **Status:** IN PROGRESS
+> **Status:** DONE
 > [← 01-expansion.md](../01-expansion.md) | [← planning/README.md](../../README.md)
 
 ---
@@ -30,18 +30,18 @@ Implementar un `@Scheduled` job diario en Spring Boot que elimine registros de `
 
 ## Done Criteria
 
-- [ ] Solo se eliminan registros que cumplan ambas condiciones: cerrados (usados O expirados) Y fuera del período de retención
-- [ ] Registros dentro del período de retención no son eliminados, independientemente de su estado
-- [ ] Registros pendientes y no expirados no son eliminados aunque superen el TTL (protección de edge case)
-- [ ] El método del port retorna `long` con la cantidad de registros eliminados en la ejecución
-- [ ] `Clock` inyectado en el use case; `Instant.now()` no se llama directamente en ninguna clase propia
-- [ ] Job es idempotente: ejecuciones consecutivas no producen errores ni efectos secundarios negativos
-- [ ] Job loguea en INFO: inicio, `retentionDays`, `threshold` calculado, cantidad eliminada, duración en ms
-- [ ] Job loguea en ERROR si ocurre cualquier excepción durante la ejecución
-- [ ] No se loguean `rawCode`, `teacherUid` ni ningún dato sensible
-- [ ] TTL configurable vía `app.auth.reset-code-retention-days` (default: 90)
-- [ ] No hay regresión en tests de `ForgotPasswordUseCase` ni `ResetPasswordUseCase`
-- [ ] TRACEABILITY.md actualizado con nuevos términos de este story
+- [x] Solo se eliminan registros que cumplan ambas condiciones: cerrados (usados O expirados) Y fuera del período de retención
+- [x] Registros dentro del período de retención no son eliminados, independientemente de su estado
+- [x] Registros pendientes y no expirados no son eliminados aunque superen el TTL (protección de edge case)
+- [x] El método del port retorna `long` con la cantidad de registros eliminados en la ejecución
+- [x] `Clock` inyectado en el use case; `Instant.now()` no se llama directamente en ninguna clase propia
+- [x] Job es idempotente: ejecuciones consecutivas no producen errores ni efectos secundarios negativos
+- [x] Job loguea en INFO: inicio, `retentionDays`, `threshold` calculado, cantidad eliminada, duración en ms
+- [x] Job loguea en ERROR si ocurre cualquier excepción durante la ejecución
+- [x] No se loguean `rawCode`, `teacherUid` ni ningún dato sensible
+- [x] TTL configurable vía `app.auth.reset-code-retention-days` (default: 90)
+- [x] No hay regresión en tests de `ForgotPasswordUseCase` ni `ResetPasswordUseCase`
+- [x] TRACEABILITY.md actualizado con nuevos términos de este story
 
 ---
 

@@ -9,7 +9,7 @@
 
 | # | Story | SDLC Phase(s) | Depends On | Status |
 |---|-------|--------------|------------|--------|
-| 01 | Cleanup job para `password_reset_codes` | D / I / T | — | TODO |
+| 01 | Cleanup job para `password_reset_codes` | D / I / T | — | DONE |
 
 ---
 
