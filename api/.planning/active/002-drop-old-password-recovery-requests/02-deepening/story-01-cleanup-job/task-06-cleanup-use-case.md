@@ -1,6 +1,6 @@
 # ⚛️ TASK 06 — `CleanupPasswordResetCodesUseCase` con `Clock` inyectado
 
-> **Status:** TODO
+> **Status:** DONE
 > **Workflow:** GENERATE-DOCUMENT
 > **Depends On:** task-03, task-05
 > [← story file](../story-01-cleanup-job.md)
@@ -37,8 +37,7 @@ Crear `CleanupPasswordResetCodesUseCase` en el domain layer con `Clock` inyectad
    public class CleanupPasswordResetCodesHandler {
        private final PasswordResetCodeRepositoryPort codeRepository;
        private final Clock clock;
-       @Value("${app.auth.reset-code-retention-days}")
-       private int retentionDays;
+       private final int retentionDays;  // inyectado en @Bean factory, no via @Value en el handler
 
        public long execute() {
            var threshold = Instant.now(clock).minus(retentionDays, ChronoUnit.DAYS);
@@ -46,6 +45,7 @@ Crear `CleanupPasswordResetCodesUseCase` en el domain layer con `Clock` inyectad
        }
    }
    ```
+   > **Desviación del diseño original:** `retentionDays` se declaró como `final int` en lugar de usar `@Value` en el campo. Razón: la convención del proyecto pasa todos los valores de configuración a través del constructor; `@Value` en el campo de un POJO creado por `@Bean` mezcla inyección Lombok con field injection de Spring. La `@Bean` factory en `AuthConfig` usa `@Value` al nivel del parámetro del método, manteniendo el handler puro.
 2. Crear `ClockConfig.java` en `shared/infrastructure/config/`:
    ```java
    @Configuration
@@ -73,11 +73,11 @@ Crear `CleanupPasswordResetCodesUseCase` en el domain layer con `Clock` inyectad
 
 ## Done Criteria
 
-- [ ] `CleanupPasswordResetCodesHandler` existe en `auth/application/usecase/`
-- [ ] `Clock` se inyecta; no hay llamadas directas a `Instant.now()` en la clase
-- [ ] `ClockConfig` registra el bean `Clock.systemUTC()`
-- [ ] Test unitario cubre cálculo de threshold con `Clock.fixed` y retorno del resultado
-- [ ] `./mvnw test` pasa
+- [x] `CleanupPasswordResetCodesHandler` existe en `auth/application/usecase/`
+- [x] `Clock` se inyecta; no hay llamadas directas a `Instant.now()` en la clase
+- [x] `ClockConfig` registra el bean `Clock.systemUTC()`
+- [x] Test unitario cubre cálculo de threshold con `Clock.fixed` y retorno del resultado
+- [x] `./mvnw test` pasa
 
 ---
 
