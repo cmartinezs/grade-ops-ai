@@ -4,6 +4,7 @@ import cl.gradeops.ai.api.auth.application.port.out.PasswordResetCodeRepositoryP
 import cl.gradeops.ai.api.auth.domain.model.PasswordResetCode;
 import lombok.RequiredArgsConstructor;
 
+import java.time.Instant;
 import java.util.Optional;
 
 @RequiredArgsConstructor
@@ -14,7 +15,11 @@ public class PasswordResetCodePersistenceAdapter implements PasswordResetCodeRep
 
     @Override
     public void save(PasswordResetCode code) {
-        jpaRepository.save(mapper.toEntity(code));
+        PasswordResetCodeJpaEntity entity = jpaRepository
+                .findByTeacherUid(code.getTeacherUid())
+                .map(existing -> { mapper.updateEntity(existing, code); return existing; })
+                .orElseGet(() -> mapper.toEntity(code));
+        jpaRepository.save(entity);
     }
 
     @Override
@@ -25,5 +30,10 @@ public class PasswordResetCodePersistenceAdapter implements PasswordResetCodeRep
     @Override
     public void deleteByTeacherUid(String teacherUid) {
         jpaRepository.deleteByTeacherUid(teacherUid);
+    }
+
+    @Override
+    public long deleteAllClosedCreatedBefore(Instant threshold) {
+        return jpaRepository.bulkDeleteClosedCreatedBefore(threshold);
     }
 }

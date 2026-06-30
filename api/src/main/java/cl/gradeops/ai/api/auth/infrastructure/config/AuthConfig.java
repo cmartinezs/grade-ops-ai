@@ -7,6 +7,9 @@ import cl.gradeops.ai.api.auth.application.port.in.RevokeRefreshTokensUseCase;
 import cl.gradeops.ai.api.auth.application.port.out.AuthPort;
 import cl.gradeops.ai.api.auth.application.port.out.EmailNotificationPort;
 import cl.gradeops.ai.api.auth.application.port.out.PasswordResetCodeRepositoryPort;
+import cl.gradeops.ai.api.auth.application.port.in.CleanupPasswordResetCodesUseCase;
+import cl.gradeops.ai.api.auth.application.usecase.CleanupPasswordResetCodesHandler;
+import cl.gradeops.ai.api.auth.infrastructure.adapter.in.scheduler.PasswordResetCodeCleanupJob;
 import cl.gradeops.ai.api.auth.application.usecase.IssuePasswordResetCodeHandler;
 import cl.gradeops.ai.api.auth.application.usecase.RegisterHandler;
 import cl.gradeops.ai.api.auth.application.usecase.RevokeRefreshTokensHandler;
@@ -26,6 +29,8 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.thymeleaf.TemplateEngine;
+
+import java.time.Clock;
 
 @Configuration
 @RequiredArgsConstructor
@@ -83,6 +88,20 @@ class AuthConfig {
     IssuePasswordResetCodeHandler issuePasswordResetCodeHandler(
             PasswordResetCodeRepositoryPort codeRepository) {
         return new IssuePasswordResetCodeHandler(codeRepository);
+    }
+
+    @Bean
+    CleanupPasswordResetCodesUseCase cleanupPasswordResetCodesUseCase(
+            PasswordResetCodeRepositoryPort codeRepository,
+            Clock clock,
+            @Value("${app.auth.reset-code-retention-days}") int retentionDays) {
+        return new CleanupPasswordResetCodesHandler(codeRepository, clock, retentionDays);
+    }
+
+    @Bean
+    PasswordResetCodeCleanupJob passwordResetCodeCleanupJob(
+            CleanupPasswordResetCodesUseCase cleanupUseCase) {
+        return new PasswordResetCodeCleanupJob(cleanupUseCase);
     }
 
     @Bean
