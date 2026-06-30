@@ -29,6 +29,8 @@ app:
     secret: ${INTERNAL_API_SECRET:change-me-in-production}
   cors:
     allowed-origins: ${CORS_ALLOWED_ORIGINS:https://gradeops.app}
+  auth:
+    reset-code-retention-days: 90
 
 gradeops:
   web:

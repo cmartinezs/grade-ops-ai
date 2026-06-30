@@ -186,7 +186,7 @@ INTERNAL_API_SECRET=change-me-in-development
 GOOGLE_APPLICATION_CREDENTIALS=/path/to/firebase-adminsdk.json
 ```
 
-For local development, place overrides in `src/main/resources/application-local.yml` (gitignored) and activate the profile with `-Dspring.profiles.active=local`.
+For local development, copy `src/main/resources/application-local.example.yml` to `src/main/resources/application-local.yml` (gitignored), update the paths and credentials, and activate the profile with `-Dspring.profiles.active=local`.
 
 ### Database Setup
 
