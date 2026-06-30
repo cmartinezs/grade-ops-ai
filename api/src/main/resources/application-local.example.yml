@@ -1,0 +1,28 @@
+firebase:
+  credentials-path: /path/to/firebase-service-account.json
+
+app:
+  cors:
+    allowed-origins: http://localhost:3000
+  auth:
+    reset-code-retention-days: 1   # short TTL for local testing; default is 90 in application.yml
+
+spring:
+  docker:
+    compose:
+      enabled: true
+      lifecycle-management: start-and-stop
+      file: compose.yml
+  mail:
+    host: sandbox.smtp.mailtrap.io
+    port: 587
+    username: ${SMTP_USERNAME:}
+    password: ${SMTP_PASSWORD:}
+
+gradeops:
+  web:
+    base-url: http://localhost:3000
+  email:
+    from-address: noreply@gradeops.local
+    from-name: GradeOps AI (local)
+    support-email: dev@gradeops.local
