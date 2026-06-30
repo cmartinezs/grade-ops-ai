@@ -9,6 +9,7 @@ import cl.gradeops.ai.api.auth.application.port.out.EmailNotificationPort;
 import cl.gradeops.ai.api.auth.application.port.out.PasswordResetCodeRepositoryPort;
 import cl.gradeops.ai.api.auth.application.port.in.CleanupPasswordResetCodesUseCase;
 import cl.gradeops.ai.api.auth.application.usecase.CleanupPasswordResetCodesHandler;
+import cl.gradeops.ai.api.auth.infrastructure.adapter.in.scheduler.PasswordResetCodeCleanupJob;
 import cl.gradeops.ai.api.auth.application.usecase.IssuePasswordResetCodeHandler;
 import cl.gradeops.ai.api.auth.application.usecase.RegisterHandler;
 import cl.gradeops.ai.api.auth.application.usecase.RevokeRefreshTokensHandler;
@@ -95,6 +96,12 @@ class AuthConfig {
             Clock clock,
             @Value("${app.auth.reset-code-retention-days}") int retentionDays) {
         return new CleanupPasswordResetCodesHandler(codeRepository, clock, retentionDays);
+    }
+
+    @Bean
+    PasswordResetCodeCleanupJob passwordResetCodeCleanupJob(
+            CleanupPasswordResetCodesUseCase cleanupUseCase) {
+        return new PasswordResetCodeCleanupJob(cleanupUseCase);
     }
 
     @Bean
