@@ -1,6 +1,6 @@
 # ⚛️ TASK 05 — Port + adapter: `deleteAllClosedCreatedBefore(Instant)`
 
-> **Status:** TODO
+> **Status:** DONE
 > **Workflow:** GENERATE-DOCUMENT
 > **Depends On:** task-01, task-02
 > [← story file](../story-01-cleanup-job.md)
@@ -70,10 +70,10 @@ Añadir `long deleteAllClosedCreatedBefore(Instant threshold)` al port `Password
 
 ## Done Criteria
 
-- [ ] `PasswordResetCodeRepositoryPort` declara `long deleteAllClosedCreatedBefore(Instant threshold)`
-- [ ] `PasswordResetCodeJpaRepository` tiene el `@Modifying @Query` con doble condición
-- [ ] `PasswordResetCodePersistenceAdapter` implementa el método del port
-- [ ] `./mvnw test` pasa
+- [x] `PasswordResetCodeRepositoryPort` declara `long deleteAllClosedCreatedBefore(Instant threshold)`
+- [x] `PasswordResetCodeJpaRepository` tiene el `@Modifying @Query` con doble condición
+- [x] `PasswordResetCodePersistenceAdapter` implementa el método del port
+- [x] `./mvnw test` pasa
 
 ---
 
