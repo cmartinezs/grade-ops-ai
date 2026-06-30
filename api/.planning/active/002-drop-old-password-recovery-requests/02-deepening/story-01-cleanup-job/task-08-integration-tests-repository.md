@@ -1,6 +1,6 @@
 # ⚛️ TASK 08 — Tests de integración: `deleteAllClosedCreatedBefore`
 
-> **Status:** TODO
+> **Status:** DONE
 > **Workflow:** GENERATE-DOCUMENT
 > **Depends On:** task-05
 > [← story file](../story-01-cleanup-job.md)
@@ -53,9 +53,9 @@ Escribir tests de integración para `PasswordResetCodePersistenceAdapter.deleteA
 
 ## Done Criteria
 
-- [ ] Los 6 tests de integración existen y pasan
-- [ ] La segunda ejecución del test de idempotencia retorna `0` sin error
-- [ ] `./mvnw test` pasa
+- [x] Los 6 tests de integración existen y pasan
+- [x] La segunda ejecución del test de idempotencia retorna `0` sin error
+- [x] `./mvnw test` pasa
 
 ---
 
