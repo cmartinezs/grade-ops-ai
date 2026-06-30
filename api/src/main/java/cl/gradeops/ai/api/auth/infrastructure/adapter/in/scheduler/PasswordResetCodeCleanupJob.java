@@ -16,7 +16,7 @@ public class PasswordResetCodeCleanupJob {
 
     @Scheduled(cron = "0 0 2 * * *", zone = "UTC")
     public void run() {
-        log.info("PasswordResetCode cleanup started");
+        log.info("PasswordResetCode cleanup started — retentionDays={}", cleanupUseCase.getRetentionDays());
         var start = Instant.now();
         try {
             long deleted = cleanupUseCase.execute();

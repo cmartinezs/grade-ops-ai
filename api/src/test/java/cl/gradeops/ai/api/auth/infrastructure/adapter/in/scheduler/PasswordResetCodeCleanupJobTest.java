@@ -47,14 +47,20 @@ class PasswordResetCodeCleanupJobTest {
     @Test
     void shouldDelegateToUseCaseAndLogSuccessFields() {
         // given
+        when(cleanupUseCase.getRetentionDays()).thenReturn(90);
         when(cleanupUseCase.execute()).thenReturn(7L);
 
         // when
         job.run();
 
         // then
+        verify(cleanupUseCase).getRetentionDays();
         verify(cleanupUseCase).execute();
         List<ILoggingEvent> logs = listAppender.list;
+        assertThat(logs).anySatisfy(e -> {
+            assertThat(e.getLevel()).isEqualTo(Level.INFO);
+            assertThat(e.getFormattedMessage()).contains("retentionDays=90");
+        });
         assertThat(logs).anySatisfy(e -> {
             assertThat(e.getLevel()).isEqualTo(Level.INFO);
             assertThat(e.getFormattedMessage()).contains("deleted=7");
