@@ -18,7 +18,7 @@ Implementar un `@Scheduled` job diario en Spring Boot que elimine registros de `
 | 1 | [Fix JPA entity PK: `@Id UUID id`](story-01-cleanup-job/task-01-fix-jpa-entity-pk.md) | GENERATE-DOCUMENT | DONE | entidad JPA consistente con el PK real de la tabla |
 | 2 | [Flyway V8: índice en `created_at`](story-01-cleanup-job/task-02-flyway-v8-index.md) | GENERATE-DOCUMENT | DONE | `V8__add_index_prc_created_at.sql` |
 | 3 | [Configurar `app.auth.reset-code-retention-days`](story-01-cleanup-job/task-03-configure-retention-property.md) | GENERATE-DOCUMENT | DONE | propiedad en `application.yml` y `application-local.example.yml` |
-| 4 | [Validación estática JPA y Flyway](story-01-cleanup-job/task-04-static-jpa-flyway-validation.md) | GENERATE-DOCUMENT | TODO | regla ArchUnit + checklist V8 |
+| 4 | [Validación estática JPA y Flyway](story-01-cleanup-job/task-04-static-jpa-flyway-validation.md) | GENERATE-DOCUMENT | DONE | regla ArchUnit + checklist V8 |
 | 5 | [Port + adapter: `deleteAllClosedCreatedBefore`](story-01-cleanup-job/task-05-port-adapter-delete-method.md) | GENERATE-DOCUMENT | TODO | extensión del port + `@Modifying @Query` en adapter |
 | 6 | [`CleanupPasswordResetCodesHandler` con `Clock`](story-01-cleanup-job/task-06-cleanup-use-case.md) | GENERATE-DOCUMENT | TODO | use case + bean `Clock` + test unitario |
 | 7 | [`PasswordResetCodeCleanupJob` con `@Scheduled`](story-01-cleanup-job/task-07-cleanup-job.md) | GENERATE-DOCUMENT | TODO | job en `adapter/in/scheduler/` con logging |

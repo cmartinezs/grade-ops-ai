@@ -6,6 +6,7 @@ import com.tngtech.archunit.junit.ArchTest;
 import com.tngtech.archunit.lang.ArchRule;
 
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
+import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noFields;
 
 @AnalyzeClasses(
     packages = "cl.gradeops.ai.api",
@@ -49,5 +50,13 @@ public class HexagonalArchitectureTest {
                 "org.springframework.data..",
                 "jakarta.persistence.."
             )
+            .allowEmptyShould(true);
+
+    @ArchTest
+    static final ArchRule jpa_entities_must_not_use_string_as_id =
+        noFields().that()
+            .areDeclaredInClassesThat().resideInAPackage("..auth.infrastructure.adapter.out.persistence..")
+            .and().areAnnotatedWith(jakarta.persistence.Id.class)
+            .should().haveRawType(String.class)
             .allowEmptyShould(true);
 }
