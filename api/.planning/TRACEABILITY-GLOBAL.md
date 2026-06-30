@@ -57,6 +57,14 @@ Cell values:
 | `ListAssessmentsUseCase` | 001-hexagonal-refactor | ✅ | N/A | ✅ |
 | `AssessmentRepositoryPort` | 001-hexagonal-refactor | ✅ | N/A | ✅ |
 | `AssessmentSummaryResult` | 001-hexagonal-refactor | ✅ | N/A | ✅ |
+| `PasswordResetCodeJpaEntity` (PK fix) | 002-drop-old-password-recovery-requests | ✅ | N/A | ✅ |
+| `deleteAllClosedCreatedBefore` | 002-drop-old-password-recovery-requests | ✅ | N/A | ✅ |
+| `CleanupPasswordResetCodesUseCase` | 002-drop-old-password-recovery-requests | ✅ | N/A | ✅ |
+| `CleanupPasswordResetCodesHandler` | 002-drop-old-password-recovery-requests | ✅ | N/A | ✅ |
+| `PasswordResetCodeCleanupJob` | 002-drop-old-password-recovery-requests | ✅ | N/A | ✅ |
+| `app.auth.reset-code-retention-days` | 002-drop-old-password-recovery-requests | ✅ | N/A | ✅ |
+| `Clock` (bean Spring, testabilidad) | 002-drop-old-password-recovery-requests | ✅ | N/A | ✅ |
+| `V8__add_index_prc_created_at` | 002-drop-old-password-recovery-requests | ✅ | N/A | ✅ |
 
 ---
 
@@ -66,7 +74,7 @@ Cell values:
 
 | ID | Term / Issue | Source Planning | Status | Notes |
 |----|-------------|----------------|--------|-------|
-| — | *No open residuals* | — | — | — |
+| R-01 | Migrar cleanup a Cloud Scheduler / Cloud Run Job | 002-drop-old-password-recovery-requests | OPEN | Activar si `min-instances` baja a 0 o se requiere ejecución garantizada en multi-réplica |
 
 ---
 
@@ -76,6 +84,7 @@ Cell values:
 |------|----------|--------|
 | 2026-06-11 | — | Matrix initialized. Area codes configured by plan-init based on project structure. |
 | 2026-06-26 | 001-hexagonal-refactor | Planning DONE — 5 stories completed; 21 domain terms registered (shared kernel, auth BC, teacher BC, assessment BC stub, cleanup). |
+| 2026-06-30 | 002-drop-old-password-recovery-requests | Planning DONE — 1 story, 10 tasks; 9 términos nuevos (cleanup job, port extension, Clock bean, Flyway V8); 1 residual abierto (Cloud Scheduler migration). |
 
 ---
 
