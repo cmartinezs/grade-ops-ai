@@ -28,8 +28,7 @@ Central directory for all project plannings.
 
 ### 🚧 In Progress → see [`active/README.md`](active/README.md)
 
-- [005-design-template](active/005-design-template/README.md) — Aplicación del Design System al portal docente (5 scopes, DEEPENING)
-- [006-password-recovery](active/006-password-recovery/00-initial.md) — Flujo `/forgot-password` para recuperación de contraseña vía Firebase Auth (2 scopes, EXPANSION)
+_None._
 
 ### ✅ Completed → see [`finished/README.md`](finished/README.md)
 
@@ -37,7 +36,6 @@ Central directory for all project plannings.
 - [002-google-sign-in](finished/002-google-sign-in/README.md) — Google OAuth sign-in para teachers (3 scopes, COMPLETED 2026-06-15)
 - [003-auth-ux-and-local-dev](finished/003-auth-ux-and-local-dev/README.md) — Auth UX polish and local dev stack (3 scopes, COMPLETED 2026-06-14)
 - [004-subpage-identity](finished/004-subpage-identity/README.md) — Identidad visual por subpágina (5 scopes, COMPLETED 2026-06-15)
-
-### 🆕 Initial
-
-- [007-password-recovery-custom-email](007-password-recovery-custom-email/00-initial.md) — Reemplazar Firebase email con servicio propio en `api/` (JavaMail + Thymeleaf)
+- [005-design-template](finished/005-design-template/README.md) — Aplicación del Design System al portal docente (5 scopes, COMPLETED 2026-06-21)
+- [006-password-recovery](finished/006-password-recovery/README.md) — Flujo `/forgot-password` + `/reset-password` vía Firebase Auth, SUPERSEDED por 007 (3 scopes, COMPLETED 2026-06-21)
+- [007-password-recovery-custom-email](finished/007-password-recovery-custom-email/README.md) — Reemplazar Firebase email con servicio propio en `api/` (JavaMail + Thymeleaf) (3 scopes, COMPLETED 2026-06-30)

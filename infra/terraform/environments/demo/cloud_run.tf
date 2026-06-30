@@ -83,6 +83,61 @@ resource "google_cloud_run_v2_service" "api" {
       }
 
       env {
+        name = "SMTP_HOST"
+        value_source {
+          secret_key_ref {
+            secret  = google_secret_manager_secret.smtp_host.secret_id
+            version = "latest"
+          }
+        }
+      }
+
+      env {
+        name = "SMTP_PORT"
+        value_source {
+          secret_key_ref {
+            secret  = google_secret_manager_secret.smtp_port.secret_id
+            version = "latest"
+          }
+        }
+      }
+
+      env {
+        name = "SMTP_USERNAME"
+        value_source {
+          secret_key_ref {
+            secret  = google_secret_manager_secret.smtp_username.secret_id
+            version = "latest"
+          }
+        }
+      }
+
+      env {
+        name = "SMTP_PASSWORD"
+        value_source {
+          secret_key_ref {
+            secret  = google_secret_manager_secret.smtp_password.secret_id
+            version = "latest"
+          }
+        }
+      }
+
+      env {
+        name = "GRADEOPS_MAIL_FROM"
+        value_source {
+          secret_key_ref {
+            secret  = google_secret_manager_secret.mail_from.secret_id
+            version = "latest"
+          }
+        }
+      }
+
+      env {
+        name  = "GRADEOPS_WEB_BASE_URL"
+        value = "https://placeholder.hosted.app"
+      }
+
+      env {
         name  = "CORS_ALLOWED_ORIGINS"
         value = "https://placeholder.hosted.app"
       }

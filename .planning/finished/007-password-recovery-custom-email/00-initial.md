@@ -1,6 +1,6 @@
 # 🌱 INITIAL: 007-password-recovery-custom-email
 
-> **Status:** Initial
+> **Status:** DONE — expanded and completed
 > [← planning/README.md](../../README.md)
 
 ---
@@ -19,10 +19,10 @@ El enfoque de Firebase (planning 006) enviaba el correo directamente desde el cl
 
 ## Approximate Scope
 
-- [ ] `api/` — nuevo EmailService (JavaMail + Thymeleaf), PasswordResetService, PasswordResetCodeEntity, endpoints `POST /forgot-password` y `PUT /reset-password`, Flyway V5, AuthPort.updatePassword()
-- [ ] `web/` — actualizar `/forgot-password` (reemplazar Firebase SDK por llamada API), reescribir `/reset-password` (quitar Firebase, agregar campo email, leer `?code=`, llamar PUT endpoint)
-- [ ] `infra/` — secrets SMTP en Secret Manager, env vars en Cloud Run (`api/`)
-- [ ] `docs/` — ✅ ya actualizado en sesión de diseño (US-012, API Reference, spec)
+- [x] `api/` — nuevo EmailService (JavaMail + Thymeleaf), PasswordResetService, PasswordResetCodeEntity, endpoints `POST /forgot-password` y `PUT /reset-password`, Flyway V5, AuthPort.updatePassword()
+- [x] `web/` — actualizar `/forgot-password` (reemplazar Firebase SDK por llamada API), reescribir `/reset-password` (quitar Firebase, agregar campo email, leer `?code=`, llamar PUT endpoint)
+- [x] `infra/` — secrets SMTP en Secret Manager, env vars en Cloud Run (`api/`)
+- [x] `docs/` — ✅ ya actualizado en sesión de diseño (US-012, API Reference, spec)
 
 ---
 
@@ -62,7 +62,7 @@ Error codes: `RESET_CODE_NOT_FOUND` (404), `RESET_CODE_EXPIRED` (410), `RESET_CO
 
 ## Next Step
 
-- [ ] Ejecutar `/plan-expand 007-password-recovery-custom-email` para crear los scopes de implementación.
+- [x] Ejecutar `/plan-expand 007-password-recovery-custom-email` para crear los scopes de implementación.
 
 ---
 
