@@ -22,6 +22,11 @@ Implement the Assessment Agent following the project's fixed agent pipeline patt
 - Prompts are versioned `.st` (StringTemplate) files in `src/main/resources/prompts/` — never inlined in Java.
 - The agent never persists domain entities — it receives `{Agent}Command`, returns `{Agent}Result`; persistence belongs to `api/` (sibling child planning `api/.planning/003-assessment-creation`).
 - Vertex AI Gemini access for this service's Cloud Run service account (`aiplatform.user`) is already provisioned in `infra/terraform/environments/demo/service_accounts.tf` — no infra change needed.
+- Every task in this story must be designed and reviewed against `api/docs/gradeops-ai-java-guidelines/` *before* implementation, not corrected after — task-01 needed four separate correction rounds (banned Java exceptions, wrong package placement, missing Lombok `@Builder`, non-exhaustive test assertions) because it was atomized without this cross-check. Tasks 02-05 were rewritten on 2026-07-10 to close that gap; see `RETROSPECTIVE-RAW.md` for the full history.
+- **Architecture decisions locked in for tasks 03-05** (each chosen over a simpler alternative, per explicit human direction — see `RETROSPECTIVE-RAW.md` for the full reasoning):
+  - The Gemini call is isolated behind `AssessmentGenerationPort` + `GeminiAssessmentGenerationAdapter` (`infrastructure.adapter.out.gemini`), not called directly from application code — matches `01-arquitectura-hexagonal-y-paquetes.md`'s own `agents/` example package.
+  - The pipeline is wrapped in an explicit `GenerateAssessmentDraftUseCase` port + thin `GenerateAssessmentDraftHandler`, with `AssessmentAgentOrchestrator` running the actual pipeline — the Nivel-2 "use case con orquestador" pattern from `03-use-cases-orquestadores-y-pasos.md`, not a single flat service class.
+  - `AgentExecutionLogPayload` carries the full audit field set `11-seguridad-observabilidad-y-auditoria.md` requires (`agentExecutionId`, `agentName`, `promptVersion`, `inputHash`/`outputHash`, token estimates, `errorCode`), scoped to what `agents/` actually knows — `tenantId`/`teacherId`/resource identifiers are `api/`'s responsibility to attach when persisting the final `AgentExecutionLog` row.
 
 ---
 
@@ -40,10 +45,10 @@ Implement the Assessment Agent following the project's fixed agent pipeline patt
 | # | Task | Workflow | Status | Output |
 |---|------|----------|--------|--------|
 | 1 | [AssessmentCommand / AssessmentResult contracts](story-01-assessment-agent/task-01-contracts.md) | GENERATE-DOCUMENT | DONE | `AssessmentCommand.java`, `AssessmentResult.java` |
-| 2 | [Prompt template assessment-generation.st](story-01-assessment-agent/task-02-prompt-template.md) | GENERATE-DOCUMENT | TODO | `src/main/resources/prompts/assessment-generation.st`, `org.antlr:ST4` dependency |
-| 3 | [AssessmentAgentService (fixed pipeline)](story-01-assessment-agent/task-03-assessment-agent-service.md) | GENERATE-DOCUMENT | TODO | `AssessmentAgentService.java`, `AssessmentAgentException.java`, `AgentExecutionLogPayload.java`, `AssessmentExecutionOutcome.java` |
-| 4 | [Internal REST endpoint](story-01-assessment-agent/task-04-internal-endpoint.md) | GENERATE-DOCUMENT | TODO | `AssessmentController.java`, internal-auth filter |
-| 5 | [AssessmentAgentService unit tests](story-01-assessment-agent/task-05-unit-tests.md) | GENERATE-DOCUMENT | TODO | `AssessmentAgentServiceTest.java` |
+| 2 | [Prompt template assessment-generation.st](story-01-assessment-agent/task-02-prompt-template.md) | GENERATE-DOCUMENT | TODO | `src/main/resources/prompts/assessment-generation.st`, `org.antlr:ST4` dependency, `AssessmentGenerationTemplateTest.java` |
+| 3 | [Assessment draft generation (orchestrator, port, adapter)](story-01-assessment-agent/task-03-assessment-agent-service.md) | GENERATE-DOCUMENT | TODO | `GenerateAssessmentDraftUseCase.java`, `GenerateAssessmentDraftHandler.java`, `AssessmentAgentOrchestrator.java`, `AssessmentGenerationPort.java`, `GeminiAssessmentGenerationAdapter.java`, `AssessmentAgentException.java`, `AgentExecutionLogPayload.java`, `AssessmentExecutionOutcome.java`, `AssessmentConfig.java` |
+| 4 | [Internal REST endpoint](story-01-assessment-agent/task-04-internal-endpoint.md) | GENERATE-DOCUMENT | TODO | `AssessmentController.java`, `InternalAuthFilter.java`, `CorrelationIdFilter.java`, `AgentGlobalExceptionHandler.java`, `SharedWebConfig.java` |
+| 5 | [Assessment draft generation unit tests](story-01-assessment-agent/task-05-unit-tests.md) | GENERATE-DOCUMENT | TODO | `GenerateAssessmentDraftHandlerTest.java`, `AssessmentAgentOrchestratorTest.java`, `GeminiAssessmentGenerationAdapterTest.java` |
 
 ---
 
