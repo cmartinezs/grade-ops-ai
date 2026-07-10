@@ -87,9 +87,24 @@ interno descartable.
 Reglas:
 
 - Mantener el contrato inmutable; si contiene colecciones, hacer copia defensiva
-  con `List.copyOf`, `Set.copyOf` o equivalente.
-- Validar campos obligatorios en el constructor compacto del `record` con
-  `Objects.requireNonNull` o una validación de dominio equivalente.
+  con `List.copyOf`, `Set.copyOf` o equivalente, normalizando `null` a colección
+  vacía en vez de lanzar.
+- Nunca usar `Objects.requireNonNull` ni excepciones de la API de Java
+  (`NullPointerException`, `IllegalArgumentException`, `IllegalStateException`)
+  para validar campos obligatorios — la regla de
+  `12-excepciones-y-manejo-de-errores.md` aplica también a estos contratos.
+  Si el contrato necesita rechazar un valor inválido en su propio constructor,
+  usar la excepción propia de la capa/artifact que lo declara (en `api/`, una
+  subclase de `DomainException`/`ApplicationException`; en `agents/`, la
+  excepción propia del agente, p. ej. `AssessmentAgentException`).
+- Si el `Result` es la salida de un proceso no confiable (por ejemplo la
+  respuesta estructurada de un LLM deserializada por Spring AI), no validar
+  campos obligatorios en el constructor compacto del `record`: un valor
+  ausente ahí no es un bug de quien construye el objeto, es un dato esperado
+  que debe evaluarse explícitamente. Dejar que el paso dedicado del pipeline
+  (p. ej. `validateOutput`) sea el único punto que rechaza campos ausentes,
+  con la excepción propia del artifact. El constructor compacto se limita a
+  garantizar inmutabilidad (copia defensiva de colecciones).
 - Modelar estados opcionales de forma coherente: si dos campos opcionales
   representan un mismo modo de ejecución, deben venir juntos o rechazarse.
 - Evitar acoplar contratos públicos a Spring, JPA, Jackson o Bean Validation.

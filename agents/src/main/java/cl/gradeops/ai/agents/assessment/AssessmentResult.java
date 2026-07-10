@@ -1,7 +1,5 @@
 package cl.gradeops.ai.agents.assessment;
 
-import static java.util.Objects.requireNonNull;
-
 import java.util.List;
 
 /**
@@ -9,6 +7,15 @@ import java.util.List;
  *
  * <p>Returned for both initial draft generation (US-011) and regeneration (US-012).
  * The agent never persists this data; persistence is {@code api/}'s responsibility.
+ *
+ * <p>The compact constructor only guarantees immutability (defensive copy of the list
+ * fields, normalizing {@code null} to an empty list). It never rejects missing required
+ * fields: this record is the target of Spring AI's structured-output deserialization from
+ * Gemini's response, so an absent field is expected model output, not a caller bug. Required-
+ * field validation belongs to {@code AssessmentAgentService.validateOutput}, which rejects
+ * incomplete results with {@code AssessmentAgentException} per the project's own exception
+ * hierarchy (see {@code 12-excepciones-y-manejo-de-errores.md}) rather than a Java API
+ * exception thrown from this constructor.
  *
  * @param title assessment title
  * @param context scenario or framing given to the student
@@ -26,11 +33,8 @@ public record AssessmentResult(
         List<String> constraints) {
 
     public AssessmentResult {
-        requireNonNull(title, "title is required");
-        requireNonNull(context, "context is required");
-        requireNonNull(instructions, "instructions is required");
-        objectives = List.copyOf(requireNonNull(objectives, "objectives is required"));
-        deliverables = List.copyOf(requireNonNull(deliverables, "deliverables is required"));
-        constraints = List.copyOf(requireNonNull(constraints, "constraints is required"));
+        objectives = objectives == null ? List.of() : List.copyOf(objectives);
+        deliverables = deliverables == null ? List.of() : List.copyOf(deliverables);
+        constraints = constraints == null ? List.of() : List.copyOf(constraints);
     }
 }
