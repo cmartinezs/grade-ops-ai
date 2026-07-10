@@ -122,6 +122,15 @@ When committing changes for a monorepo root planning that coordinates child plan
 - If one logical change touches both a parent and a child planning (e.g. creating a child planning and updating the parent's `Linked Child Plannings` section), split it into one commit per planning rather than a single mixed commit.
 - Before checking which planning owns a given file, verify with `ls <child>/.planning/` whether that child directory actually has its own workspace — do not assume based on the repository map table alone.
 
+### Git worktrees for child plannings
+
+Execute a child planning's implementation in its own git worktree, never directly in this checkout:
+
+- `git worktree add ../gradeops-api <branch>` for a child planning owned by `api/`
+- `git worktree add ../gradeops-agents <branch>` for a child planning owned by `agents/`
+
+Follow the plugin's full standard git process inside that worktree (layered story/task branches, task PRs into the story branch, story PR into `git.base_branch`, local branch cleanup after each merge — see `.planning/GUIDE.md § Layered git branch cleanup`). Since `api/`, `agents/`, and the root currently share a single git history (no independent `.git` per subdirectory), branch names must be prefixed with the worktree's own name — `gradeops-api`/`gradeops-agents` — **before** the rest of the branch name the plugin would otherwise generate (e.g. `gradeops-api/story-01-assessment-creation-persistence`, `gradeops-agents/story-01-assessment-agent`), so that story/task branches from different child workspaces never collide.
+
 ## Google Cloud targets
 
 Primary runtime: Cloud Run (web, api, agents). Database: Cloud SQL PostgreSQL. Files: Cloud Storage. Secrets: Secret Manager. Logs: Cloud Logging.
