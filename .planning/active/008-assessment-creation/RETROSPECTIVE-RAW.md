@@ -41,7 +41,15 @@ Each entry should answer as many of these as possible:
 
 ---
 
-*(No other unexpected events recorded yet.)*
+### 2026-07-10 — Cross-child-planning contract drift: agents/'s AssessmentCommand changed after api/'s dependent tasks were already atomized
+
+**What happened:** `agents/.planning/001-assessment-creation`'s task-02 code review found that `AssessmentCommand.previousDraftId` alone cannot supply the regeneration prompt with the prior draft's content — `agents/` never persists data or calls back into `api/`. A `previousDraft` (content) field was added to the contract on 2026-07-10, after `api/.planning/003-assessment-creation`'s task-05 (`agentclient`) and task-08 (regeneration endpoint) had already been atomized against the original 7-field shape (Sync Checkpoint 1 of Story 01 in this planning had been marked DONE the day before, 2026-07-09).
+
+**What was expected instead:** the contract each child planning atomizes tasks against should stay stable once a sync checkpoint marks it DONE, or downstream tasks in the other child planning need to be notified and corrected before they're executed — not discovered only when someone tries to implement against a stale copy.
+
+**How it was resolved:** the user explicitly asked to notify the `api/` child planning. Updated three layers: (1) `api/`'s own task-05/task-08 files plus that story's Inconsistencies Found, so whoever executes those tasks sees the correct 8-field contract; (2) this root planning's Story 01 and Story 02 coordination stories (Sync Checkpoints + Inconsistencies Found), so the drift is visible at the parent level, not just buried in a child planning's file; (3) `agents/`'s own task-01/task-03/TRACEABILITY already recorded the change on its side when the field was added. Each edit was committed on its own planning's branch (this root-level fix on `chore/notify-agentclient-previousdraft` off `develop`; `api/`'s fix on `gradeops-api/story-01-assessment-creation-persistence`) per the parent/child commit-scoping rule.
+
+**What should be carried forward:** a sync checkpoint marked DONE is a snapshot, not a guarantee — if a child planning's contract changes after a dependent checkpoint is checked off, that change must be pushed back through the coordination story (this file's Story 01/02), not just fixed silently inside the child planning that happened to catch it. Consider whether sync checkpoints for "contract defined" should link directly to the contract file's task, so a later diff is easier to notice.
 
 ---
 
