@@ -25,6 +25,15 @@ Each entry should answer as many of these as possible:
 
 <!-- Add newest entries at the top. -->
 
+### 2026-07-10 13:20 - AssessmentCommand/AssessmentResult were placed in the feature root package, not application.command/application.result
+
+- **Source:** human code review (task-01 PR #25), requested correction
+- **Related story/task:** story-01-assessment-agent, task-01-contracts
+- **What happened:** both records were created directly under `cl.gradeops.ai.agents.assessment`, and the "Contratos públicos entre artifacts y agentes" section added to `03-use-cases-orquestadores-y-pasos.md` during an earlier correction claimed this flat placement was an intentional exception for `agents/` ("se permite ubicar el Command/Result en el package público de la feature"). `01-arquitectura-hexagonal-y-paquetes.md`'s own package template (lines 97-110) places `Command` under `<feature>.application.command` and `Result` under `<feature>.application.result`, and its `agents/` example (`ai.gradeops.agents.grading.domain/application/infrastructure`) shows the same layered structure applies to this artifact too. The carve-out note was not actually grounded in that document — it was an ad-hoc rationalization written without checking it.
+- **Expected instead:** `AssessmentCommand` under `assessment.application.command`, `AssessmentResult` under `assessment.application.result`, matching every other feature's contract placement in the guideline.
+- **Resolution:** moved both records (and their tests) into `application/command/` and `application/result/` respectively. Removed the incorrect carve-out paragraph from `03-use-cases-orquestadores-y-pasos.md` and replaced it with a pointer to the actual template. Updated task-01-contracts.md's Technical Design, Implementation Steps, and Done Criteria to reference the correct packages.
+- **Retrospective signal:** when writing a "here's why this deviates from the guideline" note in a shared doc, verify against the referenced document's actual content before writing it — don't infer/invent a carve-out to justify code that was already written. Task-03 (`AssessmentAgentService`, `AssessmentAgentException`, `AgentExecutionLogPayload`, `AssessmentExecutionOutcome`) has not yet assigned these to specific sub-packages either — worth getting right the first time when that task executes, using this same template (`AssessmentAgentService`/`AssessmentAgentException` likely `application`, `AgentExecutionLogPayload`/`AssessmentExecutionOutcome` likely `application.result` or a dedicated sub-package — decide during task-03, not retrofitted after).
+
 ### 2026-07-10 13:05 - AssessmentCommand also used Objects.requireNonNull and IllegalArgumentException, missed in the first correction pass
 
 - **Source:** human code review (task-01 PR #25), requested correction
