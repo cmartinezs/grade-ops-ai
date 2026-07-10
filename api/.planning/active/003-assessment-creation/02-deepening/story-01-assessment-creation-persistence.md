@@ -67,7 +67,7 @@ Implement the full backend flow for assessment creation: persist the teacher's b
 
 | # | Description | Docs Involved | Status | Resolution Path |
 |---|-------------|--------------|--------|----------------|
-| — | *None yet* | — | — | — |
+| 1 | `agents/`'s `AssessmentCommand` gained a `previousDraft` field (content, not just `previousDraftId`) on 2026-07-10, discovered during that planning's task-02 code review: `agents/` never persists data or calls back into `api/`, so `previousDraftId` alone cannot supply the regeneration prompt with the prior draft's content — `api/` must resolve and send it. This story's tasks were written before that change. | `agents/.planning/active/001-assessment-creation/02-deepening/story-01-assessment-agent/task-01-contracts.md`, this story's task-05 and task-08 | RESOLVED | task-05 and task-08 updated 2026-07-10 to include `previousDraft` (rendering the loaded `AssessmentDraft` to text) in the outgoing command — see their Technical Design sections |
 
 ---
 

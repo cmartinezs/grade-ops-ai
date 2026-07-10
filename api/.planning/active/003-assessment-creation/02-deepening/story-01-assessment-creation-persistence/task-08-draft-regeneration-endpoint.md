@@ -15,7 +15,8 @@
 
 ## Technical Design
 
-- **Approach:** near-identical flow to task-07's `GenerateAssessmentDraftHandler`, reused via a shared internal helper rather than duplicated — both call `agentclient` outside a transaction, then persist a new `AgentExecutionLog` + new `AssessmentDraft` version inside one. The only differences: the command includes `adjustmentNotes` + `previousDraftId` (the current draft), and the new draft's `versionNumber` is `currentVersion + 1` with `previousVersionId` pointing at the current draft.
+- **Approach:** near-identical flow to task-07's `GenerateAssessmentDraftHandler`, reused via a shared internal helper rather than duplicated — both call `agentclient` outside a transaction, then persist a new `AgentExecutionLog` + new `AssessmentDraft` version inside one. The differences: the command includes `adjustmentNotes`, `previousDraftId` (the current draft's ID, for correlation only), and **`previousDraft`** (the current draft's content, rendered to text — see below); the new draft's `versionNumber` is `currentVersion + 1` with `previousVersionId` pointing at the current draft.
+- **`previousDraft` content (added 2026-07-10, see task-05):** `agents/`'s `AssessmentCommand.previousDraft` needs the prior draft's actual content, not just its ID — `agents/` never persists data or calls back into `api/`, so `api/` is the only side that can supply it. This handler renders the loaded `AssessmentDraft` (title, context, instructions, objectives, deliverables, constraints) into a single text block before building the command — a small package-private mapper method (e.g. `AssessmentDraft.toPromptSummary()` on the domain entity, or a dedicated mapper in `application`, whichever keeps domain free of prompt-formatting concerns — decide during implementation) is sufficient; no new persistence or endpoint is needed since the draft is already loaded in step 1 below.
 - **Affected files / components:**
   - `assessment/application/command/RegenerateAssessmentDraftCommand.java`, `application/port/in/RegenerateAssessmentDraftUseCase.java`, `application/usecase/RegenerateAssessmentDraftHandler.java` (new — internally delegates the shared call/persist logic to a small package-private helper extracted from task-07's handler, avoiding duplicating the transaction/ordering logic)
   - `assessment/infrastructure/adapter/in/web/AssessmentController.java` (**modify** — add `POST /api/v1/assessments/{id}/draft/regenerate`)
@@ -29,7 +30,7 @@
 ## Implementation Steps
 
 1. Extract the shared "call agent outside transaction, then persist log+draft" logic from task-07's `GenerateAssessmentDraftHandler` into a small internal helper method/class both handlers call, so the two handlers do not duplicate that ordering-sensitive logic.
-2. Create `RegenerateAssessmentDraftHandler.java`: load the current draft (404/409 if none), load the brief, build the command with `adjustmentNotes` + `previousDraftId`, call the shared helper with `versionNumber = current + 1` and `previousVersionId = current draft id`.
+2. Create `RegenerateAssessmentDraftHandler.java`: load the current draft (404/409 if none), load the brief, render the current draft's content to text (`previousDraft`), build the command with `adjustmentNotes` + `previousDraftId` + `previousDraft`, call the shared helper with `versionNumber = current + 1` and `previousVersionId = current draft id`.
 3. Add `POST /api/v1/assessments/{id}/draft/regenerate` to `AssessmentController.java`.
 4. Create request/response DTOs.
 5. Wire the new handler in `AssessmentConfig.java`.
