@@ -9,19 +9,31 @@ class AssessmentCommandTest {
     @Test
     void shouldCreateInitialGenerationCommandWhenRequiredFieldsArePresent() {
         // given
-        AssessmentCommand command = AssessmentCommand.builder()
+        AssessmentCommand.AssessmentCommandBuilder builder = AssessmentCommand.builder()
                 .learningGoal("Evaluate loops")
                 .topic("Java loops")
                 .level("introductory")
                 .duration("60 minutes")
-                .language("Java")
-                .build();
+                .language("Java");
 
         // when
-        String topic = command.topic();
+        AssessmentCommand command = builder.build();
 
-        // then
-        assertThat(topic).isEqualTo("Java loops");
+        // then — 1. no nulo
+        assertThat(command).isNotNull();
+        // then — 2. atributos requeridos no nulos
+        assertThat(command.learningGoal()).isNotNull();
+        assertThat(command.topic()).isNotNull();
+        assertThat(command.level()).isNotNull();
+        assertThat(command.duration()).isNotNull();
+        assertThat(command.language()).isNotNull();
+        // then — 3. valores esperados
+        assertThat(command.learningGoal()).isEqualTo("Evaluate loops");
+        assertThat(command.topic()).isEqualTo("Java loops");
+        assertThat(command.level()).isEqualTo("introductory");
+        assertThat(command.duration()).isEqualTo("60 minutes");
+        assertThat(command.language()).isEqualTo("Java");
+        // then — 4. campos de regeneración ausentes en generación inicial
         assertThat(command.adjustmentNotes()).isNull();
         assertThat(command.previousDraftId()).isNull();
     }
@@ -29,39 +41,61 @@ class AssessmentCommandTest {
     @Test
     void shouldCreateRegenerationCommandWhenAdjustmentFieldsAreProvidedTogether() {
         // given
-        AssessmentCommand command = AssessmentCommand.builder()
+        AssessmentCommand.AssessmentCommandBuilder builder = AssessmentCommand.builder()
                 .learningGoal("Evaluate loops")
                 .topic("Java loops")
                 .level("introductory")
                 .duration("60 minutes")
                 .language("Java")
                 .adjustmentNotes("Make it shorter")
-                .previousDraftId("draft-123")
-                .build();
+                .previousDraftId("draft-123");
 
         // when
-        String adjustmentNotes = command.adjustmentNotes();
+        AssessmentCommand command = builder.build();
 
-        // then
-        assertThat(adjustmentNotes).isEqualTo("Make it shorter");
+        // then — 1. no nulo
+        assertThat(command).isNotNull();
+        // then — 2. atributos no nulos
+        assertThat(command.learningGoal()).isNotNull();
+        assertThat(command.topic()).isNotNull();
+        assertThat(command.level()).isNotNull();
+        assertThat(command.duration()).isNotNull();
+        assertThat(command.language()).isNotNull();
+        assertThat(command.adjustmentNotes()).isNotNull();
+        assertThat(command.previousDraftId()).isNotNull();
+        // then — 3. valores esperados
+        assertThat(command.learningGoal()).isEqualTo("Evaluate loops");
+        assertThat(command.topic()).isEqualTo("Java loops");
+        assertThat(command.level()).isEqualTo("introductory");
+        assertThat(command.duration()).isEqualTo("60 minutes");
+        assertThat(command.language()).isEqualTo("Java");
+        assertThat(command.adjustmentNotes()).isEqualTo("Make it shorter");
         assertThat(command.previousDraftId()).isEqualTo("draft-123");
     }
 
     @Test
     void shouldConstructCommandWithoutValidatingRequiredFieldsOrAdjustmentPairing() {
-        // given / when — a null required field and a mismatched adjustment pairing are both
+        // given — a null required field and a mismatched adjustment pairing are both
         // malformed-input concerns for AssessmentAgentService.validate (task-03), not this record.
-        AssessmentCommand command = AssessmentCommand.builder()
+        AssessmentCommand.AssessmentCommandBuilder builder = AssessmentCommand.builder()
                 .learningGoal(null)
                 .topic("Java loops")
                 .level("introductory")
                 .duration("60 minutes")
                 .language("Java")
-                .adjustmentNotes("Make it shorter")
-                .build();
+                .adjustmentNotes("Make it shorter");
 
-        // then
+        // when
+        AssessmentCommand command = builder.build();
+
+        // then — 1. no nulo
+        assertThat(command).isNotNull();
+        // then — 2/3. valores esperados, incluyendo los nulos intencionales
         assertThat(command.learningGoal()).isNull();
+        assertThat(command.topic()).isEqualTo("Java loops");
+        assertThat(command.level()).isEqualTo("introductory");
+        assertThat(command.duration()).isEqualTo("60 minutes");
+        assertThat(command.language()).isEqualTo("Java");
         assertThat(command.adjustmentNotes()).isEqualTo("Make it shorter");
         assertThat(command.previousDraftId()).isNull();
     }
