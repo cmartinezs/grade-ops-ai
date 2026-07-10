@@ -25,6 +25,14 @@ Each entry should answer as many of these as possible:
 
 <!-- Add newest entries at the top. -->
 
+### 2026-07-10 13:40 - Tests did not follow the exhaustive-assertions strategy
+
+- **Source:** human code review (task-01 PR #25), requested correction
+- **Related story/task:** story-01-assessment-agent, task-01-contracts
+- **What happened:** `AssessmentCommandTest`/`AssessmentResultTest` only asserted the one or two fields each test's name called out, not the full constructed object. `10-testing-calidad-y-automatizacion.md`'s "Estrategia de assertions exhaustivas" requires, in order: not-null result, not-null attributes, expected values per field, state — every test, not just tests that are "about" a specific field.
+- **Resolution:** rewrote both test classes so every test asserts the full object: not-null check on the result, not-null checks on every attribute expected to be populated, then the expected value of every field (including fields intentionally left `null`, asserted as such).
+- **Retrospective signal:** this is the fourth correction round on the same two files. All four were guideline sections that exist and were simply not consulted before writing the original code/tests. Reinforces the prior entry's conclusion: cross-check the relevant `api/docs/gradeops-ai-java-guidelines/` sections *before* writing, not after.
+
 ### 2026-07-10 13:32 - Root cause identified: story/tasks were never written against the java-guidelines; full guideline pass applied to task-01 before closing
 
 - **Source:** human direction, after three consecutive correction rounds on the same task (exceptions, then package structure)
