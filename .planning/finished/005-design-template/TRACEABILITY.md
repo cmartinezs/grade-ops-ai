@@ -26,7 +26,7 @@ Term and concept traceability for this planning. For global consolidated view, s
 
 | Term / Concept | AG | AP | DO | IN | WB | W | Notes |
 |---------------|----|----|----|----|----|---|-------|
-| GradeOps AI Design System | N/A | N/A | ✅ | N/A | ✅ | ✅ | Implementado en scopes 01–04; tokens, fuentes, componentes DS activos en web |
+| GradeOps AI Design System | N/A | N/A | ✅ | N/A | ✅ | ✅ | Implementado en stories 01–04; tokens, fuentes, componentes DS activos en web |
 | Tokens CSS (--brand, --surface-card, etc.) | N/A | N/A | ✅ | N/A | ✅ | ✅ | `web/src/styles/ds-tokens/` — colors, typography, spacing, base cargados en globals.css |
 | Bricolage Grotesque (font-display) | N/A | N/A | ✅ | N/A | ✅ | ✅ | Cargada vía `next/font/google`; mapeada a `--font-display` en globals.css |
 | Hanken Grotesque (font-sans) | N/A | N/A | ✅ | N/A | ✅ | ✅ | Cargada vía `next/font/google`; mapeada a `--font-sans` en globals.css |
@@ -68,8 +68,8 @@ Term and concept traceability for this planning. For global consolidated view, s
 | ID | Term / Issue | Blocker | Status | Target Resolution |
 |----|-------------|---------|--------|------------------|
 | R01 | Panel derecho del dashboard (cobertura por curso, estudiantes en riesgo) | Requiere endpoints API de estadísticas | PENDING | Planning futuro (estadísticas del dashboard) |
-| R02 | Funcionalidad password reset | Fuera del scope del template | PENDING | Planning futuro (auth features) |
-| R03 | Tipo exacto de `AssessmentSummaryDto.type` y `status` — verificar si los valores del enum coinciden con los esperados por el mapeo | Verificar al implementar scope-04 | RESOLVED | Status enum: DRAFT/OPEN/GRADING/CLOSED (no type field). AssessmentRow adaptado. |
+| R02 | Funcionalidad password reset | Fuera del story del template | PENDING | Planning futuro (auth features) |
+| R03 | Tipo exacto de `AssessmentSummaryDto.type` y `status` — verificar si los valores del enum coinciden con los esperados por el mapeo | Verificar al implementar story-04 | RESOLVED | Status enum: DRAFT/OPEN/GRADING/CLOSED (no type field). AssessmentRow adaptado. |
 
 ---
 

@@ -19,11 +19,11 @@ El resultado es un **template de diseño funcional** — las pantallas que hoy e
 |---------|------|--------|
 | [00-initial.md](00-initial.md) | INITIAL | ✅ |
 | [01-expansion.md](01-expansion.md) | EXPANSION | ✅ |
-| [02-deepening/scope-01-ds-tokens-base.md](02-deepening/scope-01-ds-tokens-base.md) | DEEPENING | DONE |
-| [02-deepening/scope-02-shell-layout.md](02-deepening/scope-02-shell-layout.md) | DEEPENING | DONE |
-| [02-deepening/scope-03-login-page.md](02-deepening/scope-03-login-page.md) | DEEPENING | DONE |
-| [02-deepening/scope-04-dashboard-page.md](02-deepening/scope-04-dashboard-page.md) | DEEPENING | DONE |
-| [02-deepening/scope-05-placeholder-routes.md](02-deepening/scope-05-placeholder-routes.md) | DEEPENING | DONE |
+| [02-deepening/story-01-ds-tokens-base.md](02-deepening/story-01-ds-tokens-base.md) | DEEPENING | DONE |
+| [02-deepening/story-02-shell-layout.md](02-deepening/story-02-shell-layout.md) | DEEPENING | DONE |
+| [02-deepening/story-03-login-page.md](02-deepening/story-03-login-page.md) | DEEPENING | DONE |
+| [02-deepening/story-04-dashboard-page.md](02-deepening/story-04-dashboard-page.md) | DEEPENING | DONE |
+| [02-deepening/story-05-placeholder-routes.md](02-deepening/story-05-placeholder-routes.md) | DEEPENING | DONE |
 | [TRACEABILITY.md](TRACEABILITY.md) | — | — |
 
 ---
@@ -32,12 +32,12 @@ El resultado es un **template de diseño funcional** — las pantallas que hoy e
 
 ### Qué se entregó
 
-5/5 scopes completados. El frontend Next.js pasó de TailwindCSS genérico a usar el design system propio de GradeOps AI: tokens CSS, tipografía Bricolage/Hanken, colores Sprout/Gold/Slate, shell docente funcional (sidebar + topbar), login rediseñado, dashboard con datos reales, y 4 rutas maqueta navegables.
+5/5 stories completados. El frontend Next.js pasó de TailwindCSS genérico a usar el design system propio de GradeOps AI: tokens CSS, tipografía Bricolage/Hanken, colores Sprout/Gold/Slate, shell docente funcional (sidebar + topbar), login rediseñado, dashboard con datos reales, y 4 rutas maqueta navegables.
 
 ### Lo que salió distinto al plan
 
 - **`AssessmentSummaryDto` no tenía `type` ni `average`** — el `AssessmentRow` se adaptó a los campos disponibles. El mapeo de tipo quedó pendiente para cuando el API lo exponga (R01).
-- **`Hanken_Grotesk`** es el nombre correcto en el paquete `next/font/google`, no `Hanken_Grotesque` como lo nombraba el DS — diferencia descubierta durante la implementación del scope 01.
+- **`Hanken_Grotesk`** es el nombre correcto en el paquete `next/font/google`, no `Hanken_Grotesque` como lo nombraba el DS — diferencia descubierta durante la implementación del story 01.
 - **`PlaceholderPage`** quedó en `components/shell/` en vez de `components/ds/` — mejor ubicación dado que es un componente de estructura de navegación, no una primitiva del DS.
 
 ### Decisiones clave que conviene recordar

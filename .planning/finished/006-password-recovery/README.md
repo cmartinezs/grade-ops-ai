@@ -17,9 +17,9 @@ Implementar el flujo de recuperación de contraseña para docentes registrados c
 |---------|------|--------|
 | [00-initial.md](00-initial.md) | INITIAL | ✅ |
 | [01-expansion.md](01-expansion.md) | EXPANSION | ✅ SUPERSEDED |
-| [02-deepening/scope-01-forgot-password-page.md](02-deepening/scope-01-forgot-password-page.md) | DEEPENING | DONE |
-| [02-deepening/scope-02-docs-us012-dod.md](02-deepening/scope-02-docs-us012-dod.md) | DEEPENING | DONE |
-| [02-deepening/scope-03-reset-password-page.md](02-deepening/scope-03-reset-password-page.md) | DEEPENING | DONE |
+| [02-deepening/story-01-forgot-password-page.md](02-deepening/story-01-forgot-password-page.md) | DEEPENING | DONE |
+| [02-deepening/story-02-docs-us012-dod.md](02-deepening/story-02-docs-us012-dod.md) | DEEPENING | DONE |
+| [02-deepening/story-03-reset-password-page.md](02-deepening/story-03-reset-password-page.md) | DEEPENING | DONE |
 | [TRACEABILITY.md](TRACEABILITY.md) | — | — |
 
 ---
@@ -28,7 +28,7 @@ Implementar el flujo de recuperación de contraseña para docentes registrados c
 
 ### Qué se entregó
 
-3/3 scopes completados. Se implementaron `/forgot-password` (formulario RHF+Zod, llamada a `sendPasswordResetEmail`, mensaje neutral anti-enumeración) y `/reset-password` (handler custom de Firebase con `verifyPasswordResetCode` + `confirmPasswordReset`, validación de `oobCode` y `mode`, 6 tests). US-012 fue marcada como implementada en docs.
+3/3 stories completados. Se implementaron `/forgot-password` (formulario RHF+Zod, llamada a `sendPasswordResetEmail`, mensaje neutral anti-enumeración) y `/reset-password` (handler custom de Firebase con `verifyPasswordResetCode` + `confirmPasswordReset`, validación de `oobCode` y `mode`, 6 tests). US-012 fue marcada como implementada en docs.
 
 ### Por qué está SUPERSEDED
 

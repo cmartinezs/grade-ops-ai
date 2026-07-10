@@ -12,7 +12,7 @@ Resolves a detected conflict between two documents by applying the source hierar
 2. Apply the source hierarchy from `GUIDE.md` to determine which one has authority.
 3. Update the lower-authority document to align with the authoritative one.
 4. If both are at equal authority level: check document status (`Final` > `In Review` > `Draft`) and use the one with higher status.
-5. Record the resolution in the current scope's task or in `TRACEABILITY.md`.
+5. Record the resolution in the current story's task or in `TRACEABILITY.md`.
 
 ---
 

@@ -2,7 +2,7 @@
 
 > [← README](README.md)
 
-Checks if a previously deferred residual can now be resolved, given new work completed in subsequent scopes or plannings.
+Checks if a previously deferred residual can now be resolved, given new work completed in subsequent stories or plannings.
 
 ---
 

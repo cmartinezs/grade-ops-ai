@@ -1,20 +1,20 @@
 # 🚀 EXPANSION: 007-password-recovery-custom-email
 
-> **Status:** DONE — all scopes completed
+> **Status:** DONE — all stories completed
 > **Supersedes:** `006-password-recovery` (Camino B — sobreescribir encima; las rutas web sobreviven, la lógica interna se reemplaza)
 > [← planning/README.md](../../README.md)
 
 ---
 
-## Scope Summary
+## Story Summary
 
-| # | Scope | Área | Depends On | Status |
+| # | Story | Área | Depends On | Status |
 |---|-------|------|------------|--------|
 | 01 | api-password-reset-service | AP | — | DONE |
 | 02 | web-auth-pages | WB | 01 | DONE |
 | 03 | infra-smtp-secrets | IN | — | DONE |
 
-> `docs/` no requiere scope — ya fue actualizado en la sesión de diseño (US-012, API Reference, spec en `docs/superpowers/specs/`).
+> `docs/` no requiere story — ya fue actualizado en la sesión de diseño (US-012, API Reference, spec en `docs/superpowers/specs/`).
 
 ---
 
@@ -22,8 +22,8 @@
 
 ```mermaid
 flowchart LR
-    S01[Scope 01: api-password-reset-service\nBackend completo: entity, service, email, endpoints] --> S02[Scope 02: web-auth-pages\n/forgot-password + /reset-password actualizados]
-    S03[Scope 03: infra-smtp-secrets\nSMTP en Secret Manager + Cloud Run env]
+    S01[Story 01: api-password-reset-service\nBackend completo: entity, service, email, endpoints] --> S02[Story 02: web-auth-pages\n/forgot-password + /reset-password actualizados]
+    S03[Story 03: infra-smtp-secrets\nSMTP en Secret Manager + Cloud Run env]
 ```
 
 > **S01** y **S03** pueden ejecutarse en paralelo — no tienen dependencia entre sí.

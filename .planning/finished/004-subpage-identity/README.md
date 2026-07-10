@@ -7,9 +7,9 @@
 
 ---
 
-## Scopes (5 / 5 DONE)
+## Stories (5 / 5 DONE)
 
-| # | Scope | Status |
+| # | Story | Status |
 |---|-------|--------|
 | 01 | development-mission-control | ✅ DONE |
 | 02 | requirements-blueprint | ✅ DONE |

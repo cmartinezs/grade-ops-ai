@@ -12,7 +12,7 @@ Complete the web authentication experience (styling, branding, UX edge cases) an
 
 ## Why
 
-After executing `002-google-sign-in` (scope 03), several gaps were discovered during manual testing:
+After executing `002-google-sign-in` (story 03), several gaps were discovered during manual testing:
 - Tailwind CSS was not configured — no styles applied at all
 - The app had no visual identity (logo, favicon)
 - Google sign-in popup triggered a COOP browser warning

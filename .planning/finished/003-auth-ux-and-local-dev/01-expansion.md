@@ -5,9 +5,9 @@
 
 ---
 
-## Scope Summary
+## Story Summary
 
-| # | Scope | Area(s) | Priority | Depends On | Status |
+| # | Story | Area(s) | Priority | Depends On | Status |
 |---|-------|---------|----------|------------|--------|
 | 01 | web-tailwind-and-brand | WB | P0 | — | DONE |
 | 02 | web-auth-ux-polish | WB | P0 | 01 | DONE |

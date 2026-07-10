@@ -13,7 +13,7 @@ flowchart TD
     C -- Yes --> D[[RESOLVE-CONFLICT]]
     D --> E[Record resolution in TRACEABILITY.md]
     C -- No --> F[Add as residual in TRACEABILITY.md]
-    F --> G[Add resolution path: which planning or scope will resolve it]
+    F --> G[Add resolution path: which planning or story will resolve it]
     G --> H[Continue current work without blocking]
 ```
 
@@ -22,11 +22,11 @@ flowchart TD
 ## Steps
 
 1. Clearly describe the inconsistency: what contradicts what, in which files.
-2. Determine if it can be resolved immediately (within this scope).
+2. Determine if it can be resolved immediately (within this story).
 3. If yes: execute `[RESOLVE-CONFLICT]` and record the resolution.
 4. If no: add as a **residual** in `TRACEABILITY.md`:
    - Note source doc A vs source doc B.
-   - Note the expected resolution path (future planning, scope, PDR).
+   - Note the expected resolution path (future planning, story, PDR).
 5. Continue current work — residuals do not block progress.
 
 ---

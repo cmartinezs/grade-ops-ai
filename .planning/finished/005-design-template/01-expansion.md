@@ -5,9 +5,9 @@
 
 ---
 
-## Scope Summary
+## Story Summary
 
-| # | Scope | Área | Depends On | Status |
+| # | Story | Área | Depends On | Status |
 |---|-------|------|------------|--------|
 | 01 | ds-tokens-base | WB | — | PENDING |
 | 02 | shell-layout | WB | 01 | PENDING |
@@ -21,10 +21,10 @@
 
 ```mermaid
 flowchart LR
-    S01[Scope 01: ds-tokens-base\nTokens CSS + fuentes + assets] --> S02[Scope 02: shell-layout\nSidebar + Topbar layout]
-    S01 --> S03[Scope 03: login-page\nLogin branded con DS]
-    S02 --> S04[Scope 04: dashboard-page\nDashboard con DS shell]
-    S02 --> S05[Scope 05: placeholder-routes\nMaquetas evaluaciones/banco/etc]
+    S01[Story 01: ds-tokens-base\nTokens CSS + fuentes + assets] --> S02[Story 02: shell-layout\nSidebar + Topbar layout]
+    S01 --> S03[Story 03: login-page\nLogin branded con DS]
+    S02 --> S04[Story 04: dashboard-page\nDashboard con DS shell]
+    S02 --> S05[Story 05: placeholder-routes\nMaquetas evaluaciones/banco/etc]
 ```
 
 > **S01** es la base que todos los demás requieren — debe ejecutarse primero.  
@@ -86,7 +86,7 @@ flowchart LR
 
 - Este planning **no modifica la lógica funcional** existente (auth, API calls, Firebase) — solo apunta a la capa visual.
 - El dashboard existente (`DashboardPage`) se adapta visualmente sin cambiar sus llamadas a `getAssessments()`.
-- El template del DS (`TeacherPortal.dc.html`) y el UI kit (`ui_kits/teacher/`) son la **referencia visual principal** para cada scope.
+- El template del DS (`TeacherPortal.dc.html`) y el UI kit (`ui_kits/teacher/`) son la **referencia visual principal** para cada story.
 - Este es un template de diseño — no se espera perfección por funcionalidad; se espera que el look&feel sea correcto y el shell funcione como base para implementaciones futuras.
 
 ---

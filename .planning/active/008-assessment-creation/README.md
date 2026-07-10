@@ -1,34 +1,62 @@
-# 📐 Planning Templates
+# Planning: 008-assessment-creation
 
-> [← planning/README.md](../README.md)
+> [← planning/README.md](../../README.md)
 
-Templates for creating new plannings. Copy this entire `_template/` directory to `planning/NNN-name/` when starting a new planning.
-
----
-
-## Files in this directory
-
-| File | Purpose |
-|------|---------|
-| [`00-initial.md`](00-initial.md) | INITIAL phase — general intent and context |
-| [`01-expansion.md`](01-expansion.md) | EXPANSION phase — scopes and dependencies |
-| [`02-deepening/scope-NN-name.md`](02-deepening/scope-NN-name.md) | DEEPENING phase — one file per scope |
-| [`TRACEABILITY.md`](TRACEABILITY.md) | Term traceability matrix for this planning |
-| [`pdr-NNN-title.md`](pdr-NNN-title.md) | Project Decision Record template |
+Enable the first step of the open-assessment pipeline: turning a teacher's learning intent into a structured, AI-generated assessment draft that is editable and fully logged.
 
 ---
 
-## Usage
+## Overview
 
-```bash
-# 1. Copy the template to a new planning directory
-cp -r planning/_template/ planning/001-name-of-planning/
-
-# 2. Fill 00-initial.md with intent
-# 3. When ready: fill 01-expansion.md and move to active/
-# 4. Create scope files in 02-deepening/ for each scope
-```
+- **Planning ID:** 008-assessment-creation
+- **Current status:** Deepening
+- **Intent:** Enable the first step of the open-assessment pipeline: turning a teacher's learning intent into a structured, AI-generated assessment draft that is editable and fully logged.
+- **Owner:** human
+- **Started:** 2026-07-09
+- **Completed:** *(not completed yet)*
 
 ---
 
-> [← planning/README.md](../README.md)
+## Key Links
+
+- [Initial context](00-initial.md)
+- [Expansion plan](01-expansion.md)
+- [Story details](02-deepening/)
+- [Traceability](TRACEABILITY.md)
+- [Retrospective raw notes](RETROSPECTIVE-RAW.md)
+
+---
+
+## Current State
+
+- [x] Initial intent is complete.
+- [x] Expansion stories are dimensioned (3 stories: agents-assessment-agent, api-assessment-creation, web-assessment-creation).
+- [ ] Stories are DONE or intentionally SKIPPED.
+- [ ] Traceability is complete.
+- [ ] Retrospective is complete.
+
+---
+
+## Retrospective
+
+Complete this section before archiving.
+
+### Outcomes
+
+- [What shipped, changed, or was decided?]
+
+### Deviations
+
+- [What changed from the original scope, and why?]
+
+### Follow-ups
+
+- [Open improvements, deferred work, or next planning candidates.]
+
+### Lessons
+
+- [What should carry forward to future planning work?]
+
+---
+
+> [← planning/README.md](../../README.md)

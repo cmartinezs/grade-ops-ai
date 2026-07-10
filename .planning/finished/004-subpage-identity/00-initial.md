@@ -43,7 +43,7 @@ Además, el contenido actual es superficial: las páginas de requirements y tech
 - **Color dominante:** Indigo (#6366f1) sobre azul oscuro.
 - **Animación:** Grupos de requirements aparecen en cascada al hacer scroll (stagger de 80ms por tarjeta, `opacity` + `translateY`).
 - **Contenido nuevo:**
-  - Una frase de contexto por cada grupo explicando *por qué* ese requerimiento existe — extraído de `docs/02-product/mvp-scope.md` y `docs/02-product/workflows.md`.
+  - Una frase de contexto por cada grupo explicando *por qué* ese requerimiento existe — extraído de `docs/02-product/mvp-story.md` y `docs/02-product/workflows.md`.
   - Sección "Modos de evaluación" comparando Open vs Closed — extraído de `docs/02-product/assessment-modes.md`.
 
 ### 3. `/technicals` — "Engine Room"

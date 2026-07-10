@@ -5,9 +5,9 @@
 
 Auth UX polish and local development stack setup. Discovered and fixed after manual testing of `002-google-sign-in`.
 
-## Scopes
+## Stories
 
-| # | Scope | Area | Status |
+| # | Story | Area | Status |
 |---|-------|------|--------|
 | 01 | web-tailwind-and-brand | WB | DONE |
 | 02 | web-auth-ux-polish | WB | DONE |

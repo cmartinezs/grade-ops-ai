@@ -89,7 +89,7 @@ Solo llena el campo `Intent`. Las demás secciones quedan para completar a mano.
     ├── 00-initial.md              ← pre-llenado
     ├── 01-expansion.md            ← vacío
     ├── 02-deepening/
-    │   └── scope-NN-name.md       ← plantilla vacía
+    │   └── story-NN-name.md       ← plantilla vacía
     └── TRACEABILITY.md
 ```
 
@@ -97,7 +97,7 @@ Abre `00-initial.md` y completa o revisa cualquier sección que haya quedado com
 
 ---
 
-## Paso 3 — Dimensionar los scopes
+## Paso 3 — Dimensionar los stories
 
 Cuando tengas claridad sobre el alcance:
 
@@ -105,26 +105,26 @@ Cuando tengas claridad sobre el alcance:
 /plan-expand 001-jwt-auth-api
 ```
 
-Claude lee `00-initial.md` y te propone los scopes (o te pregunta si los quieres definir tú):
+Claude lee `00-initial.md` y te propone los stories (o te pregunta si los quieres definir tú):
 
 ```
-Propuesta de scopes para 001-jwt-auth-api:
+Propuesta de stories para 001-jwt-auth-api:
 
-scope-01-docs        DO  Documentar el contrato de auth en docs/
-scope-02-api-domain  AP  Entidades Teacher, JwtToken, AuthEvent en api/
-scope-03-api-auth    AP  Endpoints /auth/login y /auth/refresh + Spring Security
-scope-04-web-login   WB  Página de login en web/, llamada al endpoint
+story-01-docs        DO  Documentar el contrato de auth en docs/
+story-02-api-domain  AP  Entidades Teacher, JwtToken, AuthEvent en api/
+story-03-api-auth    AP  Endpoints /auth/login y /auth/refresh + Spring Security
+story-04-web-login   WB  Página de login en web/, llamada al endpoint
 
 Dependencias:
-  scope-03 → scope-02
-  scope-04 → scope-03
+  story-03 → story-02
+  story-04 → story-03
 
-¿Confirmas estos scopes, o quieres ajustar? (confirmar / editar)
+¿Confirmas estos stories, o quieres ajustar? (confirmar / editar)
 ```
 
 Al confirmar, Claude:
 1. Llena `01-expansion.md` con la tabla y el mapa de dependencias
-2. Crea `02-deepening/scope-0N-*.md` para cada scope con status `TODO`
+2. Crea `02-deepening/story-0N-*.md` para cada story con status `TODO`
 3. Mueve el folder a `.planning/active/001-jwt-auth-api/`
 4. Actualiza `.planning/README.md` y `active/README.md`
 
@@ -133,37 +133,69 @@ Al confirmar, Claude:
 ```
 ACTIVE
   001-jwt-auth-api — Implement JWT authentication for the API layer
-    scope-01-docs        [TODO]
-    scope-02-api-domain  [TODO]
-    scope-03-api-auth    [TODO]
-    scope-04-web-login   [TODO]
+    story-01-docs        [TODO]
+    story-02-api-domain  [TODO]
+    story-03-api-auth    [TODO]
+    story-04-web-login   [TODO]
 ```
 
 ---
 
-## Paso 4 — Ejecutar
+## Paso 4 (opcional) — Atomizar una story
+
+Si las tareas de una story siguen siendo demasiado gruesas para implementarlas directamente, descomponlo en tareas atómicas:
 
 ```
-/plan-scope 001-jwt-auth-api scope-01
-/plan-scope 001-jwt-auth-api scope-02
-/plan-scope 001-jwt-auth-api scope-03
-/plan-scope 001-jwt-auth-api scope-04
+/plan-atomize 001-jwt-auth-api story-03
 ```
 
-Si ejecutas algún scope a mano, márcalo después:
+Claude propone el desglose y, al confirmar, crea un archivo por tarea:
 
 ```
-/plan-done 001-jwt-auth-api scope-02
+.planning/active/001-jwt-auth-api/02-deepening/
+├── story-03-api-auth.md             ← la tabla de tareas pasa a ser el índice
+└── story-03-api-auth/
+    ├── task-01-jwt-filter.md        ← diseño técnico + pasos + tests + done criteria
+    ├── task-02-login-endpoint.md
+    └── task-03-refresh-endpoint.md
+```
+
+Cada tarea es ejecutable en una sola sesión y cumple el checklist de atomicidad (`[CHECK-ATOMICITY]`): un solo entregable verificable, diseño técnico decidido, pasos concretos, plan de tests unitarios y done criteria binarios.
+
+```
+# Ejecutar una tarea individual
+/plan-task 001-jwt-auth-api story-03 task-01
+
+# Auditar que las tareas están bien formadas (solo lectura)
+/plan-task-validate 001-jwt-auth-api story-03
 ```
 
 ---
 
-## Paso 5 — Archivar
+## Paso 5 — Ejecutar
+
+```
+/plan-story 001-jwt-auth-api story-01
+/plan-story 001-jwt-auth-api story-02
+/plan-story 001-jwt-auth-api story-03
+/plan-story 001-jwt-auth-api story-04
+```
+
+Si ejecutas alguna story a mano, márcalo después:
+
+```
+/plan-done 001-jwt-auth-api story-02
+```
+
+---
+
+## Paso 6 — Archivar
 
 Valida la integridad estructural y, si no hay FAIL, archiva:
 
 ```
 /plan-validate 001-jwt-auth-api
+/plan-retrospective 001-jwt-auth-api
 /plan-archive 001-jwt-auth-api
 ```
 
@@ -173,9 +205,9 @@ Valida la integridad estructural y, si no hay FAIL, archiva:
 
 | | Flujo A (desde epic) | Flujo B (desde cero) |
 |--|---------------------|---------------------|
-| Fuente de los scopes | User stories del epic | Definición manual o inferida por Claude |
+| Fuente de los stories | User stories del epic | Definición manual o inferida por Claude |
 | Pasa por INITIAL | No — va directo a `active/` | Sí — requiere `/plan-expand` |
-| Done criteria | Vienen de los AC + DoD de cada story | Hay que definirlos en cada scope |
+| Done criteria | Vienen de los AC + DoD de cada story | Hay que definirlos en cada story |
 | Trazabilidad al producto | Enlace explícito `Source: US-NNN` | Sin enlace a product backlog |
 
 ---

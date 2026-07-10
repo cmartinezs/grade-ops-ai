@@ -1,6 +1,6 @@
 # 🌱 INITIAL: 005-design-template
 
-> **Status:** Initial → promovido a DEEPENING directamente (scope claro)
+> **Status:** Initial → promovido a DEEPENING directamente (story claro)
 > [← planning/README.md](../../README.md)
 
 ---
@@ -67,7 +67,7 @@ El objetivo es que el template de diseño quede **funcional** — login y dashbo
 
 ## Next Step
 
-- [x] Llenar `01-expansion.md` y scopes en `02-deepening/`
+- [x] Llenar `01-expansion.md` y stories en `02-deepening/`
 - [x] Mover a `planning/active/`
 
 ---

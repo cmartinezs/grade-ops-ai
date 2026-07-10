@@ -1,33 +1,63 @@
-# 📐 Planning Templates
+# Planning: [Planning Name]
 
 > [← planning/README.md](../README.md)
 
-Templates for creating new plannings. Copy this entire `_template/` directory to `planning/NNN-name/` when starting a new planning.
+Short working summary for this planning. Keep this file current as the planning moves through INITIAL, EXPANSION, DEEPENING, and COMPLETED.
 
 ---
 
-## Files in this directory
+## Overview
 
-| File | Purpose |
-|------|---------|
-| [`00-initial.md`](00-initial.md) | INITIAL phase — general intent and context |
-| [`01-expansion.md`](01-expansion.md) | EXPANSION phase — scopes and dependencies |
-| [`02-deepening/scope-NN-name.md`](02-deepening/scope-NN-name.md) | DEEPENING phase — one file per scope |
-| [`TRACEABILITY.md`](TRACEABILITY.md) | Term traceability matrix for this planning |
-| [`pdr-NNN-title.md`](pdr-NNN-title.md) | Project Decision Record template |
+- **Planning ID:** NNN-name
+- **Current status:** Initial
+- **Intent:** [One-sentence intent from 00-initial.md]
+- **Owner:** [human / AI agent / team]
+- **Started:** YYYY-MM-DD
+- **Completed:** *(not completed yet)*
 
 ---
 
-## Usage
+## Key Links
 
-```bash
-# 1. Copy the template to a new planning directory
-cp -r planning/_template/ planning/001-name-of-planning/
+- [Initial context](00-initial.md)
+- [Expansion plan](01-expansion.md)
+- [Story details](02-deepening/)
+- [Traceability](TRACEABILITY.md)
+- [Retrospective raw notes](RETROSPECTIVE-RAW.md)
 
-# 2. Fill 00-initial.md with intent
-# 3. When ready: fill 01-expansion.md and move to active/
-# 4. Create scope files in 02-deepening/ for each scope
-```
+---
+
+## Current State
+
+Summarize where this planning stands and what remains before archive.
+
+- [ ] Initial intent is complete.
+- [ ] Expansion stories are dimensioned.
+- [ ] Stories are DONE or intentionally SKIPPED.
+- [ ] Traceability is complete.
+- [ ] Retrospective is complete.
+
+---
+
+## Retrospective
+
+Complete this section before archiving.
+
+### Outcomes
+
+- [What shipped, changed, or was decided?]
+
+### Deviations
+
+- [What changed from the original scope, and why?]
+
+### Follow-ups
+
+- [Open improvements, deferred work, or next planning candidates.]
+
+### Lessons
+
+- [What should carry forward to future planning work?]
 
 ---
 

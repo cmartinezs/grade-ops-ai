@@ -5,9 +5,9 @@
 
 ---
 
-## Scope Summary
+## Story Summary
 
-| # | Scope | Area | Depends On | Status |
+| # | Story | Area | Depends On | Status |
 |---|-------|------|------------|--------|
 | 01 | development-mission-control | WB | — | DONE |
 | 02 | requirements-blueprint | WB | — | DONE |
@@ -15,7 +15,7 @@
 | 04 | xprize-launch-pad | WB | — | DONE |
 | 05 | contact-open-door | WB | — | DONE |
 
-Todos los scopes son independientes entre sí — tocan páginas distintas. El patrón de scroll-reveal (`IntersectionObserver` + `<script is:inline>`) se establece en scope-01 y los demás lo replican.
+Todos los stories son independientes entre sí — tocan páginas distintas. El patrón de scroll-reveal (`IntersectionObserver` + `<script is:inline>`) se establece en story-01 y los demás lo replican.
 
 ---
 
@@ -23,18 +23,18 @@ Todos los scopes son independientes entre sí — tocan páginas distintas. El p
 
 ```mermaid
 flowchart LR
-    S01[Scope 01: development-mission-control]
-    S02[Scope 02: requirements-blueprint]
-    S03[Scope 03: technicals-engine-room]
-    S04[Scope 04: xprize-launch-pad]
-    S05[Scope 05: contact-open-door]
+    S01[Story 01: development-mission-control]
+    S02[Story 02: requirements-blueprint]
+    S03[Story 03: technicals-engine-room]
+    S04[Story 04: xprize-launch-pad]
+    S05[Story 05: contact-open-door]
     S01 -.->|patrón scroll-reveal| S02
     S01 -.->|patrón scroll-reveal| S03
     S01 -.->|patrón scroll-reveal| S04
     S01 -.->|patrón scroll-reveal| S05
 ```
 
-> Las flechas punteadas son dependencias de patrón (no bloqueantes). Los scopes 02–05 pueden ejecutarse en paralelo entre sí una vez que el patrón de scroll-reveal está establecido por scope-01.
+> Las flechas punteadas son dependencias de patrón (no bloqueantes). Los stories 02–05 pueden ejecutarse en paralelo entre sí una vez que el patrón de scroll-reveal está establecido por story-01.
 
 ---
 
@@ -60,7 +60,7 @@ flowchart LR
 - Stagger: cada card recibe `transition-delay: Nms` inline al renderizar el array en Astro.
 
 ### Idiomas (ES/EN)
-- Cada scope modifica **ambas versiones** de la página (`src/pages/[nombre].astro` ES + `src/pages/en/[nombre].astro` EN).
+- Cada story modifica **ambas versiones** de la página (`src/pages/[nombre].astro` ES + `src/pages/en/[nombre].astro` EN).
 - El contenido nuevo se inline en el archivo (no en i18n) para mantener autonomía por página.
 - Contenido: ES en la página raíz, EN en `en/`.
 

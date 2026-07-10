@@ -62,7 +62,7 @@ Error codes: `RESET_CODE_NOT_FOUND` (404), `RESET_CODE_EXPIRED` (410), `RESET_CO
 
 ## Next Step
 
-- [x] Ejecutar `/plan-expand 007-password-recovery-custom-email` para crear los scopes de implementación.
+- [x] Ejecutar `/plan-expand 007-password-recovery-custom-email` para crear los stories de implementación.
 
 ---
 

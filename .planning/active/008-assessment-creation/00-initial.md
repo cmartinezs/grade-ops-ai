@@ -29,7 +29,7 @@ As a programming instructor, the teacher wants to describe a learning goal and c
 - [ ] `web/` — Intake form (learning goal, topic, level/difficulty, duration, programming language) and draft editing UI
 - [ ] `api/` — Persistence of brief before agent call, draft storage/retrieval, `AgentExecutionLog` records
 - [ ] `agents/` — Assessment Agent execution producing structured draft (title, context, instructions, objectives, deliverables, constraints); regeneration with adjustment notes (P1)
-- [ ] `infra/` — Verify Terraform resources exist for any new/expanded api/agents services touched by this scope
+- [ ] `infra/` — Verify Terraform resources exist for any new/expanded api/agents services touched by this story
 - [ ] `.planning/` — none
 
 ---

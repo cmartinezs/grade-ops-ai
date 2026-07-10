@@ -10,7 +10,7 @@ Core workflows for managing the planning system lifecycle itself.
 
 | Workflow | Description |
 |----------|-------------|
-| [ADVANCE-PLANNING](ADVANCE-PLANNING.md) | Advance a planning from its current scope to the next |
+| [ADVANCE-PLANNING](ADVANCE-PLANNING.md) | Advance a planning from its current story to the next |
 | [CREATE-PLANNING](CREATE-PLANNING.md) | Start a brand new planning from scratch |
 
 ---

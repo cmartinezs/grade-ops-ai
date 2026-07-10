@@ -2,7 +2,7 @@
 
 > [← README](README.md)
 
-Connects the output of a completed scope or planning to the broader SDLC phase outputs and milestone tracking files.
+Connects the output of a completed story or planning to the broader SDLC phase outputs and milestone tracking files.
 
 ---
 

@@ -5,16 +5,16 @@
 
 ---
 
-## Scope Summary
+## Story Summary
 
-| # | Scope | Área | Depends On | Status |
-|---|-------|------|------------|--------|
-| 01 | agents-assessment-agent | AG | — | PENDING |
-| 02 | api-assessment-creation | AP | 01 | PENDING |
-| 03 | web-assessment-creation | WB | 02 | PENDING |
+| # | Story | Área | Depends On | Risk | External Issue | Status |
+|---|-------|------|------------|------|----------------|--------|
+| 01 | agents-assessment-agent | AG | — | M | — | TODO |
+| 02 | api-assessment-creation | AP | 01 | M | — | TODO |
+| 03 | web-assessment-creation | WB | 02 | L | — | TODO |
 
-> `docs/` no requiere scope — US-010, US-011, US-012 ya fueron enriquecidos (DoD, Technical Notes, Dependencies, Complexity) vía `/us-enrich` antes de esta expansión.
-> `infra/` no requiere scope — Cloud Run, Artifact Registry, IAM (incluyendo `aiplatform.user` para la SA de `agents/`) y Secret Manager ya están provisionados en `infra/terraform/environments/demo/` para los tres servicios; esta planning extiende servicios existentes, no introduce uno nuevo.
+> `docs/` no requiere story — US-010, US-011, US-012 ya fueron enriquecidos (DoD, Technical Notes, Dependencies, Complexity) vía `/us-enrich` antes de esta expansión.
+> `infra/` no requiere story — Cloud Run, Artifact Registry, IAM (incluyendo `aiplatform.user` para la SA de `agents/`) y Secret Manager ya están provisionados en `infra/terraform/environments/demo/` para los tres servicios; esta planning extiende servicios existentes, no introduce uno nuevo.
 
 Stories covered: **US-010** Assessment Brief Intake (P0), **US-011** Assessment Draft Generation (P0), **US-012** Assessment Draft Regeneration (P1) — `docs/02-product/user-stories/epic-02-assessment-creation/`.
 
@@ -24,8 +24,8 @@ Stories covered: **US-010** Assessment Brief Intake (P0), **US-011** Assessment 
 
 ```mermaid
 flowchart LR
-    S01[Scope 01: agents-assessment-agent\nAssessment Agent: contrato, prompt, pipeline] --> S02[Scope 02: api-assessment-creation\nBrief intake, draft persistence/versioning, agentclient]
-    S02 --> S03[Scope 03: web-assessment-creation\nIntake form, draft edit, regenerate UI]
+    S01[Story 01: agents-assessment-agent\nAssessment Agent: contrato, prompt, pipeline] --> S02[Story 02: api-assessment-creation\nBrief intake, draft persistence/versioning, agentclient]
+    S02 --> S03[Story 03: web-assessment-creation\nIntake form, draft edit, regenerate UI]
 ```
 
 > **S01** se construye primero porque define el contrato `AssessmentCommand` / `AssessmentResult` que `api/` consume — sin agentes no hay qué integrar.
@@ -47,6 +47,12 @@ flowchart LR
 
 ---
 
+## Linked Child Plannings
+
+*N/A — `grade-ops-ai` is a monorepo of independent sub-repos (`web/`, `api/`, `agents/`, `infra/`), each with its own git history, but none currently maintains a separate `.planning/` workspace; all execution is coordinated from this root planning.*
+
+---
+
 ## Notes
 
 - **Orden de construcción bottom-up:** a diferencia de plannings previos (auth-only), esta es la primera planning que toca `agents/`. El contrato de agente se define primero (S01) para que `api/` (S02) y `web/` (S03) integren contra una interfaz estable.
@@ -55,7 +61,28 @@ flowchart LR
 - **`AgentExecutionLog` por ejecución:** tanto la generación inicial (US-011) como cada regeneración (US-012) producen su propio registro (modelo, costo estimado, status) — son ejecuciones distintas, no se comparten logs.
 - **Convención de formularios:** todo formulario en `web/` usa React Hook Form + Zod (`zodResolver`), nunca validación nativa HTML — regla ya establecida en el proyecto.
 - **Gemini API key server-side only:** la invocación del Assessment Agent ocurre exclusivamente en `agents/`; la key nunca se expone al frontend.
-- **P1 dentro del mismo scope:** US-012 (regeneración, P1) no obtiene un scope propio — comparte capas con US-011 (mismo contrato de agente, mismo modelo de persistencia extendido con versionado, misma UI de draft extendida con la acción de regenerar). Si se requiere despriorizar, las tareas de regeneración pueden diferirse dentro de cada scope sin bloquear US-010/US-011.
+- **P1 dentro del mismo story:** US-012 (regeneración, P1) no obtiene un story propio — comparte capas con US-011 (mismo contrato de agente, mismo modelo de persistencia extendido con versionado, misma UI de draft extendida con la acción de regenerar). Si se requiere despriorizar, las tareas de regeneración pueden diferirse dentro de cada story sin bloquear US-010/US-011.
+
+---
+
+## Risk Register
+
+| ID | Risk | Impact | Likelihood | Mitigation | Owner | Status |
+|----|------|--------|------------|------------|-------|--------|
+| R-01 | Assessment Agent structured output from Gemini is malformed or drifts from the expected schema | M | M | Schema-validate every response in S01 before returning it to `api/`; reject and surface a clear error rather than persisting a malformed draft | agents/ owner | Open |
+| R-02 | Draft versioning model (S02) is under-designed and regeneration silently overwrites a previous version | H | L | DoD explicitly requires previous versions to remain retrievable; cover with an integration test before marking S02 done | api/ owner | Open |
+
+Use `L`, `M`, or `H` for impact and likelihood. Carry high risks into the related story and task files.
+
+---
+
+## External Issue Mapping
+
+| Story | External System | External ID / URL | Sync Notes |
+|-------|-----------------|-------------------|------------|
+| 01 | — | — | — |
+| 02 | — | — | — |
+| 03 | — | — | — |
 
 ---
 

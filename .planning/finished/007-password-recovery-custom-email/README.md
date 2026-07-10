@@ -18,9 +18,9 @@ Reemplazar el flujo de recuperación de contraseña basado en Firebase SDK (`sen
 |---------|------|--------|
 | [00-initial.md](00-initial.md) | INITIAL | ✅ |
 | [01-expansion.md](01-expansion.md) | EXPANSION | ✅ |
-| [02-deepening/scope-01-api-password-reset-service.md](02-deepening/scope-01-api-password-reset-service.md) | DEEPENING | DONE |
-| [02-deepening/scope-02-web-auth-pages.md](02-deepening/scope-02-web-auth-pages.md) | DEEPENING | DONE |
-| [02-deepening/scope-03-infra-smtp-secrets.md](02-deepening/scope-03-infra-smtp-secrets.md) | DEEPENING | DONE |
+| [02-deepening/story-01-api-password-reset-service.md](02-deepening/story-01-api-password-reset-service.md) | DEEPENING | DONE |
+| [02-deepening/story-02-web-auth-pages.md](02-deepening/story-02-web-auth-pages.md) | DEEPENING | DONE |
+| [02-deepening/story-03-infra-smtp-secrets.md](02-deepening/story-03-infra-smtp-secrets.md) | DEEPENING | DONE |
 | [TRACEABILITY.md](TRACEABILITY.md) | — | — |
 
 ---
@@ -29,11 +29,11 @@ Reemplazar el flujo de recuperación de contraseña basado en Firebase SDK (`sen
 
 ### Qué se entregó
 
-3/3 scopes completados. El flujo de recuperación de contraseña pasó de depender de Firebase SDK client-side a ser controlado completamente por el backend: `EmailService` (JavaMail + Thymeleaf), `PasswordResetService` con token UUID propio, dos endpoints públicos en `AuthController`, migración Flyway V5+V6, y secretos SMTP en Terraform. Las páginas `/forgot-password` y `/reset-password` sobrevivieron del plan 006 con su lógica interna reescrita.
+3/3 stories completados. El flujo de recuperación de contraseña pasó de depender de Firebase SDK client-side a ser controlado completamente por el backend: `EmailService` (JavaMail + Thymeleaf), `PasswordResetService` con token UUID propio, dos endpoints públicos en `AuthController`, migración Flyway V5+V6, y secretos SMTP en Terraform. Las páginas `/forgot-password` y `/reset-password` sobrevivieron del plan 006 con su lógica interna reescrita.
 
 ### Lo que estaba ya implementado al iniciar
 
-Al ejecutar los scopes se encontró que la implementación estaba mayoritariamente completa desde sesiones anteriores. Los scopes funcionaron como auditoría y verificación: confirmaron que el código existía, era correcto, y los 65 tests de API + 14 tests de web pasaban. Solo el scope-03 (infra) requirió trabajo nuevo.
+Al ejecutar los stories se encontró que la implementación estaba mayoritariamente completa desde sesiones anteriores. Los stories funcionaron como auditoría y verificación: confirmaron que el código existía, era correcto, y los 65 tests de API + 14 tests de web pasaban. Solo el story-03 (infra) requirió trabajo nuevo.
 
 ### Mejoras sobre la spec encontradas en el código
 

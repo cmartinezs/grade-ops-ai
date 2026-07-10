@@ -5,9 +5,9 @@
 
 ---
 
-## Scope Summary
+## Story Summary
 
-| # | Scope | Area(s) | Priority | Depends On | Status |
+| # | Story | Area(s) | Priority | Depends On | Status |
 |---|-------|---------|----------|------------|--------|
 | 01 | teacher-login | WB, AP | P0 | 06 or 08 | PENDING |
 | 02 | assessment-dashboard | WB, AP | P0 | 01 | PENDING |
@@ -27,19 +27,19 @@
 
 ```mermaid
 flowchart LR
-    S10[Scope 10: firebase-infra] --> S08[Scope 08: self-registration]
+    S10[Story 10: firebase-infra] --> S08[Story 08: self-registration]
     S10 --> S06
-    S11[Scope 11: firebase-auth-adr] --> S06
+    S11[Story 11: firebase-auth-adr] --> S06
     S11 --> S08
     S11 --> S09
-    S08 --> S09[Scope 09: email-verification]
-    S08 --> S01[Scope 01: teacher-login]
-    S06[Scope 06: provisioning] --> S01
-    S01 --> S02[Scope 02: dashboard]
-    S01 --> S04[Scope 04: sign-out/session]
-    S01 --> S07[Scope 07: access-denial]
-    S02 --> S05[Scope 05: empty-state]
-    S06 --> S03[Scope 03: pilot-flag]
+    S08 --> S09[Story 09: email-verification]
+    S08 --> S01[Story 01: teacher-login]
+    S06[Story 06: provisioning] --> S01
+    S01 --> S02[Story 02: dashboard]
+    S01 --> S04[Story 04: sign-out/session]
+    S01 --> S07[Story 07: access-denial]
+    S02 --> S05[Story 05: empty-state]
+    S06 --> S03[Story 03: pilot-flag]
     S08 --> S03
 ```
 
@@ -61,17 +61,17 @@ flowchart LR
 ## Notes
 
 - Identity provider: Firebase Authentication (Google Identity Platform). Email verification uses the native link flow (`email_verified` claim), not a custom OTP.
-- Self-registration (scope-08) and operator provisioning (scope-06) coexist; both produce the same teacher record.
+- Self-registration (story-08) and operator provisioning (story-06) coexist; both produce the same teacher record.
 - No `AgentExecutionLog` requirements in this epic — no AI agents involved (per epic DoD).
-- All 9 source stories are fully enriched (DoD, Technical Notes, Dependencies, Complexity); scopes were synced accordingly — no `[inferred]` markers remain.
-- **Open decisions** (operator access mechanism, pre-verified email for provisioned accounts, session expiry strategy) are closed by the ADR in scope-11 — execute it before scopes 03/04/06/08/09.
-- Scope-10 extracts the Firebase provisioning work that scope-08 previously carried as an external dependency; scope-08 is now WB+AP only.
+- All 9 source stories are fully enriched (DoD, Technical Notes, Dependencies, Complexity); stories were synced accordingly — no `[inferred]` markers remain.
+- **Open decisions** (operator access mechanism, pre-verified email for provisioned accounts, session expiry strategy) are closed by the ADR in story-11 — execute it before stories 03/04/06/08/09.
+- Story-10 extracts the Firebase provisioning work that story-08 previously carried as an external dependency; story-08 is now WB+AP only.
 
 ---
 
 ## Source
 
-Generated from `docs/02-product/user-stories/epic-01-teacher-onboarding/` (9 stories → 9 scopes, no filter) on 2026-06-12.
+Generated from `docs/02-product/user-stories/epic-01-teacher-onboarding/` (9 stories → 9 stories, no filter) on 2026-06-12.
 
 ---
 

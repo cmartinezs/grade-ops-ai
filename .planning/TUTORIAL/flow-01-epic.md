@@ -35,7 +35,7 @@ Verificar que no hay un planning activo para este epic antes de crear uno.
 
 ## Paso 2 — Enriquecer las stories
 
-Las stories actuales son delgadas (Story + AC). Para que los scopes generados tengan done criteria ejecutables, conviene agregar las secciones de ejecución primero.
+Las stories actuales son delgadas (Story + AC). Para que los stories generados tengan done criteria ejecutables, conviene agregar las secciones de ejecución primero.
 
 El argumento puede ser un path o un ID encontrado en el contenido del archivo:
 
@@ -78,7 +78,7 @@ Repetir para cada story del epic:
 /us-enrich US-043
 ```
 
-> **Tip:** puedes saltar este paso. `/plan-from-epic` genera scopes incluso para stories sin DoD — los done criteria quedarán como `[inferred]` y el reporte final listará cuáles necesitan `/us-enrich`.
+> **Tip:** puedes saltar este paso. `/plan-from-epic` genera stories incluso para stories sin DoD — los done criteria quedarán como `[inferred]` y el reporte final listará cuáles necesitan `/us-enrich`.
 
 ---
 
@@ -101,14 +101,14 @@ Claude detecta los 4 archivos de stories en el directorio, lee el README del epi
 
 **`01-expansion.md`** — una fila por story:
 
-| Scope | Story | Area | Depends on |
+| Story ID | Story | Area | Depends on |
 |-------|-------|------|------------|
-| scope-01 | US-040 Rubric-Based Grading Suggestion | AP + AG | — |
-| scope-02 | US-041 Uncertainty Flags | AP + AG | scope-01 |
-| scope-03 | US-042 Teacher Edit of Score | AP + WB | scope-01 |
-| scope-04 | US-043 Reject AI Suggestion | AP + WB | scope-01 |
+| story-01 | US-040 Rubric-Based Grading Suggestion | AP + AG | — |
+| story-02 | US-041 Uncertainty Flags | AP + AG | story-01 |
+| story-03 | US-042 Teacher Edit of Score | AP + WB | story-01 |
+| story-04 | US-043 Reject AI Suggestion | AP + WB | story-01 |
 
-**`02-deepening/scope-01-rubric-based-grading-suggestion.md`** — ejemplo:
+**`02-deepening/story-01-rubric-based-grading-suggestion.md`** — ejemplo:
 
 ```markdown
 ## Objective
@@ -128,7 +128,7 @@ so I can review rather than score from scratch.
 - [ ] UI muestra score sugerido con evidence snippet
 
 ## Tasks
-- [ ] Define implementation tasks  ← a completar con /plan-enrich-story o /plan-scope
+- [ ] Define implementation tasks  ← a completar con /plan-enrich-story o /plan-story
 ```
 
 El planning aparece directamente en `active/` — no pasa por INITIAL porque el epic ya contiene la expansión completa.
@@ -138,39 +138,57 @@ El planning aparece directamente en `active/` — no pasa por INITIAL porque el 
 ```
 ACTIVE
   005-grading-assistance — Grading Assistance (Epic 05)
-    scope-01-rubric-based-grading-suggestion  [TODO]
-    scope-02-uncertainty-flags                [TODO]
-    scope-03-teacher-edit-score               [TODO]
-    scope-04-reject-ai-suggestion             [TODO]
+    story-01-rubric-based-grading-suggestion  [TODO]
+    story-02-uncertainty-flags                [TODO]
+    story-03-teacher-edit-score               [TODO]
+    story-04-reject-ai-suggestion             [TODO]
 ```
 
 ---
 
-## Paso 4 — Ejecutar los scopes
+## Paso 4 — Ejecutar los stories
+
+### Opcional — atomizar antes de ejecutar
+
+Si las tareas de una story son demasiado gruesas para implementarlas directamente:
 
 ```
-/plan-scope 005-grading-assistance scope-01
+/plan-atomize 005-grading-assistance story-01
 ```
 
-Claude lee el scope, verifica los contratos de `docs/`, y ejecuta cada tarea. Al terminar el scope:
+Claude descompone la story en tareas atómicas — un archivo por tarea bajo `02-deepening/story-01-*/`, cada una con diseño técnico, pasos de implementación, tests unitarios y done criteria. Luego puedes ejecutarlas una a una:
 
 ```
-/plan-scope 005-grading-assistance scope-02
-/plan-scope 005-grading-assistance scope-03
-/plan-scope 005-grading-assistance scope-04
+/plan-task 005-grading-assistance story-01 task-01
 ```
 
-Si prefieres ejecutar las tareas a mano y solo marcar el scope como hecho:
+o todas en orden con `/plan-story`, que detecta la story atomizado.
+
+### Ejecutar la story completo
 
 ```
-/plan-done 005-grading-assistance scope-01
+/plan-story 005-grading-assistance story-01
+```
+
+Claude lee la story, verifica los contratos de `docs/`, y ejecuta cada tarea. Al terminar la story:
+
+```
+/plan-story 005-grading-assistance story-02
+/plan-story 005-grading-assistance story-03
+/plan-story 005-grading-assistance story-04
+```
+
+Si prefieres ejecutar las tareas a mano y solo marcar la story como hecho:
+
+```
+/plan-done 005-grading-assistance story-01
 ```
 
 ---
 
 ## Paso 5 — Archivar
 
-Cuando todos los scopes están en `DONE`, valida la integridad estructural antes de cerrar:
+Cuando todos los stories están en `DONE`, valida la integridad estructural antes de cerrar:
 
 ```
 /plan-validate 005-grading-assistance
@@ -179,10 +197,11 @@ Cuando todos los scopes están en `DONE`, valida la integridad estructural antes
 Si el reporte sale limpio (sin FAIL), archiva:
 
 ```
+/plan-retrospective 005-grading-assistance
 /plan-archive 005-grading-assistance
 ```
 
-Claude audita (todos los scopes DONE, tareas con output, TRACEABILITY lleno, sección Retrospective presente) y mueve el planning a `finished/`.
+Claude genera la retrospectiva desde `RETROSPECTIVE-RAW.md`, audita (todos los stories DONE, tareas con output, TRACEABILITY lleno, sección Retrospective completada) y mueve el planning a `finished/`.
 
 ---
 
@@ -194,19 +213,19 @@ Claude audita (todos los scopes DONE, tareas con output, TRACEABILITY lleno, sec
 /plan-from-epic 005 docs/02-product/user-stories/epic-05-grading-assistance/ --filter priority=P0
 ```
 
-Las stories P1/P2 quedan en el epic como backlog, sin scope en el planning.
+Las stories P1/P2 quedan en el epic como backlog, sin story en el planning.
 
 ---
 
 ## Variante: story aparece demasiado grande
 
-Si durante la ejecución scope-01 resulta ser demasiado amplio:
+Si durante la ejecución story-01 resulta ser demasiado amplio:
 
 ```
-/plan-split-story 005-grading-assistance scope-01
+/plan-split-story 005-grading-assistance story-01
 ```
 
-Ver [Flujo D](flow-04-mid-execution.md#scope-demasiado-amplio) para el detalle completo.
+Ver [Flujo D](flow-04-mid-execution.md#story-demasiado-amplio) para el detalle completo.
 
 ---
 

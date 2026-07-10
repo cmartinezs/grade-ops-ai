@@ -1,14 +1,14 @@
 # 🚀 EXPANSION: 006-password-recovery
 
 > **Status:** SUPERSEDED — Reemplazado por `007-password-recovery-custom-email`
-> Los scopes están DONE pero la implementación fue reemplazada: Firebase `sendPasswordResetEmail` descartado a favor de email service propio en `api/`. Ver `007-password-recovery-custom-email`.
+> Los stories están DONE pero la implementación fue reemplazada: Firebase `sendPasswordResetEmail` descartado a favor de email service propio en `api/`. Ver `007-password-recovery-custom-email`.
 > [← planning/README.md](../../README.md)
 
 ---
 
-## Scope Summary
+## Story Summary
 
-| # | Scope | SDLC Phase(s) | Depends On | Status |
+| # | Story | SDLC Phase(s) | Depends On | Status |
 |---|-------|--------------|------------|--------|
 | 01 | Página `/forgot-password` y enlace desde `/login` | D / S | — | DONE |
 | 02 | Documentar US-012 como implementada | DO | 01 | DONE |
@@ -20,8 +20,8 @@
 
 ```mermaid
 flowchart LR
-    S01[Scope 01: forgot-password page] --> S02[Scope 02: US-012 DoD]
-    S01 --> S03[Scope 03: reset-password page]
+    S01[Story 01: forgot-password page] --> S02[Story 02: US-012 DoD]
+    S01 --> S03[Story 03: reset-password page]
 ```
 
 ---

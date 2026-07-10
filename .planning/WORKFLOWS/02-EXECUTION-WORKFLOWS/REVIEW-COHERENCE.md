@@ -26,7 +26,7 @@ flowchart TD
 
 ## Steps
 
-1. List all documents modified in the current scope.
+1. List all documents modified in the current story.
 2. For each modified document: extract all links and cross-references.
 3. Verify each link resolves to an existing file at the expected path.
 4. Execute `[VALIDATE-GLOSSARY]` — check terminology matches the project glossary.

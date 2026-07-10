@@ -5,9 +5,9 @@
 
 ---
 
-## Scope Summary
+## Story Summary
 
-| # | Scope | Area(s) | Priority | Depends On | Status |
+| # | Story | Area(s) | Priority | Depends On | Status |
 |---|-------|---------|----------|------------|--------|
 | 01 | infra-google-provider | IN | P0 | — | DONE |
 | 02 | api-teacher-upsert | AP | P0 | 01 | DONE |
@@ -19,8 +19,8 @@
 
 ```mermaid
 flowchart LR
-    S01[Scope 01: infra-google-provider] --> S02[Scope 02: api-teacher-upsert]
-    S01 --> S03[Scope 03: web-google-sign-in]
+    S01[Story 01: infra-google-provider] --> S02[Story 02: api-teacher-upsert]
+    S01 --> S03[Story 03: web-google-sign-in]
     S02 --> S03
 ```
 
@@ -41,7 +41,7 @@ flowchart LR
 
 ## Notes
 
-- The Firebase Google provider is already enabled in the Firebase console; scope-01 is the IaC alignment to match that state in Terraform.
+- The Firebase Google provider is already enabled in the Firebase console; story-01 is the IaC alignment to match that state in Terraform.
 - The API token verification path is unchanged — Google ID tokens are verified identically to email/password tokens via Firebase Admin SDK / JWKS. Only the teacher upsert logic is new.
 - Google-authenticated users have `emailVerified: true` by default; the `AuthGuard` check must account for this to avoid sending Google users to `/verify-email`.
 - "Sign in with Google" appears **alongside** (not replacing) the email/password form on both `/login` and `/register`.

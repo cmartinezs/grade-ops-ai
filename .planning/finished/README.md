@@ -8,7 +8,7 @@ Plannings that have reached COMPLETED status. Archived and read-only.
 
 ## Completed
 
-| Planning | Completed | Intent | Scopes |
+| Planning | Completed | Intent | Stories |
 |----------|-----------|--------|--------|
 | [001-teacher-onboarding](001-teacher-onboarding/README.md) | 2026-06-13 | Teacher Onboarding and Workspace — registration, email verification, sign-in/out, dashboard, provisioning, isolation, pilot flagging | 11 / 11 DONE |
 | [002-google-sign-in](002-google-sign-in/README.md) | 2026-06-15 | Google OAuth sign-in for teachers — infra IDP config, API upsert, web button + AuthGuard bypass | 3 / 3 DONE |

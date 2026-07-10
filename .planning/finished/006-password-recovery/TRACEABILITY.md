@@ -25,12 +25,12 @@ Term and concept traceability for this planning. For global consolidated view, s
 
 | Term / Concept | AG | AP | DO | IN | WB | W | Notes |
 |---------------|----|----|----|----|----|---|-------|
-| `sendPasswordResetEmail` (Firebase Auth SDK) | N/A | N/A | N/A | N/A | ⚠️ | N/A | Implementado en scope-01; reemplazado por 007 con `POST /api/v1/auth/forgot-password` |
+| `sendPasswordResetEmail` (Firebase Auth SDK) | N/A | N/A | N/A | N/A | ⚠️ | N/A | Implementado en story-01; reemplazado por 007 con `POST /api/v1/auth/forgot-password` |
 | `/forgot-password` (ruta web) | N/A | N/A | ✅ | N/A | ✅ | ✅ | Ruta existente; lógica interna reemplazada por 007 |
 | `/reset-password` (ruta web custom handler) | N/A | N/A | ✅ | N/A | ✅ | ✅ | Ruta existente; lógica interna reemplazada por 007 |
-| `verifyPasswordResetCode` / `confirmPasswordReset` | N/A | N/A | N/A | N/A | ⚠️ | N/A | Implementados en scope-03; reemplazados por 007 |
+| `verifyPasswordResetCode` / `confirmPasswordReset` | N/A | N/A | N/A | N/A | ⚠️ | N/A | Implementados en story-03; reemplazados por 007 |
 | Mensaje neutral anti-enumeración | N/A | N/A | ✅ | N/A | ✅ | ✅ | Patrón mantenido en 007: éxito y usuario-no-encontrado muestran el mismo mensaje |
-| US-012 (password recovery) | N/A | N/A | ✅ | N/A | N/A | ✅ | DoD marcado en scope-02; Technical Notes actualizadas en scope-03 |
+| US-012 (password recovery) | N/A | N/A | ✅ | N/A | N/A | ✅ | DoD marcado en story-02; Technical Notes actualizadas en story-03 |
 | `FieldWithHelper` + RHF + Zod (auth forms) | N/A | N/A | N/A | N/A | ✅ | ✅ | Patrón establecido en este planning; heredado por 007 |
 
 ---

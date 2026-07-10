@@ -13,7 +13,9 @@ Guías por escenario real. Cada archivo cubre una situación concreta de princip
 | Quiero planificar la implementación de un epic | [→ Flujo A](flow-01-epic.md) |
 | Tengo trabajo transversal que no pertenece a ningún epic | [→ Flujo B](flow-02-general.md) |
 | Quiero refinar el backlog sin ejecutar nada todavía | [→ Flujo C](flow-03-backlog.md) |
+| Necesito definir smoke tests del proyecto antes del code review | [→ Flujo G](flow-06-smoke-config.md) |
 | El planning ya está activo y necesito ajustarlo | [→ Flujo D](flow-04-mid-execution.md) |
+| Quiero ejecutar un planning de punta a punta sin intervención | [→ Flujo E](flow-05-autonomous.md) |
 | Solo quiero la referencia rápida de comandos | [→ Referencia](reference.md) |
 
 ---
@@ -35,7 +37,7 @@ docs/02-product/user-stories/       ← PRODUCTO (qué y por qué)
     00-initial.md
     01-expansion.md                 ← 1 fila por user story
     02-deepening/
-      scope-NN-story-name.md        ← done criteria = AC + DoD de la story
+      story-NN-story-name.md        ← done criteria = AC + DoD de la story
 ```
 
 ---
@@ -54,7 +56,7 @@ docs/02-product/user-stories/       ← PRODUCTO (qué y por qué)
 
 | Comando | Argumento | Qué hace |
 |---------|-----------|----------|
-| `/plan-from-epic` | `NNN path/to/container` | Genera planning activo completo (1 story = 1 scope) |
+| `/plan-from-epic` | `NNN path/to/container` | Genera planning activo completo (1 story = 1 user story) |
 
 Los comandos leen la estructura que encuentran y se adaptan — no requieren una jerarquía de carpetas específica ni un formato de ID fijo. Para GradeOps AI el container es `docs/02-product/user-stories/epic-NN-slug/`; en otro proyecto podría ser `features/checkout/` o `requirements.md`.
 
@@ -67,18 +69,33 @@ Los comandos leen la estructura que encuentran y se adaptan — no requieren una
 | `/plan-new NNN-slug @path.md` | Crea planning en INITIAL desde documento |
 | `/plan-status` | Estado de todos los plannings |
 | `/plan-expand NNN-slug` | INITIAL → EXPANSION (solo flujo general) |
-| `/plan-scope NNN-slug scope-NN` | Ejecuta todas las tareas de un scope |
-| `/plan-done NNN-slug scope-NN` | Marca scope completo y avanza |
-| `/plan-done NNN-slug scope-NN task-N` | Marca una tarea específica |
+| `/plan-git-config [--base-branch <branch>]` | Configura la rama base git (para proyectos ya inicializados) |
+| `/plan-atomize NNN-slug story-NN` | Descompone una story en tareas atómicas (diseño + implementación + verificación) |
+| `/plan-task NNN-slug story-NN task-NN` | Ejecuta una tarea en rama propia, valida, espera code review humano, abre PR hacia la rama de story y recuerda limpiar la rama local tras el merge |
+| `/plan-task-validate NNN-slug [story-NN]` | Audita tareas atómicas contra el checklist de atomicidad |
+| `/plan-story NNN-slug story-NN` | Crea rama de story desde la rama base, coordina PRs de task, limpia ramas locales mergeadas y abre PR final de story |
+| `/plan-done NNN-slug story-NN` | Marca story completo tras revisión humana y PRs de task mergeados; recuerda limpiar la rama local de story tras el merge final |
+| `/plan-done NNN-slug story-NN task-N` | Marca una tarea específica |
+| `/plan-edge-case NNN-slug -- nota` | Registra un evento inesperado para la retrospectiva |
+| `/plan-retrospective NNN-slug` | Genera la retrospectiva final |
 | `/plan-archive NNN-slug` | Audita y archiva a `finished/` |
 
 **Enriquecimiento del planning (plannings ACTIVE):**
 
 | Comando | Qué hace |
 |---------|----------|
-| `/plan-enrich-epic NNN-slug` | Agrega scopes nuevos al planning |
-| `/plan-enrich-story NNN-slug scope-NN` | Profundiza un scope incompleto o ambiguo |
-| `/plan-split-story NNN-slug scope-NN` | Divide un scope demasiado amplio |
+| `/plan-enrich-epic NNN-slug` | Agrega stories nuevos al planning |
+| `/plan-enrich-story NNN-slug story-NN` | Profundiza una story incompleto o ambiguo |
+| `/plan-split-story NNN-slug story-NN` | Divide una story demasiado amplio |
+
+**Pipeline autónomo con agentes:**
+
+| Comando | Qué hace |
+|---------|----------|
+| `/plan-run [NNN-slug\|"descripción"]` | Ejecuta el ciclo completo — detecta estado, confirma una vez, delega a agentes |
+| `/plan-agent-plan NNN-slug` | Agente de planificación: crea y expande sin interrupciones |
+| `/plan-agent-execute NNN-slug` | Agente de ejecución: atomiza y ejecuta stories en paralelo |
+| `/plan-agent-validate NNN-slug` | Agente de cierre: valida, marca done y archiva |
 
 ---
 
