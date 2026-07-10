@@ -81,9 +81,9 @@ Implement the fixed pipeline (validate command → load data → build envelope 
 3. Create `application/exception/AssessmentAgentException.java` with the `Reason` enum and the `log` accessor described above.
 4. Create `application/result/AgentExecutionLogPayload.java` and `AssessmentExecutionOutcome.java` (both `@Builder`).
 5. Create `application/orchestrator/AssessmentAgentOrchestrator.java`:
-   - `validate(AssessmentCommand)` — reject blank `learningGoal`/`topic`/`level`/`duration`/`language`, and reject a mismatched `adjustmentNotes`/`previousDraftId` pairing; throw `AssessmentAgentException(INVALID_COMMAND, ...)`.
+   - `validate(AssessmentCommand)` — reject blank `learningGoal`/`topic`/`level`/`duration`/`language`, and reject an inconsistent regeneration triple: `adjustmentNotes`, `previousDraftId`, and `previousDraft` must be all present or all absent — any partial combination is `INVALID_COMMAND` (this is stricter than the original two-field pairing check from task-01, extended when `previousDraft` was added to the command post-hoc — see task-01-contracts.md and `RETROSPECTIVE-RAW.md`); throw `AssessmentAgentException(INVALID_COMMAND, ...)`.
    - Load and cache the parsed `assessment-generation.st` template once (constructor or `@PostConstruct`); read its header-comment version string for `promptVersion`.
-   - `buildEnvelope(AssessmentCommand)` — render the cached template.
+   - `buildEnvelope(AssessmentCommand)` — render the cached template, mapping every command field to its matching template attribute 1:1: `learningGoal`, `topic`, `level`, `duration`, `language` always; `adjustmentNotes` and `previousDraft` only when present (matches the template's `<if(adjustmentNotes)>` branch — `previousDraftId` is not a template attribute, it never reaches the prompt, it stays in `AgentExecutionLogPayload` for correlation only).
    - Call `assessmentGenerationPort.generate(renderedPrompt)`.
    - `validateOutput(AssessmentResult)` — reject if any required field is blank/empty; throw `AssessmentAgentException(MALFORMED_OUTPUT, ...)` (with a `FAILED` log payload attached) otherwise.
    - Build the `COMPLETED` `AgentExecutionLogPayload` (hash prompt/output, carry tokens/cost/model from the port response, generate a fresh `agentExecutionId`, record `startedAt`/`finishedAt`).
@@ -124,7 +124,7 @@ N/A — no database or ORM involved.
 ## Done Criteria
 
 - [ ] `GenerateAssessmentDraftHandler.execute(AssessmentCommand)` returns a fully-populated `AssessmentExecutionOutcome` for a valid command, verified once against a real Gemini call.
-- [ ] Invalid `AssessmentCommand` (blank required field, or mismatched `adjustmentNotes`/`previousDraftId`) is rejected before any Gemini call.
+- [ ] Invalid `AssessmentCommand` (blank required field, or an incomplete `adjustmentNotes`/`previousDraftId`/`previousDraft` regeneration triple) is rejected before any Gemini call.
 - [ ] Malformed/incomplete Gemini output is rejected with `AssessmentAgentException(MALFORMED_OUTPUT)`, never returned as a partial result.
 - [ ] `AgentExecutionLogPayload` carries every field listed in the Interfaces/contracts section above, for both the success and failure paths.
 - [ ] Regeneration (`adjustmentNotes` present) renders a visibly different prompt than initial generation.

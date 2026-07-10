@@ -6,19 +6,23 @@ import lombok.Builder;
  * Input contract for the Assessment Agent (US-010/US-011/US-012).
  *
  * <p>Carries the teacher's brief fields for initial draft generation (US-011) and,
- * when {@code adjustmentNotes}/{@code previousDraftId} are present, the additional
- * input for draft regeneration (US-012) — one shared contract instead of a second
+ * when {@code adjustmentNotes}/{@code previousDraftId}/{@code previousDraft} are present, the
+ * additional input for draft regeneration (US-012) — one shared contract instead of a second
  * command/agent. The agent never persists this data; persistence is {@code api/}'s
- * responsibility.
+ * responsibility. Because this artifact never persists anything and never calls back into
+ * {@code api/}, it cannot resolve {@code previousDraftId} into content on its own —
+ * {@code api/} must resolve the ID on its side and send the actual prior-draft content as
+ * {@code previousDraft}; {@code previousDraftId} exists purely for correlation/audit
+ * (e.g. {@code AgentExecutionLogPayload}), not for content lookup.
  *
  * <p>This record does not validate its own fields. It is the target of Jackson
  * deserialization at the internal REST endpoint, so a missing or inconsistent field is
- * expected malformed input, not a caller bug. {@code AssessmentAgentService.validate}
- * is the single place that rejects a blank required field or a mismatched
- * {@code adjustmentNotes}/{@code previousDraftId} pairing, with
- * {@code AssessmentAgentException(INVALID_COMMAND)} — the project's own exception type,
- * per {@code 12-excepciones-y-manejo-de-errores.md} — rather than a Java API exception
- * thrown from this constructor.
+ * expected malformed input, not a caller bug. {@code AssessmentAgentOrchestrator.validate}
+ * is the single place that rejects a blank required field or an inconsistent regeneration
+ * triple ({@code adjustmentNotes}/{@code previousDraftId}/{@code previousDraft} must all be
+ * present together or all absent), with {@code AssessmentAgentException(INVALID_COMMAND)} —
+ * the project's own exception type, per {@code 12-excepciones-y-manejo-de-errores.md} —
+ * rather than a Java API exception thrown from this constructor.
  *
  * @param learningGoal what the teacher wants to evaluate
  * @param topic programming topic or skill area
@@ -26,7 +30,10 @@ import lombok.Builder;
  * @param duration expected assessment duration
  * @param language programming language or pseudocode
  * @param adjustmentNotes free-text regeneration instructions; {@code null} for initial generation
- * @param previousDraftId identifier of the draft version being regenerated; {@code null} for initial generation
+ * @param previousDraftId identifier of the draft version being regenerated, for correlation/audit
+ *     only; {@code null} for initial generation
+ * @param previousDraft rendered content/summary of the prior draft being regenerated, sent by
+ *     {@code api/} (which owns the actual persisted draft); {@code null} for initial generation
  */
 @Builder
 public record AssessmentCommand(
@@ -36,5 +43,6 @@ public record AssessmentCommand(
         String duration,
         String language,
         String adjustmentNotes,
-        String previousDraftId) {
+        String previousDraftId,
+        String previousDraft) {
 }

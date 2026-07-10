@@ -36,6 +36,7 @@ class AssessmentCommandTest {
         // then — 4. campos de regeneración ausentes en generación inicial
         assertThat(command.adjustmentNotes()).isNull();
         assertThat(command.previousDraftId()).isNull();
+        assertThat(command.previousDraft()).isNull();
     }
 
     @Test
@@ -48,7 +49,8 @@ class AssessmentCommandTest {
                 .duration("60 minutes")
                 .language("Java")
                 .adjustmentNotes("Make it shorter")
-                .previousDraftId("draft-123");
+                .previousDraftId("draft-123")
+                .previousDraft("Title: Loop exercise. Objectives: use for loops.");
 
         // when
         AssessmentCommand command = builder.build();
@@ -63,6 +65,7 @@ class AssessmentCommandTest {
         assertThat(command.language()).isNotNull();
         assertThat(command.adjustmentNotes()).isNotNull();
         assertThat(command.previousDraftId()).isNotNull();
+        assertThat(command.previousDraft()).isNotNull();
         // then — 3. valores esperados
         assertThat(command.learningGoal()).isEqualTo("Evaluate loops");
         assertThat(command.topic()).isEqualTo("Java loops");
@@ -71,12 +74,14 @@ class AssessmentCommandTest {
         assertThat(command.language()).isEqualTo("Java");
         assertThat(command.adjustmentNotes()).isEqualTo("Make it shorter");
         assertThat(command.previousDraftId()).isEqualTo("draft-123");
+        assertThat(command.previousDraft()).isEqualTo("Title: Loop exercise. Objectives: use for loops.");
     }
 
     @Test
-    void shouldConstructCommandWithoutValidatingRequiredFieldsOrAdjustmentPairing() {
-        // given — a null required field and a mismatched adjustment pairing are both
-        // malformed-input concerns for AssessmentAgentService.validate (task-03), not this record.
+    void shouldConstructCommandWithoutValidatingRequiredFieldsOrRegenerationTripleConsistency() {
+        // given — a null required field and an incomplete regeneration triple (adjustmentNotes
+        // without previousDraftId/previousDraft) are both malformed-input concerns for
+        // AssessmentAgentOrchestrator.validate (task-03), not this record.
         AssessmentCommand.AssessmentCommandBuilder builder = AssessmentCommand.builder()
                 .learningGoal(null)
                 .topic("Java loops")
@@ -98,5 +103,6 @@ class AssessmentCommandTest {
         assertThat(command.language()).isEqualTo("Java");
         assertThat(command.adjustmentNotes()).isEqualTo("Make it shorter");
         assertThat(command.previousDraftId()).isNull();
+        assertThat(command.previousDraft()).isNull();
     }
 }
