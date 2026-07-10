@@ -19,7 +19,7 @@ The full implementation detail (contract, prompt, pipeline, tasks, Done Criteria
 
 | # | Checkpoint | Status |
 |---|-----------|--------|
-| 1 | `agents/.planning/001-assessment-creation` reaches EXPANSION/DEEPENING with a defined `AssessmentCommand`/`AssessmentResult` contract | ✅ DONE (2026-07-09) |
+| 1 | `agents/.planning/001-assessment-creation` reaches EXPANSION/DEEPENING with a defined `AssessmentCommand`/`AssessmentResult` contract | ✅ DONE (2026-07-09) — amended 2026-07-10, `AssessmentCommand` gained a `previousDraft` field; see Inconsistencies Found #2 |
 | 2 | Child planning's Story 01 (`assessment-agent`) reaches DONE — internal endpoint is live and testable | TODO |
 | 3 | Contract shape confirmed stable enough for `api/.planning/003-assessment-creation` to integration-test against it | TODO |
 
@@ -40,6 +40,7 @@ The full implementation detail (contract, prompt, pipeline, tasks, Done Criteria
 | # | Description | Docs Involved | Status | Resolution Path |
 |---|-------------|--------------|--------|----------------|
 | 1 | This story originally contained the full agent implementation task breakdown (contract, prompt, pipeline — 7 tasks), duplicating what should live in a child planning. Corrected 2026-07-09: content moved to `agents/.planning/active/001-assessment-creation/02-deepening/story-01-assessment-agent.md`; this file rewritten as a coordination story. | This file (previous version), `agents/.planning/active/001-assessment-creation/` | RESOLVED | Content moved, not duplicated; this file now only tracks child planning status |
+| 2 | `agents/`'s `AssessmentCommand` contract (checkpoint 1, marked DONE 2026-07-09) changed on 2026-07-10: gained a `previousDraft` (content) field, discovered during that child planning's task-02 code review — `previousDraftId` alone cannot supply the regeneration prompt's content since `agents/` never persists data or calls back into `api/`. `api/.planning/003-assessment-creation`'s task-05/task-08 depended on the pre-change 7-field shape. | `agents/.planning/active/001-assessment-creation/02-deepening/story-01-assessment-agent/task-01-contracts.md`, `api/.planning/active/003-assessment-creation/02-deepening/story-01-assessment-creation-persistence/task-05-agentclient.md`, `task-08-draft-regeneration-endpoint.md` | RESOLVED | `api/`'s task-05 and task-08 updated 2026-07-10 to account for the 8-field contract before either task was implemented — see `api/`'s story Inconsistencies Found #1 |
 
 ---
 
