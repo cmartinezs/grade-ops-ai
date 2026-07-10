@@ -16,6 +16,7 @@ Planning commands always operate on the current working directory's `./.planning
 - If the current directory has no `./.planning/`, run `/plan-init` in the current directory before creating or running a planning.
 - In a monorepo, the parent workspace and each child artifact workspace are separate planning systems when they each have their own `.planning/`.
 - Running `/plan-new`, `/plan-from-epic`, `/plan-agent-plan`, or `/plan-expand` inside a child artifact must create or modify only that child artifact's `.planning/`.
+- When a parent planning creates or coordinates child plannings under git, each child planning must run from its own sibling worktree. Create the worktree with the branch that belongs to that child planning: `git worktree add ../<worktree-prefix> <branch>` for an existing branch, or `git worktree add -b <branch> ../<worktree-prefix> <base_branch>` for a new branch.
 
 ### Layered git branch cleanup
 
@@ -27,16 +28,17 @@ When git execution is enabled, the planning system uses a layered branch model:
 - After the final story PR is merged into `git.base_branch`, delete the local story branch from an updated base branch checkout with `git branch -d <story-branch>`.
 - Do not force-delete these branches. If `git branch -d` refuses, confirm the PR merge state first.
 - Remote branch deletion remains a PR/repository policy action.
+- Child planning branches created in a dedicated worktree preserve the worktree prefix before the story/task name: `<worktree-prefix>/story-NN-<slug>` and `<worktree-prefix>/story-NN-<slug>/task-NN-<slug>`.
 
 ### Monorepo parent/child coordination
 
 When a parent monorepo planning affects child artifacts that have their own `.planning/` workspaces:
 
 - The parent planning owns parent-scope work: orchestration, cross-artifact decisions, integration sequencing, shared docs, releases, and synchronization.
-- Each child artifact owns its implementation work in a child planning under `<child>/.planning/`.
-- The parent planning links to child plannings in `01-expansion.md → Linked Child Plannings`.
+- Each child artifact owns its implementation work in a child planning under that child's own worktree and `./.planning/`.
+- The parent planning links to child plannings in `01-expansion.md → Linked Child Plannings`, including the child worktree path and prefixed branch.
 - The parent must not duplicate child implementation stories or tasks. It should contain coordination stories that track child planning status and integration checkpoints.
-- If a child artifact lacks `.planning/`, initialize it there with `/plan-init` before expanding the parent planning.
+- If a child artifact lacks `.planning/`, initialize it from that child worktree with `/plan-init` before expanding the parent planning.
 
 ---
 

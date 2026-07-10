@@ -38,11 +38,11 @@ flowchart LR
 
 ## Linked Child Plannings
 
-Use this section when a parent monorepo planning coordinates work owned by child artifact workspaces. Child implementation must live in each child's own `.planning/`; the parent keeps only synchronization and parent-scope work.
+Use this section when a parent monorepo planning coordinates work owned by child artifact workspaces. Child implementation must live in each child's own worktree and `./.planning/`; the parent keeps only synchronization and parent-scope work. Under git, preserve the child worktree prefix before the story/task branch name, for example `<worktree-prefix>/story-NN-<slug>`.
 
-| Child Workspace | Child Planning | Ownership | Sync Notes | Status |
-|-----------------|----------------|-----------|------------|--------|
-| — | — | — | — | — |
+| Child Worktree | Child Branch | Child Planning | Ownership | Sync Notes | Status |
+|----------------|--------------|----------------|-----------|------------|--------|
+| — | — | — | — | — | — |
 
 ---
 

@@ -124,12 +124,10 @@ When committing changes for a monorepo root planning that coordinates child plan
 
 ### Git worktrees for child plannings
 
-Execute a child planning's implementation in its own git worktree, never directly in this checkout:
+Follow the plugin's generic worktree-per-child-planning convention (`.planning/GUIDE.md § Workspace Boundary` / `§ Monorepo parent/child coordination`, plugin ≥ 3.6.0). Project-specific worktree names for this repo's child artifacts:
 
-- `git worktree add ../gradeops-api <branch>` for a child planning owned by `api/`
-- `git worktree add ../gradeops-agents <branch>` for a child planning owned by `agents/`
-
-Follow the plugin's full standard git process inside that worktree (layered story/task branches, task PRs into the story branch, story PR into `git.base_branch`, local branch cleanup after each merge — see `.planning/GUIDE.md § Layered git branch cleanup`). Since `api/`, `agents/`, and the root currently share a single git history (no independent `.git` per subdirectory), branch names must be prefixed with the worktree's own name — `gradeops-api`/`gradeops-agents` — **before** the rest of the branch name the plugin would otherwise generate (e.g. `gradeops-api/story-01-assessment-creation-persistence`, `gradeops-agents/story-01-assessment-agent`), so that story/task branches from different child workspaces never collide.
+- `../gradeops-api` for a child planning owned by `api/`
+- `../gradeops-agents` for a child planning owned by `agents/`
 
 ## Google Cloud targets
 

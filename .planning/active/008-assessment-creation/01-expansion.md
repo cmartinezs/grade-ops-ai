@@ -51,12 +51,12 @@ flowchart LR
 
 ## Linked Child Plannings
 
-Use this section when a parent monorepo planning coordinates work owned by child artifact workspaces. Child implementation must live in each child's own `.planning/`; the parent keeps only synchronization and parent-scope work.
+Use this section when a parent monorepo planning coordinates work owned by child artifact workspaces. Child implementation must live in each child's own worktree and `./.planning/`; the parent keeps only synchronization and parent-scope work. Under git, preserve the child worktree prefix before the story/task branch name, for example `gradeops-agents/story-01-assessment-agent`.
 
-| Child Workspace | Child Planning | Ownership | Sync Notes | Status |
-|-----------------|----------------|-----------|------------|--------|
-| `agents/` | [001-assessment-creation](../../../agents/.planning/active/001-assessment-creation/README.md) | child | Defines `AssessmentCommand`/`AssessmentResult` contract and the internal endpoint `api/` calls via `agentclient`. Must reach a stable contract before `api/`'s child planning can integration-test against a real agent. | TODO |
-| `api/` | [003-assessment-creation](../../../api/.planning/active/003-assessment-creation/README.md) | child | Persists brief/draft, calls `agents/` via `agentclient`, exposes the endpoints `web/` (Story 03) consumes. Depends on the `agents/` child planning's contract. | TODO |
+| Child Worktree | Child Branch | Child Planning | Ownership | Sync Notes | Status |
+|----------------|--------------|----------------|-----------|------------|--------|
+| `../gradeops-agents` (`agents/`) | `gradeops-agents/story-01-assessment-agent` | [001-assessment-creation](../../../agents/.planning/active/001-assessment-creation/README.md) | child | Defines `AssessmentCommand`/`AssessmentResult` contract and the internal endpoint `api/` calls via `agentclient`. Must reach a stable contract before `api/`'s child planning can integration-test against a real agent. | TODO |
+| `../gradeops-api` (`api/`) | `gradeops-api/story-01-assessment-creation-persistence` | [003-assessment-creation](../../../api/.planning/active/003-assessment-creation/README.md) | child | Persists brief/draft, calls `agents/` via `agentclient`, exposes the endpoints `web/` (Story 03) consumes. Depends on the `agents/` child planning's contract. | TODO |
 
 `agents/.planning/` did not exist before this correction — it was initialized via `/plan-init` (area `AG` → `src/`) specifically so this work could be owned there instead of duplicated in this root planning. `api/.planning/` already existed (with prior plannings `001-hexagonal-refactor`, `002-drop-old-password-recovery-requests`); `003-assessment-creation` is the next planning in that workspace's own sequence.
 
