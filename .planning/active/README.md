@@ -8,7 +8,17 @@ Plannings currently in EXPANSION or DEEPENING phase.
 
 ## In Progress
 
-_None._
+### [008-assessment-creation](008-assessment-creation/01-expansion.md)
+
+Enable the first step of the open-assessment pipeline: turning a teacher's learning intent into a structured, AI-generated assessment draft that is editable and fully logged.
+
+Stories: US-010 Assessment Brief Intake (P0), US-011 Assessment Draft Generation (P0), US-012 Assessment Draft Regeneration (P1) — `docs/02-product/user-stories/epic-02-assessment-creation/`.
+
+| # | Scope | Área | Status |
+|---|-------|------|--------|
+| 01 | [agents-assessment-agent](008-assessment-creation/02-deepening/scope-01-agents-assessment-agent.md) | AG | TODO |
+| 02 | [api-assessment-creation](008-assessment-creation/02-deepening/scope-02-api-assessment-creation.md) | AP | TODO |
+| 03 | [web-assessment-creation](008-assessment-creation/02-deepening/scope-03-web-assessment-creation.md) | WB | TODO |
 
 ---
 

@@ -26,9 +26,13 @@ Central directory for all project plannings.
 
 > **In progress** (EXPANSION / DEEPENING): [`active/`](active/README.md) · **Completed**: [`finished/`](finished/README.md)
 
-### 🚧 In Progress → see [`active/README.md`](active/README.md)
+### 🆕 Initial
 
 _None._
+
+### 🚧 In Progress → see [`active/README.md`](active/README.md)
+
+- [008-assessment-creation](active/008-assessment-creation/01-expansion.md) — Enable the first step of the open-assessment pipeline: turning a teacher's learning intent into a structured, AI-generated assessment draft that is editable and fully logged.
 
 ### ✅ Completed → see [`finished/README.md`](finished/README.md)
 
