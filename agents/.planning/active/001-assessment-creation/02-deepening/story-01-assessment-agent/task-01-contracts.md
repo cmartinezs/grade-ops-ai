@@ -1,6 +1,6 @@
 # ⚛️ TASK 01 — AssessmentCommand / AssessmentResult contracts
 
-> **Status:** TODO
+> **Status:** DONE
 > **Workflow:** GENERATE-DOCUMENT
 > **Depends On:** —
 > [← story file](../story-01-assessment-agent.md)
@@ -59,12 +59,12 @@ N/A — no database or ORM involved; agents never persist domain entities.
 
 ## Done Criteria
 
-- [ ] `AssessmentCommand` and `AssessmentResult` exist under `cl.gradeops.ai.agents.assessment` with exactly the fields specified above.
-- [ ] `./mvnw -Pbeta compile` succeeds with no errors.
-- [ ] Field names verified against the US-010/US-011/US-012 source docs.
-- [ ] Existing `GradeOpsAgentsApplicationTest#contextLoads` still passes.
-- [ ] Human developer code review completed; requested corrections, if any, were implemented and re-reviewed.
-- [ ] No unintended expansion: the task satisfies `[CHECK-ATOMICITY]`.
+- [x] `AssessmentCommand` and `AssessmentResult` exist under `cl.gradeops.ai.agents.assessment` with exactly the fields specified above.
+- [x] `./mvnw -Pbeta compile` succeeds with no errors.
+- [x] Field names verified against the US-010/US-011/US-012 source docs.
+- [x] Existing `GradeOpsAgentsApplicationTest#contextLoads` still passes.
+- [x] Human developer code review completed; requested corrections, if any, were implemented and re-reviewed.
+- [x] No unintended expansion: the task satisfies `[CHECK-ATOMICITY]`.
 
 ---
 

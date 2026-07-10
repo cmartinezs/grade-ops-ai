@@ -78,6 +78,31 @@ public record CreateAssessmentResult(
 }
 ```
 
+## Contratos públicos entre artifacts y agentes
+
+Cuando un `Command` o `Result` cruza artifacts o procesos, por ejemplo `api/`
+llamando a `agents/`, tratarlo como contrato público estable, no como DTO
+interno descartable.
+
+Reglas:
+
+- Mantener el contrato inmutable; si contiene colecciones, hacer copia defensiva
+  con `List.copyOf`, `Set.copyOf` o equivalente.
+- Validar campos obligatorios en el constructor compacto del `record` con
+  `Objects.requireNonNull` o una validación de dominio equivalente.
+- Modelar estados opcionales de forma coherente: si dos campos opcionales
+  representan un mismo modo de ejecución, deben venir juntos o rechazarse.
+- Evitar acoplar contratos públicos a Spring, JPA, Jackson o Bean Validation.
+  Las anotaciones de framework pertenecen a adapters o DTOs de entrada/salida,
+  no al contrato compartido entre artifacts.
+- Fijar nombres de campos contra el consumidor real antes de implementar. Si un
+  documento aspiracional y una historia atomizada discrepan, registrar la
+  inconsistencia y declarar cuál fuente manda para ese slice.
+- En `agents/`, se permite ubicar el `Command`/`Result` en el package público de
+  la feature cuando actúa como fachada estable del agente. La implementación
+  interna del agente debe seguir separando aplicación, dominio e infraestructura
+  cuando aparezcan handlers, puertos, adapters o prompts.
+
 ### Handler
 
 ```java

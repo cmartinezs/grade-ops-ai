@@ -23,8 +23,8 @@ Term and concept traceability for this planning. For global consolidated view, s
 <!-- MATRIX-HEADER: plan-init adds one column per area between "Term / Concept" and "Notes" -->
 | Term / Concept | AG | W | Notes |
 |---------------|----|---|-------|
-| `AssessmentCommand` | ❌ | ✅ | Contract record — task-01. Fields must match `api/`'s `AssessmentBrief`/`AssessmentDraft`. |
-| `AssessmentResult` | ❌ | ✅ | Contract record — task-01. |
+| `AssessmentCommand` | ✅ | ✅ | Contract record — task-01. Fields match `api/`'s `AssessmentBrief`/`AssessmentDraft` (cross-checked against `api/.planning/003-assessment-creation`). |
+| `AssessmentResult` | ✅ | ✅ | Contract record — task-01. Narrower than `docs/03-ai-agents/assessment-agent.md`'s Output Contract example — see Inconsistencies Found #1 in the story file. |
 | `assessment-generation.st` | ❌ | ✅ | Versioned StringTemplate prompt under `src/main/resources/prompts/` — task-02. |
 | `org.antlr:ST4` | ❌ | ✅ | New Maven dependency (StringTemplate engine), added by task-02. |
 | `AssessmentAgentService` | ❌ | ✅ | Fixed-pipeline service — task-03. Owns schema validation and execution-log capture (merged from original candidates 4/5 during atomization). |
