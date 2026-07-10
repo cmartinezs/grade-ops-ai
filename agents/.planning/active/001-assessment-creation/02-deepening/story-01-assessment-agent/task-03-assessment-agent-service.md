@@ -30,7 +30,7 @@ Implement `AssessmentAgentService`, the fixed pipeline (validate command → loa
 3. Create `AssessmentAgentException.java` (runtime exception carrying a reason code: `INVALID_COMMAND`, `MALFORMED_OUTPUT`).
 4. Create `AssessmentAgentService.java`:
    - Constructor-inject `ChatClient.Builder` and build a `ChatClient` from it — no field injection.
-   - `validate(AssessmentCommand)` — reject blank `learningGoal`/`topic`/`level`/`duration`/`language`; throw `AssessmentAgentException(INVALID_COMMAND)`.
+   - `validate(AssessmentCommand)` — reject blank `learningGoal`/`topic`/`level`/`duration`/`language`, and reject a mismatched `adjustmentNotes`/`previousDraftId` pairing (one present without the other); throw `AssessmentAgentException(INVALID_COMMAND)` for either case. (Moved here from task-01: `AssessmentCommand` itself does not validate — see its Javadoc.)
    - Load and cache the parsed `assessment-generation.st` template once (constructor or `@PostConstruct`), not per call.
    - `buildEnvelope(AssessmentCommand)` — render the cached template with the command's attributes.
    - `callGemini(String renderedPrompt)` — `chatClient.prompt(renderedPrompt).call()`, capture the `ChatResponse`, then map to `AssessmentResult` via `.entity(AssessmentResult.class)`.

@@ -1,6 +1,6 @@
 # ⚛️ TASK 01 — AssessmentCommand / AssessmentResult contracts
 
-> **Status:** TODO
+> **Status:** DONE
 > **Workflow:** GENERATE-DOCUMENT
 > **Depends On:** —
 > [← story file](../story-01-assessment-agent.md)
@@ -15,10 +15,10 @@ Define the `AssessmentCommand` and `AssessmentResult` records that form the Asse
 
 ## Technical Design
 
-- **Approach:** model both as immutable Java records — idiomatic for Java 21 DTOs with no behavior, and matches the project rule that agents receive `{Agent}Command` and return `{Agent}Result` without persisting anything. `AssessmentCommand` carries the brief fields plus optional regeneration fields (`adjustmentNotes`, `previousDraftId`) so both US-011 and US-012 share one contract instead of a second command/agent.
-- **Affected files / components:** new package `agents/src/main/java/cl/gradeops/ai/agents/assessment/`; new files `AssessmentCommand.java`, `AssessmentResult.java`.
+- **Approach:** model both as immutable Java records — idiomatic for Java 21 DTOs with no behavior, and matches the project rule that agents receive `{Agent}Command` and return `{Agent}Result` without persisting anything. `AssessmentCommand` carries the brief fields plus optional regeneration fields (`adjustmentNotes`, `previousDraftId`) so both US-011 and US-012 share one contract instead of a second command/agent. Both records carry Lombok's `@Builder` (`api/docs/gradeops-ai-java-guidelines/07-lombok.md:76-84` lists this as the recommended pattern for Command/Result records), which required adding the `lombok` dependency plus the standard Spring Boot Maven/compiler-plugin wiring to `agents/pom.xml` (mirroring `api/pom.xml`, since this is the first Lombok use in `agents/`).
+- **Affected files / components:** new packages `agents/src/main/java/cl/gradeops/ai/agents/assessment/application/command/` and `.../assessment/application/result/`, per `api/docs/gradeops-ai-java-guidelines/01-arquitectura-hexagonal-y-paquetes.md`'s package template (`<feature>.application.command`, `<feature>.application.result`); new files `AssessmentCommand.java`, `AssessmentResult.java`; `agents/pom.xml` (Lombok dependency + plugin wiring).
 - **Interfaces / contracts:**
-  - `AssessmentCommand(String learningGoal, String topic, String level, String duration, String language, String adjustmentNotes, String previousDraftId)` — `adjustmentNotes`/`previousDraftId` are `@Nullable`, present only when `api/` requests a regeneration.
+  - `AssessmentCommand(String learningGoal, String topic, String level, String duration, String language, String adjustmentNotes, String previousDraftId)` — `adjustmentNotes`/`previousDraftId` may be `null`, present only when `api/` requests a regeneration.
   - `AssessmentResult(String title, String context, String instructions, List<String> objectives, List<String> deliverables, List<String> constraints)`.
 - **Risk:** Low — routine change, pure data definition, no external calls.
 - **Design notes:** field names must exactly match what `api/`'s child planning (`api/.planning/003-assessment-creation`) persists as `AssessmentBrief`/`AssessmentDraft` — cross-check against the enriched user stories before finalizing, since a mismatch here breaks the cross-repo contract silently.
@@ -27,10 +27,11 @@ Define the `AssessmentCommand` and `AssessmentResult` records that form the Asse
 
 ## Implementation Steps
 
-1. Create package `agents/src/main/java/cl/gradeops/ai/agents/assessment/`.
-2. Create `AssessmentCommand.java` — record with `learningGoal`, `topic`, `level`, `duration`, `language`, plus optional `adjustmentNotes`, `previousDraftId`.
-3. Create `AssessmentResult.java` — record with `title`, `context`, `instructions`, `objectives` (`List<String>`), `deliverables` (`List<String>`), `constraints` (`List<String>`).
-4. Add Javadoc on both records cross-referencing US-010/US-011/US-012 and the no-persistence rule.
+1. Create packages `agents/src/main/java/cl/gradeops/ai/agents/assessment/application/command/` and `.../assessment/application/result/`.
+2. Add the `lombok` dependency and the Spring Boot Maven/compiler-plugin annotation-processor wiring to `agents/pom.xml`, copied from `api/pom.xml`.
+3. Create `AssessmentCommand.java` in `application.command` — record with `learningGoal`, `topic`, `level`, `duration`, `language`, plus optional `adjustmentNotes`, `previousDraftId`; annotated `@Builder`.
+4. Create `AssessmentResult.java` in `application.result` — record with `title`, `context`, `instructions`, `objectives` (`List<String>`), `deliverables` (`List<String>`), `constraints` (`List<String>`); annotated `@Builder`.
+5. Add Javadoc on both records cross-referencing US-010/US-011/US-012 and the no-persistence rule.
 
 ---
 
@@ -59,12 +60,13 @@ N/A — no database or ORM involved; agents never persist domain entities.
 
 ## Done Criteria
 
-- [ ] `AssessmentCommand` and `AssessmentResult` exist under `cl.gradeops.ai.agents.assessment` with exactly the fields specified above.
-- [ ] `./mvnw -Pbeta compile` succeeds with no errors.
-- [ ] Field names verified against the US-010/US-011/US-012 source docs.
-- [ ] Existing `GradeOpsAgentsApplicationTest#contextLoads` still passes.
-- [ ] Human developer code review completed; requested corrections, if any, were implemented and re-reviewed.
-- [ ] No unintended expansion: the task satisfies `[CHECK-ATOMICITY]`.
+- [x] `AssessmentCommand` and `AssessmentResult` exist under `cl.gradeops.ai.agents.assessment.application.command` / `.application.result` respectively, per the project's hexagonal package template, with exactly the fields specified above.
+- [x] Both records carry `@Builder` per `07-lombok.md`; neither record, nor any code in this task, throws a Java API exception (`12-excepciones-y-manejo-de-errores.md`).
+- [x] `./mvnw -Pbeta compile` succeeds with no errors.
+- [x] Field names verified against the US-010/US-011/US-012 source docs.
+- [x] Existing `GradeOpsAgentsApplicationTest#contextLoads` still passes.
+- [x] Human developer code review completed; requested corrections, if any, were implemented and re-reviewed.
+- [x] No unintended expansion: the task satisfies `[CHECK-ATOMICITY]`.
 
 ---
 
