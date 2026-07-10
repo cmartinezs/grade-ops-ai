@@ -28,18 +28,21 @@ Implement the full backend flow for assessment creation: persist the teacher's b
 
 ## Tasks
 
-> **Each row in this table must have a corresponding `task-NN-name.md` file under `story-01-assessment-creation-persistence/` before this story can be marked `IN PROGRESS`.** Use `/plan-atomize` to generate all task files at once, or create them individually — but they must exist before execution begins.
+> Atomized via `/plan-atomize`. Grew from the original 8 candidates to 11 atomic tasks after discovering an existing `Assessment` stub (`StubAssessmentPersistenceAdapter`, whose own comment says "Epic 02 will replace return type with domain Assessment objects") — the new work must replace that stub, not create a disconnected duplicate concept, adding a dedicated `Assessment` aggregate task (task-01) and a dashboard-wiring task (task-10) not present in the original breakdown.
 
 | # | Task | Workflow | Status | Output |
 |---|------|----------|--------|--------|
-| 1 | Flyway migration + entity + repository for `AssessmentBrief` (learning goal, topic, level/difficulty, duration, language) | GENERATE-DOCUMENT | TODO | `V<N>__add_assessment_brief.sql`, `AssessmentBriefEntity.java`, `AssessmentBriefRepository.java` |
-| 2 | Flyway migration + entity + repository for `AssessmentDraft` with versioning (FK to brief, FK to previous version, version number) | GENERATE-DOCUMENT | TODO | `V<N+1>__add_assessment_draft.sql`, `AssessmentDraftEntity.java`, `AssessmentDraftRepository.java` |
-| 3 | Brief intake endpoint (`POST`) — persists the brief before any agent call; returns the persisted brief id | GENERATE-DOCUMENT | TODO | `AssessmentController` endpoint + `AssessmentService.createBrief()` |
-| 4 | Draft generation endpoint — builds `AssessmentCommand` from the persisted brief, calls `agents/` via `agentclient`, persists the returned draft (version 1) and its `AgentExecutionLog` | GENERATE-DOCUMENT | TODO | `AssessmentService.generateDraft()`, `agentclient` integration |
-| 5 | Draft regeneration endpoint — builds `AssessmentCommand` from brief + adjustment notes + previous version reference, persists the new version and its own `AgentExecutionLog`, keeps the previous version intact | GENERATE-DOCUMENT | TODO | `AssessmentService.regenerateDraft()` |
-| 6 | Draft edit endpoint (`PATCH`/`PUT`) — teacher edits the current version's fields directly, no new agent call, no new `AgentExecutionLog` | GENERATE-DOCUMENT | TODO | `AssessmentController` endpoint + `AssessmentService.updateDraft()` |
-| 7 | Draft/version retrieval endpoint(s) — current version + version history, retrievable after page refresh | GENERATE-DOCUMENT | TODO | `AssessmentController` GET endpoints |
-| 8 | Unit + integration tests: persist-before-agent-call ordering, versioning (no overwrite), `AgentExecutionLog` fields per execution, edit does not create a new version/log | GENERATE-DOCUMENT | TODO | Test classes |
+| 1 | [Assessment aggregate root](story-01-assessment-creation-persistence/task-01-assessment-aggregate.md) | GENERATE-DOCUMENT | TODO | `V9__add_assessments.sql`, `Assessment.java`, real `AssessmentPersistenceAdapter` (replaces stub) |
+| 2 | [AssessmentBrief entity + persistence](story-01-assessment-creation-persistence/task-02-assessment-brief.md) | GENERATE-DOCUMENT | TODO | `V10__add_assessment_briefs.sql`, `AssessmentBrief.java` + persistence stack |
+| 3 | [AssessmentDraft entity + versioning](story-01-assessment-creation-persistence/task-03-assessment-draft.md) | GENERATE-DOCUMENT | TODO | `V11__add_assessment_drafts.sql`, `AssessmentDraft.java` + persistence stack |
+| 4 | [validate-db-orm-consistency (V9+V10+V11)](story-01-assessment-creation-persistence/task-04-db-orm-consistency.md) | GENERATE-DOCUMENT | TODO | Verification evidence, FK-chain integration check |
+| 5 | [agentclient module](story-01-assessment-creation-persistence/task-05-agentclient.md) | GENERATE-DOCUMENT | TODO | `AssessmentAgentClient.java`, `AgentClientConfig.java` |
+| 6 | [Brief intake endpoint](story-01-assessment-creation-persistence/task-06-brief-intake-endpoint.md) | GENERATE-DOCUMENT | TODO | `POST /api/v1/assessments` |
+| 7 | [Draft generation endpoint (+ AgentExecutionLog)](story-01-assessment-creation-persistence/task-07-draft-generation-endpoint.md) | GENERATE-DOCUMENT | TODO | `V12__add_agent_execution_logs.sql`, `POST /api/v1/assessments/{id}/draft` |
+| 8 | [Draft regeneration endpoint](story-01-assessment-creation-persistence/task-08-draft-regeneration-endpoint.md) | GENERATE-DOCUMENT | TODO | `POST /api/v1/assessments/{id}/draft/regenerate` |
+| 9 | [Draft edit endpoint](story-01-assessment-creation-persistence/task-09-draft-edit-endpoint.md) | GENERATE-DOCUMENT | TODO | `PATCH /api/v1/assessments/{id}/draft` |
+| 10 | [Retrieval endpoints + dashboard wiring](story-01-assessment-creation-persistence/task-10-retrieval-and-dashboard-wiring.md) | GENERATE-DOCUMENT | TODO | `GET .../draft`, `GET .../draft/versions`, real `GET /api/v1/assessments` data |
+| 11 | [End-to-end integration tests](story-01-assessment-creation-persistence/task-11-integration-tests.md) | GENERATE-DOCUMENT | TODO | `AssessmentCreationFlowIntegrationTest.java` |
 
 ---
 
