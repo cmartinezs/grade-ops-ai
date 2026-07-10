@@ -42,6 +42,14 @@ As a programming instructor, the teacher wants to describe a learning goal and c
 
 ---
 
+## Supersedes
+
+> *Fill only if this planning replaces or contradicts a previous planning. Leave blank otherwise. Run `SUPERSEDE-PLANNING` workflow before creating this planning if applicable.*
+
+*(none)*
+
+---
+
 ## Next Step
 
 - [ ] When dimensioned → fill `01-expansion.md` and move to `planning/active/`
