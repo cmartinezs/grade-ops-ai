@@ -114,6 +114,14 @@ Minimum infra checklist per service introduced:
 
 When expanding or deepening a planning, always check `infra/terraform/environments/demo/` to verify that each service referenced in code scopes has a corresponding `.tf` file. If it doesn't, add an infra scope or task explicitly.
 
+### Commit scoping for parent/child plannings
+
+When committing changes for a monorepo root planning that coordinates child plannings (see `.planning/GUIDE.md § Monorepo parent/child coordination`), **commits must be scoped per planning — the parent must never commit a child's changes, and vice versa.** This holds even though `api/`, `agents/`, `web/`, and the root currently share a single git history (verified 2026-07-09: no independent `.git` per subdirectory despite the "multi-repo" description above).
+
+- Commit the parent planning's own files (root `.planning/`) in a separate commit from each child planning's files (`<child>/.planning/` and any child-owned implementation code).
+- If one logical change touches both a parent and a child planning (e.g. creating a child planning and updating the parent's `Linked Child Plannings` section), split it into one commit per planning rather than a single mixed commit.
+- Before checking which planning owns a given file, verify with `ls <child>/.planning/` whether that child directory actually has its own workspace — do not assume based on the repository map table alone.
+
 ## Google Cloud targets
 
 Primary runtime: Cloud Run (web, api, agents). Database: Cloud SQL PostgreSQL. Files: Cloud Storage. Secrets: Secret Manager. Logs: Cloud Logging.
