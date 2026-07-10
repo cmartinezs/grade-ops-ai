@@ -1,6 +1,7 @@
 package cl.gradeops.ai.agents.assessment.application.result;
 
 import java.util.List;
+import lombok.Builder;
 
 /**
  * Structured output of the Assessment Agent (US-010/US-011/US-012).
@@ -24,6 +25,7 @@ import java.util.List;
  * @param deliverables expected student deliverables
  * @param constraints rules, resources, or submission constraints
  */
+@Builder
 public record AssessmentResult(
         String title,
         String context,

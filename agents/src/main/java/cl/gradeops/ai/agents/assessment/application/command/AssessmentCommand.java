@@ -1,5 +1,7 @@
 package cl.gradeops.ai.agents.assessment.application.command;
 
+import lombok.Builder;
+
 /**
  * Input contract for the Assessment Agent (US-010/US-011/US-012).
  *
@@ -26,6 +28,7 @@ package cl.gradeops.ai.agents.assessment.application.command;
  * @param adjustmentNotes free-text regeneration instructions; {@code null} for initial generation
  * @param previousDraftId identifier of the draft version being regenerated; {@code null} for initial generation
  */
+@Builder
 public record AssessmentCommand(
         String learningGoal,
         String topic,

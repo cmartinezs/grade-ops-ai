@@ -15,13 +15,14 @@ class AssessmentResultTest {
         List<String> objectives = new ArrayList<>(List.of("Use for loops"));
         List<String> deliverables = new ArrayList<>(List.of("Source code"));
         List<String> constraints = new ArrayList<>(List.of("No external libraries"));
-        AssessmentResult result = new AssessmentResult(
-                "Loop exercise",
-                "Practice iteration",
-                "Implement the requested program",
-                objectives,
-                deliverables,
-                constraints);
+        AssessmentResult result = AssessmentResult.builder()
+                .title("Loop exercise")
+                .context("Practice iteration")
+                .instructions("Implement the requested program")
+                .objectives(objectives)
+                .deliverables(deliverables)
+                .constraints(constraints)
+                .build();
 
         // when
         objectives.add("Mutated objective");
@@ -37,13 +38,14 @@ class AssessmentResultTest {
     @Test
     void shouldExposeUnmodifiableListFields() {
         // given
-        AssessmentResult result = new AssessmentResult(
-                "Loop exercise",
-                "Practice iteration",
-                "Implement the requested program",
-                List.of("Use for loops"),
-                List.of("Source code"),
-                List.of("No external libraries"));
+        AssessmentResult result = AssessmentResult.builder()
+                .title("Loop exercise")
+                .context("Practice iteration")
+                .instructions("Implement the requested program")
+                .objectives(List.of("Use for loops"))
+                .deliverables(List.of("Source code"))
+                .constraints(List.of("No external libraries"))
+                .build();
 
         // when / then
         assertThatThrownBy(() -> result.objectives().add("Mutated objective"))
@@ -53,16 +55,14 @@ class AssessmentResultTest {
     @Test
     void shouldNormalizeNullListFieldToEmptyImmutableList() {
         // given
-        List<String> objectives = null;
-
-        // when
-        AssessmentResult result = new AssessmentResult(
-                "Loop exercise",
-                "Practice iteration",
-                "Implement the requested program",
-                objectives,
-                List.of("Source code"),
-                List.of("No external libraries"));
+        AssessmentResult result = AssessmentResult.builder()
+                .title("Loop exercise")
+                .context("Practice iteration")
+                .instructions("Implement the requested program")
+                .objectives(null)
+                .deliverables(List.of("Source code"))
+                .constraints(List.of("No external libraries"))
+                .build();
 
         // then
         assertThat(result.objectives()).isEmpty();

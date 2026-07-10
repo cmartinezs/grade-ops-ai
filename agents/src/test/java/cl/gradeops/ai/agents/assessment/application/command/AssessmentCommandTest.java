@@ -9,14 +9,13 @@ class AssessmentCommandTest {
     @Test
     void shouldCreateInitialGenerationCommandWhenRequiredFieldsArePresent() {
         // given
-        AssessmentCommand command = new AssessmentCommand(
-                "Evaluate loops",
-                "Java loops",
-                "introductory",
-                "60 minutes",
-                "Java",
-                null,
-                null);
+        AssessmentCommand command = AssessmentCommand.builder()
+                .learningGoal("Evaluate loops")
+                .topic("Java loops")
+                .level("introductory")
+                .duration("60 minutes")
+                .language("Java")
+                .build();
 
         // when
         String topic = command.topic();
@@ -30,14 +29,15 @@ class AssessmentCommandTest {
     @Test
     void shouldCreateRegenerationCommandWhenAdjustmentFieldsAreProvidedTogether() {
         // given
-        AssessmentCommand command = new AssessmentCommand(
-                "Evaluate loops",
-                "Java loops",
-                "introductory",
-                "60 minutes",
-                "Java",
-                "Make it shorter",
-                "draft-123");
+        AssessmentCommand command = AssessmentCommand.builder()
+                .learningGoal("Evaluate loops")
+                .topic("Java loops")
+                .level("introductory")
+                .duration("60 minutes")
+                .language("Java")
+                .adjustmentNotes("Make it shorter")
+                .previousDraftId("draft-123")
+                .build();
 
         // when
         String adjustmentNotes = command.adjustmentNotes();
@@ -51,14 +51,14 @@ class AssessmentCommandTest {
     void shouldConstructCommandWithoutValidatingRequiredFieldsOrAdjustmentPairing() {
         // given / when — a null required field and a mismatched adjustment pairing are both
         // malformed-input concerns for AssessmentAgentService.validate (task-03), not this record.
-        AssessmentCommand command = new AssessmentCommand(
-                null,
-                "Java loops",
-                "introductory",
-                "60 minutes",
-                "Java",
-                "Make it shorter",
-                null);
+        AssessmentCommand command = AssessmentCommand.builder()
+                .learningGoal(null)
+                .topic("Java loops")
+                .level("introductory")
+                .duration("60 minutes")
+                .language("Java")
+                .adjustmentNotes("Make it shorter")
+                .build();
 
         // then
         assertThat(command.learningGoal()).isNull();

@@ -25,6 +25,15 @@ Each entry should answer as many of these as possible:
 
 <!-- Add newest entries at the top. -->
 
+### 2026-07-10 13:32 - Root cause identified: story/tasks were never written against the java-guidelines; full guideline pass applied to task-01 before closing
+
+- **Source:** human direction, after three consecutive correction rounds on the same task (exceptions, then package structure)
+- **Related story/task:** story-01-assessment-agent (all tasks), task-01-contracts
+- **What happened:** three separate corrections were needed on `AssessmentCommand`/`AssessmentResult` (banned Java exceptions, then wrong package placement) because `story-01-assessment-agent.md` and its tasks were atomized without cross-checking `api/docs/gradeops-ai-java-guidelines/`. Each fix was reactive — found by human review after the fact — rather than caught by design.
+- **Resolution for task-01:** applied the remaining guideline item that had only been noted as optional: added Lombok (`agents/pom.xml`, mirroring `api/pom.xml`'s dependency + plugin wiring) and `@Builder` on both records per `07-lombok.md:76-84`'s explicit Command/Result example. Updated both test classes to construct fixtures via the builder. task-01 is now believed fully aligned with the guideline set (see the full-file review two turns earlier in this log for the section-by-section check).
+- **Next step (explicit, deferred until this task/PR is closed):** review `story-01-assessment-agent.md` and tasks 02-05 against the java-guidelines *before* they are executed, so the same categories of mismatch (exceptions, package structure, Lombok usage, DDD layering for task-03's service/exception/log-payload types) don't have to be caught reactively again. Do this as a dedicated pass, not folded into task-02's execution.
+- **Retrospective signal:** for any future story in `agents/` or `api/`, cross-check the atomized task files against `api/docs/gradeops-ai-java-guidelines/` (particularly 01, 03, 06, 07, 12) *during atomization*, not after implementation. A short "guideline compliance" line in each task's Technical Design (which sub-packages, which exception type, which Lombok annotations) would have caught all three corrections at plan time instead of after three review rounds.
+
 ### 2026-07-10 13:20 - AssessmentCommand/AssessmentResult were placed in the feature root package, not application.command/application.result
 
 - **Source:** human code review (task-01 PR #25), requested correction
