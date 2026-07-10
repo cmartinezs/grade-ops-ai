@@ -1,8 +1,6 @@
 package cl.gradeops.ai.agents.assessment;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatNullPointerException;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import org.junit.jupiter.api.Test;
 
@@ -50,38 +48,21 @@ class AssessmentCommandTest {
     }
 
     @Test
-    void shouldRejectCommandWhenRequiredFieldIsNull() {
-        // given
-        String learningGoal = null;
+    void shouldConstructCommandWithoutValidatingRequiredFieldsOrAdjustmentPairing() {
+        // given / when — a null required field and a mismatched adjustment pairing are both
+        // malformed-input concerns for AssessmentAgentService.validate (task-03), not this record.
+        AssessmentCommand command = new AssessmentCommand(
+                null,
+                "Java loops",
+                "introductory",
+                "60 minutes",
+                "Java",
+                "Make it shorter",
+                null);
 
-        // when / then
-        assertThatNullPointerException()
-                .isThrownBy(() -> new AssessmentCommand(
-                        learningGoal,
-                        "Java loops",
-                        "introductory",
-                        "60 minutes",
-                        "Java",
-                        null,
-                        null))
-                .withMessage("learningGoal is required");
-    }
-
-    @Test
-    void shouldRejectRegenerationCommandWhenOnlyAdjustmentNotesAreProvided() {
-        // given
-        String adjustmentNotes = "Make it shorter";
-
-        // when / then
-        assertThatThrownBy(() -> new AssessmentCommand(
-                        "Evaluate loops",
-                        "Java loops",
-                        "introductory",
-                        "60 minutes",
-                        "Java",
-                        adjustmentNotes,
-                        null))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("adjustmentNotes and previousDraftId must be provided together for regeneration");
+        // then
+        assertThat(command.learningGoal()).isNull();
+        assertThat(command.adjustmentNotes()).isEqualTo("Make it shorter");
+        assertThat(command.previousDraftId()).isNull();
     }
 }

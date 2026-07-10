@@ -1,7 +1,5 @@
 package cl.gradeops.ai.agents.assessment;
 
-import static java.util.Objects.requireNonNull;
-
 /**
  * Input contract for the Assessment Agent (US-010/US-011/US-012).
  *
@@ -10,6 +8,15 @@ import static java.util.Objects.requireNonNull;
  * input for draft regeneration (US-012) — one shared contract instead of a second
  * command/agent. The agent never persists this data; persistence is {@code api/}'s
  * responsibility.
+ *
+ * <p>This record does not validate its own fields. It is the target of Jackson
+ * deserialization at the internal REST endpoint, so a missing or inconsistent field is
+ * expected malformed input, not a caller bug. {@code AssessmentAgentService.validate}
+ * is the single place that rejects a blank required field or a mismatched
+ * {@code adjustmentNotes}/{@code previousDraftId} pairing, with
+ * {@code AssessmentAgentException(INVALID_COMMAND)} — the project's own exception type,
+ * per {@code 12-excepciones-y-manejo-de-errores.md} — rather than a Java API exception
+ * thrown from this constructor.
  *
  * @param learningGoal what the teacher wants to evaluate
  * @param topic programming topic or skill area
@@ -27,17 +34,4 @@ public record AssessmentCommand(
         String language,
         String adjustmentNotes,
         String previousDraftId) {
-
-    public AssessmentCommand {
-        requireNonNull(learningGoal, "learningGoal is required");
-        requireNonNull(topic, "topic is required");
-        requireNonNull(level, "level is required");
-        requireNonNull(duration, "duration is required");
-        requireNonNull(language, "language is required");
-
-        if ((adjustmentNotes == null) != (previousDraftId == null)) {
-            throw new IllegalArgumentException(
-                    "adjustmentNotes and previousDraftId must be provided together for regeneration");
-        }
-    }
 }
