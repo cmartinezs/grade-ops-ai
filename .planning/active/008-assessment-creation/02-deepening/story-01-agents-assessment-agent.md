@@ -1,4 +1,4 @@
-# 🔍 DEEPENING: Story 01 — agents-assessment-agent
+# 🔍 DEEPENING: Story 01 — agents-assessment-agent-coordination
 
 > **Status:** TODO
 > [← 01-expansion.md](../01-expansion.md) | [← planning/README.md](../../README.md)
@@ -7,54 +7,29 @@
 
 ## Objective
 
-Implement the Assessment Agent in `agents/` following the project's fixed agent pipeline pattern (validate command → load data → build envelope → call Gemini → validate structured output → log execution → return result). It must generate a structured assessment draft from a teacher's brief (US-011) and support regeneration with an adjustment-notes field, reusing the same contract (US-012).
+**Coordination story — not an implementation story.** Track the `agents/` half of the assessment-creation pipeline, which is implemented in the child planning [`agents/.planning/active/001-assessment-creation`](../../../../agents/.planning/active/001-assessment-creation/README.md) (`agents/` has its own `.planning/` workspace, initialized specifically for this work — see `01-expansion.md → Linked Child Plannings`).
+
+The full implementation detail (contract, prompt, pipeline, tasks, Done Criteria) lives in that child planning's `02-deepening/story-01-assessment-agent.md` — it is intentionally not duplicated here.
 
 **Source stories:** `docs/02-product/user-stories/epic-02-assessment-creation/02-assessment-draft-generation.md`, `03-assessment-draft-regeneration.md`.
 
 ---
 
-## Context
+## Sync Checkpoints
 
-- First planning to touch `agents/` — no prior Assessment Agent contract exists yet. This story defines it.
-- Base package: `cl.gradeops.ai.agents` (per project convention — see prior plannings' package rule).
-- Prompts are versioned `.st` (StringTemplate) files in `agents/src/main/resources/prompts/` — never inlined in Java.
-- The agent never persists domain entities — it receives `{Agent}Command`, returns `{Agent}Result`; persistence belongs to `api/` (Story 02).
-- Vertex AI Gemini access for the `agents/` Cloud Run service account (`aiplatform.user`) is already provisioned in `infra/terraform/environments/demo/service_accounts.tf` — no infra change needed.
-
----
-
-## Risk
-
-| Risk | Impact | Likelihood | Mitigation |
-|------|--------|------------|------------|
-| Gemini structured output is malformed or drifts from the expected schema | M | M | Schema-validate every response before returning it (task 4); reject and surface a clear error rather than returning a malformed result |
-
----
-
-## Tasks
-
-| # | Task | Workflow | Status | Output |
-|---|------|----------|--------|--------|
-| 1 | Define `AssessmentCommand` (brief fields + optional `adjustmentNotes` + optional previous-version reference) and `AssessmentResult` (title, context, instructions, objectives, deliverables, constraints) contracts | GENERATE-DOCUMENT | TODO | `AssessmentCommand.java`, `AssessmentResult.java` |
-| 2 | Create prompt template `assessment-generation.st` covering initial generation and regeneration-with-adjustment-notes cases | GENERATE-DOCUMENT | TODO | `agents/src/main/resources/prompts/assessment-generation.st` |
-| 3 | Implement `AssessmentAgentService`: validate command → load data → build envelope → call Gemini → validate structured output → log execution → return result | GENERATE-DOCUMENT | TODO | `AssessmentAgentService.java` |
-| 4 | Implement structured-output schema validation (reject/raise on malformed Gemini responses before returning) | GENERATE-DOCUMENT | TODO | Validation logic in `AssessmentAgentService` or a dedicated validator |
-| 5 | Capture `AgentExecutionLog`-shaping data (model name, cost estimate, status, timestamps) at the point of execution, ready for `api/` to persist | GENERATE-DOCUMENT | TODO | Execution log payload returned alongside `AssessmentResult` |
-| 6 | Expose the internal REST endpoint(s) for `api/` to call (service-to-service OIDC, not public) | GENERATE-DOCUMENT | TODO | Controller/endpoint in `agents/` |
-| 7 | Unit tests for `AssessmentAgentService` (mocked Gemini call): valid generation, regeneration with adjustment notes, malformed-output rejection | GENERATE-DOCUMENT | TODO | Test classes |
+| # | Checkpoint | Status |
+|---|-----------|--------|
+| 1 | `agents/.planning/001-assessment-creation` reaches EXPANSION/DEEPENING with a defined `AssessmentCommand`/`AssessmentResult` contract | ✅ DONE (2026-07-09) |
+| 2 | Child planning's Story 01 (`assessment-agent`) reaches DONE — internal endpoint is live and testable | TODO |
+| 3 | Contract shape confirmed stable enough for `api/.planning/003-assessment-creation` to integration-test against it | TODO |
 
 ---
 
 ## Done Criteria
 
-- [ ] Assessment Agent returns a structured draft (title, context, instructions, objectives, deliverables, constraints) for a valid `AssessmentCommand`.
-- [ ] The same command shape accepts an optional `adjustmentNotes` field used for regeneration, without requiring a separate agent or contract.
-- [ ] Prompt lives in a versioned `.st` file, never inlined in Java.
-- [ ] Structured output is schema-validated before being returned to the caller.
-- [ ] Execution metadata (model, cost estimate, status) is produced per invocation, ready for `AgentExecutionLog` persistence in `api/`.
-- [ ] The endpoint is internal-only (service-to-service auth), not publicly reachable.
-- [ ] Unit tests pass (`./mvnw test`).
-- [ ] TRACEABILITY.md updated with new terms from this story (e.g. `AssessmentCommand`, `AssessmentResult`, `assessment-generation.st`).
+- [ ] `agents/.planning/active/001-assessment-creation` reports its story `assessment-agent` as DONE.
+- [ ] The internal agent endpoint is reachable from `api/` in the target environment.
+- [ ] This coordination story's status here is updated to DONE only after the child planning confirms completion — do not mark this DONE independently.
 
 ---
 
@@ -64,7 +39,7 @@ Implement the Assessment Agent in `agents/` following the project's fixed agent 
 
 | # | Description | Docs Involved | Status | Resolution Path |
 |---|-------------|--------------|--------|----------------|
-| — | *None yet* | — | — | — |
+| 1 | This story originally contained the full agent implementation task breakdown (contract, prompt, pipeline — 7 tasks), duplicating what should live in a child planning. Corrected 2026-07-09: content moved to `agents/.planning/active/001-assessment-creation/02-deepening/story-01-assessment-agent.md`; this file rewritten as a coordination story. | This file (previous version), `agents/.planning/active/001-assessment-creation/` | RESOLVED | Content moved, not duplicated; this file now only tracks child planning status |
 
 ---
 
