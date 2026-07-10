@@ -35,17 +35,15 @@ Implement the Assessment Agent following the project's fixed agent pipeline patt
 
 ## Tasks
 
-> **Each row in this table must have a corresponding `task-NN-name.md` file under `story-01-assessment-agent/` before this story can be marked `IN PROGRESS`.** Use `/plan-atomize` to generate all task files at once, or create them individually — but they must exist before execution begins.
+> Atomized via `/plan-atomize`. Task candidates 4 and 5 from the original story-level breakdown were merged into task-03 — schema validation and execution-log capture are inseparable steps of the same pipeline call, not independently verifiable deliverables (`[CHECK-ATOMICITY]` — fragment rule).
 
 | # | Task | Workflow | Status | Output |
 |---|------|----------|--------|--------|
-| 1 | Define `AssessmentCommand` (brief fields + optional `adjustmentNotes` + optional previous-version reference) and `AssessmentResult` (title, context, instructions, objectives, deliverables, constraints) contracts | GENERATE-DOCUMENT | TODO | `AssessmentCommand.java`, `AssessmentResult.java` |
-| 2 | Create prompt template `assessment-generation.st` covering initial generation and regeneration-with-adjustment-notes cases | GENERATE-DOCUMENT | TODO | `src/main/resources/prompts/assessment-generation.st` |
-| 3 | Implement `AssessmentAgentService`: validate command → load data → build envelope → call Gemini → validate structured output → log execution → return result | GENERATE-DOCUMENT | TODO | `AssessmentAgentService.java` |
-| 4 | Implement structured-output schema validation (reject/raise on malformed Gemini responses before returning) | GENERATE-DOCUMENT | TODO | Validation logic in `AssessmentAgentService` or a dedicated validator |
-| 5 | Capture `AgentExecutionLog`-shaping data (model name, cost estimate, status, timestamps) at the point of execution, ready for `api/` to persist | GENERATE-DOCUMENT | TODO | Execution log payload returned alongside `AssessmentResult` |
-| 6 | Expose the internal REST endpoint(s) for `api/` to call (service-to-service OIDC, not public) | GENERATE-DOCUMENT | TODO | Controller/endpoint |
-| 7 | Unit tests for `AssessmentAgentService` (mocked Gemini call): valid generation, regeneration with adjustment notes, malformed-output rejection | GENERATE-DOCUMENT | TODO | Test classes |
+| 1 | [AssessmentCommand / AssessmentResult contracts](story-01-assessment-agent/task-01-contracts.md) | GENERATE-DOCUMENT | TODO | `AssessmentCommand.java`, `AssessmentResult.java` |
+| 2 | [Prompt template assessment-generation.st](story-01-assessment-agent/task-02-prompt-template.md) | GENERATE-DOCUMENT | TODO | `src/main/resources/prompts/assessment-generation.st`, `org.antlr:ST4` dependency |
+| 3 | [AssessmentAgentService (fixed pipeline)](story-01-assessment-agent/task-03-assessment-agent-service.md) | GENERATE-DOCUMENT | TODO | `AssessmentAgentService.java`, `AssessmentAgentException.java`, `AgentExecutionLogPayload.java`, `AssessmentExecutionOutcome.java` |
+| 4 | [Internal REST endpoint](story-01-assessment-agent/task-04-internal-endpoint.md) | GENERATE-DOCUMENT | TODO | `AssessmentController.java`, internal-auth filter |
+| 5 | [AssessmentAgentService unit tests](story-01-assessment-agent/task-05-unit-tests.md) | GENERATE-DOCUMENT | TODO | `AssessmentAgentServiceTest.java` |
 
 ---
 
