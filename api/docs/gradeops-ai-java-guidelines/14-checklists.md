@@ -26,7 +26,7 @@
 - [ ] Existe `UseCase` en `application.port.in`.
 - [ ] Existe `Command` o `Query`.
 - [ ] Existe `Result`.
-- [ ] `Command`/`Result` públicos validan campos obligatorios y copian defensivamente colecciones.
+- [ ] `Command`/`Result` públicos copian defensivamente colecciones (normalizando `null` a colección vacía) y, si validan campos obligatorios en su constructor, usan una excepción propia del proyecto — nunca `Objects.requireNonNull` ni excepciones de la API de Java.
 - [ ] Contratos compartidos entre artifacts no dependen de Spring/JPA/Jackson/Bean Validation.
 - [ ] Campos opcionales que representan un mismo modo de ejecución se validan de forma coherente.
 - [ ] Handler implementa el puerto de entrada.

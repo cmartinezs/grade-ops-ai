@@ -1,7 +1,6 @@
 package cl.gradeops.ai.agents.assessment;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatNullPointerException;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.util.ArrayList;
@@ -52,36 +51,22 @@ class AssessmentResultTest {
     }
 
     @Test
-    void shouldRejectResultWhenRequiredTextFieldIsNull() {
-        // given
-        String title = null;
-
-        // when / then
-        assertThatNullPointerException()
-                .isThrownBy(() -> new AssessmentResult(
-                        title,
-                        "Practice iteration",
-                        "Implement the requested program",
-                        List.of("Use for loops"),
-                        List.of("Source code"),
-                        List.of("No external libraries")))
-                .withMessage("title is required");
-    }
-
-    @Test
-    void shouldRejectResultWhenRequiredListFieldIsNull() {
+    void shouldNormalizeNullListFieldToEmptyImmutableList() {
         // given
         List<String> objectives = null;
 
-        // when / then
-        assertThatNullPointerException()
-                .isThrownBy(() -> new AssessmentResult(
-                        "Loop exercise",
-                        "Practice iteration",
-                        "Implement the requested program",
-                        objectives,
-                        List.of("Source code"),
-                        List.of("No external libraries")))
-                .withMessage("objectives is required");
+        // when
+        AssessmentResult result = new AssessmentResult(
+                "Loop exercise",
+                "Practice iteration",
+                "Implement the requested program",
+                objectives,
+                List.of("Source code"),
+                List.of("No external libraries"));
+
+        // then
+        assertThat(result.objectives()).isEmpty();
+        assertThatThrownBy(() -> result.objectives().add("Mutated objective"))
+                .isInstanceOf(UnsupportedOperationException.class);
     }
 }

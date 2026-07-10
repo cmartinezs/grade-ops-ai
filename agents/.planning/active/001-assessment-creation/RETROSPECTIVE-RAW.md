@@ -25,6 +25,15 @@ Each entry should answer as many of these as possible:
 
 <!-- Add newest entries at the top. -->
 
+### 2026-07-10 12:53 - AssessmentResult compact constructor used Objects.requireNonNull, violating the project's exception guideline
+
+- **Source:** human code review (task-01 PR #25), requested correction
+- **Related story/task:** story-01-assessment-agent, task-01-contracts
+- **What happened:** a prior correction to `AssessmentResult` (see the code-review entry immediately below) added `Objects.requireNonNull` calls to the compact constructor to enforce required fields. `api/docs/gradeops-ai-java-guidelines/12-excepciones-y-manejo-de-errores.md` explicitly lists `throw new NullPointerException(...)` as prohibited in any layer, and states `DomainInvariantViolationException` "reemplaza ... a `Objects.requireNonNull`" — this guideline was not consulted when writing that fix, and the sibling guideline edits added under "Contratos públicos entre artifacts y agentes" (`03-use-cases-orquestadores-y-pasos.md`, `14-checklists.md`) recommended `Objects.requireNonNull` too, contradicting the project's own established rule.
+- **Expected instead:** required-field validation for `AssessmentResult` should never throw a raw Java API exception. It also should not happen in the record's constructor at all: `task-03-assessment-agent-service.md` already designs `AssessmentAgentService.validateOutput()` as the single place that rejects an incomplete Gemini structured-output result with `AssessmentAgentException(MALFORMED_OUTPUT)`. Throwing from the record constructor would fail during Spring AI's Jackson deserialization, before that dedicated validation step ever runs — duplicating the check and surfacing the wrong exception type.
+- **Resolution:** removed all `requireNonNull` calls from `AssessmentResult`'s compact constructor; it now only normalizes `null` list fields to an empty immutable list (`List.copyOf`) and never throws. Updated the two affected java-guidelines files to stop recommending `Objects.requireNonNull` for cross-artifact `Command`/`Result` contracts, and to state explicitly that a `Result` deserialized from an untrusted external source (LLM output) must not validate required fields in its constructor — that belongs to the pipeline's dedicated validation step, using the artifact's own exception type. Updated `AssessmentResultTest` accordingly (removed the two NPE-rejection tests, added a null-to-empty-list normalization test).
+- **Retrospective signal:** when adding validation to a record/DTO in this codebase, check `12-excepciones-y-manejo-de-errores.md` first — "fail fast with `Objects.requireNonNull`" is a common Java default that is explicitly banned here. For agent `Result` records specifically, also check whether a later task in the same story already owns required-field validation as a dedicated pipeline step before adding it to the record itself.
+
 ### 2026-07-10 01:49 - AssessmentResult scope narrower than docs/03-ai-agents/assessment-agent.md output contract
 
 - **Source:** `/plan-task` — CHECK-AGNOSTIC-BOUNDARY
