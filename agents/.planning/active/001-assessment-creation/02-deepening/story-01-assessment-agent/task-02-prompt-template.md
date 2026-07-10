@@ -1,6 +1,6 @@
 # ⚛️ TASK 02 — Prompt template `assessment-generation.st`
 
-> **Status:** TODO
+> **Status:** DONE
 > **Workflow:** GENERATE-DOCUMENT
 > **Depends On:** task-01
 > [← story file](../story-01-assessment-agent.md)
@@ -28,7 +28,7 @@ Design and select the versioned StringTemplate prompt `assessment-generation.st`
   - Prompt length/token cost (affects `AgentExecutionLogPayload.costEstimate` from task-03).
   - Clarity of the regeneration branch's effect (does `adjustmentNotes` visibly change the output vs. initial generation).
 - **Affected files / components:** `agents/src/main/resources/prompts/assessment-generation.st` (the selected variant only — the others are documented in this task file's "Prompt Variants Explored" section below, not committed as separate resource files); add Maven dependency `org.antlr:ST4` to `pom.xml` (StringTemplate engine — not yet a project dependency); `AssessmentGenerationTemplateTest.java` (new — see Verification; `00-principios-rectores.md` #10 requires an automated test, not an ad hoc check, before a feature/task counts as done — this covers structural/rendering validity only, not prompt quality, which the `opencode` comparison covers).
-- **Interfaces / contracts:** template attributes: `learningGoal`, `topic`, `level`, `duration`, `language`, `adjustmentNotes` (optional), `previousDraft` (optional, rendered summary of the prior version when regenerating). Instructs the model to produce strict JSON matching `AssessmentResult`'s fields (`title`, `context`, `instructions`, `objectives`, `deliverables`, `constraints`). Header comment format: single line, machine-parseable, e.g. `// assessment-generation.v1` — task-03's `AgentExecutionLogPayload.promptVersion` reads this string verbatim, so the format must stay stable once task-03 depends on it.
+- **Interfaces / contracts:** template attributes: `learningGoal`, `topic`, `level`, `duration`, `language`, `adjustmentNotes` (optional), `previousDraft` (optional, rendered summary of the prior version when regenerating — backed directly by `AssessmentCommand.previousDraft()`, added to the command post-hoc during this task's code review since `previousDraftId` alone cannot supply content; see task-01-contracts.md). Instructs the model to produce strict JSON matching `AssessmentResult`'s fields (`title`, `context`, `instructions`, `objectives`, `deliverables`, `constraints`). Header comment format: single line, machine-parseable, e.g. `// assessment-generation.v1` — task-03's `AgentExecutionLogPayload.promptVersion` reads this string verbatim, so the format must stay stable once task-03 depends on it.
 - **Risk:** M — a poorly structured prompt produces malformed JSON that task-03's validator must catch; mitigated by the variant comparison and `opencode` validation above, not just by being explicit about the JSON shape in the text.
 - **Design notes:** keep the template strict about JSON-only output (no prose wrapper), since Spring AI's structured-output conversion in task-03 will attempt to deserialize the response directly into `AssessmentResult`.
 
@@ -36,7 +36,45 @@ Design and select the versioned StringTemplate prompt `assessment-generation.st`
 
 ## Prompt Variants Explored
 
-*Filled in during execution: one subsection per candidate variant (what it does, how, why it's plausible), the `opencode` CLI transcripts/outputs used to evaluate it, and the final comparison table plus the reasoning for the winning variant.*
+**Testing method:** the `opencode` CLI in this environment has no Gemini/Vertex AI provider configured (`opencode providers list` shows only `opencode/*` hosted models and `openai/*`) — the production model stays Gemini per `CLAUDE.md`, but for this task `opencode run "<rendered prompt>" -m opencode/deepseek-v4-flash-free --format json` was used as an available, fast, free-tier proxy to test prompt *structure* compliance (JSON-shape adherence, fencing behavior, scoping), which is largely model-agnostic instruction-following behavior. Each variant was rendered with a fixed sample brief (`learningGoal="Evaluate whether students can implement iterative algorithms correctly"`, `topic="Array manipulation and loops"`, `level="introductory"`, `duration="60 minutes"`, `language="Python"`) and, for the regeneration case, a fixed `previousDraft`/`adjustmentNotes` pair. 13 total runs across all variants; outputs validated for JSON-parseability and field completeness with `jq`. **Full rendered prompts and raw outputs for every run are committed** in [`task-02-evidence-variant-a.md`](task-02-evidence-variant-a.md), [`task-02-evidence-variant-b.md`](task-02-evidence-variant-b.md), and [`task-02-evidence-variant-c.md`](task-02-evidence-variant-c.md) (this last file also covers the final refined version) — not only summarized here, so the comparison is re-reviewable locally without depending on a PR description.
+
+### Variant A — instruction-heavy
+
+**What/how:** long-form numbered rule list (8 explicit rules) up front, brief attributes, JSON shape described in prose as rule 7, no worked example. **Why plausible:** maximally explicit — nothing about the required behavior is left implicit.
+
+Results (3 runs: gen×2, regen×1): all 3 valid JSON with all 6 required fields. 1/3 wrapped in a ` ```json ` code fence despite rule 6 explicitly forbidding it (the regeneration run). Generated content was appropriately scoped (single function per assessment). Full transcripts: [`task-02-evidence-variant-a.md`](task-02-evidence-variant-a.md).
+
+### Variant B — schema-first
+
+**What/how:** leads with the literal JSON shape (`{ "title": string, ... }`) before any framing text, brief closing constraint about fit-to-duration. **Why plausible:** puts the exact output contract closest to where generation starts, a common technique for structured-output reliability.
+
+Results (3 runs: gen×2, regen×1): all 3 valid JSON with all 6 fields. 1/3 fenced (first gen run). More notably, both generation runs asked for 4-5 separate functions with edge-case handling inside a stated 60-minute window — over-scoped relative to the brief's own duration constraint, a real quality defect independent of JSON-shape compliance. Full transcripts: [`task-02-evidence-variant-b.md`](task-02-evidence-variant-b.md).
+
+### Variant C — few-shot
+
+**What/how:** opens with one complete worked example (`AssessmentResult` JSON for an unrelated "array rotation" topic) shown bare, no code fence, before asking for the real one. **Why plausible:** "show, don't just tell" — demonstrating the exact bare-JSON formatting tends to be a stronger signal than describing it in prose.
+
+Results (3 runs: gen×2, regen×1): all 3 valid JSON with all 6 fields, 0/3 fenced. Generated content matched the example's single-function complexity level (no over-scoping). Full transcripts: [`task-02-evidence-variant-c.md`](task-02-evidence-variant-c.md).
+
+### Final refinement and validation
+
+Variant C won on both criteria that actually differentiated the candidates (fence-avoidance, appropriate scoping), so it was extended with an explicit scoping line — "prefer a single focused task over multiple functions/parts" — to further guard against Variant B's over-scoping failure mode, and re-validated with 4 more runs (gen×2, regen×2) before being committed as `assessment-generation.st`.
+
+Results (final, 4 runs): all 4 valid JSON with all 6 fields; 1/4 fenced (second regen run) — a reminder that no static prompt design eliminates fencing 100%; Spring AI's structured-output entity mapping (task-03) is expected to tolerate a markdown-wrapped JSON response, so this residual risk is handled at that layer, not solely by the prompt. Full transcripts: [`task-02-evidence-variant-c.md`](task-02-evidence-variant-c.md#final-refinement--added-scoping-line-re-validated).
+
+### Comparison table
+
+| Criterion | A — instruction-heavy | B — schema-first | C — few-shot (winner) |
+|---|---|---|---|
+| JSON-shape adherence | 3/3 valid | 3/3 valid | 3/3 valid (+4/4 on final) |
+| Fence-avoidance (no ` ``` ` wrapper) | 2/3 | 2/3 | 3/3 (6/7 on final incl. refinement) |
+| Appropriate scoping to stated duration | Yes | **No** — routinely over-scoped (4-5 functions in 60 min) | Yes |
+| Regeneration reflects previous draft + adjustment | Yes | Yes | Yes |
+| Relative prompt length | Longest (8 explicit rules) | Medium | Medium (one worked example) |
+
+### Decision
+
+Variant C (few-shot), refined with the explicit single-task scoping line, is the winner — committed as `agents/src/main/resources/prompts/assessment-generation.st`. Raw `opencode` transcripts for all 13 runs (9 across the three initial variants + 4 validating the final refined version) are committed in this task's evidence files (linked above), not only in the PR description.
 
 ---
 
@@ -57,7 +95,7 @@ Design and select the versioned StringTemplate prompt `assessment-generation.st`
 | # | Verification | How to validate |
 |---|-------------|----------------|
 | 1 | At least 2-3 candidate variants were drafted, documented, and compared | "Prompt Variants Explored" section in this task file is filled in with what/how/why per variant and a comparison table |
-| 2 | The winning variant was validated with real model runs, not just static rendering | `opencode` CLI transcripts for both the initial-generation and regeneration cases are captured in "Prompt Variants Explored" and referenced in the task's PR description |
+| 2 | The winning variant was validated with real model runs, not just static rendering | `opencode` CLI transcripts for both the initial-generation and regeneration cases are committed in `task-02-evidence-variant-*.md` (rendered prompt inputs, exact command, raw outputs) — reproducible from the repo, not only summarized in this task file or a PR description |
 | 3 | Template is syntactically valid StringTemplate | `AssessmentGenerationTemplateTest` loads the resource with the ST4 library and renders it with sample attributes for both the generation and regeneration cases — no `ST4` parse exceptions |
 | 4 | Regeneration branch only renders when `adjustmentNotes` is present | Same test class: render twice (with and without `adjustmentNotes`) and assert the regeneration-only text is present/absent accordingly |
 | 5 | Header comment is present and matches the documented format | Same test class: assert the first line of the loaded resource matches `// assessment-generation.v1` (or current version) |
@@ -80,13 +118,13 @@ N/A — no database or ORM involved.
 
 ## Done Criteria
 
-- [ ] At least 2-3 candidate prompt variants were drafted, each with a documented what/how/why, and compared against each other using the criteria in Technical Design.
-- [ ] The winning variant was validated with real `opencode` CLI runs (both initial-generation and regeneration cases) before being committed — not selected on static rendering alone.
-- [ ] `assessment-generation.st` exists under `agents/src/main/resources/prompts/` and is never duplicated inline in Java.
-- [ ] `AssessmentGenerationTemplateTest` (committed, automated) verifies the template renders successfully for both the initial-generation case (no `adjustmentNotes`) and the regeneration case (with `adjustmentNotes`), and verifies the header-comment version format.
-- [ ] `org.antlr:ST4` dependency added to `pom.xml`; `./mvnw -Pbeta compile` succeeds.
-- [ ] Human developer code review completed; requested corrections, if any, were implemented and re-reviewed.
-- [ ] No unintended expansion: the task satisfies `[CHECK-ATOMICITY]`.
+- [x] At least 2-3 candidate prompt variants were drafted, each with a documented what/how/why, and compared against each other using the criteria in Technical Design.
+- [x] The winning variant was validated with real `opencode` CLI runs (both initial-generation and regeneration cases) before being committed — not selected on static rendering alone.
+- [x] `assessment-generation.st` exists under `agents/src/main/resources/prompts/` and is never duplicated inline in Java.
+- [x] `AssessmentGenerationTemplateTest` (committed, automated) verifies the template renders successfully for both the initial-generation case (no `adjustmentNotes`) and the regeneration case (with `adjustmentNotes`), and verifies the header-comment version format.
+- [x] `org.antlr:ST4` dependency added to `pom.xml`; `./mvnw -Pbeta compile` succeeds.
+- [x] Human developer code review completed; requested corrections, if any, were implemented and re-reviewed.
+- [x] No unintended expansion: the task satisfies `[CHECK-ATOMICITY]`.
 
 ---
 
