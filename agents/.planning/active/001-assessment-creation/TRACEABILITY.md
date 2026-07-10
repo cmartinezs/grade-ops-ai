@@ -40,7 +40,7 @@ Term and concept traceability for this planning. For global consolidated view, s
 | ID | Decision | Rationale | Affects | Date |
 |----|----------|-----------|---------|------|
 | D-01 | Merge original task candidates 4 (schema validation) and 5 (execution-log capture) into task-03 | Both are inseparable steps of the same pipeline call — neither is independently verifiable without `AssessmentAgentService` already existing; `[CHECK-ATOMICITY]` fragment rule applies | Story 01 task breakdown | 2026-07-10 |
-| D-02 | Reuse the existing shared-secret internal-auth (`app.internal.secret`) instead of building OIDC | Already scaffolded in `application.yml`; matches the analogous internal-auth pattern used elsewhere in the monorepo. `CLAUDE.md` describes agent endpoints as "OIDC" — flagged as a doc inconsistency, not followed literally | task-04 | 2026-07-10 |
+| D-02 | Layer the shared-secret internal-auth (`app.internal.secret`) as defense-in-depth on top of Cloud Run's real IAM invoker enforcement, rather than building an app-level OIDC-token validator | Checked `infra/terraform/environments/demo/cloud_run.tf`: `agents/` is `INGRESS_TRAFFIC_INTERNAL_ONLY` and grants `roles/run.invoker` only to `api/`'s service account — this **is** real OIDC-based service-to-service auth, enforced by the Cloud Run platform before a request reaches the app. `CLAUDE.md`'s "OIDC" description is accurate at the infra layer, not a doc error. The shared secret adds a defense-in-depth check that also works in local dev, where there's no real Cloud Run IAM | task-04 | 2026-07-10 (revised, see R-01) |
 
 ---
 
@@ -48,7 +48,7 @@ Term and concept traceability for this planning. For global consolidated view, s
 
 | ID | Term / Issue | Blocker | Status | Target Resolution |
 |----|-------------|---------|--------|------------------|
-| R-01 | `CLAUDE.md`'s architecture section says agent endpoints use "service-to-service OIDC auth"; the actual scaffold (`app.internal.secret`) uses a shared secret, not OIDC | None — informational | OPEN | Resolve during task-04 via `RECORD-INCONSISTENCY`; either update `CLAUDE.md` or implement real OIDC, whichever the team decides |
+| R-01 | *(Revised 2026-07-10 — superseded by D-02)* Originally flagged as "`CLAUDE.md` says OIDC, scaffold uses a shared secret" — corrected after checking `infra/terraform/environments/demo/cloud_run.tf`: Cloud Run's IAM invoker binding between `api/`'s and `agents/`' service accounts **is** the real OIDC mechanism `CLAUDE.md` describes, enforced at the platform level. The app-level shared secret is intentional defense-in-depth, not a substitute for missing OIDC | None — informational | RESOLVED | No action needed; `agents/`'s app code does not need to independently validate an identity token since Cloud Run enforces it before the request arrives |
 
 ---
 
