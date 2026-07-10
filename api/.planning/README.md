@@ -26,6 +26,7 @@ Central directory for all project plannings.
 
 ### 🚧 In Progress → see [`active/README.md`](active/README.md)
 
+- [003-assessment-creation](active/003-assessment-creation/README.md) — Persistencia de brief/draft + integración con `agents/` para la creación de assessments (child planning de `008-assessment-creation`)
 
 ### ✅ Completed → see [`finished/README.md`](finished/README.md)
 
