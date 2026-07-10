@@ -23,14 +23,16 @@ Term and concept traceability for this planning. For global consolidated view, s
 <!-- MATRIX-HEADER: plan-init adds one column per area between "Term / Concept" and "Notes" -->
 | Term / Concept | AG | W | Notes |
 |---------------|----|---|-------|
-| `AssessmentCommand` | ✅ | ✅ | Contract record — task-01. Fields match `api/`'s `AssessmentBrief`/`AssessmentDraft` (cross-checked against `api/.planning/003-assessment-creation`). |
+| `AssessmentCommand` | ✅ | ✅ | Contract record — task-01. Fields match `api/`'s `AssessmentBrief`/`AssessmentDraft` (cross-checked against `api/.planning/003-assessment-creation`). Gained `previousDraft` (content) on 2026-07-10, post-hoc, per task-02's code review — `previousDraftId` alone can't supply the regeneration prompt's content since `agents/` never persists or calls back into `api/`. `api/`'s child planning needs to know about this new field before it implements `agentclient`'s request shape. |
 | `AssessmentResult` | ✅ | ✅ | Contract record — task-01. Narrower than `docs/03-ai-agents/assessment-agent.md`'s Output Contract example — see Inconsistencies Found #1 in the story file. |
-| `assessment-generation.st` | ❌ | ✅ | Versioned StringTemplate prompt under `src/main/resources/prompts/` — task-02. |
-| `org.antlr:ST4` | ❌ | ✅ | New Maven dependency (StringTemplate engine), added by task-02. |
-| `AssessmentAgentService` | ❌ | ✅ | Fixed-pipeline service — task-03. Owns schema validation and execution-log capture (merged from original candidates 4/5 during atomization). |
-| `AgentExecutionLogPayload` | ❌ | ✅ | Execution metadata record returned to `api/` for `AgentExecutionLog` persistence — task-03. |
+| `assessment-generation.st` | ✅ | ✅ | Versioned StringTemplate prompt under `src/main/resources/prompts/` — task-02. Few-shot variant, selected after comparing 3 candidates via `opencode` CLI runs (see task-02's "Prompt Variants Explored"). |
+| `org.antlr:ST4` | ✅ | ✅ | Maven dependency (StringTemplate engine), added by task-02 — `4.3.4`. |
+| `AssessmentGenerationTemplateTest` | ✅ | ✅ | Structural/rendering test for the template (both cases + header format) — task-02. |
+| `GenerateAssessmentDraftUseCase` / `GenerateAssessmentDraftHandler` / `AssessmentAgentOrchestrator` | ❌ | ✅ | Nivel-2 pipeline (port in / thin handler / orchestrator) that replaces the originally-planned single `AssessmentAgentService` class — task-03, decided 2026-07-10 per the pre-implementation guideline alignment pass. |
+| `AssessmentGenerationPort` / `GeminiAssessmentGenerationAdapter` | ❌ | ✅ | Isolates the Gemini/`ChatClient` call behind a port + adapter (`infrastructure.adapter.out.gemini`) — task-03. |
+| `AgentExecutionLogPayload` | ❌ | ✅ | Execution metadata record returned to `api/` for `AgentExecutionLog` persistence — task-03. Expanded 2026-07-10 to the full `11-seguridad-observabilidad-y-auditoria.md` audit field set (`agentExecutionId`, `agentName`, `promptVersion`, `inputHash`/`outputHash`, tokens, `errorCode`), beyond the original 5-field draft. |
 | `AssessmentExecutionOutcome` | ❌ | ✅ | Bundles `AssessmentResult` + `AgentExecutionLogPayload` — task-03. |
-| `AssessmentAgentException` | ❌ | ✅ | Reason-coded exception (`INVALID_COMMAND`, `MALFORMED_OUTPUT`) — task-03. |
+| `AssessmentAgentException` | ❌ | ✅ | Reason-coded exception (`INVALID_COMMAND`, `MALFORMED_OUTPUT`) that also carries a partial `AgentExecutionLogPayload` for the failure path — task-03. |
 | `POST /internal/agents/assessment` | ❌ | ✅ | Internal endpoint consumed by `api/`'s `agentclient` — task-04. Internal-auth header name to be confirmed against `api/`'s existing convention. |
 
 ---

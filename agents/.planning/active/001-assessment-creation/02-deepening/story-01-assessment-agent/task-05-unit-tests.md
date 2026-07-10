@@ -34,10 +34,10 @@ Unit test the three collaborators task-03 introduced — `GenerateAssessmentDraf
 2. Create `AssessmentAgentOrchestratorTest.java`:
    - Mock `AssessmentGenerationPort`.
    - Test: valid `AssessmentCommand` → mocked port returns a complete `AssessmentGenerationResponse` → `generate()` returns a fully-populated `AssessmentExecutionOutcome` (exhaustive assertions on both `result` and every `AgentExecutionLogPayload` field, `status="COMPLETED"`, `errorCode` null).
-   - Test: `AssessmentCommand` with `adjustmentNotes` set → assert the rendered prompt passed to the mocked port differs from the no-`adjustmentNotes` case (`ArgumentCaptor` on the prompt string).
+   - Test: `AssessmentCommand` with `adjustmentNotes`/`previousDraftId`/`previousDraft` all set → assert the rendered prompt passed to the mocked port differs from the no-adjustment case and contains the `previousDraft` content (`ArgumentCaptor` on the prompt string).
    - Test: mocked port returns a response whose `AssessmentResult` is missing a required field → `generate()` throws `AssessmentAgentException(MALFORMED_OUTPUT)`; assert the exception's attached `AgentExecutionLogPayload` has `status="FAILED"` and `errorCode="MALFORMED_OUTPUT"`.
    - Test: `AssessmentCommand` with a blank required field → `generate()` throws `AssessmentAgentException(INVALID_COMMAND)` and the mocked port is never invoked (`verifyNoInteractions`); assert the exception's log payload is present and `FAILED`.
-   - Test: `AssessmentCommand` with mismatched `adjustmentNotes`/`previousDraftId` (one present, one absent) → same `INVALID_COMMAND` assertions as above.
+   - Test: `AssessmentCommand` with an incomplete regeneration triple (e.g. `adjustmentNotes` set but `previousDraftId`/`previousDraft` absent, or any other partial combination) → same `INVALID_COMMAND` assertions as above.
 3. Create `GeminiAssessmentGenerationAdapterTest.java`:
    - Mock the `ChatClient.Builder`/`ChatClient`/`ChatClientRequestSpec` chain per Spring AI's standard test pattern.
    - Test: a rendered prompt produces a mapped `AssessmentResult` plus `modelName`/token counts read from `ChatResponse` metadata.
