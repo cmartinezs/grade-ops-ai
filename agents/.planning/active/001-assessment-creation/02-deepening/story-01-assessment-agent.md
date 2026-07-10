@@ -1,6 +1,6 @@
 # 🔍 DEEPENING: Story 01 — assessment-agent
 
-> **Status:** TODO
+> **Status:** IN PROGRESS
 > [← 01-expansion.md](../01-expansion.md) | [← planning/README.md](../../README.md)
 
 ---
@@ -39,7 +39,7 @@ Implement the Assessment Agent following the project's fixed agent pipeline patt
 
 | # | Task | Workflow | Status | Output |
 |---|------|----------|--------|--------|
-| 1 | [AssessmentCommand / AssessmentResult contracts](story-01-assessment-agent/task-01-contracts.md) | GENERATE-DOCUMENT | TODO | `AssessmentCommand.java`, `AssessmentResult.java` |
+| 1 | [AssessmentCommand / AssessmentResult contracts](story-01-assessment-agent/task-01-contracts.md) | GENERATE-DOCUMENT | DONE | `AssessmentCommand.java`, `AssessmentResult.java` |
 | 2 | [Prompt template assessment-generation.st](story-01-assessment-agent/task-02-prompt-template.md) | GENERATE-DOCUMENT | TODO | `src/main/resources/prompts/assessment-generation.st`, `org.antlr:ST4` dependency |
 | 3 | [AssessmentAgentService (fixed pipeline)](story-01-assessment-agent/task-03-assessment-agent-service.md) | GENERATE-DOCUMENT | TODO | `AssessmentAgentService.java`, `AssessmentAgentException.java`, `AgentExecutionLogPayload.java`, `AssessmentExecutionOutcome.java` |
 | 4 | [Internal REST endpoint](story-01-assessment-agent/task-04-internal-endpoint.md) | GENERATE-DOCUMENT | TODO | `AssessmentController.java`, internal-auth filter |
@@ -66,7 +66,7 @@ Implement the Assessment Agent following the project's fixed agent pipeline patt
 
 | # | Description | Docs Involved | Status | Resolution Path |
 |---|-------------|--------------|--------|----------------|
-| — | *None yet* | — | — | — |
+| 1 | `AssessmentResult` (task-01) has 6 fields matching US-011's AC exactly; `docs/03-ai-agents/assessment-agent.md`'s Output Contract example has ~15 fields (incl. `summary`, `rubric_seed`, `warnings`, `uncertainty_flags`, `schema_version`) and renames 2 overlapping fields (`learning_objectives`, `student_instructions`) | `docs/03-ai-agents/assessment-agent.md`, US-011 | OPEN | Decide whether `docs/03-ai-agents/assessment-agent.md` should be narrowed to the MVP contract actually atomized, or the extra fields tracked as explicit residuals for a later story |
 
 ---
 
