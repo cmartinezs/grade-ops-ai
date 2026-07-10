@@ -1,4 +1,4 @@
-package cl.gradeops.ai.agents.assessment;
+package cl.gradeops.ai.agents.assessment.application.result;
 
 import java.util.List;
 

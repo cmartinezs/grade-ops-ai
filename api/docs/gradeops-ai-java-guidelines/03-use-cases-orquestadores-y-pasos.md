@@ -113,10 +113,13 @@ Reglas:
 - Fijar nombres de campos contra el consumidor real antes de implementar. Si un
   documento aspiracional y una historia atomizada discrepan, registrar la
   inconsistencia y declarar cuál fuente manda para ese slice.
-- En `agents/`, se permite ubicar el `Command`/`Result` en el package público de
-  la feature cuando actúa como fachada estable del agente. La implementación
-  interna del agente debe seguir separando aplicación, dominio e infraestructura
-  cuando aparezcan handlers, puertos, adapters o prompts.
+- `agents/` sigue la misma estructura de paquetes que `api/`
+  (`01-arquitectura-hexagonal-y-paquetes.md`): el `Command` vive en
+  `<feature>.application.command`, el `Result` en `<feature>.application.result`
+  — igual que `ai.gradeops.agents.grading.application` en el ejemplo de ese
+  documento. No existe una excepción que permita ubicarlos en el paquete raíz
+  de la feature; "contrato público estable" describe su rol semántico, no un
+  paquete distinto del que ya define la arquitectura hexagonal.
 
 ### Handler
 

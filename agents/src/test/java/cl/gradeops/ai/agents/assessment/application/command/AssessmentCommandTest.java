@@ -1,4 +1,4 @@
-package cl.gradeops.ai.agents.assessment;
+package cl.gradeops.ai.agents.assessment.application.command;
 
 import static org.assertj.core.api.Assertions.assertThat;
 

@@ -1,4 +1,4 @@
-package cl.gradeops.ai.agents.assessment;
+package cl.gradeops.ai.agents.assessment.application.command;
 
 /**
  * Input contract for the Assessment Agent (US-010/US-011/US-012).

@@ -16,7 +16,7 @@ Define the `AssessmentCommand` and `AssessmentResult` records that form the Asse
 ## Technical Design
 
 - **Approach:** model both as immutable Java records — idiomatic for Java 21 DTOs with no behavior, and matches the project rule that agents receive `{Agent}Command` and return `{Agent}Result` without persisting anything. `AssessmentCommand` carries the brief fields plus optional regeneration fields (`adjustmentNotes`, `previousDraftId`) so both US-011 and US-012 share one contract instead of a second command/agent.
-- **Affected files / components:** new package `agents/src/main/java/cl/gradeops/ai/agents/assessment/`; new files `AssessmentCommand.java`, `AssessmentResult.java`.
+- **Affected files / components:** new packages `agents/src/main/java/cl/gradeops/ai/agents/assessment/application/command/` and `.../assessment/application/result/`, per `api/docs/gradeops-ai-java-guidelines/01-arquitectura-hexagonal-y-paquetes.md`'s package template (`<feature>.application.command`, `<feature>.application.result`); new files `AssessmentCommand.java`, `AssessmentResult.java`.
 - **Interfaces / contracts:**
   - `AssessmentCommand(String learningGoal, String topic, String level, String duration, String language, String adjustmentNotes, String previousDraftId)` — `adjustmentNotes`/`previousDraftId` are `@Nullable`, present only when `api/` requests a regeneration.
   - `AssessmentResult(String title, String context, String instructions, List<String> objectives, List<String> deliverables, List<String> constraints)`.
@@ -27,9 +27,9 @@ Define the `AssessmentCommand` and `AssessmentResult` records that form the Asse
 
 ## Implementation Steps
 
-1. Create package `agents/src/main/java/cl/gradeops/ai/agents/assessment/`.
-2. Create `AssessmentCommand.java` — record with `learningGoal`, `topic`, `level`, `duration`, `language`, plus optional `adjustmentNotes`, `previousDraftId`.
-3. Create `AssessmentResult.java` — record with `title`, `context`, `instructions`, `objectives` (`List<String>`), `deliverables` (`List<String>`), `constraints` (`List<String>`).
+1. Create packages `agents/src/main/java/cl/gradeops/ai/agents/assessment/application/command/` and `.../assessment/application/result/`.
+2. Create `AssessmentCommand.java` in `application.command` — record with `learningGoal`, `topic`, `level`, `duration`, `language`, plus optional `adjustmentNotes`, `previousDraftId`.
+3. Create `AssessmentResult.java` in `application.result` — record with `title`, `context`, `instructions`, `objectives` (`List<String>`), `deliverables` (`List<String>`), `constraints` (`List<String>`).
 4. Add Javadoc on both records cross-referencing US-010/US-011/US-012 and the no-persistence rule.
 
 ---
@@ -59,7 +59,7 @@ N/A — no database or ORM involved; agents never persist domain entities.
 
 ## Done Criteria
 
-- [x] `AssessmentCommand` and `AssessmentResult` exist under `cl.gradeops.ai.agents.assessment` with exactly the fields specified above.
+- [x] `AssessmentCommand` and `AssessmentResult` exist under `cl.gradeops.ai.agents.assessment.application.command` / `.application.result` respectively, per the project's hexagonal package template, with exactly the fields specified above.
 - [x] `./mvnw -Pbeta compile` succeeds with no errors.
 - [x] Field names verified against the US-010/US-011/US-012 source docs.
 - [x] Existing `GradeOpsAgentsApplicationTest#contextLoads` still passes.
