@@ -114,6 +114,15 @@ Minimum infra checklist per service introduced:
 
 When expanding or deepening a planning, always check `infra/terraform/environments/demo/` to verify that each service referenced in code scopes has a corresponding `.tf` file. If it doesn't, add an infra scope or task explicitly.
 
+### Prompt template tasks
+
+Any planning task whose deliverable is a new or revised prompt template (`.st` file under `agents/src/main/resources/prompts/`) must not settle for a single draft. The task's Technical Design and Verification must:
+
+- Explore several candidate variants of the template — meaningfully different prompting strategies (framing, few-shot vs. zero-shot, how constraints/JSON-shape instructions are structured), not minor rewordings of one idea.
+- Document each variant's what/how/why: what it does differently, how it achieves that, and why it's a plausible candidate.
+- Include an explicit comparison between the variants, weighed against the task's own risk/quality criteria (e.g. how well each resists malformed output).
+- Validate the chosen variant with real runs via the `opencode` CLI before the task can be marked DONE. Static checks (e.g. StringTemplate rendering/parsing) verify the template is well-formed, not that it produces good model output — both are required, but neither substitutes for the other.
+
 ### Commit scoping for parent/child plannings
 
 When committing changes for a monorepo root planning that coordinates child plannings (see `.planning/GUIDE.md § Monorepo parent/child coordination`), **commits must be scoped per planning — the parent must never commit a child's changes, and vice versa.** This holds even though `api/`, `agents/`, `web/`, and the root currently share a single git history (verified 2026-07-09: no independent `.git` per subdirectory despite the "multi-repo" description above).
