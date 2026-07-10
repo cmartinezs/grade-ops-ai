@@ -25,6 +25,15 @@ Each entry should answer as many of these as possible:
 
 <!-- Add newest entries at the top. -->
 
+### 2026-07-10 13:05 - AssessmentCommand also used Objects.requireNonNull and IllegalArgumentException, missed in the first correction pass
+
+- **Source:** human code review (task-01 PR #25), requested correction
+- **Related story/task:** story-01-assessment-agent, task-01-contracts
+- **What happened:** the immediately preceding correction fixed `AssessmentResult`'s compact constructor but did not check `AssessmentCommand`, which had the same `Objects.requireNonNull` calls for the five required fields, plus an `IllegalArgumentException` for the `adjustmentNotes`/`previousDraftId` pairing check — both banned by `12-excepciones-y-manejo-de-errores.md`.
+- **Expected instead:** same reasoning as `AssessmentResult`, mirrored on the input side: `task-03-assessment-agent-service.md`'s `validate(AssessmentCommand)` step already owns rejecting a blank required field with `AssessmentAgentException(INVALID_COMMAND)`. `AssessmentCommand` is the target of Jackson deserialization at the internal REST endpoint (task-04), so constructor-level throwing would fail during deserialization instead of inside that dedicated validation step.
+- **Resolution:** removed the compact constructor from `AssessmentCommand` entirely (reverting to the plain record originally specified in this task's Technical Design, which never called for constructor validation). Extended `task-03-assessment-agent-service.md`'s `validate(AssessmentCommand)` bullet to explicitly include the `adjustmentNotes`/`previousDraftId` pairing check, so that invariant isn't silently dropped when task-03 is executed. Updated `AssessmentCommandTest` accordingly.
+- **Retrospective signal:** when a correction is scoped to "the record that was just flagged," check sibling records in the same task for the identical pattern before considering the correction done — `AssessmentCommand` and `AssessmentResult` were added together and shared the same (wrong) template.
+
 ### 2026-07-10 12:53 - AssessmentResult compact constructor used Objects.requireNonNull, violating the project's exception guideline
 
 - **Source:** human code review (task-01 PR #25), requested correction
