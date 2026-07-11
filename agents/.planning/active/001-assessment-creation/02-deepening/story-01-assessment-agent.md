@@ -48,7 +48,7 @@ Implement the Assessment Agent following the project's fixed agent pipeline patt
 | 2 | [Prompt template assessment-generation.st](story-01-assessment-agent/task-02-prompt-template.md) | GENERATE-DOCUMENT | DONE | `src/main/resources/prompts/assessment-generation.st`, `org.antlr:ST4` dependency, `AssessmentGenerationTemplateTest.java` |
 | 3 | [Assessment draft generation (orchestrator, port, adapter)](story-01-assessment-agent/task-03-assessment-agent-service.md) | GENERATE-DOCUMENT | DONE | `GenerateAssessmentDraftUseCase.java`, `GenerateAssessmentDraftHandler.java`, `AssessmentAgentOrchestrator.java`, `AssessmentGenerationPort.java`, `GeminiAssessmentGenerationAdapter.java`, `AssessmentAgentException.java`, `AgentExecutionLogPayload.java`, `AssessmentExecutionOutcome.java`, `AssessmentConfig.java` |
 | 4 | [Internal REST endpoint](story-01-assessment-agent/task-04-internal-endpoint.md) | GENERATE-DOCUMENT | DONE | `AssessmentController.java`, `InternalAuthFilter.java`, `CorrelationIdFilter.java`, `AgentGlobalExceptionHandler.java`, `SharedWebConfig.java` |
-| 5 | [Assessment draft generation unit tests](story-01-assessment-agent/task-05-unit-tests.md) | GENERATE-DOCUMENT | TODO | `GenerateAssessmentDraftHandlerTest.java`, `AssessmentAgentOrchestratorTest.java`, `GeminiAssessmentGenerationAdapterTest.java` |
+| 5 | [Assessment draft generation unit tests](story-01-assessment-agent/task-05-unit-tests.md) | GENERATE-DOCUMENT | DONE | `GenerateAssessmentDraftHandlerTest.java`, `AssessmentAgentOrchestratorTest.java`, `GeminiAssessmentGenerationAdapterTest.java` |
 
 ---
 

@@ -6,6 +6,7 @@ import cl.gradeops.ai.agents.assessment.application.result.AssessmentResult;
 import lombok.RequiredArgsConstructor;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.ResponseEntity;
+import org.springframework.ai.chat.metadata.EmptyUsage;
 import org.springframework.ai.chat.metadata.Usage;
 import org.springframework.ai.chat.model.ChatResponse;
 
@@ -18,6 +19,13 @@ import org.springframework.ai.chat.model.ChatResponse;
  * entity(Class)} so both the mapped {@link AssessmentResult} and the raw {@link ChatResponse}
  * (for token-usage metadata) come from a single call — calling {@code entity(...)} and {@code
  * chatResponse()} separately would issue two model calls.
+ *
+ * <p>{@code ChatResponseMetadata.getUsage()} never actually returns {@code null} — Spring AI
+ * defaults it to {@link EmptyUsage}, whose token counts are {@code 0}, not absent. Treating
+ * only a literal {@code null} as "no usage data" would silently report {@code 0} tokens
+ * whenever a provider doesn't supply usage metadata, instead of the {@code null} this class's
+ * contract promises for that case — checking for {@code EmptyUsage} explicitly is what makes
+ * "unavailable" distinguishable from "zero".
  */
 @RequiredArgsConstructor
 public class GeminiAssessmentGenerationAdapter implements AssessmentGenerationPort {
@@ -31,13 +39,14 @@ public class GeminiAssessmentGenerationAdapter implements AssessmentGenerationPo
 
         ChatResponse chatResponse = responseEntity.response();
         Usage usage = chatResponse.getMetadata() != null ? chatResponse.getMetadata().getUsage() : null;
+        boolean usageAvailable = usage != null && !(usage instanceof EmptyUsage);
 
         return AssessmentGenerationResponse.builder()
                 .result(responseEntity.entity())
                 .rawResponseText(chatResponse.getResult().getOutput().getText())
                 .modelName(chatResponse.getMetadata() != null ? chatResponse.getMetadata().getModel() : null)
-                .estimatedInputTokens(usage != null ? usage.getPromptTokens() : null)
-                .estimatedOutputTokens(usage != null ? usage.getCompletionTokens() : null)
+                .estimatedInputTokens(usageAvailable ? usage.getPromptTokens() : null)
+                .estimatedOutputTokens(usageAvailable ? usage.getCompletionTokens() : null)
                 .build();
     }
 }
