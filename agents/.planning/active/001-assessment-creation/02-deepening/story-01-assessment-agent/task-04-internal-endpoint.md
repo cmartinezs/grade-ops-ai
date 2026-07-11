@@ -1,6 +1,6 @@
 # ⚛️ TASK 04 — Internal REST endpoint
 
-> **Status:** TODO
+> **Status:** DONE
 > **Workflow:** GENERATE-DOCUMENT
 > **Depends On:** task-03
 > [← story file](../story-01-assessment-agent.md)
@@ -80,15 +80,15 @@ N/A — no database or ORM involved.
 
 ## Done Criteria
 
-- [ ] `POST /internal/agents/assessment` exists and delegates to `GenerateAssessmentDraftUseCase`.
-- [ ] Requests without the correct internal-auth header are rejected (401/403), never reach `GenerateAssessmentDraftUseCase`.
-- [ ] Invalid command / malformed output return 422 with a reason code and an `AgentExecutionLogPayload`, never a raw 500.
-- [ ] Every response (success and error) carries a correlation ID, honoring an inbound `X-Correlation-Id` and generating one otherwise; MDC is cleared on every exit path.
-- [ ] Header-name confirmation against `api/`'s existing convention is done; any mismatch found is recorded via `RECORD-INCONSISTENCY`.
-- [ ] No raw prompt, request body, or Gemini output appears in any log line produced by this task's code.
-- [ ] `./mvnw -Pbeta test` passes.
-- [ ] Human developer code review completed; requested corrections, if any, were implemented and re-reviewed.
-- [ ] No unintended expansion: the task satisfies `[CHECK-ATOMICITY]`.
+- [x] `POST /internal/agents/assessment` exists and delegates to `GenerateAssessmentDraftUseCase`. Verified with a live `curl` request against a running instance (`beta` profile, dummy Gemini config) — 422 response shows the request reached the orchestrator via the handler.
+- [x] Requests without the correct internal-auth header are rejected (401/403), never reach `GenerateAssessmentDraftUseCase`. Verified with `curl` — 403 for missing and for wrong header.
+- [x] Invalid command / malformed output return 422 with a reason code and an `AgentExecutionLogPayload`, never a raw 500. Verified with `curl` for the invalid-command case (full `AgentErrorResponse` body observed); malformed-output case exercises the same code path, not independently live-tested (needs a real Gemini response, deferred with task-03's live-call verification).
+- [x] Every response (success and error) carries a correlation ID, honoring an inbound `X-Correlation-Id` and generating one otherwise; MDC is cleared on every exit path. Verified with `curl`: generated on a fresh request, reused when supplied, present in both 403 and 422 responses.
+- [x] Header-name confirmation against `api/`'s existing convention is done; any mismatch found is recorded via `RECORD-INCONSISTENCY`. Confirmed exact match (`X-Internal-Key`, `app.internal.secret`) — no mismatch, no inconsistency to record.
+- [x] No raw prompt, request body, or Gemini output appears in any log line produced by this task's code. Verified — no logging statements exist in the new filters/handler/controller.
+- [x] `./mvnw -Pbeta test` passes — 10/10.
+- [x] Human developer code review completed; requested corrections, if any, were implemented and re-reviewed.
+- [x] No unintended expansion: the task satisfies `[CHECK-ATOMICITY]`. The `@ConditionalOnProperty` fix (replacing a `@ConditionalOnBean` approach from task-03 that turned out to be broken) and its `app.agents.gemini.enabled` property are corrections necessary to make this task's own beans wire correctly, not scope growth.
 
 ---
 
