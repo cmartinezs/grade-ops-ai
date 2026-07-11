@@ -1,6 +1,6 @@
 # ⚛️ TASK 05 — Assessment draft generation unit tests
 
-> **Status:** TODO
+> **Status:** DONE
 > **Workflow:** GENERATE-DOCUMENT
 > **Depends On:** task-03
 > [← story file](../story-01-assessment-agent.md)
@@ -66,13 +66,13 @@ N/A — no database or ORM involved.
 
 ## Done Criteria
 
-- [ ] `GenerateAssessmentDraftHandlerTest` covers delegation.
-- [ ] `AssessmentAgentOrchestratorTest` covers: valid generation, regeneration prompt difference, malformed-output rejection (with failure log payload), invalid-command rejection without a port call (both the blank-field and mismatched-pairing cases), with a failure log payload on each rejection.
-- [ ] `GeminiAssessmentGenerationAdapterTest` covers: successful mapping with metadata, and missing-metadata fallback to `null` token fields.
-- [ ] Every test follows Given-When-Then with comments, `@ExtendWith(MockitoExtension.class)`, `should...When...` naming, and exhaustive assertions on any returned object (`10-testing-calidad-y-automatizacion.md`).
-- [ ] `./mvnw -Pbeta test` passes with no real Gemini API key required.
-- [ ] Human developer code review completed; requested corrections, if any, were implemented and re-reviewed.
-- [ ] No unintended expansion: the task satisfies `[CHECK-ATOMICITY]`.
+- [x] `GenerateAssessmentDraftHandlerTest` covers delegation.
+- [x] `AssessmentAgentOrchestratorTest` covers: valid generation, regeneration prompt difference, malformed-output rejection (with failure log payload), invalid-command rejection without a port call (both the blank-field and mismatched-pairing cases), with a failure log payload on each rejection.
+- [x] `GeminiAssessmentGenerationAdapterTest` covers: successful mapping with metadata, and missing-metadata fallback to `null` token fields. This test caught a real production bug — see `RETROSPECTIVE-RAW.md` 2026-07-11 16:39.
+- [x] Every test follows Given-When-Then with comments, `@ExtendWith(MockitoExtension.class)`, `should...When...` naming, and exhaustive assertions on any returned object.
+- [x] `./mvnw -Pbeta test` passes with no real Gemini API key required — 18/18.
+- [x] Human developer code review completed; requested corrections, if any, were implemented and re-reviewed.
+- [x] No unintended expansion: the task satisfies `[CHECK-ATOMICITY]`. The `GeminiAssessmentGenerationAdapter` fix (`EmptyUsage` detection) is a correction to task-03's own code, made necessary by writing the test this task specified — not scope growth.
 
 ---
 

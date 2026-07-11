@@ -40,6 +40,7 @@ Term and concept traceability for this planning. For global consolidated view, s
 | `AgentGlobalExceptionHandler` / `AgentErrorResponse` | ✅ | ✅ | `@RestControllerAdvice` mapping `AssessmentAgentException` to a 422 JSON body carrying the failure's `AgentExecutionLogPayload` and the request's correlation ID — task-04. `AgentErrorResponse` lives in `shared` but references the assessment-specific `AgentExecutionLogPayload`, a deliberate, temporary coupling until a second agent exists to generalize from. |
 | `AssessmentExecutionResponse` | ✅ | ✅ | Transport-level JSON wrapper for `AssessmentExecutionOutcome`, keeping Jackson out of the application layer — task-04. |
 | `SharedWebConfig` | ✅ | ✅ | Registers `CorrelationIdFilter` (order 1) and `InternalAuthFilter` (order 2) via `FilterRegistrationBean` — task-04. No Spring Security dependency in `agents/`, unlike `api/`; a plain servlet filter is sufficient here. |
+| `GenerateAssessmentDraftHandlerTest` / `AssessmentAgentOrchestratorTest` / `GeminiAssessmentGenerationAdapterTest` | ✅ | ✅ | Unit test suite for task-03's three collaborators — task-05. 18/18 tests pass with no `GOOGLE_AI_API_KEY`. The adapter test caught a real bug: `GeminiAssessmentGenerationAdapter` checked `usage != null`, but Spring AI defaults `getUsage()` to `EmptyUsage` (zeros, never `null`) — fixed to check `!(usage instanceof EmptyUsage)`; see `RETROSPECTIVE-RAW.md`. |
 
 ---
 
