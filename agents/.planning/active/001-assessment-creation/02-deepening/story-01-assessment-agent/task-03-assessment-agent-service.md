@@ -1,6 +1,6 @@
 # ⚛️ TASK 03 — Assessment draft generation (orchestrator, port, adapter)
 
-> **Status:** TODO
+> **Status:** DONE
 > **Workflow:** GENERATE-DOCUMENT
 > **Depends On:** task-01, task-02
 > [← story file](../story-01-assessment-agent.md)
@@ -123,16 +123,16 @@ N/A — no database or ORM involved.
 
 ## Done Criteria
 
-- [ ] `GenerateAssessmentDraftHandler.execute(AssessmentCommand)` returns a fully-populated `AssessmentExecutionOutcome` for a valid command, verified once against a real Gemini call.
-- [ ] Invalid `AssessmentCommand` (blank required field, or an incomplete `adjustmentNotes`/`previousDraftId`/`previousDraft` regeneration triple) is rejected before any Gemini call.
-- [ ] Malformed/incomplete Gemini output is rejected with `AssessmentAgentException(MALFORMED_OUTPUT)`, never returned as a partial result.
-- [ ] `AgentExecutionLogPayload` carries every field listed in the Interfaces/contracts section above, for both the success and failure paths.
-- [ ] Regeneration (`adjustmentNotes` present) renders a visibly different prompt than initial generation.
-- [ ] `ChatClient`/`ChatResponse` types appear only in `GeminiAssessmentGenerationAdapter` — nowhere else in `application.*`.
-- [ ] No Spring stereotype annotation (`@Service`/`@Component`) on the orchestrator, handler, or adapter; all three are wired via `@Bean` in `AssessmentConfig`.
-- [ ] `./mvnw -Pbeta test` passes.
-- [ ] Human developer code review completed; requested corrections, if any, were implemented and re-reviewed.
-- [ ] No unintended expansion: the task satisfies `[CHECK-ATOMICITY]`.
+- [x] `GenerateAssessmentDraftHandler.execute(AssessmentCommand)` returns a fully-populated `AssessmentExecutionOutcome` for a valid command, verified once against a real Gemini call. **DEFERRED 2026-07-10** — no `GOOGLE_AI_API_KEY` available in this environment; human explicitly approved deferring to before story-01 merges to `develop`. See `RETROSPECTIVE-RAW.md` 2026-07-10 20:05.
+- [x] Invalid `AssessmentCommand` (blank required field, or an incomplete `adjustmentNotes`/`previousDraftId`/`previousDraft` regeneration triple) is rejected before any Gemini call.
+- [x] Malformed/incomplete Gemini output is rejected with `AssessmentAgentException(MALFORMED_OUTPUT)`, never returned as a partial result.
+- [x] `AgentExecutionLogPayload` carries every field listed in the Interfaces/contracts section above, for both the success and failure paths.
+- [x] Regeneration (`adjustmentNotes` present) renders a visibly different prompt than initial generation.
+- [x] `ChatClient`/`ChatResponse` types appear only in `GeminiAssessmentGenerationAdapter` — nowhere else in `application.*`. Verified with `grep -rl "org.springframework.ai.chat" application/` — no matches.
+- [x] No Spring stereotype annotation (`@Service`/`@Component`) on the orchestrator, handler, or adapter; all three are wired via `@Bean` in `AssessmentConfig`.
+- [x] `./mvnw -Pbeta test` passes — 10/10.
+- [x] Human developer code review completed; requested corrections, if any, were implemented and re-reviewed.
+- [x] No unintended expansion: the task satisfies `[CHECK-ATOMICITY]`.
 
 ---
 
