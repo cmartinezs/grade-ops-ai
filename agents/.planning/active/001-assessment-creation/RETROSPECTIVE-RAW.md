@@ -25,6 +25,14 @@ Each entry should answer as many of these as possible:
 
 <!-- Add newest entries at the top. -->
 
+### 2026-07-11 - Story closure: live-Gemini verification re-confirmed as deferred, not silently dropped
+
+- **Source:** `/plan-story`-equivalent closure flow, all 5 tasks DONE, human asked to merge the story to `develop`
+- **Related story/task:** story-01-assessment-agent (closure)
+- **What happened:** before opening the final story PR, re-checked the story's own Done Criteria (not just each task's) against actual evidence — criterion #1 ("Assessment Agent returns a structured draft... for a valid AssessmentCommand") was still unmet: no real Gemini call has ever been made in this environment, only mocked/unit-tested behavior (task-05) and a live `curl`-driven exercise of every path except the actual model response (task-04). This matches the deferral first recorded at task-03 (2026-07-10 20:05), which explicitly said the gap must be closed "before story-01 merges to develop" — this is that exact moment.
+- **Resolution:** asked the human explicitly rather than silently merging or silently blocking. Decision: merge with the gap documented, not block further on it. Updated the story's Done Criteria #1 with an explicit `DEFERRED` note (matching the pattern already used in task-03/04), and added a new Residuals entry (#1) so the gap survives story closure as a tracked, findable item rather than only living in this retrospective log.
+- **Retrospective signal:** a story-level Done Criteria list is not automatically satisfied by all its tasks being DONE — a criterion can span multiple tasks' worth of evidence and still have its own unmet condition (here: "a real call happened," which no single task's own Done Criteria fully covered on its own). Check the story's Done Criteria explicitly at closure time, not just the task table's status column.
+
 ### 2026-07-11 16:48 - Code review on task-05: claimed failure-log coverage wasn't actually asserted; Mockito mixing; premature checkbox
 
 - **Source:** human code review

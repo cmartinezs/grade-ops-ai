@@ -1,6 +1,6 @@
 # 🔍 DEEPENING: Story 01 — assessment-agent
 
-> **Status:** IN PROGRESS
+> **Status:** DONE
 > [← 01-expansion.md](../01-expansion.md) | [← planning/README.md](../../README.md)
 
 ---
@@ -54,14 +54,14 @@ Implement the Assessment Agent following the project's fixed agent pipeline patt
 
 ## Done Criteria
 
-- [ ] Assessment Agent returns a structured draft (title, context, instructions, objectives, deliverables, constraints) for a valid `AssessmentCommand`.
-- [ ] The same command shape accepts an optional `adjustmentNotes` field used for regeneration, without requiring a separate agent or contract.
-- [ ] Prompt lives in a versioned `.st` file, never inlined in Java.
-- [ ] Structured output is schema-validated before being returned to the caller.
-- [ ] Execution metadata (model, cost estimate, status) is produced per invocation, ready for `AgentExecutionLog` persistence in `api/`.
-- [ ] The endpoint is internal-only (service-to-service auth), not publicly reachable.
-- [ ] Unit tests pass (`./mvnw test`).
-- [ ] TRACEABILITY.md updated with new terms from this story (e.g. `AssessmentCommand`, `AssessmentResult`, `assessment-generation.st`).
+- [x] Assessment Agent returns a structured draft (title, context, instructions, objectives, deliverables, constraints) for a valid `AssessmentCommand`. **Live-Gemini verification DEFERRED** — no `GOOGLE_AI_API_KEY` available in this environment; human explicitly re-confirmed on 2026-07-11 to merge this story with the gap documented rather than block on it further. Behavior is otherwise fully verified: unit-tested end-to-end with mocked collaborators (task-05, 18/18 passing) and structurally exercised via live `curl` requests against a running instance for every path except the actual Gemini response (task-04). Must be completed with a real key before this story is considered fully proven in production. See `RETROSPECTIVE-RAW.md` 2026-07-10 20:05 and 2026-07-11 (this entry).
+- [x] The same command shape accepts an optional `adjustmentNotes` field used for regeneration, without requiring a separate agent or contract.
+- [x] Prompt lives in a versioned `.st` file, never inlined in Java.
+- [x] Structured output is schema-validated before being returned to the caller.
+- [x] Execution metadata (model, cost estimate, status) is produced per invocation, ready for `AgentExecutionLog` persistence in `api/`.
+- [x] The endpoint is internal-only (service-to-service auth), not publicly reachable.
+- [x] Unit tests pass (`./mvnw test`) — 18/18.
+- [x] TRACEABILITY.md updated with new terms from this story (e.g. `AssessmentCommand`, `AssessmentResult`, `assessment-generation.st`).
 
 ---
 
@@ -81,7 +81,7 @@ Implement the Assessment Agent following the project's fixed agent pipeline patt
 
 | # | Description | Deferred To | Status |
 |---|-------------|------------|--------|
-| — | *None* | — | — |
+| 1 | Story Done Criteria #1 (a real Gemini call) never ran in this environment (no `GOOGLE_AI_API_KEY` available). Story merges to `develop` with this gap documented, per explicit human decision on 2026-07-11. | Whoever has a real key next — run one `POST /internal/agents/assessment` request against a live Gemini backend and record the response as evidence in this story or a follow-up task | OPEN |
 
 ---
 
