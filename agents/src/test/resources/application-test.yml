@@ -11,3 +11,10 @@ spring:
       - org.springframework.ai.model.google.genai.autoconfigure.chat.GoogleGenAiChatAutoConfiguration
       - org.springframework.ai.model.google.genai.autoconfigure.embedding.GoogleGenAiEmbeddingConnectionAutoConfiguration
       - org.springframework.ai.model.google.genai.autoconfigure.embedding.GoogleGenAiTextEmbeddingAutoConfiguration
+
+app:
+  agents:
+    gemini:
+      # No ChatClient.Builder bean exists here (autoconfiguration excluded above), so the
+      # assessment pipeline's beans must stay off too — see AssessmentConfig/AssessmentController.
+      enabled: false
