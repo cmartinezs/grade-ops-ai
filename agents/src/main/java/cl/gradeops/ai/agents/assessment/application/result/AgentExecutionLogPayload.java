@@ -6,11 +6,11 @@ import lombok.Builder;
 
 /**
  * Execution evidence for one Assessment Agent run, returned to {@code api/} for {@code
- * AgentExecutionLog} persistence. Field set matches {@code
- * 11-seguridad-observabilidad-y-auditoria.md}'s "Auditoría de agentes AI" minimum list, scoped
- * to what this artifact actually knows: no {@code tenantId}/{@code teacherId}/resource id —
- * {@code AssessmentCommand} carries no tenant context, and {@code agents/} never persists
- * anything (`CLAUDE.md`) — {@code api/} attaches those when it persists the final row.
+ * AgentExecutionLog} persistence. Field set matches the project's minimum audit requirements
+ * for agent executions, scoped to what this artifact actually knows: no {@code tenantId}/
+ * {@code teacherId}/resource id — {@code AssessmentCommand} carries no tenant context, and
+ * {@code agents/} never persists anything — {@code api/} attaches those when it persists the
+ * final row.
  *
  * <p>{@code status} only ever takes two values here (never {@code "STARTED"}): this is a
  * synchronous call that either completes or throws, so there is no separate "started" state to

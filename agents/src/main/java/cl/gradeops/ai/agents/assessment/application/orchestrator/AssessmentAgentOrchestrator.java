@@ -21,9 +21,9 @@ import lombok.RequiredArgsConstructor;
 import org.stringtemplate.v4.ST;
 
 /**
- * Runs the fixed agent pipeline (`CLAUDE.md`): validate command → load data → build envelope →
- * call Gemini → validate structured output → log execution → return result. Never touches
- * Spring AI directly — {@code assessmentGenerationPort} is the only collaborator.
+ * Runs the fixed agent pipeline: validate command → load data → build envelope → call Gemini
+ * → validate structured output → log execution → return result. Never touches Spring AI
+ * directly — {@code assessmentGenerationPort} is the only collaborator.
  *
  * <p>The template body is cached as an immutable {@code String} (loaded once via {@link
  * #loadTemplate()}), not a single shared {@code ST} instance — {@code ST.add(...)} mutates

@@ -13,10 +13,9 @@ import lombok.Builder;
  * fields, normalizing {@code null} to an empty list). It never rejects missing required
  * fields: this record is the target of Spring AI's structured-output deserialization from
  * Gemini's response, so an absent field is expected model output, not a caller bug. Required-
- * field validation belongs to {@code AssessmentAgentService.validateOutput}, which rejects
- * incomplete results with {@code AssessmentAgentException} per the project's own exception
- * hierarchy (see {@code 12-excepciones-y-manejo-de-errores.md}) rather than a Java API
- * exception thrown from this constructor.
+ * field validation belongs to {@code AssessmentAgentOrchestrator.validateOutput}, which
+ * rejects incomplete results with {@code AssessmentAgentException} — the project's own
+ * exception type — rather than a Java API exception thrown from this constructor.
  *
  * @param title assessment title
  * @param context scenario or framing given to the student

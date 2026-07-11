@@ -10,9 +10,8 @@ import org.springframework.ai.chat.metadata.Usage;
 import org.springframework.ai.chat.model.ChatResponse;
 
 /**
- * The only class in this feature allowed to import {@code ChatClient}/{@code ChatResponse}
- * (`01-arquitectura-hexagonal-y-paquetes.md`'s own {@code agents/} example:
- * {@code ...agents.grading.infrastructure.adapter.out.gemini}). Isolates
+ * The only class in this feature allowed to import {@code ChatClient}/{@code ChatResponse},
+ * per the project's package conventions for provider-specific adapters. Isolates
  * {@code AssessmentAgentOrchestrator} from Spring AI entirely.
  *
  * <p>Uses {@code ChatClient.CallResponseSpec.responseEntity(Class)} rather than {@code
