@@ -10,9 +10,9 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 /**
- * Registers this feature's application/infrastructure beans explicitly, per
- * `01-arquitectura-hexagonal-y-paquetes.md`'s "única anotación de estereotipo permitida:
- * `@RestController`" rule — none of the classes wired here carry `@Service`/`@Component`.
+ * Registers this feature's application/infrastructure beans explicitly, per the project's
+ * wiring conventions — none of the classes wired here carry {@code @Service}/{@code
+ * @Component}.
  *
  * <p>Gated on {@code ChatClient.Builder} being present: the {@code test} Spring profile
  * (`src/test/resources/application-test.yml`) intentionally excludes Google GenAI's

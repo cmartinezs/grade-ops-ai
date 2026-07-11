@@ -3,24 +3,21 @@ package cl.gradeops.ai.agents.assessment.application.exception;
 import cl.gradeops.ai.agents.assessment.application.result.AgentExecutionLogPayload;
 
 /**
- * The Assessment Agent's own exception type, per {@code
- * 12-excepciones-y-manejo-de-errores.md} — never a Java API exception
- * (`IllegalArgumentException`, `NullPointerException`, ...) is thrown from this feature's
- * application code.
+ * The Assessment Agent's own exception type — never a Java API exception
+ * ({@code IllegalArgumentException}, {@code NullPointerException}, ...) is thrown from this
+ * feature's application code.
  *
  * <p>{@code agents/} has no domain/application/infrastructure exception hierarchy of its own
- * yet (it has no domain layer at all — {@code CLAUDE.md}: "Agents do not own domain entities").
- * A single concrete exception with a reason code, rather than a subclass per failure, mirrors
- * how {@code api/}'s own {@code DomainInvariantViolationException} is used generically across
- * many different invariant violations. Splitting {@code INVALID_COMMAND}/{@code
- * MALFORMED_OUTPUT} into separate classes now, with only one agent and two reasons, would be
- * abstraction by speculation (`00-principios-rectores.md` #6, KISS) — revisit if a second
- * agent needs its own reason codes.
+ * yet — it has no domain layer at all. A single concrete exception with a reason code, rather
+ * than a subclass per failure, mirrors how invariant-violation exceptions are used generically
+ * elsewhere in the project. Splitting {@code INVALID_COMMAND}/{@code MALFORMED_OUTPUT} into
+ * separate classes now, with only one agent and two reasons, would be premature — revisit if a
+ * second agent needs its own reason codes.
  *
  * <p>Carries its own (partial, always {@code status="FAILED"}) {@link AgentExecutionLogPayload}
  * so the caller (task-04's exception handler) can still return execution evidence to {@code
- * api/} even when generation never produces an {@code AssessmentExecutionOutcome} —
- * evidence must never be a side effect of the happy path only (`00-principios-rectores.md` #8).
+ * api/} even when generation never produces an {@code AssessmentExecutionOutcome} — evidence
+ * must never be a side effect of the happy path only.
  */
 public class AssessmentAgentException extends RuntimeException {
 
