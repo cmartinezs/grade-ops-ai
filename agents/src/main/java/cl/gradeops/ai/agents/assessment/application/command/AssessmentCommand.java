@@ -21,8 +21,8 @@ import lombok.Builder;
  * is the single place that rejects a blank required field or an inconsistent regeneration
  * triple ({@code adjustmentNotes}/{@code previousDraftId}/{@code previousDraft} must all be
  * present together or all absent), with {@code AssessmentAgentException(INVALID_COMMAND)} —
- * the project's own exception type, per {@code 12-excepciones-y-manejo-de-errores.md} —
- * rather than a Java API exception thrown from this constructor.
+ * the project's own exception type — rather than a Java API exception thrown from this
+ * constructor.
  *
  * @param learningGoal what the teacher wants to evaluate
  * @param topic programming topic or skill area

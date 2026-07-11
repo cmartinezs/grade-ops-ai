@@ -25,6 +25,15 @@ Each entry should answer as many of these as possible:
 
 <!-- Add newest entries at the top. -->
 
+### 2026-07-10 20:05 - task-03: no GOOGLE_AI_API_KEY available; live Gemini smoke check deferred; AssessmentConfig broke contextLoads until gated
+
+- **Source:** `/plan-task` execution, story-01-assessment-agent task-03
+- **Related story/task:** story-01-assessment-agent, task-03-assessment-agent-service
+- **What happened (deferred verification):** task-03's Done Criteria and Software Smoke Test Check both require one real Gemini call (`GenerateAssessmentDraftHandler.execute(...)` against a real `GOOGLE_AI_API_KEY`) — the first real Gemini call in the project. No API key is available in this environment. Asked the human explicitly; decided to defer the live call rather than block the task, and complete it before the *story* (not each task) merges to `develop`.
+- **What happened (regression caught before commit):** `AssessmentConfig` unconditionally required a `ChatClient.Builder` bean. `src/test/resources/application-test.yml` intentionally excludes `GoogleGenAiChatAutoConfiguration` to keep `GradeOpsAgentsApplicationTest#contextLoads` hermetic — so no such bean exists under the `test` Spring profile, and `contextLoads` failed with `BeanCreationException` once `AssessmentConfig` was added.
+- **Resolution:** added `@ConditionalOnBean(ChatClient.Builder.class)` at the `AssessmentConfig` class level, so none of its beans register when the bean is absent (`test` profile) but all of them do when it's present (`beta`/`demo`, where the real autoconfiguration is active). Verified both paths manually: `contextLoads` passes under `test`; `./mvnw -Pbeta spring-boot:run` with dummy Google GenAI config (passed via `-Dspring-boot.run.jvmArguments`, not env vars — `export`-ing `GOOGLE_AI_API_KEY`/`AI_MODEL_NAME` before `./mvnw spring-boot:run` did not propagate to the forked JVM in this environment, a tooling quirk worth remembering for the eventual live smoke check) starts cleanly with no bean-wiring errors.
+- **Retrospective signal:** (1) a config class that conditionally depends on an external-provider bean must be tested under *every* Spring profile the project defines, not just the one being actively worked in — the `test` profile's AI exclusion existed before this task and would have silently broken CI otherwise. (2) `./mvnw spring-boot:run` with `export`-ed shell env vars did not reach the child process reliably here; use `-Dspring-boot.run.jvmArguments="-Dspring.ai...=..."` instead when a real key is available for the deferred live check.
+
 ### 2026-07-10 17:25 - Code review on task-02: regeneration prompt needs content AssessmentCommand can't provide; opencode evidence wasn't reproducible from the repo
 
 - **Source:** human code review (`.code-review/story-01-assessment-agent/task-02-prompt-template.md`)
