@@ -1,6 +1,6 @@
 # ⚛️ TASK 01 — GroqAssessmentGenerationAdapter
 
-> **Status:** TODO
+> **Status:** DONE
 > **Workflow:** GENERATE-DOCUMENT
 > **Depends On:** —
 > [← story file](../story-01-groq-provider-adapter.md)
@@ -36,8 +36,8 @@ A `GroqAssessmentGenerationAdapter` class exists, implements `AssessmentGenerati
 
 | # | Verification | How to validate |
 |---|-------------|----------------|
-| 1 | `GroqAssessmentGenerationAdapter` compiles and implements `AssessmentGenerationPort` correctly | `./mvnw compile` |
-| 2 | Real Groq call proves the structured-output mapping works | Evidence file committed with the actual request/response, referenced from this task |
+| 1 | `GroqAssessmentGenerationAdapter` compiles and implements `AssessmentGenerationPort` correctly | `./mvnw -Pbeta compile` (no-profile `compile` fails for a pre-existing, unrelated reason — see `RETROSPECTIVE-RAW.md` 2026-07-12) |
+| 2 | Real Groq call proves the structured-output mapping works | [`task-01-groq-structured-output-evidence.md`](task-01-groq-structured-output-evidence.md) — `HTTP 200`, JSON matching `AssessmentResult`'s 6 fields exactly, no mapping adjustment needed. Reusable curl recipe (both providers, direct-API and local-endpoint) generalized into [`MANUAL-PROVIDER-TESTING.md`](../../MANUAL-PROVIDER-TESTING.md) |
 
 ### Software Smoke Test Check
 
@@ -51,12 +51,12 @@ N/A — no database or ORM artifacts involved.
 
 ## Done Criteria
 
-- [ ] `GroqAssessmentGenerationAdapter.java` exists in `infrastructure.adapter.out.groq`, implements `AssessmentGenerationPort`.
-- [ ] `spring-ai-starter-model-openai` added to `agents/pom.xml`.
-- [ ] A real Groq API call's request/response is documented as committed evidence, proving the response-mapping approach works (or documenting the adjustment made because it didn't).
-- [ ] `./mvnw compile` succeeds.
-- [ ] Human developer code review completed; requested corrections, if any, were implemented and re-reviewed.
-- [ ] No unintended expansion: the task satisfies `[CHECK-ATOMICITY]`.
+- [x] `GroqAssessmentGenerationAdapter.java` exists in `infrastructure.adapter.out.groq`, implements `AssessmentGenerationPort`.
+- [x] `spring-ai-starter-model-openai` added to `agents/pom.xml`.
+- [x] A real Groq API call's request/response is documented as committed evidence, proving the response-mapping approach works (or documenting the adjustment made because it didn't).
+- [x] `./mvnw -Pbeta compile` succeeds.
+- [x] Human developer code review completed; requested corrections, if any, were implemented and re-reviewed.
+- [x] No unintended expansion: the task satisfies `[CHECK-ATOMICITY]`.
 
 ---
 

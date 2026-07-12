@@ -70,6 +70,11 @@
                     <groupId>org.springframework.ai</groupId>
                     <artifactId>spring-ai-starter-model-google-genai</artifactId>
                 </dependency>
+                <!-- Groq — consumed via its OpenAI-compatible chat completions endpoint; Spring AI has no dedicated Groq starter -->
+                <dependency>
+                    <groupId>org.springframework.ai</groupId>
+                    <artifactId>spring-ai-starter-model-openai</artifactId>
+                </dependency>
             </dependencies>
         </profile>
 
@@ -80,6 +85,11 @@
                 <dependency>
                     <groupId>org.springframework.ai</groupId>
                     <artifactId>spring-ai-starter-model-google-genai</artifactId>
+                </dependency>
+                <!-- Groq — consumed via its OpenAI-compatible chat completions endpoint; Spring AI has no dedicated Groq starter -->
+                <dependency>
+                    <groupId>org.springframework.ai</groupId>
+                    <artifactId>spring-ai-starter-model-openai</artifactId>
                 </dependency>
             </dependencies>
         </profile>
