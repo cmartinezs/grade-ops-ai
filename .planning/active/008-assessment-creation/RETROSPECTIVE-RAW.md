@@ -25,6 +25,18 @@ Each entry should answer as many of these as possible:
 
 <!-- Add newest entries at the top. -->
 
+### 2026-07-12 — Story 01 checkpoint 2 closed, story remains BLOCKED on api/'s child planning not having started
+
+**What happened:** Ran `/plan-story 008-assessment-creation story-01-agents-assessment-agent` after the human confirmed the `agents/` child planning's tracked story reached completion. Verified directly: `agents/.planning/active/001-assessment-creation/02-deepening/story-01-assessment-agent.md` is `Status: DONE`, all 5 tasks `DONE`, all Done Criteria checked. Updated this coordination story's Sync Checkpoint 2 and Done Criteria bullet 1 to reflect that. `[EXECUTE-STORY]` then found Done Criteria bullet 2 ("internal agent endpoint is reachable from `api/`") unmet — `api/.planning/active/003-assessment-creation` is still status EXPANSION with story-01 `assessment-creation-persistence` still `TODO`; no `agentclient` call has been attempted yet, so reachability cannot be verified. Also found and logged a documentation inconsistency (Inconsistencies Found #3): `agents/.planning/active/001-assessment-creation`'s Residual #1 (Gemini success path unproven) is still `Status: OPEN` in that file, while the sibling child planning `agents/.planning/finished/002-groq-genai-provider`'s retrospective claims to have closed it — but only via a Groq call, not Gemini, so the two claims describe different things.
+
+**What was expected instead:** n/a — this is the coordination story working as designed: a child reaching DONE does not imply the whole coordination story is DONE, since Sync Checkpoint 3 (api/ side) is a separate, later condition.
+
+**How it was resolved or contained:** Story status set to `IN PROGRESS` (was `TODO`). Sync Checkpoints table and Done Criteria updated with dated evidence. Story left `BLOCKED`, not `DONE` — will be re-run once `api/.planning/active/003-assessment-creation` story-01 reaches a point where `agentclient` reachability against the live `agents/` endpoint can be confirmed.
+
+**What should be carried forward:** the residual-status mismatch between `agents/`'s two child plannings (found above) is a documentation-accuracy issue, not a blocker, and was left unfixed in the child's own file — it belongs to whoever next touches `agents/.planning/active/001-assessment-creation`'s Residuals table, scoped as its own commit per the parent/child commit-scoping rule (`CLAUDE.md`).
+
+---
+
 ### 2026-07-09 — Monorepo child-planning rule was missed during /plan-expand
 
 **What happened:** During `/plan-expand`, Story 02 (`api-assessment-creation`) and Story 01 (`agents-assessment-agent`) were scoped as full implementation stories directly in this root planning. This skipped the monorepo parent/child coordination check: `api/` already had its own `.planning/` workspace (with prior plannings `001-hexagonal-refactor`, `002-drop-old-password-recovery-requests`), so its implementation should have been split into a child planning there instead of duplicated in the parent. The user caught this by asking for a review specifically focused on the monorepo rule.
