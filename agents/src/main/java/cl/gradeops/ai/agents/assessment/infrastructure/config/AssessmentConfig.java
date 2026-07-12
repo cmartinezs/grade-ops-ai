@@ -5,6 +5,8 @@ import cl.gradeops.ai.agents.assessment.application.port.out.AssessmentGeneratio
 import cl.gradeops.ai.agents.assessment.application.usecase.GenerateAssessmentDraftHandler;
 import cl.gradeops.ai.agents.assessment.infrastructure.adapter.out.gemini.GeminiAssessmentGenerationAdapter;
 import org.springframework.ai.chat.client.ChatClient;
+import org.springframework.ai.chat.model.ChatModel;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -24,14 +26,22 @@ import org.springframework.context.annotation.Configuration;
  * (alongside excluding Google GenAI's autoconfiguration entirely) to keep {@code
  * GradeOpsAgentsApplicationTest#contextLoads} hermetic; `beta`/`demo` need no change since the
  * default is {@code true}.
+ *
+ * <p>Builds Gemini's {@code ChatClient} directly from the {@code googleGenAiChatModel} bean
+ * (Spring AI's own unique name for it) rather than injecting the generic, autoconfigured {@code
+ * ChatClient.Builder} — with Groq's OpenAI-compatible starter also on the classpath (added for
+ * this planning), Spring AI's {@code ChatClientAutoConfiguration} finds two {@code ChatModel}
+ * beans and refuses to build that generic bean at all. `application-beta.yml`/`application-
+ * demo.yml` exclude that autoconfiguration entirely for this reason.
  */
 @Configuration
 @ConditionalOnProperty(prefix = "app.agents.gemini", name = "enabled", havingValue = "true", matchIfMissing = true)
 class AssessmentConfig {
 
     @Bean
-    GeminiAssessmentGenerationAdapter geminiAssessmentGenerationAdapter(ChatClient.Builder chatClientBuilder) {
-        return new GeminiAssessmentGenerationAdapter(chatClientBuilder.build());
+    GeminiAssessmentGenerationAdapter geminiAssessmentGenerationAdapter(
+            @Qualifier("googleGenAiChatModel") ChatModel chatModel) {
+        return new GeminiAssessmentGenerationAdapter(ChatClient.builder(chatModel).build());
     }
 
     @Bean
