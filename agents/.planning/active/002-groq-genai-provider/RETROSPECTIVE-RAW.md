@@ -25,6 +25,14 @@ Each entry should answer as many of these as possible:
 
 <!-- Add newest entries at the top. -->
 
+### 2026-07-12 - task-02 code review: no blocking findings, one P3 doc staleness
+
+- **Source:** human code review (`.code-review/story-01-groq-provider-adapter/task-02-env-config.md`, PR #36)
+- **Related story/task:** story-01-groq-provider-adapter, task-02-env-config
+- **What happened:** reviewer independently validated `./mvnw -Pbeta compile`/`test` (18/18), non-web `beta`/`demo` startup with `.env` and shell vars unset (full web startup blocked by the review sandbox's Tomcat socket restriction, unrelated to this task). One P3: `MANUAL-PROVIDER-TESTING.md`'s local-endpoint section still described `GOOGLE_AI_API_KEY`/`AI_MODEL_NAME` as the *current* config with the `GRADEOPS_*` rename listed as still-pending ("once story-01 task-02 lands") — accurate when written, stale now that task-02 merged.
+- **Resolution:** updated that paragraph to state the `GRADEOPS_*` vars directly (env-or-`.env`), and also updated the direct-Gemini-curl example's shell variable name (`${GOOGLE_AI_API_KEY}` → `${GRADEOPS_GEMINI_API_KEY}`) for consistency, though the reviewer didn't flag that second spot specifically.
+- **Retrospective signal:** cross-references like "once task-NN lands" are a known staleness trap — once the referenced task actually lands, the phrasing itself becomes the thing that's wrong. Worth a final grep pass for "once task-NN"/"pending"/"TODO"-style forward references across a story's docs when its last task closes, not just checking each task's own file in isolation.
+
 ### 2026-07-12 - task-02: task-01's OpenAI dependency already broke real app boot under `-Pbeta`, not just tests
 
 - **Source:** `/plan-task` execution, story-01 task-02, discovered by actually starting the app (as task-02's own Risk row required) rather than trusting `./mvnw compile`
