@@ -2,6 +2,7 @@ package cl.gradeops.ai.agents.assessment.application.orchestrator;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
@@ -79,7 +80,7 @@ class AssessmentAgentOrchestratorTest {
                 .estimatedInputTokens(120)
                 .estimatedOutputTokens(80)
                 .build();
-        when(assessmentGenerationPort.generate(anyString())).thenReturn(response);
+        when(assessmentGenerationPort.generate(anyString(), any())).thenReturn(response);
 
         // when
         AssessmentExecutionOutcome outcome = orchestrator.generate(command);
@@ -130,7 +131,7 @@ class AssessmentAgentOrchestratorTest {
                 .estimatedOutputTokens(50)
                 .build();
         ArgumentCaptor<String> promptCaptor = ArgumentCaptor.forClass(String.class);
-        when(assessmentGenerationPort.generate(promptCaptor.capture())).thenReturn(response);
+        when(assessmentGenerationPort.generate(promptCaptor.capture(), any())).thenReturn(response);
 
         // when
         orchestrator.generate(initialCommand);
@@ -166,7 +167,7 @@ class AssessmentAgentOrchestratorTest {
                 .estimatedInputTokens(100)
                 .estimatedOutputTokens(50)
                 .build();
-        when(assessmentGenerationPort.generate(anyString())).thenReturn(response);
+        when(assessmentGenerationPort.generate(anyString(), any())).thenReturn(response);
 
         // when / then
         assertThatThrownBy(() -> orchestrator.generate(command))
@@ -258,14 +259,14 @@ class AssessmentAgentOrchestratorTest {
                 twoProviderSelector, Map.of("gemini", 0.000075, "groq", 0.0));
         twoProviderOrchestrator.loadTemplate();
 
-        when(geminiPort.generate(anyString())).thenReturn(AssessmentGenerationResponse.builder()
+        when(geminiPort.generate(anyString(), any())).thenReturn(AssessmentGenerationResponse.builder()
                 .result(completeResult())
                 .rawResponseText("{\"title\":\"Loop exercise\"}")
                 .modelName("gemini-2.0-flash")
                 .estimatedInputTokens(1000)
                 .estimatedOutputTokens(1000)
                 .build());
-        when(groqPort.generate(anyString())).thenReturn(AssessmentGenerationResponse.builder()
+        when(groqPort.generate(anyString(), any())).thenReturn(AssessmentGenerationResponse.builder()
                 .result(completeResult())
                 .rawResponseText("{\"title\":\"Loop exercise\"}")
                 .modelName("llama-3.3-70b-versatile")

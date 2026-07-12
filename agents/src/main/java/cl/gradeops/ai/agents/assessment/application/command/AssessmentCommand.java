@@ -37,10 +37,14 @@ import lombok.Builder;
  * @param provider which LLM provider generates this draft; {@code null} selects the configured
  *     default. An unrecognized value is rejected by {@code AssessmentAgentOrchestrator.validate}
  *     with {@code AssessmentAgentException(INVALID_COMMAND)}, the same as any other invalid field.
- * @param model a literal, provider-specific model name; {@code null} lets the selected provider's
- *     own configured default apply. Not validated here — an unsupported value surfaces as
- *     whatever error the provider itself returns, translated by the orchestrator's existing
- *     generation-failure handling.
+ * @param model a literal, provider-specific model name, forwarded as a per-call option to the
+ *     resolved provider's {@code ChatClient}; {@code null} lets that provider's own configured
+ *     default apply. Not validated against a list of models the provider actually supports — an
+ *     unsupported value surfaces as whatever error the provider itself returns, translated by the
+ *     orchestrator's existing generation-failure handling. Which models each provider actually
+ *     offers, and which are appropriate for which capability, is not tracked anywhere yet (see
+ *     this feature's own residual notes) — the caller is responsible for sending a value the
+ *     resolved provider recognizes.
  */
 @Builder
 public record AssessmentCommand(

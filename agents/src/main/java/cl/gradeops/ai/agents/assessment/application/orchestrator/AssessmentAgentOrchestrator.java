@@ -79,7 +79,7 @@ public class AssessmentAgentOrchestrator {
 
         AssessmentGenerationResponse response;
         try {
-            response = selected.port().generate(renderedPrompt);
+            response = selected.port().generate(renderedPrompt, command.model());
         } catch (RuntimeException e) {
             throw malformedOutput(
                     "Assessment generation response could not be parsed: " + e.getMessage(),
