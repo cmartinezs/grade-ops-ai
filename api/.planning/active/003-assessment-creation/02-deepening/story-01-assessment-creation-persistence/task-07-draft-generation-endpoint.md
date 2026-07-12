@@ -24,7 +24,7 @@
   - `assessment/application/command/GenerateAssessmentDraftCommand.java`, `application/port/in/GenerateAssessmentDraftUseCase.java`, `application/usecase/GenerateAssessmentDraftHandler.java`, `application/result/GenerateAssessmentDraftResult.java` (new)
   - `assessment/infrastructure/adapter/in/web/AssessmentController.java` (**modify** — add `POST /api/v1/assessments/{id}/draft`)
   - request/response DTOs for the new endpoint
-- **Interfaces / contracts:** `POST /api/v1/assessments/{id}/draft` (no request body — brief is already persisted) → 201 with the generated draft (title, context, instructions, objectives, deliverables, constraints, version=1). `AgentExecutionLog` fields: `id`, `assessmentId`, `draftId` (nullable until the draft row exists — see design notes), `model`, `costEstimate`, `status`, `startedAt`, `finishedAt`.
+- **Interfaces / contracts:** `POST /api/v1/assessments/{id}/draft` (no request body — brief is already persisted) → 201 with the generated draft (title, context, instructions, objectives, deliverables, constraints, version=1). `AgentExecutionLog` fields (updated 2026-07-12 to match `agents/`'s actual `AgentExecutionLogPayload`, verified against source — see this story's Inconsistency #3): `id`, `assessmentId`, `draftId` (nullable until the draft row exists — see design notes), `agentExecutionId` (UUID from `agents/`, for cross-service correlation), `agentName`, `provider` (the requested provider — `agents/` doesn't echo this back, so persist the value `api/` sent, see Residual #1), `model`, `promptVersion`, `inputHash`, `outputHash`, `estimatedInputTokens`, `estimatedOutputTokens`, `costEstimate`, `status` (`COMPLETED`/`FAILED`), `errorCode` (`INVALID_COMMAND`/`MALFORMED_OUTPUT`, nullable — **separate column from `status`, not the same field**), `startedAt`, `finishedAt`.
 - **Risk:** M — the "call outside transaction, persist after" ordering is easy to get backwards; getting it wrong either holds a DB connection open for the duration of a slow Gemini call (connection-pool exhaustion risk) or persists a log for a call that hasn't actually completed. Mitigated by an explicit implementation-step ordering below and a dedicated test asserting no transaction is open during the `agentclient` call.
 - **Design notes:** insertion order within the (post-call) transaction: save the draft row first (without `agent_execution_log_id` if a chicken-and-egg FK issue arises — alternative: save the log first without `draft_id`, then the draft with the log's id, then back-fill the log's `draft_id` in a second update within the same transaction). Decide and document the exact order during implementation; either is acceptable as long as both rows end up consistently cross-referenced and the whole sequence is atomic.
 
@@ -32,14 +32,14 @@
 
 ## Implementation Steps
 
-1. Create `V12__add_agent_execution_logs.sql`: `agent_execution_logs` table — `id UUID PRIMARY KEY`, `assessment_id UUID NOT NULL REFERENCES assessments(id)`, `draft_id UUID REFERENCES assessment_drafts(id)`, `model VARCHAR`, `cost_estimate NUMERIC`, `status VARCHAR NOT NULL`, `started_at TIMESTAMPTZ NOT NULL`, `finished_at TIMESTAMPTZ NOT NULL`.
+1. Create `V12__add_agent_execution_logs.sql`: `agent_execution_logs` table — `id UUID PRIMARY KEY`, `assessment_id UUID NOT NULL REFERENCES assessments(id)`, `draft_id UUID REFERENCES assessment_drafts(id)`, `agent_execution_id UUID`, `agent_name VARCHAR`, `provider VARCHAR`, `model VARCHAR`, `prompt_version VARCHAR`, `input_hash VARCHAR`, `output_hash VARCHAR`, `estimated_input_tokens INTEGER`, `estimated_output_tokens INTEGER`, `cost_estimate NUMERIC`, `status VARCHAR NOT NULL`, `error_code VARCHAR`, `started_at TIMESTAMPTZ NOT NULL`, `finished_at TIMESTAMPTZ NOT NULL`. (Column set expanded 2026-07-12 to match `agents/`'s actual `AgentExecutionLogPayload` — see this story's Inconsistency #3; `status` and `error_code` are separate columns.)
 2. Create `AgentExecutionLog.java` (domain) and its full persistence stack (entity, repo, adapter, mapper, port) mirroring task-01's pattern.
 3. Create `GenerateAssessmentDraftHandler.java`:
    - Load the `AssessmentBrief` for the given assessment id (404 if not found).
    - Build `agentclient.AssessmentCommand` from the brief (no `adjustmentNotes`/`previousDraftId` — this is initial generation).
    - Call `AssessmentAgentClient.generate(...)` **outside** any `@Transactional` boundary.
-   - On success, open a transaction: persist the `AgentExecutionLog`, persist the `AssessmentDraft` (version 1, `previousVersionId = null`), cross-reference both per the design-notes decision.
-   - On `AgentClientException`, persist a failed `AgentExecutionLog` (status = error reason code) without a draft row, and propagate a clean error to the controller (422/502 depending on the failure type).
+   - On success, open a transaction: persist the `AgentExecutionLog` with the full field set from step 1 (including `provider` from the outgoing command, since `agents/` doesn't echo it back), persist the `AssessmentDraft` (version 1, `previousVersionId = null`), cross-reference both per the design-notes decision.
+   - On `AgentClientException`, persist a failed `AgentExecutionLog` — `status = "FAILED"`, `error_code` set to the failure's reason code (`AgentClientException`'s own reason, or `AssessmentAgentException.Reason` name if surfaced) — without a draft row, and propagate a clean error to the controller (422/502 depending on the failure type).
 4. Add `POST /api/v1/assessments/{id}/draft` to `AssessmentController.java`.
 5. Create request/response DTOs.
 6. Wire the new handler and repositories in `AssessmentConfig.java`.
@@ -77,9 +77,9 @@
 
 ## Done Criteria
 
-- [ ] `POST /api/v1/assessments/{id}/draft` generates and persists a version-1 draft plus its `AgentExecutionLog`.
+- [ ] `POST /api/v1/assessments/{id}/draft` generates and persists a version-1 draft plus its `AgentExecutionLog` — with the full field set (`agentExecutionId`, `agentName`, `provider`, `model`, `promptVersion`, `inputHash`, `outputHash`, `estimatedInputTokens`, `estimatedOutputTokens`, `costEstimate`, `status`, `errorCode`, `startedAt`, `finishedAt`), not just model/cost/status.
 - [ ] The `agentclient` call happens outside any open DB transaction.
-- [ ] A failed agent call persists a failure log (no draft row) and returns a clean, non-500 error.
+- [ ] A failed agent call persists a failure log (no draft row) with `status="FAILED"` and `errorCode` set to the specific reason — not just a generic status string — and returns a clean, non-500 error.
 - [ ] `./mvnw test` passes.
 - [ ] Human developer code review completed; requested corrections, if any, were implemented and re-reviewed.
 - [ ] No unintended expansion: the task satisfies `[CHECK-ATOMICITY]`.
