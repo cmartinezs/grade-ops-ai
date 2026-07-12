@@ -50,6 +50,8 @@ flowchart LR
 - **Per-request provider/model selection is a contract question, not just wiring.** Whether the selector field lives on `AssessmentCommand` (visible to `api/`'s `agentclient`, same cross-repo notification concern as `previousDraft` in `001`) or stays transport-only on `AssessmentController` must be decided as an explicit task-level design fork in story-01, with the human consulted the same way `001` resolved its own three architecture forks (see `001-assessment-creation/RETROSPECTIVE-RAW.md`, 2026-07-10 14:10 entry) — not assumed at this expansion stage.
 - Every task in story 01 must be cross-checked against `api/docs/gradeops-ai-java-guidelines/` *before* implementation, not corrected after — this was the single largest source of rework in `001` (four correction rounds on task-01 alone). Apply the guideline-alignment pass during `/plan-atomize`, not reactively per task.
 - Groq's chat completions API is OpenAI-compatible; whether Spring AI's OpenAI client (pointed at Groq's base URL) is a clean fit, or whether a raw client is needed, is a story-01 implementation-task decision — not resolved here.
+- Manual verification procedure for both providers (direct-to-provider `curl` and local-endpoint `curl`) is documented once, reusably, in [`MANUAL-PROVIDER-TESTING.md`](MANUAL-PROVIDER-TESTING.md) rather than duplicated per task.
+- **Future direction, out of scope for this planning:** a per-provider model registry plus a capability-based discovery endpoint (so `api/` can ask "what model for rubric-generation vs. assessment-generation" instead of hardcoding model names) — see story-01's Residual #1.
 
 ---
 

@@ -24,6 +24,7 @@ Short working summary for this planning. Keep this file current as the planning 
 - [Story details](02-deepening/)
 - [Traceability](TRACEABILITY.md)
 - [Retrospective raw notes](RETROSPECTIVE-RAW.md)
+- [Manual provider testing runbook (Gemini + Groq)](MANUAL-PROVIDER-TESTING.md)
 
 ---
 
