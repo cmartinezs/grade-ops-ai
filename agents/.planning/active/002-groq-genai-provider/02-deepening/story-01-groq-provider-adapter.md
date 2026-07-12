@@ -1,6 +1,6 @@
 # 🔍 DEEPENING: Story 01 — Groq LLM provider adapter and on-demand provider/model selection
 
-> **Status:** IN PROGRESS
+> **Status:** DONE
 > [← 01-expansion.md](../01-expansion.md) | [← planning/README.md](../../README.md)
 
 ---
@@ -40,14 +40,14 @@ Implement a Groq adapter (`AssessmentGenerationPort` implementation, parallel to
 
 ## Done Criteria
 
-- [ ] A request without an explicit provider/model defaults to Groq.
-- [ ] A request can explicitly select a provider (and optionally a model) per call; the mechanism is documented and, if it touches `AssessmentCommand`, `api/`'s `agentclient` child planning has been notified.
-- [ ] Gemini remains reachable (not removed) — `GeminiAssessmentGenerationAdapter` from `001` is untouched except for config-key renaming if required by the custom-env-var task.
-- [ ] All provider configuration (API keys, model names) resolves from project-specific (`GRADEOPS_*`) env var names, while the YAML property paths stay Spring AI's own `spring.ai.<provider>.*`.
-- [ ] Local/test runs load configuration from a `.env` file without requiring `export` in the shell.
-- [ ] At least one real Groq call succeeds end-to-end (`POST /internal/agents/assessment` → real `AssessmentResult`), closing the live-verification gap `001`'s Residual #1 left open — using Groq's free tier rather than blocked Gemini credits.
-- [ ] Unit tests pass (`./mvnw test`).
-- [ ] TRACEABILITY.md updated with new terms from this story.
+- [x] A request without an explicit provider/model defaults to Groq. — `app.agents.llm.default-provider: groq` (task-03); confirmed live via a real Groq call with no `provider` field, `log.model: "llama-3.3-70b-versatile"` (Groq's configured default).
+- [x] A request can explicitly select a provider (and optionally a model) per call; the mechanism is documented and, if it touches `AssessmentCommand`, `api/`'s `agentclient` child planning has been notified. — Documented in `docs/guides/002-groq-genai-provider/story-01/task-03.md`; `api/` notified 2026-07-12 (`api/.planning/active/003-assessment-creation`, commits `dee9e61`/`2290285` in the `gradeops-api` worktree).
+- [x] Gemini remains reachable (not removed) — `GeminiAssessmentGenerationAdapter` from `001` is untouched except for config-key renaming if required by the custom-env-var task. — **Note:** beyond the anticipated config-key renaming (task-02), task-03's P1 code-review fix also added per-call model forwarding to `GeminiAssessmentGenerationAdapter` (mirroring the Groq adapter), since the criterion's intent — Gemini stays a fully functioning, selectable provider — required it once `model` became a real per-call override. Gemini was not removed and remains reachable via `"provider": "gemini"`.
+- [x] All provider configuration (API keys, model names) resolves from project-specific (`GRADEOPS_*`) env var names, while the YAML property paths stay Spring AI's own `spring.ai.<provider>.*`. — task-02.
+- [x] Local/test runs load configuration from a `.env` file without requiring `export` in the shell. — `DotenvEnvironmentPostProcessor` (task-02).
+- [x] At least one real Groq call succeeds end-to-end (`POST /internal/agents/assessment` → real `AssessmentResult`), closing the live-verification gap `001`'s Residual #1 left open — using Groq's free tier rather than blocked Gemini credits. — task-03 live differential test (default vs. explicit `model` override, both against the real Groq API).
+- [x] Unit tests pass (`./mvnw test`). — `./mvnw -Pbeta test`: 32/32 passing, 0 failures (re-verified 2026-07-12 after task-04's closeout commits). No-profile `./mvnw test` fails for the pre-existing, unrelated reason documented in `RETROSPECTIVE-RAW.md` (both AI starters are profile-gated to `beta`/`demo`) — consistent with every task in this story, not a regression.
+- [x] TRACEABILITY.md updated with new terms from this story. — `GroqAssessmentGenerationAdapter`, `AssessmentGenerationPortSelector`, `AssessmentCommand.provider`/`.model`, `GRADEOPS_*` env vars, `DotenvEnvironmentPostProcessor`, `app.agents.llm.*`, decisions D-01/D-02, residuals R-01/R-02.
 
 ---
 
