@@ -27,7 +27,7 @@ Each entry should answer as many of these as possible:
 
 ### 2026-07-12 - task-01 code review: two real findings — OpenAI autoconfig broke contextLoads, and curl evidence didn't prove the real ChatClient path
 
-- **Source:** human code review (PR #35), then verified directly rather than accepted at face value, per `superpowers:receiving-code-review` discipline
+- **Source:** human code review (`.code-review/story-01-groq-provider-adapter/task-01-groq-adapter.md`, PR #35), then verified directly rather than accepted at face value, per `superpowers:receiving-code-review` discipline
 - **Related story/task:** story-01-groq-provider-adapter, task-01-groq-adapter
 - **What happened (P1, confirmed real):** `./mvnw -Pbeta test -Dtest=GradeOpsAgentsApplicationTest` failed with `BeanCreationException` — adding `spring-ai-starter-model-openai` (for Groq) put OpenAI's six autoconfiguration classes (`OpenAiChatAutoConfiguration`, `OpenAiAudioSpeechAutoConfiguration`, etc.) on the classpath, and none had credentials under the `test` Spring profile, unlike Google GenAI's which are already excluded there. Reproduced exactly as the reviewer described before touching anything.
 - **Resolution (P1):** added all six OpenAI autoconfiguration classes to `application-test.yml`'s `spring.autoconfigure.exclude` list, mirroring the existing Google GenAI exclusions. Verified with the reviewer's exact command (`-Dtest=GradeOpsAgentsApplicationTest,GeminiAssessmentGenerationAdapterTest` → `BUILD SUCCESS`) and the full suite (18/18).
