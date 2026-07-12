@@ -1,6 +1,6 @@
 # ⚛️ TASK 02 — Project-specific env var names + `.env` loading for both providers
 
-> **Status:** IN PROGRESS
+> **Status:** DONE
 > **Workflow:** GENERATE-DOCUMENT
 > **Depends On:** —
 > [← story file](../story-01-groq-provider-adapter.md)
@@ -68,7 +68,7 @@ N/A — no database or ORM artifacts involved.
 - [x] `.env.example` committed; `.env` confirmed ignored by `agents/.gitignore`.
 - [x] Local run with only `.env` (no `export`) boots successfully.
 - [x] `./mvnw test` passes unchanged (18/18 under `-Pbeta`; note `./mvnw test` with no profile fails for the pre-existing, unrelated reason documented in `RETROSPECTIVE-RAW.md` 2026-07-12).
-- [ ] Human developer code review completed; requested corrections, if any, were implemented and re-reviewed.
+- [x] Human developer code review completed; requested corrections, if any, were implemented and re-reviewed.
 - [x] No unintended expansion: the task satisfies `[CHECK-ATOMICITY]` — the `ChatClientAutoConfiguration`/`AssessmentConfig` fix was required to keep the app bootable at all with task-01's dependency already merged, not scope creep.
 
 ---
