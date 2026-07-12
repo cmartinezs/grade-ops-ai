@@ -1,6 +1,6 @@
 # ⚛️ TASK 01 — GroqAssessmentGenerationAdapter
 
-> **Status:** IN PROGRESS
+> **Status:** DONE
 > **Workflow:** GENERATE-DOCUMENT
 > **Depends On:** —
 > [← story file](../story-01-groq-provider-adapter.md)
@@ -59,7 +59,7 @@ N/A — no database or ORM artifacts involved.
 - [x] A real Groq API call's request/response — through the actual `ChatClient.responseEntity(AssessmentResult.class)` path, not just raw curl — is documented as committed evidence, proving the response-mapping approach works with a capable model and identifying which model(s) it fails with.
 - [x] `./mvnw -Pbeta compile` succeeds.
 - [x] `GradeOpsAgentsApplicationTest#contextLoads` passes under `-Pbeta` (OpenAI autoconfiguration excluded in `application-test.yml`, same as Google GenAI's).
-- [ ] Human developer code review completed; requested corrections, if any, were implemented and re-reviewed.
+- [x] Human developer code review completed; requested corrections, if any, were implemented and re-reviewed.
 - [x] No unintended expansion: the task satisfies `[CHECK-ATOMICITY]`.
 
 ---
