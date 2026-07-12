@@ -1,6 +1,8 @@
 package cl.gradeops.ai.agents.assessment.infrastructure.adapter.out.gemini;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import cl.gradeops.ai.agents.assessment.application.port.out.AssessmentGenerationResponse;
@@ -9,6 +11,7 @@ import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.ai.chat.client.ChatClient;
@@ -18,6 +21,8 @@ import org.springframework.ai.chat.metadata.ChatResponseMetadata;
 import org.springframework.ai.chat.metadata.Usage;
 import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.ai.chat.model.Generation;
+import org.springframework.ai.chat.prompt.ChatOptions;
+import org.springframework.ai.google.genai.GoogleGenAiChatOptions;
 
 @ExtendWith(MockitoExtension.class)
 class GeminiAssessmentGenerationAdapterTest {
@@ -71,8 +76,8 @@ class GeminiAssessmentGenerationAdapterTest {
         when(requestSpec.call()).thenReturn(callResponseSpec);
         when(callResponseSpec.responseEntity(AssessmentResult.class)).thenReturn(responseEntity);
 
-        // when
-        AssessmentGenerationResponse response = adapter.generate(RENDERED_PROMPT);
+        // when — model is null, so no per-call options should be applied
+        AssessmentGenerationResponse response = adapter.generate(RENDERED_PROMPT, null);
 
         // then — 1. no nulo
         assertThat(response).isNotNull();
@@ -91,6 +96,33 @@ class GeminiAssessmentGenerationAdapterTest {
     }
 
     @Test
+    void shouldForwardRequestedModelAsPerCallChatOptionsWhenModelIsProvided() {
+        // given
+        AssessmentResult expectedResult = completeResult();
+        ChatResponseMetadata metadata =
+                ChatResponseMetadata.builder().model("gemini-1.5-pro").build();
+        ChatResponse chatResponse = new ChatResponse(
+                List.of(new Generation(new AssistantMessage("{\"title\":\"Loop exercise\"}"))), metadata);
+        ResponseEntity<ChatResponse, AssessmentResult> responseEntity =
+                new ResponseEntity<>(chatResponse, expectedResult);
+
+        when(chatClient.prompt(RENDERED_PROMPT)).thenReturn(requestSpec);
+        when(requestSpec.options(any())).thenReturn(requestSpec);
+        when(requestSpec.call()).thenReturn(callResponseSpec);
+        when(callResponseSpec.responseEntity(AssessmentResult.class)).thenReturn(responseEntity);
+
+        // when
+        adapter.generate(RENDERED_PROMPT, "gemini-1.5-pro");
+
+        // then — the requested model reaches the ChatClient as a per-call option, not just as
+        // metadata the adapter reports back
+        ArgumentCaptor<ChatOptions.Builder> optionsCaptor = ArgumentCaptor.forClass(ChatOptions.Builder.class);
+        verify(requestSpec).options(optionsCaptor.capture());
+        GoogleGenAiChatOptions capturedOptions = (GoogleGenAiChatOptions) optionsCaptor.getValue().build();
+        assertThat(capturedOptions.getModel()).isEqualTo("gemini-1.5-pro");
+    }
+
+    @Test
     void shouldReturnNullTokenFieldsWhenUsageMetadataIsUnavailable() {
         // given
         AssessmentResult expectedResult = completeResult();
@@ -105,7 +137,7 @@ class GeminiAssessmentGenerationAdapterTest {
         when(callResponseSpec.responseEntity(AssessmentResult.class)).thenReturn(responseEntity);
 
         // when
-        AssessmentGenerationResponse response = adapter.generate(RENDERED_PROMPT);
+        AssessmentGenerationResponse response = adapter.generate(RENDERED_PROMPT, null);
 
         // then — 1. no nulo
         assertThat(response).isNotNull();

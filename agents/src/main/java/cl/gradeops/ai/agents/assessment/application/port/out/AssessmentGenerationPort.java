@@ -10,6 +10,11 @@ public interface AssessmentGenerationPort {
 
     /**
      * @param renderedPrompt the fully-rendered {@code assessment-generation.st} prompt text
+     * @param model a literal, provider-specific model name to use for this call instead of the
+     *     resolved provider's configured default; {@code null} keeps that default. Not validated
+     *     against a list of models the provider actually supports — an unsupported value
+     *     surfaces as whatever error the provider itself returns, propagated the same way a
+     *     malformed response is
      * @return the mapped result plus model/token metadata
      * @throws RuntimeException if the provider's response cannot be parsed into an {@code
      *     AssessmentResult} at all (not merely incomplete — that is {@code
@@ -17,5 +22,5 @@ public interface AssessmentGenerationPort {
      *     failures propagate; the orchestrator translates them into {@code
      *     AssessmentAgentException(MALFORMED_OUTPUT)}.
      */
-    AssessmentGenerationResponse generate(String renderedPrompt);
+    AssessmentGenerationResponse generate(String renderedPrompt, String model);
 }

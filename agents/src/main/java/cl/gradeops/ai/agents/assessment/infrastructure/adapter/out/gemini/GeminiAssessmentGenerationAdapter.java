@@ -9,6 +9,7 @@ import org.springframework.ai.chat.client.ResponseEntity;
 import org.springframework.ai.chat.metadata.EmptyUsage;
 import org.springframework.ai.chat.metadata.Usage;
 import org.springframework.ai.chat.model.ChatResponse;
+import org.springframework.ai.google.genai.GoogleGenAiChatOptions;
 
 /**
  * The only class in this feature allowed to import {@code ChatClient}/{@code ChatResponse},
@@ -33,9 +34,13 @@ public class GeminiAssessmentGenerationAdapter implements AssessmentGenerationPo
     private final ChatClient chatClient;
 
     @Override
-    public AssessmentGenerationResponse generate(String renderedPrompt) {
+    public AssessmentGenerationResponse generate(String renderedPrompt, String model) {
+        ChatClient.ChatClientRequestSpec requestSpec = chatClient.prompt(renderedPrompt);
+        if (model != null) {
+            requestSpec = requestSpec.options(GoogleGenAiChatOptions.builder().model(model));
+        }
         ResponseEntity<ChatResponse, AssessmentResult> responseEntity =
-                chatClient.prompt(renderedPrompt).call().responseEntity(AssessmentResult.class);
+                requestSpec.call().responseEntity(AssessmentResult.class);
 
         ChatResponse chatResponse = responseEntity.response();
         Usage usage = chatResponse.getMetadata() != null ? chatResponse.getMetadata().getUsage() : null;

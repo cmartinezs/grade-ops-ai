@@ -8,3 +8,14 @@ server:
 app:
   internal:
     secret: ${INTERNAL_API_SECRET:change-me-in-production}
+  agents:
+    llm:
+      # Not a secret — safe to default here rather than via a GRADEOPS_* env var. Per-request
+      # AssessmentCommand.provider overrides this; omitted requests get Groq's free tier instead
+      # of consuming Gemini credits.
+      default-provider: groq
+      cost-per-1k-tokens:
+        # Placeholder blended rates — real per-model pricing is out of scope for this
+        # hackathon-stage estimate (see AssessmentAgentOrchestrator). Groq's free tier is 0.
+        gemini: 0.000075
+        groq: 0.0

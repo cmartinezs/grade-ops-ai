@@ -1,6 +1,6 @@
 # ⚛️ TASK 03 — Provider/model selection (Strategy pattern), default Groq
 
-> **Status:** TODO
+> **Status:** DONE
 > **Workflow:** GENERATE-DOCUMENT
 > **Depends On:** task-01, task-02
 > [← story file](../story-01-groq-provider-adapter.md)
@@ -18,7 +18,7 @@ A request to `POST /internal/agents/assessment` can specify which provider (and 
 ## Technical Design
 
 - **Approach:** Add nullable `provider` (and optionally `model`) fields to `AssessmentCommand` — it is already the direct `@RequestBody` of `AssessmentController.generate`, so this is the natural, minimal-friction place for a per-request override (same pattern already used for `previousDraft`). Register `geminiAssessmentGenerationAdapter`/`groqAssessmentGenerationAdapter` as beans with explicit `@Bean(name = "gemini")` / `@Bean(name = "groq")`. Introduce a small resolver (e.g. `AssessmentGenerationPortSelector`) constructed with `Map<String, AssessmentGenerationPort> portsByProvider` (Spring auto-populates this map keyed by bean name) plus the default-provider value (`app.agents.llm.default-provider: groq`, from `application.yml`, no per-provider env needed since it's not a secret). `resolve(String requestedProvider)` returns a small record carrying both the resolved provider's name and its port (e.g. `SelectedProvider(String name, AssessmentGenerationPort port)`), not just the port — the orchestrator needs the name too, to pick the matching cost rate. `AssessmentAgentOrchestrator` depends on the selector instead of a single `AssessmentGenerationPort` — its constructor signature changes; `generate` step resolves `selector.resolve(command.provider())` before calling `.generate(renderedPrompt)`. Replace the single `COST_PER_1K_TOKENS` constant with a `Map<String, Double>` read from `app.agents.llm.cost-per-1k-tokens.<provider>` (e.g. `.gemini: 0.000075`, `.groq: 0.0` for its free tier) — the orchestrator looks up the resolved provider's own rate instead of applying Gemini's rate to every execution.
-- **Affected files / components:** `application/command/AssessmentCommand.java` (new field(s)), `application/orchestrator/AssessmentAgentOrchestrator.java` (constructor + `validate()` + generate step + cost-rate lookup replacing `COST_PER_1K_TOKENS`), new `application/port/out/AssessmentGenerationPortSelector.java` (or similar, including its `SelectedProvider` return type), `infrastructure/config/AssessmentConfig.java` (bean names, selector wiring, both adapters registered — replaces the current single-adapter wiring), `application.yml` (`app.agents.llm.default-provider`, `app.agents.llm.cost-per-1k-tokens.*`), `AssessmentCommandTest.java`, `TRACEABILITY.md` (cross-repo notification if `AssessmentCommand` changes — flag for `api/`'s `agentclient` child planning, same as `previousDraft`).
+- **Affected files / components:** `application/command/AssessmentCommand.java` (new field(s)), `application/orchestrator/AssessmentAgentOrchestrator.java` (constructor + `validate()` + generate step + cost-rate lookup replacing `COST_PER_1K_TOKENS`), new `application/port/out/AssessmentGenerationPortSelector.java` (or similar, including its `SelectedProvider` return type), `infrastructure/config/AssessmentConfig.java` (bean names, selector wiring, both adapters registered — replaces the current single-adapter wiring), `application.yml` (`app.agents.llm.default-provider`, `app.agents.llm.cost-per-1k-tokens.*`), `AssessmentCommandTest.java`, `TRACEABILITY.md` (cross-repo notification if `AssessmentCommand` changes — flag for `api/`'s `agentclient` child planning, same as `previousDraft`). **(Added after code review, P1)** `application/port/out/AssessmentGenerationPort.java` (`generate` gains a `model` parameter), `infrastructure/adapter/out/gemini/GeminiAssessmentGenerationAdapter.java` and `infrastructure/adapter/out/groq/GroqAssessmentGenerationAdapter.java` (forward a non-null `model` as a per-call `ChatOptions` override via `GoogleGenAiChatOptions.builder().model(...)` / `OpenAiChatOptions.builder().model(...)`), `GeminiAssessmentGenerationAdapterTest.java` (updated signature, new test proving the forward) — the first draft of this task accepted `AssessmentCommand.model` on the contract but never read it in `generate()`, silently discarding any value a caller sent; code review caught this before the task closed.
 - **Interfaces / contracts:** `AssessmentCommand` gains `provider`/`model` — a contract change visible to `api/`'s `agentclient`. `AssessmentAgentOrchestrator`'s constructor signature changes (internal, no external caller depends on it directly).
 - **Risk:** An invalid/unknown `provider` value must fail clearly, not silently fall through to a `NullPointerException` from an absent map key — `validate()` must reject it with `AssessmentAgentException(INVALID_COMMAND)` before the selector is ever consulted.
 - **Design notes:** Both adapters stay gated the same proven way as `001` (`@ConditionalOnProperty`, not `@ConditionalOnBean` — see `001-assessment-creation/RETROSPECTIVE-RAW.md` 2026-07-10 20:40 for why the latter silently breaks). `app.agents.gemini.enabled` already exists and gates Gemini; add an equivalent for Groq if needed, but both must be enabled by default so the selector map is never empty under normal profiles.
@@ -64,15 +64,15 @@ N/A — no database or ORM artifacts involved.
 
 ## Done Criteria
 
-- [ ] `AssessmentCommand` carries `provider`/`model`; `api/`'s `agentclient` child planning notified of the contract change.
-- [ ] `AssessmentGenerationPortSelector` (Strategy pattern via `Map<String, AssessmentGenerationPort>`) resolves the correct adapter; adding a future provider requires only a new named `@Bean`.
-- [ ] Default provider is Groq when `provider` is omitted.
-- [ ] An unrecognized `provider` value is rejected with `AssessmentAgentException(INVALID_COMMAND)`, not an unhandled exception.
-- [ ] `AgentExecutionLogPayload.costEstimate` is computed from the resolved provider's own per-1K-token rate (`app.agents.llm.cost-per-1k-tokens.<provider>`), not a single Gemini-only constant applied to every provider.
-- [ ] At least one real end-to-end request against Groq succeeds with a genuine `AssessmentResult` — closes `001`'s Residual #1 (no successful live-provider call had ever been observed).
-- [ ] `./mvnw test` passes (existing tests updated for the orchestrator's new constructor signature; new tests deferred to task-04).
-- [ ] Human developer code review completed; requested corrections, if any, were implemented and re-reviewed.
-- [ ] No unintended expansion: the task satisfies `[CHECK-ATOMICITY]`.
+- [x] `AssessmentCommand` carries `provider`/`model`; `api/`'s `agentclient` child planning notified of the contract change.
+- [x] `AssessmentGenerationPortSelector` (Strategy pattern via `Map<String, AssessmentGenerationPort>`) resolves the correct adapter; adding a future provider requires only a new named `@Bean`.
+- [x] Default provider is Groq when `provider` is omitted.
+- [x] An unrecognized `provider` value is rejected with `AssessmentAgentException(INVALID_COMMAND)`, not an unhandled exception.
+- [x] `AgentExecutionLogPayload.costEstimate` is computed from the resolved provider's own per-1K-token rate (`app.agents.llm.cost-per-1k-tokens.<provider>`), not a single Gemini-only constant applied to every provider.
+- [x] At least one real end-to-end request against Groq succeeds with a genuine `AssessmentResult` — closes `001`'s Residual #1 (no successful live-provider call had ever been observed).
+- [x] `./mvnw test` passes (existing tests updated for the orchestrator's new constructor signature; new tests deferred to task-04).
+- [x] Human developer code review completed; requested corrections, if any, were implemented and re-reviewed.
+- [x] No unintended expansion: the task satisfies `[CHECK-ATOMICITY]`.
 
 ---
 

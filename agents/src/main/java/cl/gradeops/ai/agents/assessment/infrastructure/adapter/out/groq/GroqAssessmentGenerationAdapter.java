@@ -9,6 +9,7 @@ import org.springframework.ai.chat.client.ResponseEntity;
 import org.springframework.ai.chat.metadata.EmptyUsage;
 import org.springframework.ai.chat.metadata.Usage;
 import org.springframework.ai.chat.model.ChatResponse;
+import org.springframework.ai.openai.OpenAiChatOptions;
 
 /**
  * Groq's {@code AssessmentGenerationPort} implementation. Groq exposes an OpenAI-compatible
@@ -24,9 +25,13 @@ public class GroqAssessmentGenerationAdapter implements AssessmentGenerationPort
     private final ChatClient chatClient;
 
     @Override
-    public AssessmentGenerationResponse generate(String renderedPrompt) {
+    public AssessmentGenerationResponse generate(String renderedPrompt, String model) {
+        ChatClient.ChatClientRequestSpec requestSpec = chatClient.prompt(renderedPrompt);
+        if (model != null) {
+            requestSpec = requestSpec.options(OpenAiChatOptions.builder().model(model));
+        }
         ResponseEntity<ChatResponse, AssessmentResult> responseEntity =
-                chatClient.prompt(renderedPrompt).call().responseEntity(AssessmentResult.class);
+                requestSpec.call().responseEntity(AssessmentResult.class);
 
         ChatResponse chatResponse = responseEntity.response();
         Usage usage = chatResponse.getMetadata() != null ? chatResponse.getMetadata().getUsage() : null;

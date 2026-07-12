@@ -55,6 +55,13 @@ Used in this planning's story-01 task-01 to verify Groq's structured-output supp
 Requires the app running locally (`./mvnw -Pbeta spring-boot:run -Dspring-boot.run.profiles=beta`, with a real key configured via `GRADEOPS_GEMINI_API_KEY`/`GRADEOPS_GEMINI_MODEL`/`GRADEOPS_GROQ_API_KEY`/`GRADEOPS_GROQ_MODEL`/`GRADEOPS_GROQ_BASE_URL` — either exported or via a local `.env` file, see `.env.example`) and `app.internal.secret` (or `INTERNAL_API_SECRET`) known.
 
 ```bash
+# Omit "provider" to use the default (Groq). Add "provider": "gemini" to route to Gemini
+# explicitly, or "provider": "groq" to be explicit about the default. An unrecognized value
+# (e.g. "provider": "bogus") is rejected with 422 INVALID_COMMAND before any model is called.
+# Optionally add "model" (a literal, provider-specific model name) to override the resolved
+# provider's configured default model for this one call — not validated against a list of
+# models the provider actually supports, so an unsupported value surfaces as whatever error
+# the provider itself returns.
 curl -s http://localhost:8081/internal/agents/assessment \
   -H "X-Internal-Key: ${INTERNAL_API_SECRET}" \
   -H "Content-Type: application/json" \
@@ -67,7 +74,7 @@ curl -s http://localhost:8081/internal/agents/assessment \
   }'
 ```
 
-**Current state (before story-01 task-03 lands):** this always routes to Gemini — there is no provider selection yet, `GeminiAssessmentGenerationAdapter` is the only bean registered. Once task-03 wires the provider selector, add `"provider": "groq"` (or `"gemini"`) to the request body to route explicitly; omitting it will default to Groq per this story's Done Criteria.
+**Current state (story-01 task-03 landed):** `AssessmentGenerationPortSelector` resolves `"gemini"`/`"groq"` from the request's `provider` field (or the configured default, `groq`, when omitted) and dispatches to that provider's own adapter — both are registered beans. `AgentExecutionLogPayload.costEstimate` uses the resolved provider's own per-1K-token rate (`app.agents.llm.cost-per-1k-tokens.<provider>` in `application.yml`), not a single Gemini-only estimate.
 
 ---
 
