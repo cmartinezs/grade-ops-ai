@@ -25,6 +25,14 @@ Each entry should answer as many of these as possible:
 
 <!-- Add newest entries at the top. -->
 
+### 2026-07-12 - task-04: task's own design note ("null/blank") didn't match task-03's already-implemented, already-reviewed selector behavior
+
+- **Source:** `/plan-task` execution, story-01 task-04, writing `AssessmentGenerationPortSelectorTest.java`
+- **Related story/task:** story-01-groq-provider-adapter, task-04-unit-tests
+- **What happened:** task-04's Technical Design (written during atomization, before task-03 existed) described `AssessmentGenerationPortSelector` as falling back to the default provider "when `provider` is null/blank". The actual, already-implemented and already-reviewed-and-approved `resolve`/`supports` methods (task-03) only special-case a literal `null` — a blank string (`""`) is looked up as a regular (unregistered) provider name and rejected the same as any other unknown value.
+- **Resolution:** did not change `AssessmentGenerationPortSelector`'s behavior — task-04's own scope is explicitly test-only ("Interfaces / contracts: None"), and task-03 is already `DONE`/merged/reviewed. Wrote the test suite against actual behavior instead, adding one explicit test (`shouldTreatABlankProviderAsUnrecognizedRatherThanFallingBackToDefault`) that pins down this exact discrepancy so it's documented and regression-proof rather than silently assumed either way.
+- **Retrospective signal:** a task's Technical Design, written at atomization time, describes *intent* — by the time a later, dependent task executes, the actual implementation (from an earlier, already-reviewed task) is the source of truth, not the earlier design prose. When they disagree on a minor point like this, verify against the real code and document the real behavior, rather than either blindly trusting the older design note or silently changing already-approved behavior under a different task's cover.
+
 ### 2026-07-12 - task-03 re-review: P2 finding was a false positive caused by the reviewer checking the wrong worktree
 
 - **Source:** human re-code review (`.code-review/story-01-groq-provider-adapter/task-03-provider-selection.md`), verified directly rather than accepted at face value, per `superpowers:receiving-code-review` discipline

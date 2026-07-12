@@ -1,6 +1,6 @@
 # ⚛️ TASK 04 — Unit tests: Groq adapter and provider selection
 
-> **Status:** TODO
+> **Status:** IN PROGRESS
 > **Workflow:** GENERATE-DOCUMENT
 > **Depends On:** task-01, task-02, task-03
 > [← story file](../story-01-groq-provider-adapter.md)
@@ -55,12 +55,12 @@ N/A — no database or ORM artifacts involved.
 
 ## Done Criteria
 
-- [ ] `GroqAssessmentGenerationAdapterTest.java` and `AssessmentGenerationPortSelectorTest.java` created and passing.
-- [ ] `AssessmentAgentOrchestratorTest.java` and `AssessmentCommandTest.java` updated and passing.
-- [ ] `./mvnw test` passes in full.
+- [x] `GroqAssessmentGenerationAdapterTest.java` and `AssessmentGenerationPortSelectorTest.java` created and passing.
+- [x] `AssessmentAgentOrchestratorTest.java` and `AssessmentCommandTest.java` updated and passing.
+- [x] `./mvnw test` passes in full.
 - [ ] Human developer code review completed; requested corrections, if any, were implemented and re-reviewed.
-- [ ] TRACEABILITY.md updated with new terms from this story.
-- [ ] No unintended expansion: the task satisfies `[CHECK-ATOMICITY]`.
+- [x] TRACEABILITY.md updated with new terms from this story.
+- [x] No unintended expansion: the task satisfies `[CHECK-ATOMICITY]`.
 
 ---
 

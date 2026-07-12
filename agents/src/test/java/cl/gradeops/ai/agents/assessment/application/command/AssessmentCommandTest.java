@@ -37,6 +37,35 @@ class AssessmentCommandTest {
         assertThat(command.adjustmentNotes()).isNull();
         assertThat(command.previousDraftId()).isNull();
         assertThat(command.previousDraft()).isNull();
+        // then — 5. provider/model ausentes cuando no se especifican (el selector aplica el
+        // proveedor por defecto configurado, no este record)
+        assertThat(command.provider()).isNull();
+        assertThat(command.model()).isNull();
+    }
+
+    @Test
+    void shouldCreateCommandWithExplicitProviderAndModelWhenBothAreProvided() {
+        // given
+        AssessmentCommand.AssessmentCommandBuilder builder = AssessmentCommand.builder()
+                .learningGoal("Evaluate loops")
+                .topic("Java loops")
+                .level("introductory")
+                .duration("60 minutes")
+                .language("Java")
+                .provider("groq")
+                .model("llama-3.3-70b-versatile");
+
+        // when
+        AssessmentCommand command = builder.build();
+
+        // then — 1. no nulo
+        assertThat(command).isNotNull();
+        // then — 2. atributos no nulos
+        assertThat(command.provider()).isNotNull();
+        assertThat(command.model()).isNotNull();
+        // then — 3. valores esperados
+        assertThat(command.provider()).isEqualTo("groq");
+        assertThat(command.model()).isEqualTo("llama-3.3-70b-versatile");
     }
 
     @Test
@@ -75,6 +104,9 @@ class AssessmentCommandTest {
         assertThat(command.adjustmentNotes()).isEqualTo("Make it shorter");
         assertThat(command.previousDraftId()).isEqualTo("draft-123");
         assertThat(command.previousDraft()).isEqualTo("Title: Loop exercise. Objectives: use for loops.");
+        // then — 4. provider/model son independientes de la tripleta de regeneración
+        assertThat(command.provider()).isNull();
+        assertThat(command.model()).isNull();
     }
 
     @Test
