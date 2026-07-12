@@ -25,6 +25,14 @@ Each entry should answer as many of these as possible:
 
 <!-- Add newest entries at the top. -->
 
+### 2026-07-12 - task-03 re-review: P2 finding was a false positive caused by the reviewer checking the wrong worktree
+
+- **Source:** human re-code review (`.code-review/story-01-groq-provider-adapter/task-03-provider-selection.md`), verified directly rather than accepted at face value, per `superpowers:receiving-code-review` discipline
+- **Related story/task:** story-01-groq-provider-adapter, task-03-provider-selection
+- **What happened:** the re-review's P2 finding claimed `api/.planning/active/003-assessment-creation` still had the pre-task-03 contract text, even though this exact content had already been committed (`dee9e61`) and pushed to `origin/gradeops-api/story-01-assessment-creation-persistence` in the `api/` worktree (`/home/carlos/projects/gradeops-api`). Re-verified directly via `git log`/`grep` on that worktree before pushing back — the file content and the pushed commit both matched what the fix claimed, contradicting the finding.
+- **Resolution:** pushed back with the concrete evidence (file greps + `git log` showing local HEAD == pushed remote HEAD) instead of redoing already-correct work. The human confirmed independently: their re-review tooling had inspected `api/` nested inside the `agents/` worktree (`/home/carlos/projects/gradeops-agents/api/`, if such a path is treated as `api/` by the tool) rather than the actual sibling `api/` worktree the notification was committed to — a tooling/scope mismatch, not a real gap. Re-review updated to approved, with one non-blocking observation carried forward: `task-05-agentclient.md` still had a stale "model, currently unused" phrase from before the P1 fix landed — corrected in a follow-up commit (`2290285`) in the same `api/` worktree.
+- **Retrospective signal:** in a multi-worktree/child-planning setup, verifying a cross-repo claim means checking the actual worktree path the change was committed to, not assuming any directory that happens to be named the same. This is the same "verify against the real codebase, not the reviewer's framing" discipline as the P1/P2 findings on task-01 — it cuts both ways: sometimes the reviewer is right and a claim needs correcting, sometimes the reviewer's own tooling scope is the thing that's wrong, and only checking the real state (git log, actual file content, pushed remote ref) distinguishes the two.
+
 ### 2026-07-12 - task-03 code review: model field was accepted but silently discarded (P1), plus two documentation-durability gaps (P2, P3)
 
 - **Source:** human code review (`.code-review/story-01-groq-provider-adapter/task-03-provider-selection.md`, PR #37), verified directly rather than accepted at face value, per `superpowers:receiving-code-review` discipline

@@ -1,6 +1,6 @@
 # ⚛️ TASK 03 — Provider/model selection (Strategy pattern), default Groq
 
-> **Status:** IN PROGRESS
+> **Status:** DONE
 > **Workflow:** GENERATE-DOCUMENT
 > **Depends On:** task-01, task-02
 > [← story file](../story-01-groq-provider-adapter.md)
@@ -71,7 +71,7 @@ N/A — no database or ORM artifacts involved.
 - [x] `AgentExecutionLogPayload.costEstimate` is computed from the resolved provider's own per-1K-token rate (`app.agents.llm.cost-per-1k-tokens.<provider>`), not a single Gemini-only constant applied to every provider.
 - [x] At least one real end-to-end request against Groq succeeds with a genuine `AssessmentResult` — closes `001`'s Residual #1 (no successful live-provider call had ever been observed).
 - [x] `./mvnw test` passes (existing tests updated for the orchestrator's new constructor signature; new tests deferred to task-04).
-- [ ] Human developer code review completed; requested corrections, if any, were implemented and re-reviewed.
+- [x] Human developer code review completed; requested corrections, if any, were implemented and re-reviewed.
 - [x] No unintended expansion: the task satisfies `[CHECK-ATOMICITY]`.
 
 ---
