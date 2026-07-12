@@ -34,6 +34,7 @@ _None._
 ### 🚧 In Progress → see [`active/README.md`](active/README.md)
 
 - [008-assessment-creation](active/008-assessment-creation/01-expansion.md) — Enable the first step of the open-assessment pipeline: turning a teacher's learning intent into a structured, AI-generated assessment draft that is editable and fully logged.
+- [009-groq-infra-provisioning](active/009-groq-infra-provisioning/01-expansion.md) — Provision the Groq API key and its Cloud Run wiring as real Terraform infra for the `agents/` service.
 
 ### ✅ Completed → see [`finished/README.md`](finished/README.md)
 
