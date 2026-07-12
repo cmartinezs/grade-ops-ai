@@ -1,6 +1,6 @@
 # ⚛️ TASK 04 — Unit tests: Groq adapter and provider selection
 
-> **Status:** IN PROGRESS
+> **Status:** DONE
 > **Workflow:** GENERATE-DOCUMENT
 > **Depends On:** task-01, task-02, task-03
 > [← story file](../story-01-groq-provider-adapter.md)
@@ -17,7 +17,8 @@
 
 ## Technical Design
 
-- **Approach:** Follow `GeminiAssessmentGenerationAdapterTest`'s structure exactly for `GroqAssessmentGenerationAdapterTest` (same `@Mock` fields for `ChatClient`/`ChatClientRequestSpec`/`CallResponseSpec`/`Usage`, same two cases: usage present, usage unavailable via `EmptyUsage`). `AssessmentGenerationPortSelectorTest` covers: resolves named provider, falls back to default when `provider` is null/blank, throws a clear exception for an unrecognized provider. `AssessmentAgentOrchestratorTest` gets one new failure-path test (unrecognized provider → `INVALID_COMMAND`) using the existing shared failure-log assertion helper pattern from `001`.
+- **Approach:** Follow `GeminiAssessmentGenerationAdapterTest`'s structure exactly for `GroqAssessmentGenerationAdapterTest` (same `@Mock` fields for `ChatClient`/`ChatClientRequestSpec`/`CallResponseSpec`/`Usage`, same two cases: usage present, usage unavailable via `EmptyUsage`). `AssessmentGenerationPortSelectorTest` covers: resolves named provider, falls back to default when `provider` is `null`, throws a clear exception for an unrecognized provider — **including an explicit test for a blank string (`""`), which is rejected as an unrecognized provider, not treated as equivalent to `null`.** `AssessmentAgentOrchestratorTest` gets one new failure-path test (unrecognized provider → `INVALID_COMMAND`) using the existing shared failure-log assertion helper pattern from `001`.
+  - **Design correction (2026-07-12, post code-review):** this bullet originally read "falls back to default when `provider` is null/blank," written at atomization time before task-03 existed. Task-03's actual, already-reviewed-and-merged `AssessmentGenerationPortSelector` only special-cases a literal `null` — a blank string is looked up as a regular (unregistered) provider name and rejected. Since task-04 is test-only scope and task-03 is already `DONE`, this bullet is corrected to match the real implementation rather than changing already-approved selector behavior under this task's cover. Whether client-submitted blank strings (a common "not specified" shape from web/DTO layers) should be normalized to `null` before reaching `AssessmentCommand` is tracked as R-02 in `TRACEABILITY.md`, not solved here.
 - **Affected files / components:** new `GroqAssessmentGenerationAdapterTest.java`, new `AssessmentGenerationPortSelectorTest.java`, updated `AssessmentAgentOrchestratorTest.java`, updated `AssessmentCommandTest.java` (assert `provider`/`model` fields, including the null-defaults-to-Groq case if that logic lives in the orchestrator rather than the record itself).
 - **Interfaces / contracts:** None — test-only changes.
 - **Risk:** Low — routine test-writing following an already-established, reviewed pattern in this codebase.
@@ -58,7 +59,7 @@ N/A — no database or ORM artifacts involved.
 - [x] `GroqAssessmentGenerationAdapterTest.java` and `AssessmentGenerationPortSelectorTest.java` created and passing.
 - [x] `AssessmentAgentOrchestratorTest.java` and `AssessmentCommandTest.java` updated and passing.
 - [x] `./mvnw test` passes in full.
-- [ ] Human developer code review completed; requested corrections, if any, were implemented and re-reviewed.
+- [x] Human developer code review completed; requested corrections, if any, were implemented and re-reviewed.
 - [x] TRACEABILITY.md updated with new terms from this story.
 - [x] No unintended expansion: the task satisfies `[CHECK-ATOMICITY]`.
 

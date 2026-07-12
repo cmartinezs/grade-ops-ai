@@ -25,6 +25,14 @@ Each entry should answer as many of these as possible:
 
 <!-- Add newest entries at the top. -->
 
+### 2026-07-12 - task-04 code review: reviewer independently caught the same null/blank discrepancy already logged, requiring a resolution (not just a note)
+
+- **Source:** human code review (`.code-review/story-01-groq-provider-adapter/task-04-unit-tests.md`, PR #38), verified directly rather than accepted at face value, per `superpowers:receiving-code-review` discipline
+- **Related story/task:** story-01-groq-provider-adapter, task-04-unit-tests
+- **What happened:** the reviewer flagged (P2) that task-04's Technical Design still said the selector falls back to default "when `provider` is null/blank," while the new `AssessmentGenerationPortSelectorTest` asserts the opposite for `""`. This is the same discrepancy already logged earlier today ("task-04: task's own design note didn't match task-03's already-implemented...selector behavior"), but the earlier resolution only added a test and a retrospective note — it never corrected the Technical Design text itself, so the task file still literally contradicted its own test suite. The reviewer additionally raised a real product concern beyond documentation: `AssessmentCommand.provider` is client-facing input, and `""` is a common "not specified" shape from web/DTO clients, not just an omitted field.
+- **Resolution:** asked the human directly (not a unilateral call, since it touches already-approved task-03 code) whether to (a) fix only the design text to match reality, or (b) change `AssessmentGenerationPortSelector`'s behavior now under task-04's cover. Human chose (a). Corrected task-04's Technical Design bullet to state the real, tested behavior (only literal `null` falls back; `""` is rejected), with an inline note explaining why and pointing to the new R-02 residual. Added R-02 to `TRACEABILITY.md` tracking the open question of whether blank-string normalization belongs at the API/DTO boundary or inside the selector — explicitly not solved by this task.
+- **Retrospective signal:** logging a discrepancy in `RETROSPECTIVE-RAW.md` is not the same as resolving it — the task file itself (the artifact a reviewer actually diffs against the tests) must be corrected too, or the same finding recurs on re-review. When a review raises a point that's genuinely architectural (here: where blank-input normalization should live), escalate to the human rather than picking unilaterally, even when the safer-sounding option (leave already-approved code alone) seems obvious — the human may value the product-behavior concern differently.
+
 ### 2026-07-12 - task-04: task's own design note ("null/blank") didn't match task-03's already-implemented, already-reviewed selector behavior
 
 - **Source:** `/plan-task` execution, story-01 task-04, writing `AssessmentGenerationPortSelectorTest.java`
