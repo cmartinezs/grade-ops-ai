@@ -34,6 +34,13 @@ import lombok.Builder;
  *     only; {@code null} for initial generation
  * @param previousDraft rendered content/summary of the prior draft being regenerated, sent by
  *     {@code api/} (which owns the actual persisted draft); {@code null} for initial generation
+ * @param provider which LLM provider generates this draft; {@code null} selects the configured
+ *     default. An unrecognized value is rejected by {@code AssessmentAgentOrchestrator.validate}
+ *     with {@code AssessmentAgentException(INVALID_COMMAND)}, the same as any other invalid field.
+ * @param model a literal, provider-specific model name; {@code null} lets the selected provider's
+ *     own configured default apply. Not validated here — an unsupported value surfaces as
+ *     whatever error the provider itself returns, translated by the orchestrator's existing
+ *     generation-failure handling.
  */
 @Builder
 public record AssessmentCommand(
@@ -44,5 +51,7 @@ public record AssessmentCommand(
         String language,
         String adjustmentNotes,
         String previousDraftId,
-        String previousDraft) {
+        String previousDraft,
+        String provider,
+        String model) {
 }

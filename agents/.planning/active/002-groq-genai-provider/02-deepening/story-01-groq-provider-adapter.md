@@ -33,7 +33,7 @@ Implement a Groq adapter (`AssessmentGenerationPort` implementation, parallel to
 |---|------|----------|--------|--------|
 | 1 | [GroqAssessmentGenerationAdapter](story-01-groq-provider-adapter/task-01-groq-adapter.md) | GENERATE-DOCUMENT | DONE | `GroqAssessmentGenerationAdapter.java`, `spring-ai-starter-model-openai` dependency, real-Groq-call evidence |
 | 2 | [Project-specific env var names + `.env` loading](story-01-groq-provider-adapter/task-02-env-config.md) | GENERATE-DOCUMENT | DONE | `application-beta.yml`/`application-demo.yml` changes, `.env.example`, chosen dotenv-loading mechanism |
-| 3 | [Provider/model selection (Strategy pattern), default Groq](story-01-groq-provider-adapter/task-03-provider-selection.md) | GENERATE-DOCUMENT | TODO | `AssessmentCommand` gains `provider`/`model`, `AssessmentGenerationPortSelector.java`, `AssessmentConfig` rewired, real end-to-end Groq call |
+| 3 | [Provider/model selection (Strategy pattern), default Groq](story-01-groq-provider-adapter/task-03-provider-selection.md) | GENERATE-DOCUMENT | IN PROGRESS | `AssessmentCommand` gains `provider`/`model`, `AssessmentGenerationPortSelector.java`, `AssessmentConfig` rewired, real end-to-end Groq call |
 | 4 | [Unit tests: Groq adapter and provider selection](story-01-groq-provider-adapter/task-04-unit-tests.md) | GENERATE-DOCUMENT | TODO | `GroqAssessmentGenerationAdapterTest.java`, `AssessmentGenerationPortSelectorTest.java`, updated `AssessmentAgentOrchestratorTest`/`AssessmentCommandTest` |
 
 ---

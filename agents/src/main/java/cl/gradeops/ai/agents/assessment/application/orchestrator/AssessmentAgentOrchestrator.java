@@ -3,7 +3,8 @@ package cl.gradeops.ai.agents.assessment.application.orchestrator;
 import cl.gradeops.ai.agents.assessment.application.command.AssessmentCommand;
 import cl.gradeops.ai.agents.assessment.application.exception.AssessmentAgentException;
 import cl.gradeops.ai.agents.assessment.application.exception.AssessmentAgentException.Reason;
-import cl.gradeops.ai.agents.assessment.application.port.out.AssessmentGenerationPort;
+import cl.gradeops.ai.agents.assessment.application.port.out.AssessmentGenerationPortSelector;
+import cl.gradeops.ai.agents.assessment.application.port.out.AssessmentGenerationPortSelector.SelectedProvider;
 import cl.gradeops.ai.agents.assessment.application.port.out.AssessmentGenerationResponse;
 import cl.gradeops.ai.agents.assessment.application.result.AgentExecutionLogPayload;
 import cl.gradeops.ai.agents.assessment.application.result.AssessmentExecutionOutcome;
@@ -16,14 +17,17 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.time.Instant;
 import java.util.HexFormat;
+import java.util.Map;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.stringtemplate.v4.ST;
 
 /**
- * Runs the fixed agent pipeline: validate command → load data → build envelope → call Gemini
- * → validate structured output → log execution → return result. Never touches Spring AI
- * directly — {@code assessmentGenerationPort} is the only collaborator.
+ * Runs the fixed agent pipeline: validate command → load data → build envelope → resolve
+ * provider → call the resolved LLM → validate structured output → log execution → return
+ * result. Never touches Spring AI directly — {@code selector} (a {@link
+ * AssessmentGenerationPortSelector}, Strategy pattern over every registered provider) is the
+ * only collaborator that reaches an LLM.
  *
  * <p>The template body is cached as an immutable {@code String} (loaded once via {@link
  * #loadTemplate()}), not a single shared {@code ST} instance — {@code ST.add(...)} mutates
@@ -37,11 +41,14 @@ public class AssessmentAgentOrchestrator {
     private static final String TEMPLATE_RESOURCE = "prompts/assessment-generation.st";
     private static final String AGENT_NAME = "assessment";
 
-    /** Placeholder blended rate — real per-model Gemini pricing is out of scope for this
-     *  hackathon-stage estimate; {@code costEstimate} is explicitly best-effort throughout. */
-    private static final double COST_PER_1K_TOKENS = 0.000075;
+    private final AssessmentGenerationPortSelector selector;
 
-    private final AssessmentGenerationPort assessmentGenerationPort;
+    /** Per-provider blended rate, keyed by the same provider name {@code selector} resolves to
+     *  (e.g. {@code "gemini"}, {@code "groq"}) — real per-model pricing is out of scope for this
+     *  hackathon-stage estimate; {@code costEstimate} is explicitly best-effort throughout. A
+     *  provider missing from this map yields a {@code null} estimate rather than silently
+     *  applying another provider's rate. */
+    private final Map<String, Double> costPerKTokensByProvider;
 
     private String templateBody;
     private String promptVersion;
@@ -66,23 +73,25 @@ public class AssessmentAgentOrchestrator {
         Instant startedAt = Instant.now();
         validate(command, startedAt);
 
+        SelectedProvider selected = selector.resolve(command.provider());
         String renderedPrompt = buildEnvelope(command);
         String inputHash = sha256Hex(renderedPrompt);
 
         AssessmentGenerationResponse response;
         try {
-            response = assessmentGenerationPort.generate(renderedPrompt);
+            response = selected.port().generate(renderedPrompt);
         } catch (RuntimeException e) {
             throw malformedOutput(
                     "Assessment generation response could not be parsed: " + e.getMessage(),
-                    inputHash, null, null, null, startedAt);
+                    inputHash, selected.name(), null, null, null, startedAt);
         }
 
-        validateOutput(response, inputHash, startedAt);
+        validateOutput(response, selected.name(), inputHash, startedAt);
 
         AssessmentResult result = response.result();
         String outputHash = sha256Hex(response.rawResponseText());
-        Double costEstimate = estimateCost(response.estimatedInputTokens(), response.estimatedOutputTokens());
+        Double costEstimate =
+                estimateCost(selected.name(), response.estimatedInputTokens(), response.estimatedOutputTokens());
 
         AgentExecutionLogPayload log = AgentExecutionLogPayload.builder()
                 .agentExecutionId(UUID.randomUUID())
@@ -120,6 +129,10 @@ public class AssessmentAgentOrchestrator {
                     "adjustmentNotes, previousDraftId, and previousDraft must be all present or all absent",
                     startedAt);
         }
+
+        if (!selector.supports(command.provider())) {
+            throw invalidCommand("Unrecognized provider: " + command.provider(), startedAt);
+        }
     }
 
     private String buildEnvelope(AssessmentCommand command) {
@@ -134,7 +147,8 @@ public class AssessmentAgentOrchestrator {
         return template.render();
     }
 
-    private void validateOutput(AssessmentGenerationResponse response, String inputHash, Instant startedAt) {
+    private void validateOutput(
+            AssessmentGenerationResponse response, String provider, String inputHash, Instant startedAt) {
         AssessmentResult result = response.result();
         if (result == null
                 || isBlank(result.title())
@@ -146,6 +160,7 @@ public class AssessmentAgentOrchestrator {
             throw malformedOutput(
                     "Assessment generation response is missing a required field",
                     inputHash,
+                    provider,
                     response.modelName(),
                     response.estimatedInputTokens(),
                     response.estimatedOutputTokens(),
@@ -169,6 +184,7 @@ public class AssessmentAgentOrchestrator {
     private AssessmentAgentException malformedOutput(
             String message,
             String inputHash,
+            String provider,
             String model,
             Integer estimatedInputTokens,
             Integer estimatedOutputTokens,
@@ -181,7 +197,7 @@ public class AssessmentAgentOrchestrator {
                 .inputHash(inputHash)
                 .estimatedInputTokens(estimatedInputTokens)
                 .estimatedOutputTokens(estimatedOutputTokens)
-                .costEstimate(estimateCost(estimatedInputTokens, estimatedOutputTokens))
+                .costEstimate(estimateCost(provider, estimatedInputTokens, estimatedOutputTokens))
                 .status("FAILED")
                 .errorCode(Reason.MALFORMED_OUTPUT.name())
                 .startedAt(startedAt)
@@ -190,11 +206,15 @@ public class AssessmentAgentOrchestrator {
         return new AssessmentAgentException(Reason.MALFORMED_OUTPUT, message, log);
     }
 
-    private static Double estimateCost(Integer estimatedInputTokens, Integer estimatedOutputTokens) {
-        if (estimatedInputTokens == null || estimatedOutputTokens == null) {
+    private Double estimateCost(String provider, Integer estimatedInputTokens, Integer estimatedOutputTokens) {
+        if (provider == null || estimatedInputTokens == null || estimatedOutputTokens == null) {
             return null;
         }
-        return (estimatedInputTokens + estimatedOutputTokens) / 1000.0 * COST_PER_1K_TOKENS;
+        Double ratePer1kTokens = costPerKTokensByProvider.get(provider);
+        if (ratePer1kTokens == null) {
+            return null;
+        }
+        return (estimatedInputTokens + estimatedOutputTokens) / 1000.0 * ratePer1kTokens;
     }
 
     private static String sha256Hex(String value) {

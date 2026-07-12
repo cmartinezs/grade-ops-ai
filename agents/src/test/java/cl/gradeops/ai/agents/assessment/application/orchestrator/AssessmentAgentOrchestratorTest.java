@@ -10,30 +10,38 @@ import cl.gradeops.ai.agents.assessment.application.command.AssessmentCommand;
 import cl.gradeops.ai.agents.assessment.application.exception.AssessmentAgentException;
 import cl.gradeops.ai.agents.assessment.application.exception.AssessmentAgentException.Reason;
 import cl.gradeops.ai.agents.assessment.application.port.out.AssessmentGenerationPort;
+import cl.gradeops.ai.agents.assessment.application.port.out.AssessmentGenerationPortSelector;
 import cl.gradeops.ai.agents.assessment.application.port.out.AssessmentGenerationResponse;
 import cl.gradeops.ai.agents.assessment.application.result.AgentExecutionLogPayload;
 import cl.gradeops.ai.agents.assessment.application.result.AssessmentExecutionOutcome;
 import cl.gradeops.ai.agents.assessment.application.result.AssessmentResult;
 import java.util.List;
+import java.util.Map;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
 class AssessmentAgentOrchestratorTest {
 
+    private static final String PROVIDER = "gemini";
+    private static final double COST_PER_1K_TOKENS = 0.000075;
+
     @Mock
     private AssessmentGenerationPort assessmentGenerationPort;
 
-    @InjectMocks
     private AssessmentAgentOrchestrator orchestrator;
 
     @BeforeEach
-    void loadTemplate() {
+    void setUp() {
+        // The selector is a real Strategy-pattern resolver wrapping the mocked port under the
+        // key these tests exercise — only the port itself is a mock, not the resolution logic.
+        AssessmentGenerationPortSelector selector =
+                new AssessmentGenerationPortSelector(Map.of(PROVIDER, assessmentGenerationPort), PROVIDER);
+        orchestrator = new AssessmentAgentOrchestrator(selector, Map.of(PROVIDER, COST_PER_1K_TOKENS));
         // ST4 template is normally loaded by Spring via @PostConstruct; this is a plain unit
         // test with no Spring context, so it must be invoked explicitly.
         orchestrator.loadTemplate();
@@ -224,6 +232,58 @@ class AssessmentAgentOrchestratorTest {
                 .isInstanceOf(AssessmentAgentException.class)
                 .satisfies(ex -> assertInvalidCommandFailureLog((AssessmentAgentException) ex));
         verifyNoInteractions(assessmentGenerationPort);
+    }
+
+    @Test
+    void shouldThrowInvalidCommandWhenProviderIsUnrecognized() {
+        // given
+        AssessmentCommand command = validCommandBuilder().provider("bogus").build();
+
+        // when / then
+        assertThatThrownBy(() -> orchestrator.generate(command))
+                .isInstanceOf(AssessmentAgentException.class)
+                .satisfies(ex -> assertInvalidCommandFailureLog((AssessmentAgentException) ex));
+        verifyNoInteractions(assessmentGenerationPort);
+    }
+
+    @Test
+    void shouldUseTheResolvedProviderOwnRateForCostEstimateNotAnotherProvidersRate() {
+        // given — two providers, each with its own port and its own per-1K-token rate, wired
+        // through the same Strategy-pattern selector this task introduces
+        AssessmentGenerationPort geminiPort = org.mockito.Mockito.mock(AssessmentGenerationPort.class);
+        AssessmentGenerationPort groqPort = org.mockito.Mockito.mock(AssessmentGenerationPort.class);
+        AssessmentGenerationPortSelector twoProviderSelector = new AssessmentGenerationPortSelector(
+                Map.of("gemini", geminiPort, "groq", groqPort), "groq");
+        AssessmentAgentOrchestrator twoProviderOrchestrator = new AssessmentAgentOrchestrator(
+                twoProviderSelector, Map.of("gemini", 0.000075, "groq", 0.0));
+        twoProviderOrchestrator.loadTemplate();
+
+        when(geminiPort.generate(anyString())).thenReturn(AssessmentGenerationResponse.builder()
+                .result(completeResult())
+                .rawResponseText("{\"title\":\"Loop exercise\"}")
+                .modelName("gemini-2.0-flash")
+                .estimatedInputTokens(1000)
+                .estimatedOutputTokens(1000)
+                .build());
+        when(groqPort.generate(anyString())).thenReturn(AssessmentGenerationResponse.builder()
+                .result(completeResult())
+                .rawResponseText("{\"title\":\"Loop exercise\"}")
+                .modelName("llama-3.3-70b-versatile")
+                .estimatedInputTokens(1000)
+                .estimatedOutputTokens(1000)
+                .build());
+
+        // when
+        AssessmentExecutionOutcome geminiOutcome =
+                twoProviderOrchestrator.generate(validCommandBuilder().provider("gemini").build());
+        AssessmentExecutionOutcome groqOutcome =
+                twoProviderOrchestrator.generate(validCommandBuilder().provider("groq").build());
+
+        // then — identical token counts (2000 total), but each resolved provider's own rate
+        // applies: 2000 / 1000.0 * rate
+        assertThat(geminiOutcome.log().costEstimate()).isEqualTo(0.00015);
+        assertThat(groqOutcome.log().costEstimate()).isEqualTo(0.0);
+        assertThat(geminiOutcome.log().costEstimate()).isNotEqualTo(groqOutcome.log().costEstimate());
     }
 
     /**
