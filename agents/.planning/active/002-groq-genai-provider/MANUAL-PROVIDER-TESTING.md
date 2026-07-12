@@ -14,7 +14,7 @@ Always do (1) before (2) when diagnosing a failure — it tells you in one reque
 
 ```bash
 curl -s "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent" \
-  -H "x-goog-api-key: ${GOOGLE_AI_API_KEY}" \
+  -H "x-goog-api-key: ${GRADEOPS_GEMINI_API_KEY}" \
   -H "Content-Type: application/json" \
   -d '{
     "contents": [{
@@ -52,7 +52,7 @@ Used in this planning's story-01 task-01 to verify Groq's structured-output supp
 
 ## 2. Local endpoint calls (`POST /internal/agents/assessment`)
 
-Requires the app running locally (`./mvnw -Pbeta spring-boot:run -Dspring-boot.run.profiles=beta`, with a real key configured per the current provider config — `GOOGLE_AI_API_KEY`/`AI_MODEL_NAME` today, `GRADEOPS_GEMINI_API_KEY`/`GRADEOPS_GEMINI_MODEL`/`GRADEOPS_GROQ_API_KEY`/`GRADEOPS_GROQ_MODEL`/`GRADEOPS_GROQ_BASE_URL` once story-01 task-02 lands) and `app.internal.secret` (or `INTERNAL_API_SECRET`) known.
+Requires the app running locally (`./mvnw -Pbeta spring-boot:run -Dspring-boot.run.profiles=beta`, with a real key configured via `GRADEOPS_GEMINI_API_KEY`/`GRADEOPS_GEMINI_MODEL`/`GRADEOPS_GROQ_API_KEY`/`GRADEOPS_GROQ_MODEL`/`GRADEOPS_GROQ_BASE_URL` — either exported or via a local `.env` file, see `.env.example`) and `app.internal.secret` (or `INTERNAL_API_SECRET`) known.
 
 ```bash
 curl -s http://localhost:8081/internal/agents/assessment \

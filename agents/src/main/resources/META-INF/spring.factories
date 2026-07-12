@@ -1,0 +1,2 @@
+org.springframework.boot.env.EnvironmentPostProcessor=\
+cl.gradeops.ai.agents.shared.infrastructure.config.DotenvEnvironmentPostProcessor
