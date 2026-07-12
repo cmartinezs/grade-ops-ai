@@ -25,6 +25,14 @@ Each entry should answer as many of these as possible:
 
 <!-- Add newest entries at the top. -->
 
+### 2026-07-12 - story-02 relocated to a parent-owned planning after story-01 closed
+
+- **Source:** direct human correction, not a code review finding
+- **Related story/task:** story-02-groq-infra-provisioning
+- **What happened:** at expansion time, story-02 (Secret Manager + Cloud Run wiring for the Groq key, pure `infra/terraform/*` output) was kept inside this planning (`agents/.planning/active/002-groq-genai-provider`) with the stated reasoning "infra/ has no `.planning/` of its own, so keep it here." The human corrected this after story-01 closed: this project's actual convention is that infra-only work with no dedicated child workspace is handled by the **parent** (root) planning, not by a sibling child's (here, `agents/`) planning tree.
+- **Resolution:** created a new parent-owned planning, `009-groq-infra-provisioning`, in the root worktree (`/home/carlos/projects/grade-ops-ai`, branch `develop`), carrying story-02's Objective/Risk/Tasks/Done Criteria forward unchanged. This planning's `01-expansion.md` and story-02's file were both updated with a relocation note; story-02's status changed to `MOVED` rather than being silently deleted, so the original design decision stays traceable from this planning too.
+- **Retrospective signal:** "this child planning has nowhere else to put infra-only work" is not the same question as "should this child planning own infra-only work." When a child artifact has no `.planning/` of its own, the default should be checked with the human (or against an explicit project convention) before assuming the nearest existing child planning is the right home — the parent planning is often the correct owner instead, per `.planning/GUIDE.md`'s "parent owns coordination and cross-artifact work" framing (which this same reasoning had cited, but misapplied, at expansion time).
+
 ### 2026-07-12 - task-04 code review: reviewer independently caught the same null/blank discrepancy already logged, requiring a resolution (not just a note)
 
 - **Source:** human code review (`.code-review/story-01-groq-provider-adapter/task-04-unit-tests.md`, PR #38), verified directly rather than accepted at face value, per `superpowers:receiving-code-review` discipline

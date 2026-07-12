@@ -10,7 +10,7 @@
 | # | Story | SDLC Phase(s) | Depends On | Risk | External Issue | Status |
 |---|-------|--------------|------------|------|----------------|--------|
 | 01 | [Groq LLM provider adapter and on-demand provider/model selection](02-deepening/story-01-groq-provider-adapter.md) | AG | — | M | — | TODO |
-| 02 | [Cloud Run / Secret Manager provisioning for Groq credentials](02-deepening/story-02-groq-infra-provisioning.md) | IN | 01 | L | — | TODO |
+| 02 | [Cloud Run / Secret Manager provisioning for Groq credentials](02-deepening/story-02-groq-infra-provisioning.md) | IN | 01 | L | — | MOVED |
 
 ---
 
@@ -38,7 +38,9 @@ flowchart LR
 
 ## Linked Child Plannings
 
-*N/A — this planning is itself a child workspace of the monorepo root (agents/.planning/), scoped entirely to `agents/` and the `infra/` Terraform it depends on. It has no further child workspaces of its own.*
+*N/A — this planning is itself a child workspace of the monorepo root (agents/.planning/). It has no further child workspaces of its own.*
+
+**Correction (2026-07-12):** story-02's original placement here — reasoning it belonged in this planning because `infra/` has no `.planning/` of its own — was itself the wrong call. Per this project's actual convention (confirmed by the human), `infra/`-only work without a dedicated child workspace is handled by the **parent** (root) planning, not by a sibling child's (`agents/`) planning tree. Story-02 was relocated to a new parent-owned planning, `009-groq-infra-provisioning`, at `.planning/active/009-groq-infra-provisioning/` in the root worktree (`/home/carlos/projects/grade-ops-ai`, branch `develop`) — a different worktree from this one, so no relative link applies here. See story-02's file in this planning for the pointer; its content (Objective, Risk, Tasks, Done Criteria) was carried forward unchanged.
 
 ---
 
