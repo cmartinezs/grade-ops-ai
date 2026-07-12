@@ -1,6 +1,6 @@
 # 🔍 DEEPENING: Story 01 — assessment-agent
 
-> **Status:** TODO
+> **Status:** DONE
 > [← 01-expansion.md](../01-expansion.md) | [← planning/README.md](../../README.md)
 
 ---
@@ -22,6 +22,11 @@ Implement the Assessment Agent following the project's fixed agent pipeline patt
 - Prompts are versioned `.st` (StringTemplate) files in `src/main/resources/prompts/` — never inlined in Java.
 - The agent never persists domain entities — it receives `{Agent}Command`, returns `{Agent}Result`; persistence belongs to `api/` (sibling child planning `api/.planning/003-assessment-creation`).
 - Vertex AI Gemini access for this service's Cloud Run service account (`aiplatform.user`) is already provisioned in `infra/terraform/environments/demo/service_accounts.tf` — no infra change needed.
+- Every task in this story must be designed and reviewed against `api/docs/gradeops-ai-java-guidelines/` *before* implementation, not corrected after — task-01 needed four separate correction rounds (banned Java exceptions, wrong package placement, missing Lombok `@Builder`, non-exhaustive test assertions) because it was atomized without this cross-check. Tasks 02-05 were rewritten on 2026-07-10 to close that gap; see `RETROSPECTIVE-RAW.md` for the full history.
+- **Architecture decisions locked in for tasks 03-05** (each chosen over a simpler alternative, per explicit human direction — see `RETROSPECTIVE-RAW.md` for the full reasoning):
+  - The Gemini call is isolated behind `AssessmentGenerationPort` + `GeminiAssessmentGenerationAdapter` (`infrastructure.adapter.out.gemini`), not called directly from application code — matches `01-arquitectura-hexagonal-y-paquetes.md`'s own `agents/` example package.
+  - The pipeline is wrapped in an explicit `GenerateAssessmentDraftUseCase` port + thin `GenerateAssessmentDraftHandler`, with `AssessmentAgentOrchestrator` running the actual pipeline — the Nivel-2 "use case con orquestador" pattern from `03-use-cases-orquestadores-y-pasos.md`, not a single flat service class.
+  - `AgentExecutionLogPayload` carries the full audit field set `11-seguridad-observabilidad-y-auditoria.md` requires (`agentExecutionId`, `agentName`, `promptVersion`, `inputHash`/`outputHash`, token estimates, `errorCode`), scoped to what `agents/` actually knows — `tenantId`/`teacherId`/resource identifiers are `api/`'s responsibility to attach when persisting the final `AgentExecutionLog` row.
 
 ---
 
@@ -35,30 +40,28 @@ Implement the Assessment Agent following the project's fixed agent pipeline patt
 
 ## Tasks
 
-> **Each row in this table must have a corresponding `task-NN-name.md` file under `story-01-assessment-agent/` before this story can be marked `IN PROGRESS`.** Use `/plan-atomize` to generate all task files at once, or create them individually — but they must exist before execution begins.
+> Atomized via `/plan-atomize`. Task candidates 4 and 5 from the original story-level breakdown were merged into task-03 — schema validation and execution-log capture are inseparable steps of the same pipeline call, not independently verifiable deliverables (`[CHECK-ATOMICITY]` — fragment rule).
 
 | # | Task | Workflow | Status | Output |
 |---|------|----------|--------|--------|
-| 1 | Define `AssessmentCommand` (brief fields + optional `adjustmentNotes` + optional previous-version reference) and `AssessmentResult` (title, context, instructions, objectives, deliverables, constraints) contracts | GENERATE-DOCUMENT | TODO | `AssessmentCommand.java`, `AssessmentResult.java` |
-| 2 | Create prompt template `assessment-generation.st` covering initial generation and regeneration-with-adjustment-notes cases | GENERATE-DOCUMENT | TODO | `src/main/resources/prompts/assessment-generation.st` |
-| 3 | Implement `AssessmentAgentService`: validate command → load data → build envelope → call Gemini → validate structured output → log execution → return result | GENERATE-DOCUMENT | TODO | `AssessmentAgentService.java` |
-| 4 | Implement structured-output schema validation (reject/raise on malformed Gemini responses before returning) | GENERATE-DOCUMENT | TODO | Validation logic in `AssessmentAgentService` or a dedicated validator |
-| 5 | Capture `AgentExecutionLog`-shaping data (model name, cost estimate, status, timestamps) at the point of execution, ready for `api/` to persist | GENERATE-DOCUMENT | TODO | Execution log payload returned alongside `AssessmentResult` |
-| 6 | Expose the internal REST endpoint(s) for `api/` to call (service-to-service OIDC, not public) | GENERATE-DOCUMENT | TODO | Controller/endpoint |
-| 7 | Unit tests for `AssessmentAgentService` (mocked Gemini call): valid generation, regeneration with adjustment notes, malformed-output rejection | GENERATE-DOCUMENT | TODO | Test classes |
+| 1 | [AssessmentCommand / AssessmentResult contracts](story-01-assessment-agent/task-01-contracts.md) | GENERATE-DOCUMENT | DONE | `AssessmentCommand.java`, `AssessmentResult.java` |
+| 2 | [Prompt template assessment-generation.st](story-01-assessment-agent/task-02-prompt-template.md) | GENERATE-DOCUMENT | DONE | `src/main/resources/prompts/assessment-generation.st`, `org.antlr:ST4` dependency, `AssessmentGenerationTemplateTest.java` |
+| 3 | [Assessment draft generation (orchestrator, port, adapter)](story-01-assessment-agent/task-03-assessment-agent-service.md) | GENERATE-DOCUMENT | DONE | `GenerateAssessmentDraftUseCase.java`, `GenerateAssessmentDraftHandler.java`, `AssessmentAgentOrchestrator.java`, `AssessmentGenerationPort.java`, `GeminiAssessmentGenerationAdapter.java`, `AssessmentAgentException.java`, `AgentExecutionLogPayload.java`, `AssessmentExecutionOutcome.java`, `AssessmentConfig.java` |
+| 4 | [Internal REST endpoint](story-01-assessment-agent/task-04-internal-endpoint.md) | GENERATE-DOCUMENT | DONE | `AssessmentController.java`, `InternalAuthFilter.java`, `CorrelationIdFilter.java`, `AgentGlobalExceptionHandler.java`, `SharedWebConfig.java` |
+| 5 | [Assessment draft generation unit tests](story-01-assessment-agent/task-05-unit-tests.md) | GENERATE-DOCUMENT | DONE | `GenerateAssessmentDraftHandlerTest.java`, `AssessmentAgentOrchestratorTest.java`, `GeminiAssessmentGenerationAdapterTest.java` |
 
 ---
 
 ## Done Criteria
 
-- [ ] Assessment Agent returns a structured draft (title, context, instructions, objectives, deliverables, constraints) for a valid `AssessmentCommand`.
-- [ ] The same command shape accepts an optional `adjustmentNotes` field used for regeneration, without requiring a separate agent or contract.
-- [ ] Prompt lives in a versioned `.st` file, never inlined in Java.
-- [ ] Structured output is schema-validated before being returned to the caller.
-- [ ] Execution metadata (model, cost estimate, status) is produced per invocation, ready for `AgentExecutionLog` persistence in `api/`.
-- [ ] The endpoint is internal-only (service-to-service auth), not publicly reachable.
-- [ ] Unit tests pass (`./mvnw test`).
-- [ ] TRACEABILITY.md updated with new terms from this story (e.g. `AssessmentCommand`, `AssessmentResult`, `assessment-generation.st`).
+- [x] Assessment Agent returns a structured draft (title, context, instructions, objectives, deliverables, constraints) for a valid `AssessmentCommand`. **Live-Gemini verification DEFERRED** — no `GOOGLE_AI_API_KEY` available in this environment; human explicitly re-confirmed on 2026-07-11 to merge this story with the gap documented rather than block on it further. Behavior is otherwise fully verified: unit-tested end-to-end with mocked collaborators (task-05, 18/18 passing) and structurally exercised via live `curl` requests against a running instance for every path except the actual Gemini response (task-04). Must be completed with a real key before this story is considered fully proven in production. See `RETROSPECTIVE-RAW.md` 2026-07-10 20:05 and 2026-07-11 (this entry).
+- [x] The same command shape accepts an optional `adjustmentNotes` field used for regeneration, without requiring a separate agent or contract.
+- [x] Prompt lives in a versioned `.st` file, never inlined in Java.
+- [x] Structured output is schema-validated before being returned to the caller.
+- [x] Execution metadata (model, cost estimate, status) is produced per invocation, ready for `AgentExecutionLog` persistence in `api/`.
+- [x] The endpoint is internal-only (service-to-service auth), not publicly reachable.
+- [x] Unit tests pass (`./mvnw test`) — 18/18.
+- [x] TRACEABILITY.md updated with new terms from this story (e.g. `AssessmentCommand`, `AssessmentResult`, `assessment-generation.st`).
 
 ---
 
@@ -68,7 +71,7 @@ Implement the Assessment Agent following the project's fixed agent pipeline patt
 
 | # | Description | Docs Involved | Status | Resolution Path |
 |---|-------------|--------------|--------|----------------|
-| — | *None yet* | — | — | — |
+| 1 | `AssessmentResult` (task-01) has 6 fields matching US-011's AC exactly; `docs/03-ai-agents/assessment-agent.md`'s Output Contract example has ~15 fields (incl. `summary`, `rubric_seed`, `warnings`, `uncertainty_flags`, `schema_version`) and renames 2 overlapping fields (`learning_objectives`, `student_instructions`) | `docs/03-ai-agents/assessment-agent.md`, US-011 | OPEN | Decide whether `docs/03-ai-agents/assessment-agent.md` should be narrowed to the MVP contract actually atomized, or the extra fields tracked as explicit residuals for a later story |
 
 ---
 
@@ -78,7 +81,7 @@ Implement the Assessment Agent following the project's fixed agent pipeline patt
 
 | # | Description | Deferred To | Status |
 |---|-------------|------------|--------|
-| — | *None* | — | — |
+| 1 | Story Done Criteria #1 (a real Gemini call) never ran in this environment (no `GOOGLE_AI_API_KEY` available). Story merges to `develop` with this gap documented, per explicit human decision on 2026-07-11. | Whoever has a real key next — run one `POST /internal/agents/assessment` request against a live Gemini backend and record the response as evidence in this story or a follow-up task | OPEN |
 
 ---
 

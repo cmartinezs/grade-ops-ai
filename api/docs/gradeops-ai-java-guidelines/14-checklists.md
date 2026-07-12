@@ -26,6 +26,9 @@
 - [ ] Existe `UseCase` en `application.port.in`.
 - [ ] Existe `Command` o `Query`.
 - [ ] Existe `Result`.
+- [ ] `Command`/`Result` públicos copian defensivamente colecciones (normalizando `null` a colección vacía) y, si validan campos obligatorios en su constructor, usan una excepción propia del proyecto — nunca `Objects.requireNonNull` ni excepciones de la API de Java.
+- [ ] Contratos compartidos entre artifacts no dependen de Spring/JPA/Jackson/Bean Validation.
+- [ ] Campos opcionales que representan un mismo modo de ejecución se validan de forma coherente.
 - [ ] Handler implementa el puerto de entrada.
 - [ ] Persistencia/proveedores externos entran por puertos de salida.
 - [ ] Transacción está en lugar correcto.
@@ -97,6 +100,7 @@
 
 - [ ] Prompt versionado.
 - [ ] Output estructurado validado.
+- [ ] `Command`/`Result` del agente tienen nombres de campo alineados con el consumidor real.
 - [ ] Provider aislado detrás de puerto.
 - [ ] Costos/tokens estimados registrados.
 - [ ] Créditos consumidos mediante caso de uso/política.

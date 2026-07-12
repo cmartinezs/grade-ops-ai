@@ -78,6 +78,49 @@ public record CreateAssessmentResult(
 }
 ```
 
+## Contratos públicos entre artifacts y agentes
+
+Cuando un `Command` o `Result` cruza artifacts o procesos, por ejemplo `api/`
+llamando a `agents/`, tratarlo como contrato público estable, no como DTO
+interno descartable.
+
+Reglas:
+
+- Mantener el contrato inmutable; si contiene colecciones, hacer copia defensiva
+  con `List.copyOf`, `Set.copyOf` o equivalente, normalizando `null` a colección
+  vacía en vez de lanzar.
+- Nunca usar `Objects.requireNonNull` ni excepciones de la API de Java
+  (`NullPointerException`, `IllegalArgumentException`, `IllegalStateException`)
+  para validar campos obligatorios — la regla de
+  `12-excepciones-y-manejo-de-errores.md` aplica también a estos contratos.
+  Si el contrato necesita rechazar un valor inválido en su propio constructor,
+  usar la excepción propia de la capa/artifact que lo declara (en `api/`, una
+  subclase de `DomainException`/`ApplicationException`; en `agents/`, la
+  excepción propia del agente, p. ej. `AssessmentAgentException`).
+- Si el `Result` es la salida de un proceso no confiable (por ejemplo la
+  respuesta estructurada de un LLM deserializada por Spring AI), no validar
+  campos obligatorios en el constructor compacto del `record`: un valor
+  ausente ahí no es un bug de quien construye el objeto, es un dato esperado
+  que debe evaluarse explícitamente. Dejar que el paso dedicado del pipeline
+  (p. ej. `validateOutput`) sea el único punto que rechaza campos ausentes,
+  con la excepción propia del artifact. El constructor compacto se limita a
+  garantizar inmutabilidad (copia defensiva de colecciones).
+- Modelar estados opcionales de forma coherente: si dos campos opcionales
+  representan un mismo modo de ejecución, deben venir juntos o rechazarse.
+- Evitar acoplar contratos públicos a Spring, JPA, Jackson o Bean Validation.
+  Las anotaciones de framework pertenecen a adapters o DTOs de entrada/salida,
+  no al contrato compartido entre artifacts.
+- Fijar nombres de campos contra el consumidor real antes de implementar. Si un
+  documento aspiracional y una historia atomizada discrepan, registrar la
+  inconsistencia y declarar cuál fuente manda para ese slice.
+- `agents/` sigue la misma estructura de paquetes que `api/`
+  (`01-arquitectura-hexagonal-y-paquetes.md`): el `Command` vive en
+  `<feature>.application.command`, el `Result` en `<feature>.application.result`
+  — igual que `ai.gradeops.agents.grading.application` en el ejemplo de ese
+  documento. No existe una excepción que permita ubicarlos en el paquete raíz
+  de la feature; "contrato público estable" describe su rol semántico, no un
+  paquete distinto del que ya define la arquitectura hexagonal.
+
 ### Handler
 
 ```java
