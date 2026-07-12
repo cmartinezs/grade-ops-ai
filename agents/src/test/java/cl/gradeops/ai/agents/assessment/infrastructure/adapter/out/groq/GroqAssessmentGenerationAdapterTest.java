@@ -1,0 +1,153 @@
+package cl.gradeops.ai.agents.assessment.infrastructure.adapter.out.groq;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+import cl.gradeops.ai.agents.assessment.application.port.out.AssessmentGenerationResponse;
+import cl.gradeops.ai.agents.assessment.application.result.AssessmentResult;
+import java.util.List;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.ai.chat.client.ChatClient;
+import org.springframework.ai.chat.client.ResponseEntity;
+import org.springframework.ai.chat.messages.AssistantMessage;
+import org.springframework.ai.chat.metadata.ChatResponseMetadata;
+import org.springframework.ai.chat.metadata.Usage;
+import org.springframework.ai.chat.model.ChatResponse;
+import org.springframework.ai.chat.model.Generation;
+import org.springframework.ai.chat.prompt.ChatOptions;
+import org.springframework.ai.openai.OpenAiChatOptions;
+
+@ExtendWith(MockitoExtension.class)
+class GroqAssessmentGenerationAdapterTest {
+
+    private static final String RENDERED_PROMPT = "Generate an assessment for this brief...";
+
+    @Mock
+    private ChatClient chatClient;
+
+    @Mock
+    private ChatClient.ChatClientRequestSpec requestSpec;
+
+    @Mock
+    private ChatClient.CallResponseSpec callResponseSpec;
+
+    @Mock
+    private Usage usage;
+
+    private GroqAssessmentGenerationAdapter adapter;
+
+    @BeforeEach
+    void setUp() {
+        adapter = new GroqAssessmentGenerationAdapter(chatClient);
+    }
+
+    private static AssessmentResult completeResult() {
+        return AssessmentResult.builder()
+                .title("Loop exercise")
+                .context("Practice iteration")
+                .instructions("Implement the requested program")
+                .objectives(List.of("Use for loops"))
+                .deliverables(List.of("Source code"))
+                .constraints(List.of("No external libraries"))
+                .build();
+    }
+
+    @Test
+    void shouldMapResultAndTokenUsageWhenMetadataIsPresent() {
+        // given
+        AssessmentResult expectedResult = completeResult();
+        when(usage.getPromptTokens()).thenReturn(542);
+        when(usage.getCompletionTokens()).thenReturn(134);
+        ChatResponseMetadata metadata =
+                ChatResponseMetadata.builder().model("llama-3.3-70b-versatile").usage(usage).build();
+        ChatResponse chatResponse = new ChatResponse(
+                List.of(new Generation(new AssistantMessage("{\"title\":\"Loop exercise\"}"))), metadata);
+        ResponseEntity<ChatResponse, AssessmentResult> responseEntity =
+                new ResponseEntity<>(chatResponse, expectedResult);
+
+        when(chatClient.prompt(RENDERED_PROMPT)).thenReturn(requestSpec);
+        when(requestSpec.call()).thenReturn(callResponseSpec);
+        when(callResponseSpec.responseEntity(AssessmentResult.class)).thenReturn(responseEntity);
+
+        // when — model is null, so no per-call options should be applied
+        AssessmentGenerationResponse response = adapter.generate(RENDERED_PROMPT, null);
+
+        // then — 1. no nulo
+        assertThat(response).isNotNull();
+        // then — 2. atributos no nulos
+        assertThat(response.result()).isNotNull();
+        assertThat(response.rawResponseText()).isNotNull();
+        assertThat(response.modelName()).isNotNull();
+        assertThat(response.estimatedInputTokens()).isNotNull();
+        assertThat(response.estimatedOutputTokens()).isNotNull();
+        // then — 3. valores esperados
+        assertThat(response.result()).isEqualTo(expectedResult);
+        assertThat(response.rawResponseText()).isEqualTo("{\"title\":\"Loop exercise\"}");
+        assertThat(response.modelName()).isEqualTo("llama-3.3-70b-versatile");
+        assertThat(response.estimatedInputTokens()).isEqualTo(542);
+        assertThat(response.estimatedOutputTokens()).isEqualTo(134);
+    }
+
+    @Test
+    void shouldForwardRequestedModelAsPerCallChatOptionsWhenModelIsProvided() {
+        // given
+        AssessmentResult expectedResult = completeResult();
+        ChatResponseMetadata metadata =
+                ChatResponseMetadata.builder().model("llama-3.1-8b-instant").build();
+        ChatResponse chatResponse = new ChatResponse(
+                List.of(new Generation(new AssistantMessage("{\"title\":\"Loop exercise\"}"))), metadata);
+        ResponseEntity<ChatResponse, AssessmentResult> responseEntity =
+                new ResponseEntity<>(chatResponse, expectedResult);
+
+        when(chatClient.prompt(RENDERED_PROMPT)).thenReturn(requestSpec);
+        when(requestSpec.options(any())).thenReturn(requestSpec);
+        when(requestSpec.call()).thenReturn(callResponseSpec);
+        when(callResponseSpec.responseEntity(AssessmentResult.class)).thenReturn(responseEntity);
+
+        // when
+        adapter.generate(RENDERED_PROMPT, "llama-3.1-8b-instant");
+
+        // then — the requested model reaches the ChatClient as a per-call option, not just as
+        // metadata the adapter reports back
+        ArgumentCaptor<ChatOptions.Builder> optionsCaptor = ArgumentCaptor.forClass(ChatOptions.Builder.class);
+        verify(requestSpec).options(optionsCaptor.capture());
+        OpenAiChatOptions capturedOptions = (OpenAiChatOptions) optionsCaptor.getValue().build();
+        assertThat(capturedOptions.getModel()).isEqualTo("llama-3.1-8b-instant");
+    }
+
+    @Test
+    void shouldReturnNullTokenFieldsWhenUsageMetadataIsUnavailable() {
+        // given
+        AssessmentResult expectedResult = completeResult();
+        ChatResponseMetadata metadata = ChatResponseMetadata.builder().model("llama-3.3-70b-versatile").build();
+        ChatResponse chatResponse = new ChatResponse(
+                List.of(new Generation(new AssistantMessage("{\"title\":\"Loop exercise\"}"))), metadata);
+        ResponseEntity<ChatResponse, AssessmentResult> responseEntity =
+                new ResponseEntity<>(chatResponse, expectedResult);
+
+        when(chatClient.prompt(RENDERED_PROMPT)).thenReturn(requestSpec);
+        when(requestSpec.call()).thenReturn(callResponseSpec);
+        when(callResponseSpec.responseEntity(AssessmentResult.class)).thenReturn(responseEntity);
+
+        // when
+        AssessmentGenerationResponse response = adapter.generate(RENDERED_PROMPT, null);
+
+        // then — 1. no nulo
+        assertThat(response).isNotNull();
+        // then — 2. atributos no nulos (los que sí deben venir poblados)
+        assertThat(response.result()).isNotNull();
+        assertThat(response.modelName()).isNotNull();
+        // then — 3. valores esperados, incluidos los nulos esperados por falta de metadata
+        assertThat(response.result()).isEqualTo(expectedResult);
+        assertThat(response.modelName()).isEqualTo("llama-3.3-70b-versatile");
+        assertThat(response.estimatedInputTokens()).isNull();
+        assertThat(response.estimatedOutputTokens()).isNull();
+    }
+}
