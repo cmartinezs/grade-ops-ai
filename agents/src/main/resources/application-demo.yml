@@ -9,4 +9,18 @@ spring:
         location: ${VERTEX_AI_LOCATION:us-central1}
         chat:
           options:
-            model: ${AI_MODEL_NAME}
+            model: ${GRADEOPS_GEMINI_MODEL}
+    openai:
+      api-key: ${GRADEOPS_GROQ_API_KEY}
+      base-url: ${GRADEOPS_GROQ_BASE_URL:https://api.groq.com/openai/v1}
+      chat:
+        options:
+          model: ${GRADEOPS_GROQ_MODEL}
+
+# ChatClientAutoConfiguration requires exactly one ChatModel bean; with both Google GenAI's and
+# OpenAI's (Groq) starters present it finds two (googleGenAiChatModel, openAiChatModel) and fails
+# to start. AssessmentConfig builds each provider's ChatClient directly from its own uniquely
+# named ChatModel bean instead — see AssessmentConfig.java.
+  autoconfigure:
+    exclude:
+      - org.springframework.ai.model.chat.client.autoconfigure.ChatClientAutoConfiguration

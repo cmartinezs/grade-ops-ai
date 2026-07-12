@@ -30,6 +30,7 @@ Central directory for all project plannings.
 ### 🚧 In Progress → see [`active/README.md`](active/README.md)
 
 - [001-assessment-creation](active/001-assessment-creation/README.md) — Assessment Agent (contract, prompt, pipeline) for the assessment-creation flow (child planning of `008-assessment-creation`)
+- [002-groq-genai-provider](active/002-groq-genai-provider/README.md) — Groq adapter as an alternative LLM provider alongside Gemini, on-demand per-request provider/model selection, `.env`-based local config and Cloud Run env vars instead of full Spring YAML paths
 
 ### ✅ Completed → see [`finished/README.md`](finished/README.md)
 

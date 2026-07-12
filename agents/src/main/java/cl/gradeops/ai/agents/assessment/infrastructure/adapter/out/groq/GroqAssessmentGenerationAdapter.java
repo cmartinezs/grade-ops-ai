@@ -1,4 +1,4 @@
-package cl.gradeops.ai.agents.assessment.infrastructure.adapter.out.gemini;
+package cl.gradeops.ai.agents.assessment.infrastructure.adapter.out.groq;
 
 import cl.gradeops.ai.agents.assessment.application.port.out.AssessmentGenerationPort;
 import cl.gradeops.ai.agents.assessment.application.port.out.AssessmentGenerationResponse;
@@ -9,27 +9,18 @@ import org.springframework.ai.chat.client.ResponseEntity;
 import org.springframework.ai.chat.metadata.EmptyUsage;
 import org.springframework.ai.chat.metadata.Usage;
 import org.springframework.ai.chat.model.ChatResponse;
-import org.springframework.ai.google.genai.GoogleGenAiChatOptions;
+import org.springframework.ai.openai.OpenAiChatOptions;
 
 /**
- * The only class in this feature allowed to import {@code ChatClient}/{@code ChatResponse},
- * per the project's package conventions for provider-specific adapters. Isolates
- * {@code AssessmentAgentOrchestrator} from Spring AI entirely.
- *
- * <p>Uses {@code ChatClient.CallResponseSpec.responseEntity(Class)} rather than {@code
- * entity(Class)} so both the mapped {@link AssessmentResult} and the raw {@link ChatResponse}
- * (for token-usage metadata) come from a single call — calling {@code entity(...)} and {@code
- * chatResponse()} separately would issue two model calls.
- *
- * <p>{@code ChatResponseMetadata.getUsage()} never actually returns {@code null} — Spring AI
- * defaults it to {@link EmptyUsage}, whose token counts are {@code 0}, not absent. Treating
- * only a literal {@code null} as "no usage data" would silently report {@code 0} tokens
- * whenever a provider doesn't supply usage metadata, instead of the {@code null} this class's
- * contract promises for that case — checking for {@code EmptyUsage} explicitly is what makes
- * "unavailable" distinguishable from "zero".
+ * Groq's {@code AssessmentGenerationPort} implementation. Groq exposes an OpenAI-compatible
+ * chat completions endpoint, so this adapter is built on Spring AI's OpenAI {@code ChatClient}
+ * pointed at Groq's base URL — there is no dedicated Groq starter. Structurally mirrors {@code
+ * GeminiAssessmentGenerationAdapter}: same one-call {@code responseEntity} usage and the same
+ * {@code EmptyUsage} handling (Spring AI's usage metadata is never a literal {@code null}, it
+ * defaults to a zero-valued marker type when a provider omits usage data).
  */
 @RequiredArgsConstructor
-public class GeminiAssessmentGenerationAdapter implements AssessmentGenerationPort {
+public class GroqAssessmentGenerationAdapter implements AssessmentGenerationPort {
 
     private final ChatClient chatClient;
 
@@ -37,7 +28,7 @@ public class GeminiAssessmentGenerationAdapter implements AssessmentGenerationPo
     public AssessmentGenerationResponse generate(String renderedPrompt, String model) {
         ChatClient.ChatClientRequestSpec requestSpec = chatClient.prompt(renderedPrompt);
         if (model != null) {
-            requestSpec = requestSpec.options(GoogleGenAiChatOptions.builder().model(model));
+            requestSpec = requestSpec.options(OpenAiChatOptions.builder().model(model));
         }
         ResponseEntity<ChatResponse, AssessmentResult> responseEntity =
                 requestSpec.call().responseEntity(AssessmentResult.class);

@@ -1,4 +1,4 @@
-package cl.gradeops.ai.agents.assessment.infrastructure.adapter.out.gemini;
+package cl.gradeops.ai.agents.assessment.infrastructure.adapter.out.groq;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -22,10 +22,10 @@ import org.springframework.ai.chat.metadata.Usage;
 import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.ai.chat.model.Generation;
 import org.springframework.ai.chat.prompt.ChatOptions;
-import org.springframework.ai.google.genai.GoogleGenAiChatOptions;
+import org.springframework.ai.openai.OpenAiChatOptions;
 
 @ExtendWith(MockitoExtension.class)
-class GeminiAssessmentGenerationAdapterTest {
+class GroqAssessmentGenerationAdapterTest {
 
     private static final String RENDERED_PROMPT = "Generate an assessment for this brief...";
 
@@ -41,11 +41,11 @@ class GeminiAssessmentGenerationAdapterTest {
     @Mock
     private Usage usage;
 
-    private GeminiAssessmentGenerationAdapter adapter;
+    private GroqAssessmentGenerationAdapter adapter;
 
     @BeforeEach
     void setUp() {
-        adapter = new GeminiAssessmentGenerationAdapter(chatClient);
+        adapter = new GroqAssessmentGenerationAdapter(chatClient);
     }
 
     private static AssessmentResult completeResult() {
@@ -63,10 +63,10 @@ class GeminiAssessmentGenerationAdapterTest {
     void shouldMapResultAndTokenUsageWhenMetadataIsPresent() {
         // given
         AssessmentResult expectedResult = completeResult();
-        when(usage.getPromptTokens()).thenReturn(120);
-        when(usage.getCompletionTokens()).thenReturn(80);
+        when(usage.getPromptTokens()).thenReturn(542);
+        when(usage.getCompletionTokens()).thenReturn(134);
         ChatResponseMetadata metadata =
-                ChatResponseMetadata.builder().model("gemini-2.0-flash").usage(usage).build();
+                ChatResponseMetadata.builder().model("llama-3.3-70b-versatile").usage(usage).build();
         ChatResponse chatResponse = new ChatResponse(
                 List.of(new Generation(new AssistantMessage("{\"title\":\"Loop exercise\"}"))), metadata);
         ResponseEntity<ChatResponse, AssessmentResult> responseEntity =
@@ -90,9 +90,9 @@ class GeminiAssessmentGenerationAdapterTest {
         // then — 3. valores esperados
         assertThat(response.result()).isEqualTo(expectedResult);
         assertThat(response.rawResponseText()).isEqualTo("{\"title\":\"Loop exercise\"}");
-        assertThat(response.modelName()).isEqualTo("gemini-2.0-flash");
-        assertThat(response.estimatedInputTokens()).isEqualTo(120);
-        assertThat(response.estimatedOutputTokens()).isEqualTo(80);
+        assertThat(response.modelName()).isEqualTo("llama-3.3-70b-versatile");
+        assertThat(response.estimatedInputTokens()).isEqualTo(542);
+        assertThat(response.estimatedOutputTokens()).isEqualTo(134);
     }
 
     @Test
@@ -100,7 +100,7 @@ class GeminiAssessmentGenerationAdapterTest {
         // given
         AssessmentResult expectedResult = completeResult();
         ChatResponseMetadata metadata =
-                ChatResponseMetadata.builder().model("gemini-1.5-pro").build();
+                ChatResponseMetadata.builder().model("llama-3.1-8b-instant").build();
         ChatResponse chatResponse = new ChatResponse(
                 List.of(new Generation(new AssistantMessage("{\"title\":\"Loop exercise\"}"))), metadata);
         ResponseEntity<ChatResponse, AssessmentResult> responseEntity =
@@ -112,21 +112,21 @@ class GeminiAssessmentGenerationAdapterTest {
         when(callResponseSpec.responseEntity(AssessmentResult.class)).thenReturn(responseEntity);
 
         // when
-        adapter.generate(RENDERED_PROMPT, "gemini-1.5-pro");
+        adapter.generate(RENDERED_PROMPT, "llama-3.1-8b-instant");
 
         // then — the requested model reaches the ChatClient as a per-call option, not just as
         // metadata the adapter reports back
         ArgumentCaptor<ChatOptions.Builder> optionsCaptor = ArgumentCaptor.forClass(ChatOptions.Builder.class);
         verify(requestSpec).options(optionsCaptor.capture());
-        GoogleGenAiChatOptions capturedOptions = (GoogleGenAiChatOptions) optionsCaptor.getValue().build();
-        assertThat(capturedOptions.getModel()).isEqualTo("gemini-1.5-pro");
+        OpenAiChatOptions capturedOptions = (OpenAiChatOptions) optionsCaptor.getValue().build();
+        assertThat(capturedOptions.getModel()).isEqualTo("llama-3.1-8b-instant");
     }
 
     @Test
     void shouldReturnNullTokenFieldsWhenUsageMetadataIsUnavailable() {
         // given
         AssessmentResult expectedResult = completeResult();
-        ChatResponseMetadata metadata = ChatResponseMetadata.builder().model("gemini-2.0-flash").build();
+        ChatResponseMetadata metadata = ChatResponseMetadata.builder().model("llama-3.3-70b-versatile").build();
         ChatResponse chatResponse = new ChatResponse(
                 List.of(new Generation(new AssistantMessage("{\"title\":\"Loop exercise\"}"))), metadata);
         ResponseEntity<ChatResponse, AssessmentResult> responseEntity =
@@ -146,7 +146,7 @@ class GeminiAssessmentGenerationAdapterTest {
         assertThat(response.modelName()).isNotNull();
         // then — 3. valores esperados, incluidos los nulos esperados por falta de metadata
         assertThat(response.result()).isEqualTo(expectedResult);
-        assertThat(response.modelName()).isEqualTo("gemini-2.0-flash");
+        assertThat(response.modelName()).isEqualTo("llama-3.3-70b-versatile");
         assertThat(response.estimatedInputTokens()).isNull();
         assertThat(response.estimatedOutputTokens()).isNull();
     }
