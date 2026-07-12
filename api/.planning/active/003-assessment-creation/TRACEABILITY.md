@@ -28,7 +28,7 @@ Term and concept traceability for this planning. For global consolidated view, s
 | `AssessmentBrief` | ❌ | N/A | ✅ | task-02. Field names must mirror `agents/`'s `AssessmentCommand`. |
 | `AssessmentDraft` | ❌ | N/A | ✅ | task-03. Versioned, append-only. Field names must mirror `agents/`'s `AssessmentResult`. |
 | `AgentExecutionLog` | ❌ | N/A | ✅ | task-07. First-class evidence entity per `CLAUDE.md`, kept as its own table (not folded into `AssessmentDraft`). |
-| `agentclient` module | ❌ | N/A | ✅ | task-05. Only module allowed to call `agents/`. Plain `RestClient`, no Spring AI dependency needed on this side. |
+| `agentclient` module | ❌ | N/A | ✅ | task-05. Only module allowed to call `agents/`. Plain `RestClient`, no Spring AI dependency needed on this side. As of 2026-07-12 (`agents/.planning/active/002-groq-genai-provider`), the mirrored `AssessmentCommand` DTO must also carry two more nullable fields, `provider`/`model` — see this planning's story-01 Inconsistencies Found #2. |
 | `POST /api/v1/assessments` | ❌ | N/A | ✅ | task-06 — brief intake, creates `Assessment` + `AssessmentBrief`. |
 | `POST /api/v1/assessments/{id}/draft` | ❌ | N/A | ✅ | task-07 — initial generation. |
 | `POST /api/v1/assessments/{id}/draft/regenerate` | ❌ | N/A | ✅ | task-08. |
