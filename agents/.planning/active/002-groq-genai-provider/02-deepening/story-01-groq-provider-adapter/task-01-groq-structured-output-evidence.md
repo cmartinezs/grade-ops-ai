@@ -94,13 +94,55 @@ The `message.content` string, parsed on its own, is:
 
 This matches `AssessmentResult`'s six fields exactly (`title`, `context`, `instructions`, `objectives`, `deliverables`, `constraints`), with correct types (strings vs. string arrays) and no extraneous top-level fields.
 
+**This curl call does not prove `GroqAssessmentGenerationAdapter`'s actual mapping approach works** — it manually sent an explicit, field-by-field instruction in the system prompt and asked for `response_format: {"type": "json_object"}` (basic JSON mode). Spring AI's `ChatClient.responseEntity(AssessmentResult.class)` builds its own prompt internally (via `BeanOutputConverter`, which appends a full JSON Schema and a generic "match this schema" instruction) and does not use the provider's native `response_format` parameter at all. These are different mechanisms; passing with one does not prove the other passes. See the next section, added after human code review correctly flagged this gap.
+
 ---
 
-## Conclusion
+## Real `ChatClient.responseEntity(AssessmentResult.class)` verification
 
-- Groq's OpenAI-compatible endpoint supports JSON-mode structured output (`response_format: {"type": "json_object"}`) and reliably follows a field-level schema instruction embedded in the system prompt.
-- `GroqAssessmentGenerationAdapter`'s mapping approach (`chatClient.prompt(...).call().responseEntity(AssessmentResult.class)`, identical in shape to `GeminiAssessmentGenerationAdapter`) needs no adjustment — Spring AI's `BeanOutputConverter` behind `responseEntity(Class)` relies on the same prompt-embedded-schema + text-parsing mechanism this evidence call used manually, not on the provider's native `response_format` parameter.
+`GroqChatClientManualVerification` (`src/test/java/.../infrastructure/adapter/out/groq/`, kept permanently as an on-demand diagnostic — not deleted, per explicit human direction: useful to re-validate provider communication whenever Groq's behavior, the chosen model, or the Spring AI version changes; excluded from the automated suite by filename, run explicitly with `-Dtest=GroqChatClientManualVerification`) built a real Spring AI `ChatClient` via `OpenAiChatAutoConfiguration` pointed at Groq (`spring.ai.openai.base-url=https://api.groq.com/openai/v1` — note the required `/v1` suffix, the SDK does not append it automatically; a bare `https://api.groq.com/openai` 404s), and called `.prompt(renderedPrompt).call().responseEntity(AssessmentResult.class)` — the exact method `GroqAssessmentGenerationAdapter.generate()` calls.
+
+### `llama-3.1-8b-instant` — FAILS
+
+Real call, `HTTP 200`, but the model returned the **JSON Schema itself**, not data conforming to it:
+
+```json
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": { "title": {"type": "string"}, "context": {"type": "string"}, "...": "..." },
+  "required": ["constraints", "context", "deliverables", "instructions", "objectives", "title"],
+  "additionalProperties": false
+}
+```
+
+`responseEntity` deserialized this into `AssessmentResult[title=null, context=null, instructions=null, objectives=[], deliverables=[], constraints=[]]` — every field null/empty, since the response has `properties`/`type`/`required` keys, not `title`/`context`/etc. This is a genuine, reproducible failure of the adapter's mapping approach against this specific model — not a transient error.
+
+### `llama-3.3-70b-versatile` — SUCCEEDS
+
+Same test, same prompt, only the model changed. Real call, `HTTP 200`, correctly filled `AssessmentResult`:
+
+```json
+{
+  "title": "Evaluating Loops and Conditionals in Java",
+  "context": "First-semester students, introductory level",
+  "objectives": ["Understand the purpose of loops in Java", "Apply conditional statements to control program flow", "Demonstrate the use of for, while, and do-while loops", "Use if-else statements to handle different conditions"],
+  "constraints": ["60-minute time limit", "Use only Java programming language", "No external libraries or frameworks allowed"],
+  "instructions": "Complete the provided programming tasks to demonstrate understanding of loops and conditionals in Java",
+  "deliverables": ["Completed Java code for each task", "Output or results of the programs", "Brief explanations of the programming choices made"]
+}
+```
+
+Mapped correctly into a fully-populated `AssessmentResult`. `usage`: 341 prompt tokens, 178 completion tokens.
+
+---
+
+## Conclusion (revised)
+
+- **`GroqAssessmentGenerationAdapter`'s mapping code is correct** — `responseEntity(AssessmentResult.class)` works against Groq exactly as it does against Gemini, when the underlying model is capable enough to follow Spring AI's schema-based prompting.
+- **`llama-3.1-8b-instant` is not a reliable default/example model** for this adapter — it echoes the JSON Schema back instead of filling it in, a documented instruction-following limitation of smaller models under prompt-based (not natively-enforced) structured output, distinct from Groq's own basic `response_format: json_object` mode (which this same model handled correctly in the raw curl test above). `llama-3.3-70b-versatile` does not have this problem. Every reference to `llama-3.1-8b-instant` as the example/default Groq model elsewhere in this story (task-02, task-03, `MANUAL-PROVIDER-TESTING.md`) has been corrected to `llama-3.3-70b-versatile`.
 - The blocked-model attempts are recorded here as a separate finding for `task-03`/story-02: this Groq project's models are disabled by default and require explicit enablement per model in the Groq console — worth a note in whatever setup documentation eventually covers onboarding a new Groq project key.
+- **Retrospective signal:** a raw-curl call against a provider's REST API is not equivalent evidence to calling this codebase's actual Spring AI code path — they can use entirely different mechanisms (explicit field instructions + basic JSON mode vs. schema-based prompting) that succeed or fail independently of each other. This was caught by human code review requiring the real `ChatClient` path be exercised, not assumed equivalent — see `RETROSPECTIVE-RAW.md`.
 
 ---
 

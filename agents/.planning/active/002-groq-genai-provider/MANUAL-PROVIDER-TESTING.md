@@ -35,7 +35,7 @@ curl -s https://api.groq.com/openai/v1/chat/completions \
   -H "Authorization: Bearer ${GROQ_API_KEY}" \
   -H "Content-Type: application/json" \
   -d '{
-    "model": "llama-3.1-8b-instant",
+    "model": "llama-3.3-70b-versatile",
     "response_format": {"type": "json_object"},
     "messages": [
       {"role": "system", "content": "You generate structured programming assessment drafts. Respond ONLY with a JSON object with exactly these fields: title (string), context (string), instructions (string), objectives (array of strings), deliverables (array of strings), constraints (array of strings)."},
@@ -44,7 +44,9 @@ curl -s https://api.groq.com/openai/v1/chat/completions \
   }'
 ```
 
-Used in this planning's story-01 task-01 to verify Groq's structured-output support before finalizing `GroqAssessmentGenerationAdapter`'s mapping. First 6 attempts (across 6 different models) returned `403 model_permission_blocked_project` — the Groq project had every chat model disabled by default. Resolved by enabling `llama-3.1-8b-instant` at `console.groq.com/settings/project/limits`, after which the call returned `200` with valid JSON matching `AssessmentResult`'s schema exactly. Full transcript: `02-deepening/story-01-groq-provider-adapter/task-01-groq-structured-output-evidence.md`. **Note for anyone provisioning a new Groq project key** (relevant to story-02's Cloud Run/Secret Manager work): models are not enabled by default; at least one must be explicitly enabled in the Groq console before any request will succeed, regardless of code correctness.
+Used in this planning's story-01 task-01 to verify Groq's structured-output support before finalizing `GroqAssessmentGenerationAdapter`'s mapping. First 6 attempts (across 6 different models) returned `403 model_permission_blocked_project` — the Groq project had every chat model disabled by default. Resolved by enabling models at `console.groq.com/settings/project/limits`. **Note for anyone provisioning a new Groq project key** (relevant to story-02's Cloud Run/Secret Manager work): models are not enabled by default; at least one must be explicitly enabled in the Groq console before any request will succeed, regardless of code correctness.
+
+**Model capability matters, not just the raw curl call.** A raw curl with explicit field-by-field instructions is not equivalent evidence to the actual `ChatClient.responseEntity(AssessmentResult.class)` path this codebase uses (Spring AI's `BeanOutputConverter` builds its own schema-based prompt internally). Verified directly: `llama-3.1-8b-instant` passes the raw-curl form of this test but **fails** `responseEntity(AssessmentResult.class)` — it echoes the JSON Schema back instead of filling it in. `llama-3.3-70b-versatile` passes both. Use `llama-3.3-70b-versatile` (or a comparably capable model) as the default/example Groq model — not `llama-3.1-8b-instant`. Full transcript of both real-code-path results: `02-deepening/story-01-groq-provider-adapter/task-01-groq-structured-output-evidence.md`.
 
 ---
 
