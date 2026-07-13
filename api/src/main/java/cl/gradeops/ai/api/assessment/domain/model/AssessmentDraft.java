@@ -38,9 +38,9 @@ public class AssessmentDraft extends AggregateRoot<UUID> {
         d.title = title;
         d.context = context;
         d.instructions = instructions;
-        d.objectives = objectives;
-        d.deliverables = deliverables;
-        d.constraints = constraints;
+        d.objectives = List.copyOf(objectives);
+        d.deliverables = List.copyOf(deliverables);
+        d.constraints = List.copyOf(constraints);
         d.agentExecutionLogId = agentExecutionLogId;
         d.createdAt = Instant.now();
         return d;
@@ -65,9 +65,9 @@ public class AssessmentDraft extends AggregateRoot<UUID> {
         d.title = title;
         d.context = context;
         d.instructions = instructions;
-        d.objectives = objectives;
-        d.deliverables = deliverables;
-        d.constraints = constraints;
+        d.objectives = List.copyOf(objectives);
+        d.deliverables = List.copyOf(deliverables);
+        d.constraints = List.copyOf(constraints);
         d.agentExecutionLogId = agentExecutionLogId;
         d.createdAt = Instant.now();
         return d;
@@ -94,9 +94,9 @@ public class AssessmentDraft extends AggregateRoot<UUID> {
         d.title = title;
         d.context = context;
         d.instructions = instructions;
-        d.objectives = objectives;
-        d.deliverables = deliverables;
-        d.constraints = constraints;
+        d.objectives = List.copyOf(objectives);
+        d.deliverables = List.copyOf(deliverables);
+        d.constraints = List.copyOf(constraints);
         d.agentExecutionLogId = agentExecutionLogId;
         d.createdAt = createdAt;
         return d;

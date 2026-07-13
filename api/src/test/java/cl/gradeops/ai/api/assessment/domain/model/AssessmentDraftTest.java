@@ -4,6 +4,7 @@ import cl.gradeops.ai.api.shared.domain.exception.DomainInvariantViolationExcept
 import org.junit.jupiter.api.Test;
 
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -35,6 +36,49 @@ class AssessmentDraftTest {
         assertThat(d.getConstraints()).containsExactly("con1");
         assertThat(d.getAgentExecutionLogId()).isNull();
         assertThat(d.getCreatedAt()).isNotNull();
+    }
+
+    @Test
+    void shouldNotBeAffectedByMutatingTheOriginalListAfterGenerating() {
+        List<String> objectives = new ArrayList<>(List.of("obj1"));
+        AssessmentDraft d = AssessmentDraft.generate(assessmentId(), "title", "context", "instructions",
+                objectives, List.of("del1"), List.of("con1"), null);
+
+        objectives.add("obj2");
+
+        assertThat(d.getObjectives()).containsExactly("obj1");
+    }
+
+    @Test
+    void shouldReturnImmutableListsFromGetters() {
+        AssessmentDraft d = firstVersion();
+
+        assertThatThrownBy(() -> d.getObjectives().add("x")).isInstanceOf(UnsupportedOperationException.class);
+        assertThatThrownBy(() -> d.getDeliverables().add("x")).isInstanceOf(UnsupportedOperationException.class);
+        assertThatThrownBy(() -> d.getConstraints().add("x")).isInstanceOf(UnsupportedOperationException.class);
+    }
+
+    @Test
+    void shouldNotBeAffectedByMutatingTheOriginalListAfterRegenerating() {
+        AssessmentDraft v1 = firstVersion();
+        List<String> objectives = new ArrayList<>(List.of("obj2"));
+
+        AssessmentDraft v2 = AssessmentDraft.regenerate(v1, "t2", "c2", "i2",
+                objectives, List.of(), List.of(), null);
+        objectives.add("obj3");
+
+        assertThat(v2.getObjectives()).containsExactly("obj2");
+    }
+
+    @Test
+    void shouldNotBeAffectedByMutatingTheOriginalListAfterRestoring() {
+        List<String> objectives = new ArrayList<>(List.of("obj1"));
+
+        AssessmentDraft d = AssessmentDraft.restore(UUID.randomUUID(), assessmentId(), 1, null,
+                "t", "c", "i", objectives, List.of(), List.of(), null, Instant.now());
+        objectives.add("obj2");
+
+        assertThat(d.getObjectives()).containsExactly("obj1");
     }
 
     @Test
