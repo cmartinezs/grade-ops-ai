@@ -4,7 +4,6 @@ import cl.gradeops.ai.api.assessment.application.port.out.AssessmentRepositoryPo
 import cl.gradeops.ai.api.assessment.application.result.AssessmentSummaryResult;
 import cl.gradeops.ai.api.assessment.domain.model.Assessment;
 import cl.gradeops.ai.api.assessment.domain.model.AssessmentId;
-import cl.gradeops.ai.api.assessment.domain.model.AssessmentStatus;
 import lombok.RequiredArgsConstructor;
 
 import java.util.List;
@@ -28,17 +27,12 @@ public class AssessmentPersistenceAdapter implements AssessmentRepositoryPort {
 
     @Override
     public List<AssessmentSummaryResult> findAllByTeacherId(String teacherUid) {
-        // Temporary mapping: Assessment has no title of its own — task-10 wires the
-        // display title in from the current draft/brief once those tables exist.
-        return jpaRepository.findAllByTeacherUid(teacherUid).stream()
-                .map(e -> AssessmentSummaryResult.builder()
-                        .id(e.getId().toString())
-                        .title(null)
-                        .status(AssessmentStatus.valueOf(e.getStatus()))
-                        .submissionCount(0)
-                        .pendingApprovals(0)
-                        .reportLink(null)
-                        .build())
-                .toList();
+        // Intentionally empty-list-preserving until task-10 joins in the current
+        // draft/brief title — see task-10's Technical Design, which documents this
+        // method as "left as an empty-list-preserving stub-equivalent in task-01".
+        // Mapping real assessment rows here (even with title = null) would regress
+        // the dashboard as soon as task-06 starts creating Assessment rows, before
+        // task-10's join logic exists to populate them correctly.
+        return List.of();
     }
 }

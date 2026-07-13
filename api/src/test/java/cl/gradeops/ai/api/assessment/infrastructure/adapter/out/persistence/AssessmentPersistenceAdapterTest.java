@@ -18,6 +18,7 @@ import java.util.UUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 
 @ExtendWith(MockitoExtension.class)
 class AssessmentPersistenceAdapterTest {
@@ -76,12 +77,11 @@ class AssessmentPersistenceAdapterTest {
     }
 
     @Test
-    void shouldReturnEmptyListWhenTeacherHasNoAssessments() {
-        when(jpaRepository.findAllByTeacherUid("uid-1")).thenReturn(List.of());
-
+    void shouldReturnEmptyListRegardlessOfPersistedRowsUntilTask10WiresRealSummary() {
         List<AssessmentSummaryResult> result = adapter().findAllByTeacherId("uid-1");
 
         assertThat(result).isEmpty();
+        verifyNoInteractions(jpaRepository);
     }
 
     @Test

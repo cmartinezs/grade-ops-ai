@@ -26,8 +26,10 @@ public class Assessment extends AggregateRoot<AssessmentId> {
     }
 
     public static Assessment restore(AssessmentId id, String teacherUid, AssessmentStatus status, Instant createdAt) {
+        if (id == null)                                 throw new DomainInvariantViolationException("id must not be null");
         if (teacherUid == null || teacherUid.isBlank()) throw new DomainInvariantViolationException("teacherUid must not be blank");
         if (status == null)                             throw new DomainInvariantViolationException("status must not be null");
+        if (createdAt == null)                          throw new DomainInvariantViolationException("createdAt must not be null");
         Assessment a = new Assessment();
         a.id = id;
         a.teacherUid = teacherUid;
