@@ -25,12 +25,10 @@ Provision the Groq API key and any provider/model env vars `agents/`'s `002-groq
 
 ## Tasks
 
-> Atomize via `/plan-atomize` before execution begins.
-
 | # | Task | Workflow | Status | Output |
 |---|------|----------|--------|--------|
-| 1 | Secret Manager entry for the Groq API key (`demo` environment) | GENERATE-DOCUMENT | TODO | `infra/terraform/environments/demo/*.tf` — new `google_secret_manager_secret`/`secret_version` resources |
-| 2 | Cloud Run env var / secret binding for the `agents/` service | GENERATE-DOCUMENT | TODO | `infra/terraform/environments/demo/cloud_run.tf` (or equivalent) updated with the new secret reference and any plain env vars story-01 requires |
+| 1 | [Secret Manager entry for the Groq API key](story-01-groq-infra-provisioning/task-01-groq-secret.md) | GENERATE-DOCUMENT | TODO | `infra/terraform/environments/demo/groq.tf` — new `google_secret_manager_secret.groq_api_key` |
+| 2 | [Cloud Run env var / secret binding for the agents/ service](story-01-groq-infra-provisioning/task-02-cloud-run-groq-env.md) | GENERATE-DOCUMENT | TODO | `infra/terraform/environments/demo/cloud_run.tf` — `google_cloud_run_v2_service.agents` gains `GRADEOPS_GROQ_API_KEY` (secret) and `GRADEOPS_GROQ_MODEL` (plain) env vars |
 
 ---
 

@@ -27,7 +27,9 @@ Term and concept traceability for this planning. For global consolidated view, s
 <!-- MATRIX-HEADER: plan-init adds one column per area between "Term / Concept" and "Notes" -->
 | Term / Concept | AG | AP | DO | IN | WB | W | Notes |
 |---------------|----|----|----|----|----|---|-------|
-| *[term]* | | | | | | | |
+| `GRADEOPS_GROQ_API_KEY` (Secret Manager secret + Cloud Run secret-bound env var) | ✅ | N/A | N/A | ✅ | N/A | | Defined in `agents/002-groq-genai-provider` story-01 task-02 (`agents/src/main/resources/application-demo.yml`); provisioned as infra by this planning's story-01 task-01/task-02 |
+| `GRADEOPS_GROQ_MODEL` (Cloud Run plain env var) | ✅ | N/A | N/A | ✅ | N/A | | Value `llama-3.3-70b-versatile`, matching `agents/.env.example`; wired by this planning's story-01 task-02 |
+| `GRADEOPS_GROQ_BASE_URL` | ✅ | N/A | N/A | N/A | N/A | | Intentionally not set in Cloud Run — `agents/src/main/resources/application-demo.yml` already defaults it to `https://api.groq.com/openai/v1` |
 
 ---
 
