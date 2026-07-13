@@ -25,7 +25,7 @@ Term and concept traceability for this planning. For global consolidated view, s
 | Term / Concept | AP | DO | W | Notes |
 |---------------|----|----|---|-------|
 | `Assessment` (real, replaces stub) | ✅ | N/A | ✅ | Aggregate root — task-01 DONE. Replaces `StubAssessmentPersistenceAdapter`, whose own comment predicted this exact epic. |
-| `AssessmentBrief` | ❌ | N/A | ✅ | task-02. Field names must mirror `agents/`'s `AssessmentCommand`. |
+| `AssessmentBrief` | ✅ | ✅ | ✅ | task-02 DONE. Field names verified to mirror `agents/`'s `AssessmentCommand` exactly (checked against source). Inline doc: `docs/guides/003-assessment-creation/story-01-assessment-creation-persistence/task-02-assessment-brief.md`. |
 | `AssessmentDraft` | ❌ | N/A | ✅ | task-03. Versioned, append-only. Field names must mirror `agents/`'s `AssessmentResult`. |
 | `AgentExecutionLog` | ❌ | N/A | ✅ | task-07. First-class evidence entity per `CLAUDE.md`, kept as its own table (not folded into `AssessmentDraft`). |
 | `agentclient` module | ❌ | N/A | ✅ | task-05. Only module allowed to call `agents/`. Plain `RestClient`, no Spring AI dependency needed on this side. As of 2026-07-12 (`agents/.planning/active/002-groq-genai-provider`), the mirrored `AssessmentCommand` DTO must also carry two more nullable fields, `provider`/`model` — see this planning's story-01 Inconsistencies Found #2. |

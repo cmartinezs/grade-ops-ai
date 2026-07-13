@@ -2,6 +2,7 @@ package cl.gradeops.ai.api.assessment.infrastructure.adapter.out.persistence;
 
 import cl.gradeops.ai.api.assessment.domain.model.Assessment;
 import cl.gradeops.ai.api.assessment.domain.model.AssessmentBrief;
+import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,6 +16,7 @@ import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.context.TestPropertySource;
 import org.testcontainers.containers.PostgreSQLContainer;
 
+import java.time.temporal.ChronoUnit;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -52,6 +54,7 @@ class AssessmentBriefPersistenceAdapterIntegrationTest {
     @Autowired AssessmentJpaRepository assessmentRepository;
     @Autowired AssessmentBriefJpaRepository briefRepository;
     @Autowired JdbcTemplate jdbcTemplate;
+    @Autowired EntityManager entityManager;
 
     AssessmentPersistenceAdapter assessmentAdapter;
     AssessmentBriefPersistenceAdapter briefAdapter;
@@ -73,6 +76,12 @@ class AssessmentBriefPersistenceAdapterIntegrationTest {
         AssessmentBrief brief = AssessmentBrief.create(assessment.getId(), "goal", "topic", "basic", "90min", "Java");
         briefAdapter.save(brief);
 
+        // Force a genuine round trip through Postgres instead of returning the same
+        // managed instance from Hibernate's first-level cache — otherwise this assertion
+        // would compare createdAt against itself and never actually exercise persistence.
+        entityManager.flush();
+        entityManager.clear();
+
         Optional<AssessmentBrief> found = briefAdapter.findByAssessmentId(assessment.getId());
 
         assertThat(found).isPresent();
@@ -83,7 +92,13 @@ class AssessmentBriefPersistenceAdapterIntegrationTest {
         assertThat(found.get().getLevel()).isEqualTo("basic");
         assertThat(found.get().getDuration()).isEqualTo("90min");
         assertThat(found.get().getLanguage()).isEqualTo("Java");
-        assertThat(found.get().getCreatedAt()).isEqualTo(brief.getCreatedAt());
+        // PostgreSQL TIMESTAMPTZ has microsecond precision, and pgjdbc rounds rather than
+        // truncates when storing — comparing at MICROS is flaky by +/-1us depending on the
+        // discarded nanosecond remainder. Truncate both sides to MILLIS, matching
+        // PasswordResetCodeJpaRepositoryIntegrationTest's established convention while
+        // staying clear of that rounding boundary.
+        assertThat(found.get().getCreatedAt().truncatedTo(ChronoUnit.MILLIS))
+                .isEqualTo(brief.getCreatedAt().truncatedTo(ChronoUnit.MILLIS));
     }
 
     @Test
