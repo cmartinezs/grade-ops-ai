@@ -1,5 +1,19 @@
 # Code review - Task 01: Assessment aggregate root
 
+## Re-review 2026-07-13
+
+Estado: APROBADO, sin hallazgos abiertos.
+
+Hallazgos anteriores:
+
+- RESUELTO - `Assessment.restore` ahora rechaza `id == null` y `createdAt == null`, y `AssessmentTest` cubre invariantes de creacion/restauracion del aggregate.
+- RESUELTO - `findAllByTeacherId` vuelve a preservar `List.of()` hasta task-10 y los tests del adapter fijan que no consulta JPA para ese metodo.
+
+Verificacion de re-review:
+
+- `./mvnw test -Dtest=AssessmentTest,AssessmentPersistenceAdapterTest,AssessmentControllerTest,ListAssessmentsHandlerTest` paso correctamente: 19 tests, 0 failures, 0 errors.
+- `git diff --check origin/gradeops-api/story-01-assessment-creation-persistence...HEAD` detecto una linea blanca extra al final de este artefacto; queda corregida en esta actualizacion local del review.
+
 ## Hallazgos
 
 ### MEDIUM - `Assessment.restore` permite aggregates incompletos
@@ -68,4 +82,3 @@ return jpaRepository.findAllByTeacherUid(teacherUid).stream()
 - `./mvnw test -Dtest=AssessmentPersistenceAdapterTest,AssessmentControllerTest` paso correctamente.
 - `./mvnw test -Dtest=AssessmentPersistenceAdapterTest,AssessmentPersistenceAdapterIntegrationTest,AssessmentControllerTest` no pudo completar porque Testcontainers no encontro Docker (`/var/run/docker.sock` ausente). Los tests unitarios y de controller de esa corrida pasaron antes del fallo de ambiente.
 - `git diff --check gradeops-api/story-01-assessment-creation-persistence...HEAD` paso sin whitespace errors.
-
