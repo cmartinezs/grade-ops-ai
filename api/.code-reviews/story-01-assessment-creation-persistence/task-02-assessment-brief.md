@@ -1,6 +1,20 @@
 # Code review - Task 02: AssessmentBrief entity + persistence
 
-Estado: CAMBIOS SOLICITADOS.
+## Re-review 2026-07-13
+
+Estado: APROBADO, sin hallazgos abiertos.
+
+Hallazgos anteriores:
+
+- RESUELTO - `AssessmentBriefPersistenceAdapterIntegrationTest` ahora fuerza un round trip real contra PostgreSQL con `entityManager.flush()` + `entityManager.clear()` antes de leer, evitando que Hibernate devuelva la misma instancia del primer nivel de cache. La comparacion de `createdAt` trunca ambos lados a `ChronoUnit.MILLIS`, cubriendo la diferencia de redondeo de pgjdbc al persistir `TIMESTAMPTZ`.
+- RESUELTO - `.planning/active/003-assessment-creation/TRACEABILITY.md` ahora marca `AssessmentBrief` como `AP = ✅`, `DO = ✅`, `W = ✅` y apunta al guide entregado.
+- REGISTRADO - `.planning/active/003-assessment-creation/RETROSPECTIVE-RAW.md` documenta el caso para futuros tests `@DataJpaTest` que pretendan validar round trips de persistencia.
+
+Verificacion de re-review:
+
+- PR #47 apunta a `fd59269c74f47ef62f2689a91c6a3fcf4a3b58a8` (`fix(assessment-creation-persistence): fix flaky timestamp assertion and stale TRACEABILITY entry on task-02`) y la rama local esta alineada con `origin/gradeops-api/story-01-assessment-creation-persistence--task-02-assessment-brief`.
+- `./mvnw test -Dtest=AssessmentBriefTest,AssessmentBriefPersistenceAdapterTest,AssessmentBriefPersistenceAdapterIntegrationTest` paso correctamente: 18 tests, 0 failures, 0 errors.
+- `./mvnw test` paso correctamente: 171 tests, 0 failures, 0 errors.
 
 ## Hallazgos
 
