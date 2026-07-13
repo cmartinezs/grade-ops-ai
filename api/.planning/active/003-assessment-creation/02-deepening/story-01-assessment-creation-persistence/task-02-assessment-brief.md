@@ -1,6 +1,6 @@
 # ⚛️ TASK 02 — AssessmentBrief entity + persistence
 
-> **Status:** TODO
+> **Status:** DONE
 > **Workflow:** GENERATE-DOCUMENT
 > **Depends On:** task-01
 > [← story file](../story-01-assessment-creation-persistence.md)
@@ -73,12 +73,12 @@ Create the `AssessmentBrief` domain model, JPA entity, migration, and repository
 
 ## Done Criteria
 
-- [ ] `V10__add_assessment_briefs.sql` applies cleanly with a `UNIQUE` FK to `assessments(id)`.
-- [ ] `AssessmentBrief` domain + persistence classes exist and round-trip correctly.
-- [ ] Field names verified against `agents/`'s `AssessmentCommand`; any mismatch recorded as a residual.
-- [ ] `./mvnw test` passes.
-- [ ] Human developer code review completed; requested corrections, if any, were implemented and re-reviewed.
-- [ ] No unintended expansion: the task satisfies `[CHECK-ATOMICITY]`.
+- [x] `V10__add_assessment_briefs.sql` applies cleanly with a `UNIQUE` FK to `assessments(id)`.
+- [x] `AssessmentBrief` domain + persistence classes exist and round-trip correctly.
+- [x] Field names verified against `agents/`'s `AssessmentCommand`; any mismatch recorded as a residual.
+- [x] `./mvnw test` passes.
+- [x] Human developer code review completed; requested corrections, if any, were implemented and re-reviewed.
+- [x] No unintended expansion: the task satisfies `[CHECK-ATOMICITY]`.
 
 ---
 

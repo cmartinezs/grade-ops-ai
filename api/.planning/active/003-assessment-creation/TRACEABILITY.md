@@ -25,7 +25,7 @@ Term and concept traceability for this planning. For global consolidated view, s
 | Term / Concept | AP | DO | W | Notes |
 |---------------|----|----|---|-------|
 | `Assessment` (real, replaces stub) | ✅ | N/A | ✅ | Aggregate root — task-01 DONE. Replaces `StubAssessmentPersistenceAdapter`, whose own comment predicted this exact epic. |
-| `AssessmentBrief` | ❌ | N/A | ✅ | task-02. Field names must mirror `agents/`'s `AssessmentCommand`. |
+| `AssessmentBrief` | ✅ | ✅ | ✅ | task-02 DONE. Field names verified to mirror `agents/`'s `AssessmentCommand` exactly (checked against source). Inline doc: `docs/guides/003-assessment-creation/story-01-assessment-creation-persistence/task-02-assessment-brief.md`. |
 | `AssessmentDraft` | ❌ | N/A | ✅ | task-03. Versioned, append-only. Field names must mirror `agents/`'s `AssessmentResult`. |
 | `AgentExecutionLog` | ❌ | N/A | ✅ | task-07. First-class evidence entity per `CLAUDE.md`, kept as its own table (not folded into `AssessmentDraft`). |
 | `agentclient` module | ❌ | N/A | ✅ | task-05. Only module allowed to call `agents/`. Plain `RestClient`, no Spring AI dependency needed on this side. As of 2026-07-12 (`agents/.planning/active/002-groq-genai-provider`), the mirrored `AssessmentCommand` DTO must also carry two more nullable fields, `provider`/`model` — see this planning's story-01 Inconsistencies Found #2. |
@@ -54,6 +54,7 @@ Term and concept traceability for this planning. For global consolidated view, s
 | ID | Term / Issue | Blocker | Status | Target Resolution |
 |----|-------------|---------|--------|------------------|
 | R-01 | `agentclient`'s auth uses a shared secret, not the real Cloud Run OIDC identity token the IAM invoker binding implies | None — informational, see D-03 | OPEN | Revisit post-MVP if a stronger service-to-service auth guarantee is needed beyond Cloud Run's network-level IAM enforcement |
+| R-02 | `docs/04-architecture/api-design.md`'s `POST /assessments` example payload (root docs repo) has 8 fields — `learningGoal`, `topic`, `language`, `level`, `durationMinutes` (number), `studentCountEstimate`, `constraints`, `teacherNotes` — but `agents/`'s actual `AssessmentCommand` (verified 2026-07-13 against `agents/src/main/java/.../assessment/application/command/AssessmentCommand.java`, ground truth) and this story's task-02 `AssessmentBrief` (mirrors it exactly) only carry 5: `learningGoal`, `topic`, `level`, `duration` (`String`, not `durationMinutes`), `language`. `studentCountEstimate`/`constraints`/`teacherNotes` exist nowhere in the implemented contract or persistence model. | OPEN | task-06 (brief intake endpoint) is where the actual request DTO gets defined — that task must decide whether to align the endpoint payload to the narrower 5-field `AssessmentCommand`/`AssessmentBrief` shape (recommended, avoids silently-dropped fields) or expand `AssessmentBrief`/`AssessmentCommand` to match the doc; either way `docs/04-architecture/api-design.md` needs updating to match whatever is actually built |
 
 ---
 
