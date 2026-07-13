@@ -1,6 +1,6 @@
 # ⚛️ TASK 03 — AssessmentDraft entity + versioning
 
-> **Status:** TODO
+> **Status:** DONE
 > **Workflow:** GENERATE-DOCUMENT
 > **Depends On:** task-01
 > [← story file](../story-01-assessment-creation-persistence.md)
@@ -74,13 +74,13 @@ Create the versioned `AssessmentDraft` domain model, JPA entity, migration, and 
 
 ## Done Criteria
 
-- [ ] `V11__add_assessment_drafts.sql` applies cleanly with `(assessment_id, version_number)` unique and a self-referencing `previous_version_id`.
-- [ ] `AssessmentDraft` domain + persistence classes exist, including correct JSON list-field mapping.
-- [ ] Multiple versions for the same assessment coexist without overwrite; `findCurrentByAssessmentId` returns the latest.
-- [ ] Field names verified against `agents/`'s `AssessmentResult`.
-- [ ] `./mvnw test` passes.
-- [ ] Human developer code review completed; requested corrections, if any, were implemented and re-reviewed.
-- [ ] No unintended expansion: the task satisfies `[CHECK-ATOMICITY]`.
+- [x] `V11__add_assessment_drafts.sql` applies cleanly with `(assessment_id, version_number)` unique and a self-referencing `previous_version_id`.
+- [x] `AssessmentDraft` domain + persistence classes exist, including correct JSON list-field mapping.
+- [x] Multiple versions for the same assessment coexist without overwrite; `findCurrentByAssessmentId` returns the latest.
+- [x] Field names verified against `agents/`'s `AssessmentResult`.
+- [x] `./mvnw test` passes.
+- [x] Human developer code review completed; requested corrections, if any, were implemented and re-reviewed.
+- [x] No unintended expansion: the task satisfies `[CHECK-ATOMICITY]`.
 
 ---
 
