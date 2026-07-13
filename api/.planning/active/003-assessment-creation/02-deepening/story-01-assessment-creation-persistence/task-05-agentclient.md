@@ -1,6 +1,6 @@
 # ⚛️ TASK 05 — agentclient module
 
-> **Status:** TODO
+> **Status:** DONE
 > **Workflow:** GENERATE-DOCUMENT
 > **Depends On:** —
 > [← story file](../story-01-assessment-creation-persistence.md)
@@ -69,15 +69,15 @@ N/A — no database or ORM involved.
 
 ## Done Criteria
 
-- [ ] `agentclient` module exists and is the only package importing/calling `agents/`.
-- [ ] `AssessmentCommand`/`AssessmentAgentResponse` field names verified against `agents/`'s contract — including the full 13-field `AgentExecutionLogPayload` shape (`status` and `errorCode` as separate fields), not a subset.
-- [ ] Non-2xx and connection failures are mapped to `AgentClientException`, never propagate as raw exceptions.
-- [ ] Shared-secret header sent on every call; timeout explicitly configured (not default/unbounded).
-- [ ] `X-Correlation-Id` is generated and sent on every outbound call to `agents/`; the response's correlation ID is captured for logging.
-- [ ] Real-OIDC-token gap recorded as a residual (not silently dropped).
-- [ ] `./mvnw test` passes.
-- [ ] Human developer code review completed; requested corrections, if any, were implemented and re-reviewed.
-- [ ] No unintended expansion: the task satisfies `[CHECK-ATOMICITY]`.
+- [x] `agentclient` module exists and is the only package importing/calling `agents/`.
+- [x] `AssessmentCommand`/`AssessmentAgentResponse` field names verified against `agents/`'s contract — including the full 13-field `AgentExecutionLogPayload` shape (`status` and `errorCode` as separate fields), not a subset.
+- [x] Non-2xx and connection failures are mapped to `AgentClientException`, never propagate as raw exceptions.
+- [x] Shared-secret header sent on every call; timeout explicitly configured (not default/unbounded).
+- [x] `X-Correlation-Id` is generated and sent on every outbound call to `agents/`; the response's correlation ID is captured for logging.
+- [x] Real-OIDC-token gap recorded as a residual (not silently dropped).
+- [x] `./mvnw test` passes.
+- [x] Human developer code review completed; requested corrections, if any, were implemented and re-reviewed.
+- [x] No unintended expansion: the task satisfies `[CHECK-ATOMICITY]`.
 
 ---
 
