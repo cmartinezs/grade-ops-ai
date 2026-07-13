@@ -1,6 +1,6 @@
 # ⚛️ TASK 01 — Assessment aggregate root (domain + persistence)
 
-> **Status:** TODO
+> **Status:** DONE
 > **Workflow:** GENERATE-DOCUMENT
 > **Depends On:** —
 > [← story file](../story-01-assessment-creation-persistence.md)
@@ -79,14 +79,14 @@ Create the real `Assessment` aggregate root (domain model, JPA entity, Flyway mi
 
 ## Done Criteria
 
-- [ ] `V9__add_assessments.sql` applies cleanly.
-- [ ] `Assessment`, `AssessmentId` domain classes exist with no Spring/JPA imports.
-- [ ] `AssessmentJpaEntity`, `AssessmentJpaRepository`, `AssessmentPersistenceAdapter`, `AssessmentPersistenceMapper` exist and round-trip correctly.
-- [ ] `StubAssessmentPersistenceAdapter` deleted; `AssessmentConfig` wires the real adapter.
-- [ ] `GET /api/v1/assessments` still returns `200 []` for a teacher with no assessments (no regression).
-- [ ] `./mvnw test` passes.
-- [ ] Human developer code review completed; requested corrections, if any, were implemented and re-reviewed.
-- [ ] No unintended expansion: the task satisfies `[CHECK-ATOMICITY]`.
+- [x] `V9__add_assessments.sql` applies cleanly.
+- [x] `Assessment`, `AssessmentId` domain classes exist with no Spring/JPA imports.
+- [x] `AssessmentJpaEntity`, `AssessmentJpaRepository`, `AssessmentPersistenceAdapter`, `AssessmentPersistenceMapper` exist and round-trip correctly.
+- [x] `StubAssessmentPersistenceAdapter` deleted; `AssessmentConfig` wires the real adapter.
+- [x] `GET /api/v1/assessments` still returns `200 []` for a teacher with no assessments (no regression).
+- [x] `./mvnw test` passes.
+- [x] Human developer code review completed; requested corrections, if any, were implemented and re-reviewed.
+- [x] No unintended expansion: the task satisfies `[CHECK-ATOMICITY]`.
 
 ---
 

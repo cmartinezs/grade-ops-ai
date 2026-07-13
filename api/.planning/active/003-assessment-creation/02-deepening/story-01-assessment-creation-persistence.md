@@ -1,6 +1,6 @@
 # 🔍 DEEPENING: Story 01 — assessment-creation-persistence
 
-> **Status:** TODO
+> **Status:** IN PROGRESS
 > [← 01-expansion.md](../01-expansion.md) | [← planning/README.md](../../README.md)
 
 ---
@@ -32,7 +32,7 @@ Implement the full backend flow for assessment creation: persist the teacher's b
 
 | # | Task | Workflow | Status | Output |
 |---|------|----------|--------|--------|
-| 1 | [Assessment aggregate root](story-01-assessment-creation-persistence/task-01-assessment-aggregate.md) | GENERATE-DOCUMENT | TODO | `V9__add_assessments.sql`, `Assessment.java`, real `AssessmentPersistenceAdapter` (replaces stub) |
+| 1 | [Assessment aggregate root](story-01-assessment-creation-persistence/task-01-assessment-aggregate.md) | GENERATE-DOCUMENT | DONE | `V9__add_assessments.sql`, `Assessment.java`, real `AssessmentPersistenceAdapter` (replaces stub) |
 | 2 | [AssessmentBrief entity + persistence](story-01-assessment-creation-persistence/task-02-assessment-brief.md) | GENERATE-DOCUMENT | TODO | `V10__add_assessment_briefs.sql`, `AssessmentBrief.java` + persistence stack |
 | 3 | [AssessmentDraft entity + versioning](story-01-assessment-creation-persistence/task-03-assessment-draft.md) | GENERATE-DOCUMENT | TODO | `V11__add_assessment_drafts.sql`, `AssessmentDraft.java` + persistence stack |
 | 4 | [validate-db-orm-consistency (V9+V10+V11)](story-01-assessment-creation-persistence/task-04-db-orm-consistency.md) | GENERATE-DOCUMENT | TODO | Verification evidence, FK-chain integration check |

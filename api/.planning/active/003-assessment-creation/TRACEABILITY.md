@@ -24,7 +24,7 @@ Term and concept traceability for this planning. For global consolidated view, s
 <!-- MATRIX-HEADER: plan-init adds one column per area between "Term / Concept" and "Notes" -->
 | Term / Concept | AP | DO | W | Notes |
 |---------------|----|----|---|-------|
-| `Assessment` (real, replaces stub) | ❌ | N/A | ✅ | Aggregate root — task-01. Replaces `StubAssessmentPersistenceAdapter`, whose own comment predicted this exact epic. |
+| `Assessment` (real, replaces stub) | ✅ | N/A | ✅ | Aggregate root — task-01 DONE. Replaces `StubAssessmentPersistenceAdapter`, whose own comment predicted this exact epic. |
 | `AssessmentBrief` | ❌ | N/A | ✅ | task-02. Field names must mirror `agents/`'s `AssessmentCommand`. |
 | `AssessmentDraft` | ❌ | N/A | ✅ | task-03. Versioned, append-only. Field names must mirror `agents/`'s `AssessmentResult`. |
 | `AgentExecutionLog` | ❌ | N/A | ✅ | task-07. First-class evidence entity per `CLAUDE.md`, kept as its own table (not folded into `AssessmentDraft`). |
