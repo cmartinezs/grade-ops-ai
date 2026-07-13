@@ -1,6 +1,6 @@
 # ⚛️ TASK 04 — validate-db-orm-consistency (V9+V10+V11)
 
-> **Status:** TODO
+> **Status:** DONE
 > **Workflow:** GENERATE-DOCUMENT
 > **Depends On:** task-01, task-02, task-03
 > [← story file](../story-01-assessment-creation-persistence.md)
@@ -62,12 +62,12 @@ Explicit static + runtime DB/ORM consistency validation covering all three new m
 
 ## Done Criteria
 
-- [ ] `V9`, `V10`, `V11` all apply cleanly together against a fresh database.
-- [ ] Full FK chain (assessment → brief, assessment → draft v1 → draft v2) verified with no orphan or constraint-violation risk.
-- [ ] `HexagonalArchitectureTest` passes with all new classes.
-- [ ] `./mvnw test` passes.
-- [ ] Human developer code review completed; requested corrections, if any, were implemented and re-reviewed.
-- [ ] No unintended expansion: the task satisfies `[CHECK-ATOMICITY]`.
+- [x] `V9`, `V10`, `V11` all apply cleanly together against a fresh database.
+- [x] Full FK chain (assessment → brief, assessment → draft v1 → draft v2) verified with no orphan or constraint-violation risk.
+- [x] `HexagonalArchitectureTest` passes with all new classes.
+- [x] `./mvnw test` passes.
+- [x] Human developer code review completed; requested corrections, if any, were implemented and re-reviewed.
+- [x] No unintended expansion: the task satisfies `[CHECK-ATOMICITY]`.
 
 ---
 
