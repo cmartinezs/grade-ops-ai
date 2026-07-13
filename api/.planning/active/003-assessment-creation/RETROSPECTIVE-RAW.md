@@ -25,6 +25,15 @@ Each entry should answer as many of these as possible:
 
 <!-- Add newest entries at the top. -->
 
+### 2026-07-13 14:00 - Human code review requested corrections on task-03: mutable list aggregate state
+
+- **Source:** manual (human developer review on PR #48)
+- **Related story/task:** story-01, task-03
+- **What happened:** Human reviewer filed a MEDIUM finding on `AssessmentDraft.java`: `generate(...)`, `regenerate(...)`, and `restore(...)` stored the raw `List<String>` references passed in for `objectives`/`deliverables`/`constraints` directly, and the getters returned those same references — allowing a caller to mutate a nominally immutable, append-only versioned draft either by mutating the list handed to the factory after construction, or by mutating the list returned from a getter. This directly contradicted this repo's own DDD guideline (`docs/gradeops-ai-java-guidelines/02-ddd-tactico.md`, which shows `List.copyOf(...)` in its own `Assessment` aggregate example) and the sibling `agents/`'s `AssessmentResult` record, which this task's fields are supposed to mirror and which already does `List.copyOf(...)` in its compact constructor for exactly this reason.
+- **Expected instead:** Defensive copying of all three list fields at construction time (`List.copyOf(...)`), matching the established convention already present elsewhere in this codebase and in the mirrored `agents/` contract.
+- **Resolution:** Changed all three assignment sites (`generate`, `regenerate`, `restore`) to `List.copyOf(objectives/deliverables/constraints)`; `List.copyOf` throwing on null is safe because `validateContent(...)` already rejects null lists before the copy runs. Added 4 domain tests: mutating the original list after `generate`/`regenerate`/`restore` doesn't affect the draft, and the three getters return lists that throw `UnsupportedOperationException` on mutation. Full suite: 199/199 (Docker available).
+- **Retrospective signal:** task-01's `Assessment` and task-02's `AssessmentBrief` have no `List<String>` fields, so this class of bug had no earlier chance to surface in this story — worth a quick self-check whenever a new domain aggregate is the *first* one in a story to hold a collection field: does it copy-on-write like the guideline's own example, or did the pattern get missed because no prior task in the story needed it? Same applies going forward for task-07/08 (`AgentExecutionLog`) and any other draft-adjacent aggregate touching `List` fields.
+
 ### 2026-07-13 13:00 - Human code review requested corrections on task-02; fix itself required two more iterations
 
 - **Source:** manual (human developer review on PR #47)

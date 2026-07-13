@@ -5,6 +5,9 @@ import cl.gradeops.ai.api.assessment.application.usecase.ListAssessmentsHandler;
 import cl.gradeops.ai.api.assessment.infrastructure.adapter.out.persistence.AssessmentBriefJpaRepository;
 import cl.gradeops.ai.api.assessment.infrastructure.adapter.out.persistence.AssessmentBriefPersistenceAdapter;
 import cl.gradeops.ai.api.assessment.infrastructure.adapter.out.persistence.AssessmentBriefPersistenceMapper;
+import cl.gradeops.ai.api.assessment.infrastructure.adapter.out.persistence.AssessmentDraftJpaRepository;
+import cl.gradeops.ai.api.assessment.infrastructure.adapter.out.persistence.AssessmentDraftPersistenceAdapter;
+import cl.gradeops.ai.api.assessment.infrastructure.adapter.out.persistence.AssessmentDraftPersistenceMapper;
 import cl.gradeops.ai.api.assessment.infrastructure.adapter.out.persistence.AssessmentJpaRepository;
 import cl.gradeops.ai.api.assessment.infrastructure.adapter.out.persistence.AssessmentPersistenceAdapter;
 import cl.gradeops.ai.api.assessment.infrastructure.adapter.out.persistence.AssessmentPersistenceMapper;
@@ -36,6 +39,18 @@ class AssessmentConfig {
             AssessmentBriefJpaRepository jpaRepository,
             AssessmentBriefPersistenceMapper mapper) {
         return new AssessmentBriefPersistenceAdapter(jpaRepository, mapper);
+    }
+
+    @Bean
+    AssessmentDraftPersistenceMapper assessmentDraftPersistenceMapper() {
+        return new AssessmentDraftPersistenceMapper();
+    }
+
+    @Bean
+    AssessmentDraftPersistenceAdapter assessmentDraftPersistenceAdapter(
+            AssessmentDraftJpaRepository jpaRepository,
+            AssessmentDraftPersistenceMapper mapper) {
+        return new AssessmentDraftPersistenceAdapter(jpaRepository, mapper);
     }
 
     @Bean
