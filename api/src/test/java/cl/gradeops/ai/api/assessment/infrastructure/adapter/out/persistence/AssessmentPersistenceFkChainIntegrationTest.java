@@ -135,6 +135,9 @@ class AssessmentPersistenceFkChainIntegrationTest {
         briefAdapter.save(AssessmentBrief.create(assessment.getId(), "goal", "topic", "basic", "90min", "Java"));
         AssessmentDraft v1 = AssessmentDraft.generate(assessment.getId(), "t1", "c1", "i1", List.of(), List.of(), List.of(), null);
         draftAdapter.save(v1);
+        // Cover the self-referencing previous_version_id chain too, not just a single draft row.
+        AssessmentDraft v2 = AssessmentDraft.regenerate(v1, "t2", "c2", "i2", List.of(), List.of(), List.of(), null);
+        draftAdapter.save(v2);
 
         entityManager.flush();
 
