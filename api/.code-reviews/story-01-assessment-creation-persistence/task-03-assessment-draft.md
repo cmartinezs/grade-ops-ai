@@ -1,5 +1,21 @@
 # Code review - Task 03: AssessmentDraft entity + versioning
 
+## Re-review 2026-07-13
+
+Estado: APROBADO, sin hallazgos abiertos.
+
+Hallazgos anteriores:
+
+- RESUELTO - `AssessmentDraft.generate(...)`, `regenerate(...)` y `restore(...)` ahora copian defensivamente `objectives`, `deliverables` y `constraints` con `List.copyOf(...)`, evitando que una lista mutable externa modifique una version ya construida. Los getters devuelven esas listas inmutables.
+- RESUELTO - `AssessmentDraftTest` agrega cobertura para mutacion posterior de la lista original en los tres caminos de construccion y para mutacion via getters.
+
+Verificacion de re-review:
+
+- Rama local alineada con `origin/gradeops-api/story-01-assessment-creation-persistence--task-03-assessment-draft` en `4f289fa` (`fix(assessment-creation-persistence): defensively copy AssessmentDraft list fields`).
+- PR #48 sigue `OPEN`, no draft, `mergeStateStatus = CLEAN`; checks visibles de Vercel en verde.
+- `./mvnw test` paso correctamente con Docker activo: 199 tests, 0 failures, 0 errors. Testcontainers levanto PostgreSQL 16 y Flyway valido/aplico 11 migraciones hasta V11.
+- `git diff --check origin/gradeops-api/story-01-assessment-creation-persistence...HEAD` paso sin errores.
+
 ## Review 2026-07-13
 
 Estado: REQUIERE CAMBIOS.
