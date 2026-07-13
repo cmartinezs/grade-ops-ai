@@ -1,7 +1,6 @@
 package cl.gradeops.ai.api.agentclient;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestClient;
@@ -15,9 +14,9 @@ import java.util.UUID;
  * call so cross-service log tracing between {@code api/} and {@code agents/} is possible from
  * day one (see {@code CorrelationIdFilter} in {@code agents/}, which honors this header).
  */
+@Slf4j
 public class AssessmentAgentClient {
 
-    private static final Logger log = LoggerFactory.getLogger(AssessmentAgentClient.class);
     private static final String ASSESSMENT_PATH = "/internal/agents/assessment";
     private static final String CORRELATION_ID_HEADER = "X-Correlation-Id";
 
