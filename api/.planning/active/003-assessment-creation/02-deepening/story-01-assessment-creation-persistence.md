@@ -1,6 +1,6 @@
 # 🔍 DEEPENING: Story 01 — assessment-creation-persistence
 
-> **Status:** IN PROGRESS
+> **Status:** DONE
 > [← 01-expansion.md](../01-expansion.md) | [← planning/README.md](../../README.md)
 
 ---
@@ -48,16 +48,16 @@ Implement the full backend flow for assessment creation: persist the teacher's b
 
 ## Done Criteria
 
-- [ ] Brief is persisted before the Assessment Agent is invoked, in a separate step — an agent failure never loses the teacher's input.
-- [ ] Persisted brief and draft are retrievable after a page refresh.
-- [ ] Draft generation calls `agents/` exclusively through the `agentclient` module; no other module imports Spring AI.
-- [ ] Draft generation persists the full structured result (title, context, instructions, objectives, deliverables, constraints) plus an `AgentExecutionLog` capturing the full field set `agents/` actually returns (`agentExecutionId`, `agentName`, `model`, `promptVersion`, `inputHash`, `outputHash`, `estimatedInputTokens`, `estimatedOutputTokens`, `costEstimate`, `status`, `errorCode`, `startedAt`, `finishedAt` — see Inconsistency #3), not just model/cost/status.
-- [ ] Regeneration creates a new version linked to the assessment without deleting or overwriting the previous version; the previous version remains retrievable.
-- [ ] Each regeneration produces its own distinct `AgentExecutionLog` row.
-- [ ] Draft editing (teacher-made changes) persists without triggering a new agent call or a new `AgentExecutionLog`.
-- [ ] Gemini API key is never exposed to the frontend — the key stays server-side within `agents/`, this repo only calls the internal agent endpoint.
-- [ ] `./mvnw test` passes.
-- [ ] TRACEABILITY.md updated with new terms from this story.
+- [x] Brief is persisted before the Assessment Agent is invoked, in a separate step — an agent failure never loses the teacher's input.
+- [x] Persisted brief and draft are retrievable after a page refresh.
+- [x] Draft generation calls `agents/` exclusively through the `agentclient` module; no other module imports Spring AI.
+- [x] Draft generation persists the full structured result (title, context, instructions, objectives, deliverables, constraints) plus an `AgentExecutionLog` capturing the full field set `agents/` actually returns (`agentExecutionId`, `agentName`, `model`, `promptVersion`, `inputHash`, `outputHash`, `estimatedInputTokens`, `estimatedOutputTokens`, `costEstimate`, `status`, `errorCode`, `startedAt`, `finishedAt` — see Inconsistency #3), not just model/cost/status.
+- [x] Regeneration creates a new version linked to the assessment without deleting or overwriting the previous version; the previous version remains retrievable.
+- [x] Each regeneration produces its own distinct `AgentExecutionLog` row.
+- [x] Draft editing (teacher-made changes) persists without triggering a new agent call or a new `AgentExecutionLog`.
+- [x] Gemini API key is never exposed to the frontend — the key stays server-side within `agents/`, this repo only calls the internal agent endpoint.
+- [x] `./mvnw test` passes.
+- [x] TRACEABILITY.md updated with new terms from this story.
 
 ---
 
