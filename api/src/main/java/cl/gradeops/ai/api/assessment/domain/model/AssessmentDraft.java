@@ -102,6 +102,24 @@ public class AssessmentDraft extends AggregateRoot<UUID> {
         return d;
     }
 
+    /**
+     * A direct, non-versioning edit of this draft's content (US-013): unlike {@link #regenerate},
+     * this keeps the same {@code id}/{@code versionNumber}/{@code previousVersionId} — the
+     * intent is an in-place update of the current version's row, not a new one. Any {@code null}
+     * parameter keeps its current value, so a caller can submit a partial edit.
+     */
+    public AssessmentDraft applyEdit(String title, String context, String instructions,
+                                      List<String> objectives, List<String> deliverables, List<String> constraints) {
+        return restore(id, assessmentId, versionNumber, previousVersionId,
+                title != null ? title : this.title,
+                context != null ? context : this.context,
+                instructions != null ? instructions : this.instructions,
+                objectives != null ? objectives : this.objectives,
+                deliverables != null ? deliverables : this.deliverables,
+                constraints != null ? constraints : this.constraints,
+                agentExecutionLogId, createdAt);
+    }
+
     private static void validateContent(AssessmentId assessmentId, String title, String context,
                                          String instructions, List<String> objectives,
                                          List<String> deliverables, List<String> constraints) {
