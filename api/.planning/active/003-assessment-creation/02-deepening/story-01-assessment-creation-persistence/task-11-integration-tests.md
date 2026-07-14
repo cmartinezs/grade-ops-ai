@@ -1,6 +1,6 @@
 # ⚛️ TASK 11 — End-to-end integration tests
 
-> **Status:** TODO
+> **Status:** DONE
 > **Workflow:** GENERATE-DOCUMENT
 > **Depends On:** task-06, task-07, task-08, task-09, task-10
 > [← story file](../story-01-assessment-creation-persistence.md)
@@ -60,11 +60,26 @@ N/A — no schema change in this task; exercises the full schema from prior task
 
 ## Done Criteria
 
-- [ ] `AssessmentCreationFlowIntegrationTest` covers: happy path, agent-failure resilience, multi-regeneration version integrity, edit-scoped-to-latest-version.
-- [ ] Full `./mvnw test` suite passes (all 11 tasks combined).
-- [ ] Every Done Criterion listed in `story-01-assessment-creation-persistence.md` is verifiable by an existing automated test or documented manual check.
-- [ ] Human developer code review completed; requested corrections, if any, were implemented and re-reviewed.
-- [ ] No unintended expansion: the task satisfies `[CHECK-ATOMICITY]`.
+- [x] `AssessmentCreationFlowIntegrationTest` covers: happy path, agent-failure resilience, multi-regeneration version integrity, edit-scoped-to-latest-version.
+- [x] Full `./mvnw test` suite passes (all 11 tasks combined) — 288 tests, 0 failures, 0 errors.
+- [x] Every Done Criterion listed in `story-01-assessment-creation-persistence.md` is verifiable by an existing automated test or documented manual check — see mapping below.
+- [x] Human developer code review completed; requested corrections, if any, were implemented and re-reviewed — no blocking findings; one residual noted (see story Residuals #3).
+- [x] No unintended expansion: the task satisfies `[CHECK-ATOMICITY]`.
+
+### Story Done Criteria → verification mapping
+
+| Story Done Criterion | Verified by |
+|---|---|
+| Brief persisted before agent invoked, separate step, agent failure never loses input | task-06 unit tests; this task's `agentFailureDuringGenerationLeavesBriefIntactWithOnlyAFailureLogAndNoDraft` |
+| Persisted brief and draft retrievable after a page refresh | task-10 retrieval tests; this task's flow test (`entityManager.flush()/clear()` between every step forces a real re-read) |
+| Draft generation calls `agents/` exclusively through `agentclient`; no other module imports Spring AI | `HexagonalArchitectureTest` (ArchUnit, part of `./mvnw test`) |
+| Draft generation persists full structured result + full 13-field `AgentExecutionLog` | task-07's `AgentExecutionLogTest`, `GenerateAssessmentDraftHandlerIntegrationTest` |
+| Regeneration creates a new version without deleting/overwriting the previous; previous remains retrievable | task-08 tests; this task's `twoRegenerationsInARowProduceThreeDistinctRetrievableVersions` |
+| Each regeneration produces its own distinct `AgentExecutionLog` row | task-08's `RegenerateAssessmentDraftHandlerIntegrationTest`; this task's multi-regeneration test |
+| Draft editing persists without a new agent call or new `AgentExecutionLog` | task-09's `UpdateAssessmentDraftHandlerIntegrationTest`; this task's `editAfterRegenerationUpdatesOnlyTheLatestVersion` |
+| Gemini API key never exposed to the frontend | True by construction — no Gemini/Vertex credential exists anywhere in `api/`'s codebase or config; `api/` only calls the internal `agents/` endpoint via `agentclient`. Documented manual check, not a runtime-testable assertion. |
+| `./mvnw test` passes | Confirmed — 288/288, 0 failures |
+| `TRACEABILITY.md` updated with new terms from this story | Already current through task-10 (`.planning/active/003-assessment-creation/TRACEABILITY.md`); this task introduces no new domain term (test-only), so no new row was needed |
 
 ---
 
