@@ -1,5 +1,28 @@
 # Code review - Task 07: Draft generation endpoint
 
+## Re-review 2026-07-13
+
+Estado: APROBADO, sin hallazgos abiertos.
+
+PR informado: #52
+
+Rama local revalidada: `gradeops-api/story-01-assessment-creation-persistence--task-07-draft-generation-endpoint` en `8744d1b` (`test(assessment-creation-persistence): add real-repository integration test for draft/log cross-reference`), alineada con `origin/gradeops-api/story-01-assessment-creation-persistence--task-07-draft-generation-endpoint`.
+
+Hallazgos anteriores:
+
+- RESUELTO - Se agrego `GenerateAssessmentDraftHandlerIntegrationTest`, que ejecuta el `GenerateAssessmentDraftHandler` real con adapters/repositorios reales sobre PostgreSQL Testcontainers y Flyway hasta V12, dejando stubbeado solo `AssessmentAgentClient`.
+- RESUELTO - El caso exitoso ahora valida, despues de `flush()`/`clear()`, que se persiste un draft v1, un log `COMPLETED`, `assessment_drafts.agent_execution_log_id` apunta al log y `agent_execution_logs.draft_id` queda backfilled con el draft.
+- RESUELTO - El caso fallido ahora valida que no se persiste ningun draft y que queda un unico log `FAILED` con `errorCode = "AGENT_REJECTED"` y `draftId = null`.
+
+Verificacion de re-review:
+
+- `git fetch origin`
+- `git status --short --branch`
+- `git log --oneline --decorate -8`
+- Revision manual de `src/test/java/cl/gradeops/ai/api/assessment/application/usecase/GenerateAssessmentDraftHandlerIntegrationTest.java`.
+- `./mvnw -Dtest=GenerateAssessmentDraftHandlerIntegrationTest,GenerateAssessmentDraftHandlerTest,AgentExecutionLogPersistenceAdapterIntegrationTest,AssessmentControllerTest,HexagonalArchitectureTest test` paso correctamente: 27 tests, 0 failures, 0 errors. Testcontainers levanto PostgreSQL 16.14 y Flyway valido/aplico 12 migraciones hasta V12. La salida de Hibernate mostro la secuencia esperada del caso exitoso: insert log, insert draft, update log.
+- `./mvnw test` paso correctamente: 236 tests, 0 failures, 0 errors, 0 skipped. Testcontainers levanto PostgreSQL 16.14 y Flyway valido/aplico 12 migraciones hasta V12.
+
 ## Review 2026-07-13
 
 Estado: REQUIERE CAMBIOS.
