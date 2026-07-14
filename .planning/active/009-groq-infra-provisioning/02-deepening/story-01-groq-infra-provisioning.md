@@ -1,6 +1,6 @@
 # 🔍 DEEPENING: Story 01 — Cloud Run / Secret Manager provisioning for Groq credentials
 
-> **Status:** IN PROGRESS
+> **Status:** DONE
 > [← 01-expansion.md](../01-expansion.md) | [← planning/README.md](../../README.md)
 
 ---
@@ -34,10 +34,10 @@ Provision the Groq API key and any provider/model env vars `agents/`'s `002-groq
 
 ## Done Criteria
 
-- [ ] `terraform -chdir=terraform/environments/demo plan` shows only the expected new/changed resources for the Groq secret and Cloud Run env var binding.
-- [ ] No existing Cloud Run service, Artifact Registry repo, or IAM binding is modified beyond what's needed to grant the `agents/` service account access to the new secret.
-- [ ] Human has reviewed the `terraform plan` output before any `apply`.
-- [ ] TRACEABILITY.md updated with new terms from this story.
+- [x] `terraform -chdir=terraform/environments/demo plan` shows only the expected new/changed resources for the Groq secret and Cloud Run env var binding. Caveat: the plan also shows 26 other pending creates from pre-existing config that was never applied to `demo` (confirmed via GCP query, not caused by this story) — see `RETROSPECTIVE-RAW.md` 2026-07-13 00:15.
+- [x] No existing Cloud Run service, Artifact Registry repo, or IAM binding is modified beyond what's needed to grant the `agents/` service account access to the new secret.
+- [x] Human has reviewed the `terraform plan` output before any `apply`.
+- [x] TRACEABILITY.md updated with new terms from this story.
 
 ---
 
