@@ -17,6 +17,7 @@ Plannings that have reached COMPLETED status. Archived and read-only.
 | [005-design-template](005-design-template/README.md) | 2026-06-21 | Aplicación del Design System al portal docente — tokens CSS, tipografía Bricolage/Hanken, shell docente (sidebar + topbar), login y dashboard rediseñados, rutas maqueta | 5 / 5 DONE |
 | [006-password-recovery](006-password-recovery/README.md) | 2026-06-21 | Flujo `/forgot-password` + `/reset-password` vía Firebase Auth — SUPERSEDED por 007-password-recovery-custom-email | 3 / 3 DONE |
 | [007-password-recovery-custom-email](007-password-recovery-custom-email/README.md) | 2026-06-30 | Password recovery con email propio — JavaMail + Thymeleaf, token UUID server-side, endpoints públicos, páginas web reescritas y secretos SMTP para demo | 3 / 3 DONE |
+| [009-groq-infra-provisioning](009-groq-infra-provisioning/README.md) | 2026-07-14 | Groq API key Secret Manager entry + Cloud Run env/secret binding for the `agents/` service — Terraform infra only, no `apply` run | 1 / 1 DONE |
 
 ---
 

@@ -22,14 +22,4 @@ Stories: US-010 Assessment Brief Intake (P0), US-011 Assessment Draft Generation
 
 ---
 
-### [009-groq-infra-provisioning](009-groq-infra-provisioning/01-expansion.md)
-
-Provision the Groq API key and its Cloud Run wiring as real Terraform infra for the `agents/` service. `infra/` has no `.planning/` workspace of its own, so this parent planning owns the Terraform implementation directly — relocated from `agents/.planning/active/002-groq-genai-provider`'s story-02 (agents/'s story-01, the Groq adapter itself, is `DONE`).
-
-| # | Story | Área | Status |
-|---|-------|------|--------|
-| 01 | [groq-infra-provisioning](009-groq-infra-provisioning/02-deepening/story-01-groq-infra-provisioning.md) | IN | TODO |
-
----
-
 > [← planning/README.md](../README.md)
