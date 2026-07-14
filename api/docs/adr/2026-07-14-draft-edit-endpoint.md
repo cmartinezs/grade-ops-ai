@@ -18,7 +18,7 @@ This reconciles with task-03's "insert-only" framing: that statement described t
 
 ## Consequences
 
-No new persistence port method, no domain mutation, no schema change. `UpdateAssessmentDraftHandlerIntegrationTest` asserts the resulting SQL is an `UPDATE ... where id=?` (not an insert) and that the `AgentExecutionLog` count is unchanged after an edit — locking in the "in-place, no side effects" guarantee this task exists to provide. `NoPriorDraftException` (task-08) and `GenerateAssessmentDraftResponse`/`GenerateAssessmentDraftResult` (task-07) were reused rather than duplicated, since their shapes already matched exactly.
+No new persistence port method, no domain mutation, no schema change. `UpdateAssessmentDraftHandlerIntegrationTest` asserts the observable effect of an in-place update — same `draftId`, same `versionNumber`, a single row in `assessment_drafts`, and an unchanged `AgentExecutionLog` count — locking in the "in-place, no side effects" guarantee this task exists to provide. (The test doesn't assert SQL text directly; a local run additionally showed the expected `update assessment_drafts ... where id=?` in the Hibernate log, consistent with this assertion.) `NoPriorDraftException` (task-08) and `GenerateAssessmentDraftResponse`/`GenerateAssessmentDraftResult` (task-07) were reused rather than duplicated, since their shapes already matched exactly.
 
 ## Alternatives Considered
 
