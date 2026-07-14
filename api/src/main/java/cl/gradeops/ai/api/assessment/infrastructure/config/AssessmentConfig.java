@@ -10,6 +10,7 @@ import cl.gradeops.ai.api.assessment.application.usecase.DraftGenerationCoordina
 import cl.gradeops.ai.api.assessment.application.usecase.GenerateAssessmentDraftHandler;
 import cl.gradeops.ai.api.assessment.application.usecase.ListAssessmentsHandler;
 import cl.gradeops.ai.api.assessment.application.usecase.RegenerateAssessmentDraftHandler;
+import cl.gradeops.ai.api.assessment.application.usecase.UpdateAssessmentDraftHandler;
 import cl.gradeops.ai.api.assessment.infrastructure.adapter.out.persistence.AgentExecutionLogJpaRepository;
 import cl.gradeops.ai.api.assessment.infrastructure.adapter.out.persistence.AgentExecutionLogPersistenceAdapter;
 import cl.gradeops.ai.api.assessment.infrastructure.adapter.out.persistence.AgentExecutionLogPersistenceMapper;
@@ -119,5 +120,13 @@ class AssessmentConfig {
             DraftGenerationCoordinator draftGenerationCoordinator) {
         return new RegenerateAssessmentDraftHandler(assessmentRepository, assessmentBriefRepository,
                 assessmentDraftRepository, ownershipVerifier, draftGenerationCoordinator);
+    }
+
+    @Bean
+    UpdateAssessmentDraftHandler updateAssessmentDraftHandler(
+            AssessmentRepositoryPort assessmentRepository,
+            AssessmentDraftRepositoryPort assessmentDraftRepository,
+            OwnershipVerifier ownershipVerifier) {
+        return new UpdateAssessmentDraftHandler(assessmentRepository, assessmentDraftRepository, ownershipVerifier);
     }
 }

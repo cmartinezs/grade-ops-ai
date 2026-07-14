@@ -234,4 +234,60 @@ class AssessmentDraftTest {
                 .isInstanceOf(DomainInvariantViolationException.class)
                 .hasMessageContaining("createdAt");
     }
+
+    @Test
+    void applyEditShouldKeepSameIdVersionAndPreviousVersionId() {
+        AssessmentDraft v1 = firstVersion();
+
+        AssessmentDraft edited = v1.applyEdit("new title", null, null, null, null, null);
+
+        assertThat(edited.getId()).isEqualTo(v1.getId());
+        assertThat(edited.getVersionNumber()).isEqualTo(v1.getVersionNumber());
+        assertThat(edited.getPreviousVersionId()).isEqualTo(v1.getPreviousVersionId());
+        assertThat(edited.getAssessmentId()).isEqualTo(v1.getAssessmentId());
+        assertThat(edited.getAgentExecutionLogId()).isEqualTo(v1.getAgentExecutionLogId());
+        assertThat(edited.getCreatedAt()).isEqualTo(v1.getCreatedAt());
+    }
+
+    @Test
+    void applyEditShouldOnlyChangeProvidedFieldsAndKeepTheRest() {
+        AssessmentDraft v1 = firstVersion();
+
+        AssessmentDraft edited = v1.applyEdit("new title", null, null, null, null, null);
+
+        assertThat(edited.getTitle()).isEqualTo("new title");
+        assertThat(edited.getContext()).isEqualTo(v1.getContext());
+        assertThat(edited.getInstructions()).isEqualTo(v1.getInstructions());
+        assertThat(edited.getObjectives()).isEqualTo(v1.getObjectives());
+        assertThat(edited.getDeliverables()).isEqualTo(v1.getDeliverables());
+        assertThat(edited.getConstraints()).isEqualTo(v1.getConstraints());
+    }
+
+    @Test
+    void applyEditShouldChangeAllFieldsWhenAllAreProvided() {
+        AssessmentDraft v1 = firstVersion();
+
+        AssessmentDraft edited = v1.applyEdit("t2", "c2", "i2", List.of("o2"), List.of("d2"), List.of("k2"));
+
+        assertThat(edited.getTitle()).isEqualTo("t2");
+        assertThat(edited.getContext()).isEqualTo("c2");
+        assertThat(edited.getInstructions()).isEqualTo("i2");
+        assertThat(edited.getObjectives()).containsExactly("o2");
+        assertThat(edited.getDeliverables()).containsExactly("d2");
+        assertThat(edited.getConstraints()).containsExactly("k2");
+    }
+
+    @Test
+    void applyEditWithAllNullsShouldReturnEquivalentDraft() {
+        AssessmentDraft v1 = firstVersion();
+
+        AssessmentDraft edited = v1.applyEdit(null, null, null, null, null, null);
+
+        assertThat(edited.getTitle()).isEqualTo(v1.getTitle());
+        assertThat(edited.getContext()).isEqualTo(v1.getContext());
+        assertThat(edited.getInstructions()).isEqualTo(v1.getInstructions());
+        assertThat(edited.getObjectives()).isEqualTo(v1.getObjectives());
+        assertThat(edited.getDeliverables()).isEqualTo(v1.getDeliverables());
+        assertThat(edited.getConstraints()).isEqualTo(v1.getConstraints());
+    }
 }
