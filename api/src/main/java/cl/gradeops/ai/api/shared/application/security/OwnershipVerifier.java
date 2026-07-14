@@ -1,4 +1,4 @@
-package cl.gradeops.ai.api.shared.infrastructure.config.security;
+package cl.gradeops.ai.api.shared.application.security;
 
 import cl.gradeops.ai.api.shared.domain.exception.ResourceNotFoundException;
 import org.slf4j.Logger;

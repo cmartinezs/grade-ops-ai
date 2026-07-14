@@ -1,7 +1,6 @@
-package cl.gradeops.ai.api.shared.infrastructure.config.security;
+package cl.gradeops.ai.api.shared.application.security;
 
 import cl.gradeops.ai.api.shared.infrastructure.adapter.in.web.GlobalExceptionHandler;
-import cl.gradeops.ai.api.shared.infrastructure.config.security.OwnershipVerifier;
 import cl.gradeops.ai.api.shared.domain.exception.ResourceNotFoundException;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
