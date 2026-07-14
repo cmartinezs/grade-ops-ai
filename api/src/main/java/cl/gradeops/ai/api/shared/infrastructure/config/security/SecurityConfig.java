@@ -1,6 +1,7 @@
 package cl.gradeops.ai.api.shared.infrastructure.config.security;
 
 import cl.gradeops.ai.api.auth.application.port.out.AuthPort;
+import cl.gradeops.ai.api.shared.application.security.OwnershipVerifier;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;

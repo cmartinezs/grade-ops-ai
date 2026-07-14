@@ -1,11 +1,16 @@
 package cl.gradeops.ai.api.assessment.infrastructure.adapter.in.web;
 
+import cl.gradeops.ai.api.agentclient.AgentClientException;
 import cl.gradeops.ai.api.assessment.application.command.CreateAssessmentBriefCommand;
+import cl.gradeops.ai.api.assessment.application.command.GenerateAssessmentDraftCommand;
 import cl.gradeops.ai.api.assessment.application.port.in.CreateAssessmentBriefUseCase;
+import cl.gradeops.ai.api.assessment.application.port.in.GenerateAssessmentDraftUseCase;
 import cl.gradeops.ai.api.assessment.application.port.in.ListAssessmentsUseCase;
 import cl.gradeops.ai.api.assessment.application.result.AssessmentSummaryResult;
 import cl.gradeops.ai.api.assessment.application.result.CreateAssessmentBriefResult;
+import cl.gradeops.ai.api.assessment.application.result.GenerateAssessmentDraftResult;
 import cl.gradeops.ai.api.assessment.domain.model.AssessmentStatus;
+import cl.gradeops.ai.api.shared.domain.exception.ResourceNotFoundException;
 import cl.gradeops.ai.api.shared.infrastructure.config.FirebaseTestConfig;
 import cl.gradeops.ai.api.shared.infrastructure.config.security.AuthenticatedTeacher;
 import com.google.firebase.auth.FirebaseAuth;
@@ -46,6 +51,7 @@ class AssessmentControllerTest {
     @Autowired FirebaseAuth firebaseAuth;
     @MockitoBean ListAssessmentsUseCase listAssessmentsUseCase;
     @MockitoBean CreateAssessmentBriefUseCase createAssessmentBriefUseCase;
+    @MockitoBean GenerateAssessmentDraftUseCase generateAssessmentDraftUseCase;
     @Mock FirebaseToken firebaseToken;
 
     @BeforeEach
@@ -182,5 +188,79 @@ class AssessmentControllerTest {
                 .andExpect(status().isUnauthorized());
 
         verifyNoInteractions(createAssessmentBriefUseCase);
+    }
+
+    @Test
+    void authenticated_teacher_posting_draft_generation_returns_201_with_draft() throws Exception {
+        when(firebaseToken.getUid()).thenReturn("uid-teacher-5");
+        when(firebaseToken.getEmail()).thenReturn("teacher5@school.com");
+        when(firebaseToken.isEmailVerified()).thenReturn(true);
+        when(firebaseAuth.verifyIdToken("valid-token-5", true)).thenReturn(firebaseToken);
+        java.util.UUID assessmentId = java.util.UUID.randomUUID();
+        java.util.UUID draftId = java.util.UUID.randomUUID();
+        when(generateAssessmentDraftUseCase.execute(new GenerateAssessmentDraftCommand(assessmentId, "uid-teacher-5")))
+                .thenReturn(new GenerateAssessmentDraftResult(draftId, "Title", "Context", "Instructions",
+                        List.of("obj"), List.of("del"), List.of("con"), 1));
+
+        mockMvc.perform(post("/api/v1/assessments/" + assessmentId + "/draft")
+                        .header("Authorization", "Bearer valid-token-5"))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.draftId").value(draftId.toString()))
+                .andExpect(jsonPath("$.title").value("Title"))
+                .andExpect(jsonPath("$.versionNumber").value(1))
+                .andExpect(jsonPath("$.objectives[0]").value("obj"));
+    }
+
+    @Test
+    void posting_draft_generation_for_unknown_assessment_returns_404() throws Exception {
+        when(firebaseToken.getUid()).thenReturn("uid-teacher-6");
+        when(firebaseToken.getEmail()).thenReturn("teacher6@school.com");
+        when(firebaseToken.isEmailVerified()).thenReturn(true);
+        when(firebaseAuth.verifyIdToken("valid-token-6", true)).thenReturn(firebaseToken);
+        java.util.UUID assessmentId = java.util.UUID.randomUUID();
+        when(generateAssessmentDraftUseCase.execute(new GenerateAssessmentDraftCommand(assessmentId, "uid-teacher-6")))
+                .thenThrow(new ResourceNotFoundException(assessmentId.toString()));
+
+        mockMvc.perform(post("/api/v1/assessments/" + assessmentId + "/draft")
+                        .header("Authorization", "Bearer valid-token-6"))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void posting_draft_generation_when_agent_rejects_command_returns_422() throws Exception {
+        when(firebaseToken.getUid()).thenReturn("uid-teacher-7");
+        when(firebaseToken.getEmail()).thenReturn("teacher7@school.com");
+        when(firebaseToken.isEmailVerified()).thenReturn(true);
+        when(firebaseAuth.verifyIdToken("valid-token-7", true)).thenReturn(firebaseToken);
+        java.util.UUID assessmentId = java.util.UUID.randomUUID();
+        when(generateAssessmentDraftUseCase.execute(new GenerateAssessmentDraftCommand(assessmentId, "uid-teacher-7")))
+                .thenThrow(new AgentClientException(AgentClientException.Reason.AGENT_REJECTED, "rejected", null));
+
+        mockMvc.perform(post("/api/v1/assessments/" + assessmentId + "/draft")
+                        .header("Authorization", "Bearer valid-token-7"))
+                .andExpect(status().isUnprocessableEntity());
+    }
+
+    @Test
+    void posting_draft_generation_when_agents_unreachable_returns_503() throws Exception {
+        when(firebaseToken.getUid()).thenReturn("uid-teacher-8");
+        when(firebaseToken.getEmail()).thenReturn("teacher8@school.com");
+        when(firebaseToken.isEmailVerified()).thenReturn(true);
+        when(firebaseAuth.verifyIdToken("valid-token-8", true)).thenReturn(firebaseToken);
+        java.util.UUID assessmentId = java.util.UUID.randomUUID();
+        when(generateAssessmentDraftUseCase.execute(new GenerateAssessmentDraftCommand(assessmentId, "uid-teacher-8")))
+                .thenThrow(new AgentClientException(AgentClientException.Reason.UNREACHABLE, "unreachable", null));
+
+        mockMvc.perform(post("/api/v1/assessments/" + assessmentId + "/draft")
+                        .header("Authorization", "Bearer valid-token-8"))
+                .andExpect(status().isServiceUnavailable());
+    }
+
+    @Test
+    void unauthenticated_draft_generation_request_returns_401() throws Exception {
+        mockMvc.perform(post("/api/v1/assessments/" + java.util.UUID.randomUUID() + "/draft"))
+                .andExpect(status().isUnauthorized());
+
+        verifyNoInteractions(generateAssessmentDraftUseCase);
     }
 }

@@ -1,5 +1,6 @@
 package cl.gradeops.ai.api.shared.infrastructure.adapter.in.web;
 
+import cl.gradeops.ai.api.agentclient.AgentClientException;
 import cl.gradeops.ai.api.auth.domain.exception.InvalidResetCodeException;
 import cl.gradeops.ai.api.auth.domain.exception.PasswordMismatchException;
 import cl.gradeops.ai.api.auth.domain.exception.ResetCodeEmailMismatchException;
@@ -64,6 +65,17 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiErrorResponse> handleResetCodeEmailMismatch(ResetCodeEmailMismatchException ex) {
         return ResponseEntity.status(HttpStatus.UNPROCESSABLE_CONTENT)
                 .body(ApiErrorResponse.of("RESET_CODE_EMAIL_MISMATCH"));
+    }
+
+    @ExceptionHandler(AgentClientException.class)
+    public ResponseEntity<ApiErrorResponse> handleAgentClient(AgentClientException ex) {
+        HttpStatus status = switch (ex.reason()) {
+            case UNREACHABLE -> HttpStatus.SERVICE_UNAVAILABLE;
+            case AGENT_REJECTED -> HttpStatus.UNPROCESSABLE_CONTENT;
+            case AGENT_ERROR -> HttpStatus.BAD_GATEWAY;
+        };
+        log.warn("Agent call failed: {}", ex.getMessage(), ex);
+        return ResponseEntity.status(status).body(ApiErrorResponse.of("AGENT_CALL_FAILED", ex.reason().name()));
     }
 
     // ── Raíces de jerarquía propia ────────────────────────────────────────────
