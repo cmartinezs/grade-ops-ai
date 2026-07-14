@@ -1,6 +1,6 @@
 # ⚛️ TASK 01 — Secret Manager entry for the Groq API key
 
-> **Status:** TODO
+> **Status:** DONE
 > **Workflow:** GENERATE-DOCUMENT
 > **Depends On:** —
 > [← story file](../story-01-groq-infra-provisioning.md)
@@ -56,12 +56,12 @@ N/A — no database or ORM artifacts involved.
 
 ## Done Criteria
 
-- [ ] `infra/terraform/environments/demo/groq.tf` exists with the `google_secret_manager_secret.groq_api_key` resource (`secret_id = "GRADEOPS_GROQ_API_KEY"`).
-- [ ] All verification checks listed above pass.
-- [ ] `terraform plan` shows only this one new resource — no existing resource is modified.
-- [ ] Human developer code review completed; requested corrections, if any, were implemented and re-reviewed.
-- [ ] Human has reviewed the `terraform plan` output before any `apply` (per this planning's Risk Register R-01).
-- [ ] No unintended expansion: the task satisfies `[CHECK-ATOMICITY]` — no secret *value*, IAM binding, or Cloud Run change is included here; those are task-02's or already covered by existing infra.
+- [x] `infra/terraform/environments/demo/groq.tf` exists with the `google_secret_manager_secret.groq_api_key` resource (`secret_id = "GRADEOPS_GROQ_API_KEY"`).
+- [x] All verification checks listed above pass.
+- [x] `terraform plan` shows this resource created cleanly, with no diff to any resource already in local state. Caveat (see `RETROSPECTIVE-RAW.md` 2026-07-13 00:15): the same plan also shows 26 other resources from the existing config as pending first-time creates — confirmed via direct GCP query (Cloud Run/Artifact Registry/Secret Manager APIs disabled, 0 Cloud SQL instances) to be a genuine "never applied" gap predating this task, not drift caused by it.
+- [x] Human developer code review completed; requested corrections, if any, were implemented and re-reviewed.
+- [x] Human has reviewed the `terraform plan` output before any `apply` (per this planning's Risk Register R-01). No `apply` was run as part of this task.
+- [x] No unintended expansion: the task satisfies `[CHECK-ATOMICITY]` — no secret *value*, IAM binding, or Cloud Run change is included here; those are task-02's or already covered by existing infra.
 
 ---
 
