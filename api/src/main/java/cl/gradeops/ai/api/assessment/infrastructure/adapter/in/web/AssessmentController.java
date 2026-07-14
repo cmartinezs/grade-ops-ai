@@ -2,12 +2,15 @@ package cl.gradeops.ai.api.assessment.infrastructure.adapter.in.web;
 
 import cl.gradeops.ai.api.assessment.application.command.CreateAssessmentBriefCommand;
 import cl.gradeops.ai.api.assessment.application.command.GenerateAssessmentDraftCommand;
+import cl.gradeops.ai.api.assessment.application.command.RegenerateAssessmentDraftCommand;
 import cl.gradeops.ai.api.assessment.application.port.in.CreateAssessmentBriefUseCase;
 import cl.gradeops.ai.api.assessment.application.port.in.GenerateAssessmentDraftUseCase;
 import cl.gradeops.ai.api.assessment.application.port.in.ListAssessmentsUseCase;
+import cl.gradeops.ai.api.assessment.application.port.in.RegenerateAssessmentDraftUseCase;
 import cl.gradeops.ai.api.assessment.application.result.CreateAssessmentBriefResult;
 import cl.gradeops.ai.api.assessment.application.result.GenerateAssessmentDraftResult;
 import cl.gradeops.ai.api.assessment.infrastructure.adapter.in.web.request.CreateAssessmentBriefRequest;
+import cl.gradeops.ai.api.assessment.infrastructure.adapter.in.web.request.RegenerateAssessmentDraftRequest;
 import cl.gradeops.ai.api.assessment.infrastructure.adapter.in.web.response.AssessmentSummaryResponse;
 import cl.gradeops.ai.api.assessment.infrastructure.adapter.in.web.response.CreateAssessmentBriefResponse;
 import cl.gradeops.ai.api.assessment.infrastructure.adapter.in.web.response.GenerateAssessmentDraftResponse;
@@ -34,6 +37,7 @@ public class AssessmentController {
     private final ListAssessmentsUseCase listAssessmentsUseCase;
     private final CreateAssessmentBriefUseCase createAssessmentBriefUseCase;
     private final GenerateAssessmentDraftUseCase generateAssessmentDraftUseCase;
+    private final RegenerateAssessmentDraftUseCase regenerateAssessmentDraftUseCase;
 
     @GetMapping("/assessments")
     public List<AssessmentSummaryResponse> listAssessments() {
@@ -64,6 +68,19 @@ public class AssessmentController {
             SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         GenerateAssessmentDraftResult result = generateAssessmentDraftUseCase.execute(
             new GenerateAssessmentDraftCommand(id, teacher.uid()));
+        return new GenerateAssessmentDraftResponse(
+            result.draftId(), result.title(), result.context(), result.instructions(),
+            result.objectives(), result.deliverables(), result.constraints(), result.versionNumber());
+    }
+
+    @PostMapping("/assessments/{id}/draft/regenerate")
+    @ResponseStatus(HttpStatus.CREATED)
+    public GenerateAssessmentDraftResponse regenerateDraft(@PathVariable UUID id,
+                                                             @Valid @RequestBody RegenerateAssessmentDraftRequest request) {
+        AuthenticatedTeacher teacher = (AuthenticatedTeacher)
+            SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        GenerateAssessmentDraftResult result = regenerateAssessmentDraftUseCase.execute(
+            new RegenerateAssessmentDraftCommand(id, teacher.uid(), request.adjustmentNotes()));
         return new GenerateAssessmentDraftResponse(
             result.draftId(), result.title(), result.context(), result.instructions(),
             result.objectives(), result.deliverables(), result.constraints(), result.versionNumber());

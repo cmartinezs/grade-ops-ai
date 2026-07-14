@@ -1,6 +1,6 @@
 # ⚛️ TASK 08 — Draft regeneration endpoint
 
-> **Status:** TODO
+> **Status:** DONE
 > **Workflow:** GENERATE-DOCUMENT
 > **Depends On:** task-07
 > [← story file](../story-01-assessment-creation-persistence.md)
@@ -24,6 +24,10 @@
 - **Interfaces / contracts:** `POST /api/v1/assessments/{id}/draft/regenerate` — body `{adjustmentNotes}`, response: the new draft version, same shape as task-07's generation response plus `versionNumber`.
 - **Risk:** H (story-level risk R-02) — a bug here could overwrite/lose the previous version; mitigated by never issuing an `UPDATE` on `assessment_drafts` (append-only, enforced by task-03's design), and by a dedicated test asserting the previous version's row is unchanged after regeneration.
 - **Design notes:** if no current draft exists for the assessment (regeneration requested before any generation), return 409/422 — regeneration requires a prior draft.
+- **Implemented 2026-07-13 — extraction:** the shared helper is `DraftGenerationCoordinator` (new `public` class in `assessment/application/usecase`, wired as its own `@Bean` — has to be `public` since `AssessmentConfig` constructs it across a package boundary, matching this codebase's existing manual-`@Bean`-wiring convention rather than `@Component` scanning). It owns `AssessmentAgentClient`/`AgentExecutionLogRepositoryPort`/`AssessmentDraftRepositoryPort`/`TransactionTemplate` and exposes one method, `callAgentAndPersist(assessmentId, agentCommand, draftFactory)`, where `draftFactory` is a `BiFunction<AssessmentAgentResponse.Result, UUID, AssessmentDraft>` supplied by the caller — `GenerateAssessmentDraftHandler` passes `AssessmentDraft.generate(...)`, this task's `RegenerateAssessmentDraftHandler` passes `AssessmentDraft.regenerate(...)`. This required a breaking refactor of the already-merged `GenerateAssessmentDraftHandler`'s constructor (task-07's own Implementation Steps step 1 explicitly calls for this) — `GenerateAssessmentDraftHandlerTest`'s persistence/transaction-order/failure-log assertions moved to a new `DraftGenerationCoordinatorTest`, and `GenerateAssessmentDraftHandlerTest` was narrowed to only its own remaining responsibilities (ownership, brief loading, 404s, command building).
+- **Implemented 2026-07-13 — `previousDraft` rendering:** a private static `toPromptSummary(AssessmentDraft)` method on `RegenerateAssessmentDraftHandler` itself (not a domain method, not a separate mapper class) — keeps the pure domain model free of prompt-formatting concerns per the parenthetical above, and needs no new file since the draft is already loaded in the handler.
+- **Implemented 2026-07-13 — no-prior-draft error:** new `NoPriorDraftException extends ApplicationException` (`assessment/application/exception`, new package) — reuses `GlobalExceptionHandler`'s existing generic `ApplicationException` → `422 UNPROCESSABLE_CONTENT` handler, so no new exception-handler code was needed, consistent with task-06's established 422-for-validation-failure convention.
+- **Implemented 2026-07-13 — response DTO:** no new response DTO — `GenerateAssessmentDraftResponse` already has `versionNumber`, exactly matching "same shape ... plus versionNumber," so the regenerate endpoint reuses it directly instead of duplicating an identical record.
 
 ---
 
@@ -64,12 +68,12 @@ N/A — no schema change in this task (reuses `V9`–`V12`).
 
 ## Done Criteria
 
-- [ ] `POST /api/v1/assessments/{id}/draft/regenerate` creates a new version without altering any previous version.
-- [ ] Regeneration without a prior draft returns a clean 409/422, not a 500 or NPE.
-- [ ] Each regeneration produces its own `AgentExecutionLog`.
-- [ ] `./mvnw test` passes.
-- [ ] Human developer code review completed; requested corrections, if any, were implemented and re-reviewed.
-- [ ] No unintended expansion: the task satisfies `[CHECK-ATOMICITY]`.
+- [x] `POST /api/v1/assessments/{id}/draft/regenerate` creates a new version without altering any previous version.
+- [x] Regeneration without a prior draft returns a clean 409/422, not a 500 or NPE.
+- [x] Each regeneration produces its own `AgentExecutionLog`.
+- [x] `./mvnw test` passes.
+- [x] Human developer code review completed; requested corrections, if any, were implemented and re-reviewed.
+- [x] No unintended expansion: the task satisfies `[CHECK-ATOMICITY]`.
 
 ---
 
