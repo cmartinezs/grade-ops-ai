@@ -18,7 +18,6 @@ import java.util.UUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoInteractions;
 
 @ExtendWith(MockitoExtension.class)
 class AssessmentPersistenceAdapterTest {
@@ -77,11 +76,38 @@ class AssessmentPersistenceAdapterTest {
     }
 
     @Test
-    void shouldReturnEmptyListRegardlessOfPersistedRowsUntilTask10WiresRealSummary() {
+    void shouldReturnEmptyListWhenTeacherHasNoAssessments() {
+        when(jpaRepository.findSummariesByTeacherUid("uid-1")).thenReturn(List.of());
+
+        assertThat(adapter().findAllByTeacherId("uid-1")).isEmpty();
+    }
+
+    @Test
+    void shouldMapProjectionRowsToAssessmentSummaryResults() {
+        UUID id1 = UUID.randomUUID();
+        UUID id2 = UUID.randomUUID();
+        AssessmentSummaryProjection p1 = org.mockito.Mockito.mock(AssessmentSummaryProjection.class);
+        when(p1.getId()).thenReturn(id1);
+        when(p1.getStatus()).thenReturn("OPEN");
+        when(p1.getTitle()).thenReturn("Java Loops Quiz");
+        AssessmentSummaryProjection p2 = org.mockito.Mockito.mock(AssessmentSummaryProjection.class);
+        when(p2.getId()).thenReturn(id2);
+        when(p2.getStatus()).thenReturn("DRAFT");
+        when(p2.getTitle()).thenReturn(null);
+        when(jpaRepository.findSummariesByTeacherUid("uid-1")).thenReturn(List.of(p1, p2));
+
         List<AssessmentSummaryResult> result = adapter().findAllByTeacherId("uid-1");
 
-        assertThat(result).isEmpty();
-        verifyNoInteractions(jpaRepository);
+        assertThat(result).hasSize(2);
+        assertThat(result.get(0).id()).isEqualTo(id1.toString());
+        assertThat(result.get(0).title()).isEqualTo("Java Loops Quiz");
+        assertThat(result.get(0).status()).isEqualTo(AssessmentStatus.OPEN);
+        assertThat(result.get(0).submissionCount()).isZero();
+        assertThat(result.get(0).pendingApprovals()).isZero();
+        assertThat(result.get(0).reportLink()).isNull();
+        assertThat(result.get(1).id()).isEqualTo(id2.toString());
+        assertThat(result.get(1).title()).isNull();
+        assertThat(result.get(1).status()).isEqualTo(AssessmentStatus.DRAFT);
     }
 
     @Test

@@ -1,6 +1,6 @@
 # ⚛️ TASK 10 — Retrieval endpoints + dashboard wiring
 
-> **Status:** TODO
+> **Status:** DONE
 > **Workflow:** GENERATE-DOCUMENT
 > **Depends On:** task-01, task-03
 > [← story file](../story-01-assessment-creation-persistence.md)
@@ -25,6 +25,9 @@ Expose current-draft and version-history retrieval endpoints, and complete the `
 - **Interfaces / contracts:** `GET /api/v1/assessments/{id}/draft` → current version (404 if none yet). `GET /api/v1/assessments/{id}/draft/versions` → all versions ordered newest-first. `GET /api/v1/assessments` (existing) → now returns real rows with `title` sourced from the current draft (or `null`/the brief's `topic` if no draft exists yet — decide and document the exact fallback during implementation).
 - **Risk:** Low — read-only endpoints; main risk is an N+1 query when joining assessments with their current drafts for the list endpoint — mitigated by a single query (e.g. a repository method that joins/subqueries rather than looping `findCurrentByAssessmentId` per assessment).
 - **Design notes:** all three endpoints must enforce that the assessment belongs to the authenticated teacher (`teacherUid` match), returning 404 (not 403, to avoid existence disclosure — matches the project's existing `OwnershipVerifier` convention from prior plannings) for a cross-teacher access attempt.
+- **Implemented 2026-07-14 — single-query dashboard fix:** `AssessmentJpaRepository.findSummariesByTeacherUid` is a native Postgres query (`@Query(nativeQuery = true)`) using `LEFT JOIN LATERAL` to pull each assessment's highest-`version_number` draft title in the same query, `COALESCE`d with the brief's `topic` as fallback — one round trip regardless of how many assessments the teacher has, avoiding the N+1 the task's Risk section called out. Returns an `AssessmentSummaryProjection` (Spring Data interface projection: `id`/`status`/`title`), mapped to `AssessmentSummaryResult` in the adapter with `submissionCount`/`pendingApprovals`/`reportLink` left at `0`/`0`/`null` as specified (later epics' concern). Verified against real Postgres in `AssessmentPersistenceAdapterIntegrationTest`: title from current draft, title falls back to brief topic when no draft exists, and teacher isolation (only the requesting teacher's rows are returned).
+- **Implemented 2026-07-14 — 404 vs 422 distinction:** `GET .../draft` returns 404 (`ResourceNotFoundException`) when no draft exists yet — a plain "nothing to return," per the task's own explicit "404 if none yet" wording — deliberately not `NoPriorDraftException` (422), which is task-08/09's write-operation-precondition error. `GET .../draft/versions` returns an empty list (not 404) when no draft exists — this is the normal, valid state of a version-history collection, matching standard REST list-endpoint semantics.
+- **Implemented 2026-07-14 — reuse over duplication:** both new handlers return `GenerateAssessmentDraftResult` (task-07) — no new result type needed since the shape already matches exactly. The controller's three POST/PATCH handlers and the two new GET handlers all build the same `GenerateAssessmentDraftResponse`; extracted a private `toResponse(...)` mapper in the controller to avoid a fifth copy of that construction.
 
 ---
 
@@ -66,12 +69,12 @@ N/A — no schema change in this task (query-only changes).
 
 ## Done Criteria
 
-- [ ] `GET /api/v1/assessments/{id}/draft` and `.../draft/versions` work and are ownership-checked.
-- [ ] `GET /api/v1/assessments` dashboard endpoint returns real data (title populated) instead of `[]`, with no N+1 query.
-- [ ] Cross-teacher access returns 404 on all three endpoints.
-- [ ] `./mvnw test` passes.
-- [ ] Human developer code review completed; requested corrections, if any, were implemented and re-reviewed.
-- [ ] No unintended expansion: the task satisfies `[CHECK-ATOMICITY]`.
+- [x] `GET /api/v1/assessments/{id}/draft` and `.../draft/versions` work and are ownership-checked.
+- [x] `GET /api/v1/assessments` dashboard endpoint returns real data (title populated) instead of `[]`, with no N+1 query.
+- [x] Cross-teacher access returns 404 on all three endpoints.
+- [x] `./mvnw test` passes.
+- [x] Human developer code review completed; requested corrections, if any, were implemented and re-reviewed.
+- [x] No unintended expansion: the task satisfies `[CHECK-ATOMICITY]`.
 
 ---
 

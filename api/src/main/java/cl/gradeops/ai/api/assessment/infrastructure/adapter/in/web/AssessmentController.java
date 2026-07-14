@@ -2,11 +2,15 @@ package cl.gradeops.ai.api.assessment.infrastructure.adapter.in.web;
 
 import cl.gradeops.ai.api.assessment.application.command.CreateAssessmentBriefCommand;
 import cl.gradeops.ai.api.assessment.application.command.GenerateAssessmentDraftCommand;
+import cl.gradeops.ai.api.assessment.application.command.GetCurrentDraftCommand;
+import cl.gradeops.ai.api.assessment.application.command.ListDraftVersionsCommand;
 import cl.gradeops.ai.api.assessment.application.command.RegenerateAssessmentDraftCommand;
 import cl.gradeops.ai.api.assessment.application.command.UpdateAssessmentDraftCommand;
 import cl.gradeops.ai.api.assessment.application.port.in.CreateAssessmentBriefUseCase;
 import cl.gradeops.ai.api.assessment.application.port.in.GenerateAssessmentDraftUseCase;
+import cl.gradeops.ai.api.assessment.application.port.in.GetCurrentDraftUseCase;
 import cl.gradeops.ai.api.assessment.application.port.in.ListAssessmentsUseCase;
+import cl.gradeops.ai.api.assessment.application.port.in.ListDraftVersionsUseCase;
 import cl.gradeops.ai.api.assessment.application.port.in.RegenerateAssessmentDraftUseCase;
 import cl.gradeops.ai.api.assessment.application.port.in.UpdateAssessmentDraftUseCase;
 import cl.gradeops.ai.api.assessment.application.result.CreateAssessmentBriefResult;
@@ -46,6 +50,8 @@ public class AssessmentController {
     private final GenerateAssessmentDraftUseCase generateAssessmentDraftUseCase;
     private final RegenerateAssessmentDraftUseCase regenerateAssessmentDraftUseCase;
     private final UpdateAssessmentDraftUseCase updateAssessmentDraftUseCase;
+    private final GetCurrentDraftUseCase getCurrentDraftUseCase;
+    private final ListDraftVersionsUseCase listDraftVersionsUseCase;
 
     @GetMapping("/assessments")
     public List<AssessmentSummaryResponse> listAssessments() {
@@ -73,9 +79,7 @@ public class AssessmentController {
         AuthenticatedTeacher teacher = currentTeacher();
         GenerateAssessmentDraftResult result = generateAssessmentDraftUseCase.execute(
             new GenerateAssessmentDraftCommand(id, teacher.uid()));
-        return new GenerateAssessmentDraftResponse(
-            result.draftId(), result.title(), result.context(), result.instructions(),
-            result.objectives(), result.deliverables(), result.constraints(), result.versionNumber());
+        return toResponse(result);
     }
 
     @PostMapping("/assessments/{id}/draft/regenerate")
@@ -85,9 +89,7 @@ public class AssessmentController {
         AuthenticatedTeacher teacher = currentTeacher();
         GenerateAssessmentDraftResult result = regenerateAssessmentDraftUseCase.execute(
             new RegenerateAssessmentDraftCommand(id, teacher.uid(), request.adjustmentNotes()));
-        return new GenerateAssessmentDraftResponse(
-            result.draftId(), result.title(), result.context(), result.instructions(),
-            result.objectives(), result.deliverables(), result.constraints(), result.versionNumber());
+        return toResponse(result);
     }
 
     @PatchMapping("/assessments/{id}/draft")
@@ -97,6 +99,26 @@ public class AssessmentController {
         GenerateAssessmentDraftResult result = updateAssessmentDraftUseCase.execute(new UpdateAssessmentDraftCommand(
             id, teacher.uid(), request.title(), request.context(), request.instructions(),
             request.objectives(), request.deliverables(), request.constraints()));
+        return toResponse(result);
+    }
+
+    @GetMapping("/assessments/{id}/draft")
+    public GenerateAssessmentDraftResponse getCurrentDraft(@PathVariable UUID id) {
+        AuthenticatedTeacher teacher = currentTeacher();
+        GenerateAssessmentDraftResult result = getCurrentDraftUseCase.execute(
+            new GetCurrentDraftCommand(id, teacher.uid()));
+        return toResponse(result);
+    }
+
+    @GetMapping("/assessments/{id}/draft/versions")
+    public List<GenerateAssessmentDraftResponse> listDraftVersions(@PathVariable UUID id) {
+        AuthenticatedTeacher teacher = currentTeacher();
+        return listDraftVersionsUseCase.execute(new ListDraftVersionsCommand(id, teacher.uid())).stream()
+            .map(this::toResponse)
+            .toList();
+    }
+
+    private GenerateAssessmentDraftResponse toResponse(GenerateAssessmentDraftResult result) {
         return new GenerateAssessmentDraftResponse(
             result.draftId(), result.title(), result.context(), result.instructions(),
             result.objectives(), result.deliverables(), result.constraints(), result.versionNumber());
