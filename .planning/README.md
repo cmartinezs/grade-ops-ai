@@ -34,7 +34,6 @@ _None._
 ### 🚧 In Progress → see [`active/README.md`](active/README.md)
 
 - [008-assessment-creation](active/008-assessment-creation/01-expansion.md) — Enable the first step of the open-assessment pipeline: turning a teacher's learning intent into a structured, AI-generated assessment draft that is editable and fully logged.
-- [009-groq-infra-provisioning](active/009-groq-infra-provisioning/01-expansion.md) — Provision the Groq API key and its Cloud Run wiring as real Terraform infra for the `agents/` service.
 
 ### ✅ Completed → see [`finished/README.md`](finished/README.md)
 
@@ -45,3 +44,4 @@ _None._
 - [005-design-template](finished/005-design-template/README.md) — Aplicación del Design System al portal docente (5 stories, COMPLETED 2026-06-21)
 - [006-password-recovery](finished/006-password-recovery/README.md) — Flujo `/forgot-password` + `/reset-password` vía Firebase Auth, SUPERSEDED por 007 (3 stories, COMPLETED 2026-06-21)
 - [007-password-recovery-custom-email](finished/007-password-recovery-custom-email/README.md) — Reemplazar Firebase email con servicio propio en `api/` (JavaMail + Thymeleaf) (3 stories, COMPLETED 2026-06-30)
+- [009-groq-infra-provisioning](finished/009-groq-infra-provisioning/README.md) — Groq API key Secret Manager entry + Cloud Run env/secret binding for `agents/` (1 story, COMPLETED 2026-07-14)

@@ -57,6 +57,9 @@ Cell values:
 | `provider` column in `teachers` (`EMAIL_PASSWORD` / `GOOGLE`) | 002-google-sign-in | N/A | ✅ | N/A | N/A | N/A | N/A |
 | `RegisterResult` (CREATED vs FOUND upsert) | 002-google-sign-in | N/A | ✅ | N/A | N/A | N/A | N/A |
 | AuthGuard bypass for `providerId === 'google.com'` | 002-google-sign-in | N/A | N/A | N/A | N/A | ✅ | N/A |
+| `GRADEOPS_GROQ_API_KEY` (Secret Manager secret + Cloud Run secret-bound env var) | 009-groq-infra-provisioning | ✅ | N/A | N/A | ✅ | N/A | N/A |
+| `GRADEOPS_GROQ_MODEL` (Cloud Run plain env var) | 009-groq-infra-provisioning | ✅ | N/A | N/A | ✅ | N/A | N/A |
+| `GRADEOPS_GROQ_BASE_URL` | 009-groq-infra-provisioning | ✅ | N/A | N/A | N/A | N/A | N/A |
 
 ---
 
@@ -77,6 +80,7 @@ Cell values:
 | 2026-06-11 | — | Matrix initialized. Area codes configured by plan-init based on project structure. |
 | 2026-06-13 | 001-teacher-onboarding | 12 terms added from teacher onboarding epic (Firebase auth, Admin SDK, internal key, pilot flags, apiClient, OwnershipVerifier). |
 | 2026-06-15 | 002-google-sign-in | 6 terms added: GoogleSignInButton, GoogleAuthProvider, Terraform IDP config, provider column, RegisterResult, AuthGuard bypass. |
+| 2026-07-14 | 009-groq-infra-provisioning | 3 terms added: `GRADEOPS_GROQ_API_KEY`, `GRADEOPS_GROQ_MODEL`, `GRADEOPS_GROQ_BASE_URL` (Groq API key Secret Manager entry + Cloud Run env binding for `agents/`). |
 
 ---
 

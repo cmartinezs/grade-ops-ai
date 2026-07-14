@@ -1,6 +1,6 @@
 # ⚛️ TASK 02 — Cloud Run env var / secret binding for the agents/ service
 
-> **Status:** TODO
+> **Status:** DONE
 > **Workflow:** GENERATE-DOCUMENT
 > **Depends On:** task-01
 > [← story file](../story-01-groq-infra-provisioning.md)
@@ -59,13 +59,13 @@ N/A — no database or ORM artifacts involved.
 
 ## Done Criteria
 
-- [ ] `google_cloud_run_v2_service.agents` in `cloud_run.tf` has `GRADEOPS_GROQ_API_KEY` (secret-bound to task-01's secret) and `GRADEOPS_GROQ_MODEL` (plain value) in its `containers.env` list.
-- [ ] `GRADEOPS_GROQ_BASE_URL` is intentionally absent (relies on the app-level default) — not a gap.
-- [ ] All verification checks listed above pass.
-- [ ] `terraform plan` shows only `google_cloud_run_v2_service.agents` changed (plus task-01's secret if applied together) — no existing Cloud Run service, Artifact Registry repo, or IAM binding modified beyond this.
-- [ ] Human developer code review completed; requested corrections, if any, were implemented and re-reviewed.
-- [ ] Human has reviewed the `terraform plan` output before any `apply` (per this planning's Risk Register R-01).
-- [ ] No unintended expansion: the task satisfies `[CHECK-ATOMICITY]`.
+- [x] `google_cloud_run_v2_service.agents` in `cloud_run.tf` has `GRADEOPS_GROQ_API_KEY` (secret-bound to task-01's secret) and `GRADEOPS_GROQ_MODEL` (plain value) in its `containers.env` list.
+- [x] `GRADEOPS_GROQ_BASE_URL` is intentionally absent (relies on the app-level default) — not a gap.
+- [x] All verification checks listed above pass.
+- [x] `terraform plan` shows the same 27-resource set as task-01's plan — no new resource, no IAM binding, no other Cloud Run service or Artifact Registry repo modified beyond the pre-existing gap already logged under task-01 (`RETROSPECTIVE-RAW.md` 2026-07-13 00:15).
+- [x] Human developer code review completed; requested corrections, if any, were implemented and re-reviewed.
+- [x] Human has reviewed the `terraform plan` output before any `apply` (per this planning's Risk Register R-01). No `apply` was run as part of this task.
+- [x] No unintended expansion: the task satisfies `[CHECK-ATOMICITY]`.
 
 ---
 
