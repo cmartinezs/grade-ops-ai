@@ -8,7 +8,9 @@ import cl.gradeops.ai.api.assessment.application.port.out.AssessmentRepositoryPo
 import cl.gradeops.ai.api.assessment.application.usecase.CreateAssessmentBriefHandler;
 import cl.gradeops.ai.api.assessment.application.usecase.DraftGenerationCoordinator;
 import cl.gradeops.ai.api.assessment.application.usecase.GenerateAssessmentDraftHandler;
+import cl.gradeops.ai.api.assessment.application.usecase.GetCurrentDraftHandler;
 import cl.gradeops.ai.api.assessment.application.usecase.ListAssessmentsHandler;
+import cl.gradeops.ai.api.assessment.application.usecase.ListDraftVersionsHandler;
 import cl.gradeops.ai.api.assessment.application.usecase.RegenerateAssessmentDraftHandler;
 import cl.gradeops.ai.api.assessment.application.usecase.UpdateAssessmentDraftHandler;
 import cl.gradeops.ai.api.assessment.infrastructure.adapter.out.persistence.AgentExecutionLogJpaRepository;
@@ -128,5 +130,21 @@ class AssessmentConfig {
             AssessmentDraftRepositoryPort assessmentDraftRepository,
             OwnershipVerifier ownershipVerifier) {
         return new UpdateAssessmentDraftHandler(assessmentRepository, assessmentDraftRepository, ownershipVerifier);
+    }
+
+    @Bean
+    GetCurrentDraftHandler getCurrentDraftHandler(
+            AssessmentRepositoryPort assessmentRepository,
+            AssessmentDraftRepositoryPort assessmentDraftRepository,
+            OwnershipVerifier ownershipVerifier) {
+        return new GetCurrentDraftHandler(assessmentRepository, assessmentDraftRepository, ownershipVerifier);
+    }
+
+    @Bean
+    ListDraftVersionsHandler listDraftVersionsHandler(
+            AssessmentRepositoryPort assessmentRepository,
+            AssessmentDraftRepositoryPort assessmentDraftRepository,
+            OwnershipVerifier ownershipVerifier) {
+        return new ListDraftVersionsHandler(assessmentRepository, assessmentDraftRepository, ownershipVerifier);
     }
 }
