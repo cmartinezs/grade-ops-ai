@@ -25,6 +25,16 @@ Each entry should answer as many of these as possible:
 
 <!-- Add newest entries at the top. -->
 
+### 2026-07-13 21:00 - Human code review requested corrections on task-07: missing real-repository integration test for the log/draft cross-reference
+
+- **Source:** manual (human developer review on PR #52)
+- **Related story/task:** story-01, task-07
+- **What happened:** Human reviewer filed a MEDIUM finding: `GenerateAssessmentDraftHandlerTest` used mocked repositories (so it never exercised the `TransactionTemplate` against real JPA/Flyway/Postgres) and `AgentExecutionLogPersistenceAdapterIntegrationTest` validated the log's own schema/round-trip but never created a draft referencing it — so no automated test actually proved the log→draft→log-backfill cross-reference (`assessment_drafts.agent_execution_log_id` ↔ `agent_execution_logs.draft_id`) persisted correctly together through the real handler and a real transaction. A bug in that ordering could pass every existing test, since mocks accept any call order and the schema test never created a draft at all.
+- **Expected instead:** An integration test using the real `GenerateAssessmentDraftHandler` with real repositories (Testcontainers Postgres, Flyway-migrated) and only `AssessmentAgentClient` stubbed, verifying both the success path (draft v1 + `COMPLETED` log, bidirectionally cross-referenced) and the failure path (no draft row, `FAILED` log with `errorCode` set) against actual persisted rows.
+- **Resolution:** Added `GenerateAssessmentDraftHandlerIntegrationTest` (`@DataJpaTest` + Testcontainers, `ddl-auto=validate`) constructing the handler with real `AssessmentPersistenceAdapter`/`AssessmentBriefPersistenceAdapter`/`AssessmentDraftPersistenceAdapter`/`AgentExecutionLogPersistenceAdapter` and a mocked `AssessmentAgentClient`. The success test's captured Hibernate SQL confirms the exact intended sequence: insert `agent_execution_logs` (`draft_id=null`) → insert `assessment_drafts` (`agent_execution_log_id` set) → `UPDATE agent_execution_logs SET draft_id=...` — verified against real rows read back after `entityManager.flush()/clear()`, not just mock interactions. Full suite: 236/236 (Docker available).
+- **Retrospective signal:** a unit test with mocked repositories and a persistence-adapter integration test that only exercises one entity in isolation can each pass while the actual cross-entity transactional flow between them is still broken — neither one, on its own, proves the two rows a handler is supposed to write together actually end up consistently cross-referenced in the database. Any future handler that persists two-or-more related rows across ports (not just a single adapter) should get its own real-repository integration test, not just a mocked handler test plus separate per-adapter round-trip tests.
+
+
 ### 2026-07-13 14:00 - Human code review requested corrections on task-03: mutable list aggregate state
 
 - **Source:** manual (human developer review on PR #48)
