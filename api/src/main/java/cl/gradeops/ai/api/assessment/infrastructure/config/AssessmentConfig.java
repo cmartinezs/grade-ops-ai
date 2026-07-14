@@ -1,6 +1,8 @@
 package cl.gradeops.ai.api.assessment.infrastructure.config;
 
+import cl.gradeops.ai.api.assessment.application.port.out.AssessmentBriefRepositoryPort;
 import cl.gradeops.ai.api.assessment.application.port.out.AssessmentRepositoryPort;
+import cl.gradeops.ai.api.assessment.application.usecase.CreateAssessmentBriefHandler;
 import cl.gradeops.ai.api.assessment.application.usecase.ListAssessmentsHandler;
 import cl.gradeops.ai.api.assessment.infrastructure.adapter.out.persistence.AssessmentBriefJpaRepository;
 import cl.gradeops.ai.api.assessment.infrastructure.adapter.out.persistence.AssessmentBriefPersistenceAdapter;
@@ -56,5 +58,12 @@ class AssessmentConfig {
     @Bean
     ListAssessmentsHandler listAssessmentsHandler(AssessmentRepositoryPort assessmentRepository) {
         return new ListAssessmentsHandler(assessmentRepository);
+    }
+
+    @Bean
+    CreateAssessmentBriefHandler createAssessmentBriefHandler(
+            AssessmentRepositoryPort assessmentRepository,
+            AssessmentBriefRepositoryPort assessmentBriefRepository) {
+        return new CreateAssessmentBriefHandler(assessmentRepository, assessmentBriefRepository);
     }
 }
