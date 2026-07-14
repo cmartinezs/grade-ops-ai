@@ -9,7 +9,7 @@
 
 | # | Story | SDLC Phase(s) | Depends On | Status |
 |---|-------|--------------|------------|--------|
-| 01 | assessment-creation-persistence | AP | — (external: `agents/` 001-assessment-creation) | TODO |
+| 01 | assessment-creation-persistence | AP | — (external: `agents/` 001-assessment-creation) | DONE |
 
 > This story depends on the **external** contract produced by the sibling child planning `agents/.planning/001-assessment-creation` (the `AssessmentCommand`/`AssessmentResult` contract and the internal agent endpoint). That dependency is cross-repository and is not expressible in this workspace's own `Depends On` column — it is tracked by the parent planning (root `.planning/active/008-assessment-creation/01-expansion.md → Linked Child Plannings`).
 
