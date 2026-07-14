@@ -2,12 +2,15 @@ package cl.gradeops.ai.api.assessment.application.usecase;
 
 import cl.gradeops.ai.api.agentclient.AssessmentAgentResponse;
 import cl.gradeops.ai.api.agentclient.AssessmentCommand;
-import cl.gradeops.ai.api.assessment.application.command.GenerateAssessmentDraftCommand;
+import cl.gradeops.ai.api.assessment.application.command.RegenerateAssessmentDraftCommand;
+import cl.gradeops.ai.api.assessment.application.exception.NoPriorDraftException;
 import cl.gradeops.ai.api.assessment.application.port.out.AssessmentBriefRepositoryPort;
+import cl.gradeops.ai.api.assessment.application.port.out.AssessmentDraftRepositoryPort;
 import cl.gradeops.ai.api.assessment.application.port.out.AssessmentRepositoryPort;
 import cl.gradeops.ai.api.assessment.application.result.GenerateAssessmentDraftResult;
 import cl.gradeops.ai.api.assessment.domain.model.Assessment;
 import cl.gradeops.ai.api.assessment.domain.model.AssessmentBrief;
+import cl.gradeops.ai.api.assessment.domain.model.AssessmentDraft;
 import cl.gradeops.ai.api.assessment.domain.model.AssessmentId;
 import cl.gradeops.ai.api.assessment.domain.model.AssessmentStatus;
 import cl.gradeops.ai.api.shared.application.security.OwnershipVerifier;
@@ -31,42 +34,41 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
-/**
- * Covers only this handler's own responsibilities — loading the assessment/brief, ownership
- * enforcement, and building the {@link AssessmentCommand} — with {@link DraftGenerationCoordinator}
- * mocked. The shared "call agent, persist log + draft" logic itself is covered by
- * {@link DraftGenerationCoordinatorTest} instead (task-08 extracted it out from here).
- */
 @ExtendWith(MockitoExtension.class)
-class GenerateAssessmentDraftHandlerTest {
+class RegenerateAssessmentDraftHandlerTest {
 
     @Mock AssessmentRepositoryPort assessmentRepository;
     @Mock AssessmentBriefRepositoryPort assessmentBriefRepository;
+    @Mock AssessmentDraftRepositoryPort assessmentDraftRepository;
     @Mock OwnershipVerifier ownershipVerifier;
     @Mock DraftGenerationCoordinator draftGenerationCoordinator;
 
-    GenerateAssessmentDraftHandler handler;
+    RegenerateAssessmentDraftHandler handler;
 
     final UUID assessmentUuid = UUID.randomUUID();
     final AssessmentId assessmentId = new AssessmentId(assessmentUuid);
     final Assessment assessment = Assessment.restore(assessmentId, "uid-1", AssessmentStatus.DRAFT, Instant.now());
     final AssessmentBrief brief = AssessmentBrief.create(assessmentId, "goal", "topic", "basic", "90min", "Java");
+    final AssessmentDraft currentDraft = AssessmentDraft.generate(assessmentId, "Title v1", "Context v1",
+            "Instructions v1", List.of("obj1"), List.of("del1"), List.of("con1"), UUID.randomUUID());
 
     @BeforeEach
     void setUp() {
-        handler = new GenerateAssessmentDraftHandler(
-                assessmentRepository, assessmentBriefRepository, ownershipVerifier, draftGenerationCoordinator);
+        handler = new RegenerateAssessmentDraftHandler(assessmentRepository, assessmentBriefRepository,
+                assessmentDraftRepository, ownershipVerifier, draftGenerationCoordinator);
     }
 
     @Test
-    void shouldVerifyOwnershipAndDelegateToCoordinatorWithCommandBuiltFromBrief() {
+    void shouldVerifyOwnershipAndDelegateWithAdjustmentNotesAndPreviousDraftContent() {
         when(assessmentRepository.findById(assessmentId)).thenReturn(Optional.of(assessment));
         when(assessmentBriefRepository.findByAssessmentId(assessmentId)).thenReturn(Optional.of(brief));
+        when(assessmentDraftRepository.findCurrentByAssessmentId(assessmentId)).thenReturn(Optional.of(currentDraft));
         GenerateAssessmentDraftResult expected = new GenerateAssessmentDraftResult(
-                UUID.randomUUID(), "Title", "Context", "Instructions", List.of(), List.of(), List.of(), 1);
+                UUID.randomUUID(), "Title v2", "Context v2", "Instructions v2", List.of(), List.of(), List.of(), 2);
         when(draftGenerationCoordinator.callAgentAndPersist(eq(assessmentId), any(), any())).thenReturn(expected);
 
-        GenerateAssessmentDraftResult result = handler.execute(new GenerateAssessmentDraftCommand(assessmentUuid, "uid-1"));
+        GenerateAssessmentDraftResult result = handler.execute(
+                new RegenerateAssessmentDraftCommand(assessmentUuid, "uid-1", "make it harder"));
 
         assertThat(result).isEqualTo(expected);
         verify(ownershipVerifier).verify("uid-1", "uid-1", assessmentUuid.toString());
@@ -74,41 +76,47 @@ class GenerateAssessmentDraftHandlerTest {
         ArgumentCaptor<AssessmentCommand> commandCaptor = ArgumentCaptor.forClass(AssessmentCommand.class);
         verify(draftGenerationCoordinator).callAgentAndPersist(eq(assessmentId), commandCaptor.capture(), any());
         AssessmentCommand agentCommand = commandCaptor.getValue();
-        assertThat(agentCommand.learningGoal()).isEqualTo("goal");
-        assertThat(agentCommand.topic()).isEqualTo("topic");
-        assertThat(agentCommand.level()).isEqualTo("basic");
-        assertThat(agentCommand.duration()).isEqualTo("90min");
-        assertThat(agentCommand.language()).isEqualTo("Java");
-        assertThat(agentCommand.adjustmentNotes()).isNull();
-        assertThat(agentCommand.previousDraftId()).isNull();
-        assertThat(agentCommand.previousDraft()).isNull();
+        assertThat(agentCommand.adjustmentNotes()).isEqualTo("make it harder");
+        assertThat(agentCommand.previousDraftId()).isEqualTo(currentDraft.getId().toString());
+        assertThat(agentCommand.previousDraft()).contains("Title v1", "Context v1", "Instructions v1", "obj1", "del1", "con1");
     }
 
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({"unchecked", "rawtypes"})
     @Test
-    void shouldPassADraftFactoryThatGeneratesVersionOne() {
+    void shouldPassADraftFactoryThatRegeneratesFromCurrentVersion() {
         when(assessmentRepository.findById(assessmentId)).thenReturn(Optional.of(assessment));
         when(assessmentBriefRepository.findByAssessmentId(assessmentId)).thenReturn(Optional.of(brief));
+        when(assessmentDraftRepository.findCurrentByAssessmentId(assessmentId)).thenReturn(Optional.of(currentDraft));
 
-        handler.execute(new GenerateAssessmentDraftCommand(assessmentUuid, "uid-1"));
+        handler.execute(new RegenerateAssessmentDraftCommand(assessmentUuid, "uid-1", "make it harder"));
 
-        @SuppressWarnings("rawtypes")
         ArgumentCaptor<BiFunction> factoryCaptor = ArgumentCaptor.forClass(BiFunction.class);
         verify(draftGenerationCoordinator).callAgentAndPersist(eq(assessmentId), any(), factoryCaptor.capture());
 
         UUID logId = UUID.randomUUID();
-        @SuppressWarnings("unchecked")
-        BiFunction<AssessmentAgentResponse.Result, UUID, cl.gradeops.ai.api.assessment.domain.model.AssessmentDraft> draftFactory =
-                factoryCaptor.getValue();
-        cl.gradeops.ai.api.assessment.domain.model.AssessmentDraft draft = draftFactory.apply(
-                new AssessmentAgentResponse.Result("Title", "Context", "Instructions",
-                        List.of("obj"), List.of("del"), List.of("con")),
+        BiFunction<AssessmentAgentResponse.Result, UUID, AssessmentDraft> draftFactory = factoryCaptor.getValue();
+        AssessmentDraft newDraft = draftFactory.apply(
+                new AssessmentAgentResponse.Result("Title v2", "Context v2", "Instructions v2",
+                        List.of("obj2"), List.of("del2"), List.of("con2")),
                 logId);
 
-        assertThat(draft.getVersionNumber()).isEqualTo(1);
-        assertThat(draft.getPreviousVersionId()).isNull();
-        assertThat(draft.getAgentExecutionLogId()).isEqualTo(logId);
-        assertThat(draft.getTitle()).isEqualTo("Title");
+        assertThat(newDraft.getVersionNumber()).isEqualTo(2);
+        assertThat(newDraft.getPreviousVersionId()).isEqualTo(currentDraft.getId());
+        assertThat(newDraft.getAgentExecutionLogId()).isEqualTo(logId);
+        assertThat(newDraft.getTitle()).isEqualTo("Title v2");
+    }
+
+    @Test
+    void shouldThrowNoPriorDraftExceptionWhenNoDraftExistsYet() {
+        when(assessmentRepository.findById(assessmentId)).thenReturn(Optional.of(assessment));
+        when(assessmentBriefRepository.findByAssessmentId(assessmentId)).thenReturn(Optional.of(brief));
+        when(assessmentDraftRepository.findCurrentByAssessmentId(assessmentId)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> handler.execute(
+                new RegenerateAssessmentDraftCommand(assessmentUuid, "uid-1", "make it harder")))
+                .isInstanceOf(NoPriorDraftException.class);
+
+        verifyNoInteractions(draftGenerationCoordinator);
     }
 
     @Test
@@ -117,30 +125,21 @@ class GenerateAssessmentDraftHandlerTest {
         doThrow(new ResourceNotFoundException(assessmentUuid.toString()))
                 .when(ownershipVerifier).verify("uid-1", "uid-other", assessmentUuid.toString());
 
-        assertThatThrownBy(() -> handler.execute(new GenerateAssessmentDraftCommand(assessmentUuid, "uid-other")))
+        assertThatThrownBy(() -> handler.execute(
+                new RegenerateAssessmentDraftCommand(assessmentUuid, "uid-other", "make it harder")))
                 .isInstanceOf(ResourceNotFoundException.class);
 
-        verifyNoInteractions(draftGenerationCoordinator, assessmentBriefRepository);
+        verifyNoInteractions(draftGenerationCoordinator, assessmentBriefRepository, assessmentDraftRepository);
     }
 
     @Test
     void shouldThrowNotFoundWhenAssessmentDoesNotExist() {
         when(assessmentRepository.findById(assessmentId)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> handler.execute(new GenerateAssessmentDraftCommand(assessmentUuid, "uid-1")))
+        assertThatThrownBy(() -> handler.execute(
+                new RegenerateAssessmentDraftCommand(assessmentUuid, "uid-1", "make it harder")))
                 .isInstanceOf(ResourceNotFoundException.class);
 
         verifyNoInteractions(ownershipVerifier, draftGenerationCoordinator);
-    }
-
-    @Test
-    void shouldThrowNotFoundWhenBriefDoesNotExist() {
-        when(assessmentRepository.findById(assessmentId)).thenReturn(Optional.of(assessment));
-        when(assessmentBriefRepository.findByAssessmentId(assessmentId)).thenReturn(Optional.empty());
-
-        assertThatThrownBy(() -> handler.execute(new GenerateAssessmentDraftCommand(assessmentUuid, "uid-1")))
-                .isInstanceOf(ResourceNotFoundException.class);
-
-        verifyNoInteractions(draftGenerationCoordinator);
     }
 }

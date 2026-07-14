@@ -6,8 +6,10 @@ import cl.gradeops.ai.api.assessment.application.port.out.AssessmentBriefReposit
 import cl.gradeops.ai.api.assessment.application.port.out.AssessmentDraftRepositoryPort;
 import cl.gradeops.ai.api.assessment.application.port.out.AssessmentRepositoryPort;
 import cl.gradeops.ai.api.assessment.application.usecase.CreateAssessmentBriefHandler;
+import cl.gradeops.ai.api.assessment.application.usecase.DraftGenerationCoordinator;
 import cl.gradeops.ai.api.assessment.application.usecase.GenerateAssessmentDraftHandler;
 import cl.gradeops.ai.api.assessment.application.usecase.ListAssessmentsHandler;
+import cl.gradeops.ai.api.assessment.application.usecase.RegenerateAssessmentDraftHandler;
 import cl.gradeops.ai.api.assessment.infrastructure.adapter.out.persistence.AgentExecutionLogJpaRepository;
 import cl.gradeops.ai.api.assessment.infrastructure.adapter.out.persistence.AgentExecutionLogPersistenceAdapter;
 import cl.gradeops.ai.api.assessment.infrastructure.adapter.out.persistence.AgentExecutionLogPersistenceMapper;
@@ -89,16 +91,33 @@ class AssessmentConfig {
     }
 
     @Bean
-    GenerateAssessmentDraftHandler generateAssessmentDraftHandler(
-            AssessmentRepositoryPort assessmentRepository,
-            AssessmentBriefRepositoryPort assessmentBriefRepository,
+    DraftGenerationCoordinator draftGenerationCoordinator(
             AssessmentDraftRepositoryPort assessmentDraftRepository,
             AgentExecutionLogRepositoryPort agentExecutionLogRepository,
             AssessmentAgentClient assessmentAgentClient,
-            OwnershipVerifier ownershipVerifier,
             PlatformTransactionManager transactionManager) {
+        return new DraftGenerationCoordinator(assessmentDraftRepository, agentExecutionLogRepository,
+                assessmentAgentClient, transactionManager);
+    }
+
+    @Bean
+    GenerateAssessmentDraftHandler generateAssessmentDraftHandler(
+            AssessmentRepositoryPort assessmentRepository,
+            AssessmentBriefRepositoryPort assessmentBriefRepository,
+            OwnershipVerifier ownershipVerifier,
+            DraftGenerationCoordinator draftGenerationCoordinator) {
         return new GenerateAssessmentDraftHandler(assessmentRepository, assessmentBriefRepository,
-                assessmentDraftRepository, agentExecutionLogRepository, assessmentAgentClient,
-                ownershipVerifier, transactionManager);
+                ownershipVerifier, draftGenerationCoordinator);
+    }
+
+    @Bean
+    RegenerateAssessmentDraftHandler regenerateAssessmentDraftHandler(
+            AssessmentRepositoryPort assessmentRepository,
+            AssessmentBriefRepositoryPort assessmentBriefRepository,
+            AssessmentDraftRepositoryPort assessmentDraftRepository,
+            OwnershipVerifier ownershipVerifier,
+            DraftGenerationCoordinator draftGenerationCoordinator) {
+        return new RegenerateAssessmentDraftHandler(assessmentRepository, assessmentBriefRepository,
+                assessmentDraftRepository, ownershipVerifier, draftGenerationCoordinator);
     }
 }

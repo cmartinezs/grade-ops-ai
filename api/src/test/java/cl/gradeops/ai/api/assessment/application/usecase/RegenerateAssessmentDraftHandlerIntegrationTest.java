@@ -1,9 +1,9 @@
 package cl.gradeops.ai.api.assessment.application.usecase;
 
-import cl.gradeops.ai.api.agentclient.AgentClientException;
 import cl.gradeops.ai.api.agentclient.AssessmentAgentClient;
 import cl.gradeops.ai.api.agentclient.AssessmentAgentResponse;
 import cl.gradeops.ai.api.assessment.application.command.GenerateAssessmentDraftCommand;
+import cl.gradeops.ai.api.assessment.application.command.RegenerateAssessmentDraftCommand;
 import cl.gradeops.ai.api.assessment.application.result.GenerateAssessmentDraftResult;
 import cl.gradeops.ai.api.assessment.domain.model.Assessment;
 import cl.gradeops.ai.api.assessment.domain.model.AssessmentBrief;
@@ -39,22 +39,18 @@ import org.testcontainers.containers.PostgreSQLContainer;
 
 import java.time.Instant;
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 /**
- * Exercises {@link GenerateAssessmentDraftHandler} with real repositories against a live
- * Postgres (Flyway-migrated through V12), unlike {@link GenerateAssessmentDraftHandlerTest}
- * (mocked repositories) and {@code AgentExecutionLogPersistenceAdapterIntegrationTest} (log
- * round-trip only, never creates a draft referencing the log). Only {@link AssessmentAgentClient}
- * is stubbed — everything downstream of it, including the {@code TransactionTemplate}-managed
- * log→draft→log-backfill cross-reference, runs for real. Requires Docker.
+ * Exercises {@link RegenerateAssessmentDraftHandler} with real repositories against a live
+ * Postgres (Flyway-migrated through V12): generates v1, then regenerates to v2, and verifies
+ * v1's row is byte-for-byte unchanged, both versions are retrievable, and each version has its
+ * own distinct {@code AgentExecutionLog}. Requires Docker.
  */
 @DataJpaTest
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
@@ -63,7 +59,7 @@ import static org.mockito.Mockito.when;
     "spring.flyway.enabled=true",
     "spring.jpa.hibernate.ddl-auto=validate"
 })
-class GenerateAssessmentDraftHandlerIntegrationTest {
+class RegenerateAssessmentDraftHandlerIntegrationTest {
 
     @SuppressWarnings("resource")
     static final PostgreSQLContainer<?> POSTGRES =
@@ -92,7 +88,8 @@ class GenerateAssessmentDraftHandlerIntegrationTest {
     AssessmentPersistenceAdapter assessmentAdapter;
     AssessmentBriefPersistenceAdapter briefAdapter;
     AssessmentAgentClient assessmentAgentClient;
-    GenerateAssessmentDraftHandler handler;
+    GenerateAssessmentDraftHandler generateHandler;
+    RegenerateAssessmentDraftHandler regenerateHandler;
 
     Assessment assessment;
 
@@ -107,8 +104,11 @@ class GenerateAssessmentDraftHandlerIntegrationTest {
         assessmentAgentClient = mock(AssessmentAgentClient.class);
         DraftGenerationCoordinator coordinator = new DraftGenerationCoordinator(
                 draftAdapter, logAdapter, assessmentAgentClient, transactionManager);
+        OwnershipVerifier ownershipVerifier = new OwnershipVerifier();
 
-        handler = new GenerateAssessmentDraftHandler(assessmentAdapter, briefAdapter, new OwnershipVerifier(), coordinator);
+        generateHandler = new GenerateAssessmentDraftHandler(assessmentAdapter, briefAdapter, ownershipVerifier, coordinator);
+        regenerateHandler = new RegenerateAssessmentDraftHandler(
+                assessmentAdapter, briefAdapter, draftAdapter, ownershipVerifier, coordinator);
 
         jdbcTemplate.update(
                 "INSERT INTO teacher (firebase_uid, first_name, last_name, email) VALUES (?, ?, ?, ?)",
@@ -120,66 +120,61 @@ class GenerateAssessmentDraftHandlerIntegrationTest {
         entityManager.clear();
     }
 
-    private static AssessmentAgentResponse successResponse() {
+    private static AssessmentAgentResponse response(String title) {
         Instant startedAt = Instant.now().minusSeconds(2);
         Instant finishedAt = Instant.now();
         return new AssessmentAgentResponse(
-                new AssessmentAgentResponse.Result("Title", "Context", "Instructions",
+                new AssessmentAgentResponse.Result(title, "Context", "Instructions",
                         List.of("obj"), List.of("del"), List.of("con")),
                 new AssessmentAgentResponse.Log(UUID.randomUUID(), "assessment", "gemini-2.0-flash", "v1",
-                        "in-hash", "out-hash", 100, 200, 0.01, "COMPLETED", null, startedAt, finishedAt));
+                        "in-hash-" + title, "out-hash-" + title, 100, 200, 0.01, "COMPLETED", null, startedAt, finishedAt));
     }
 
     @Test
-    void shouldPersistDraftAndLogCrossReferencedThroughRealTransactionOnSuccess() {
-        when(assessmentAgentClient.generate(any())).thenReturn(successResponse());
-
-        GenerateAssessmentDraftResult result = handler.execute(
+    void shouldCreateV2WithoutAlteringV1AndEachVersionHasItsOwnLog() {
+        when(assessmentAgentClient.generate(any())).thenReturn(response("Title v1"));
+        GenerateAssessmentDraftResult v1Result = generateHandler.execute(
                 new GenerateAssessmentDraftCommand(assessment.getId().value(), "uid-1"));
 
         entityManager.flush();
         entityManager.clear();
 
-        List<AssessmentDraftJpaEntity> drafts = draftJpaRepository.findAllByAssessmentIdOrderByVersionNumberDesc(
-                assessment.getId().value());
-        assertThat(drafts).hasSize(1);
-        AssessmentDraftJpaEntity draftEntity = drafts.get(0);
-        assertThat(draftEntity.getId()).isEqualTo(result.draftId());
-        assertThat(draftEntity.getVersionNumber()).isEqualTo(1);
-        assertThat(draftEntity.getAgentExecutionLogId()).isNotNull();
+        AssessmentDraftJpaEntity v1Before = draftJpaRepository.findById(v1Result.draftId()).orElseThrow();
 
-        Optional<AgentExecutionLogJpaEntity> logEntity = logJpaRepository.findById(draftEntity.getAgentExecutionLogId());
-        assertThat(logEntity).isPresent();
-        assertThat(logEntity.get().getStatus()).isEqualTo("COMPLETED");
-        assertThat(logEntity.get().getErrorCode()).isNull();
-        assertThat(logEntity.get().getAssessmentId()).isEqualTo(assessment.getId().value());
-
-        // The cross-reference is bidirectional: draft -> log via agent_execution_log_id,
-        // and log -> draft via the back-filled draft_id.
-        assertThat(logEntity.get().getDraftId()).isEqualTo(draftEntity.getId());
-    }
-
-    @Test
-    void shouldPersistOnlyFailureLogWithNoDraftRowOnAgentFailure() {
-        AgentClientException agentEx = new AgentClientException(
-                AgentClientException.Reason.AGENT_REJECTED, "rejected", new RuntimeException());
-        when(assessmentAgentClient.generate(any())).thenThrow(agentEx);
-
-        assertThatThrownBy(() -> handler.execute(new GenerateAssessmentDraftCommand(assessment.getId().value(), "uid-1")))
-                .isSameAs(agentEx);
+        when(assessmentAgentClient.generate(any())).thenReturn(response("Title v2"));
+        GenerateAssessmentDraftResult v2Result = regenerateHandler.execute(
+                new RegenerateAssessmentDraftCommand(assessment.getId().value(), "uid-1", "make it harder"));
 
         entityManager.flush();
         entityManager.clear();
 
-        assertThat(draftJpaRepository.findAllByAssessmentIdOrderByVersionNumberDesc(assessment.getId().value()))
-                .isEmpty();
+        // v1's row is byte-for-byte unchanged.
+        AssessmentDraftJpaEntity v1After = draftJpaRepository.findById(v1Result.draftId()).orElseThrow();
+        assertThat(v1After.getTitle()).isEqualTo(v1Before.getTitle());
+        assertThat(v1After.getVersionNumber()).isEqualTo(v1Before.getVersionNumber());
+        assertThat(v1After.getPreviousVersionId()).isEqualTo(v1Before.getPreviousVersionId());
+        assertThat(v1After.getAgentExecutionLogId()).isEqualTo(v1Before.getAgentExecutionLogId());
+        assertThat(v1After.getCreatedAt()).isEqualTo(v1Before.getCreatedAt());
 
+        // v2 is a new, distinct row linked back to v1.
+        assertThat(v2Result.versionNumber()).isEqualTo(2);
+        assertThat(v2Result.title()).isEqualTo("Title v2");
+        AssessmentDraftJpaEntity v2Entity = draftJpaRepository.findById(v2Result.draftId()).orElseThrow();
+        assertThat(v2Entity.getPreviousVersionId()).isEqualTo(v1Result.draftId());
+
+        // Both versions are retrievable.
+        List<AssessmentDraftJpaEntity> allDrafts = draftJpaRepository.findAllByAssessmentIdOrderByVersionNumberDesc(
+                assessment.getId().value());
+        assertThat(allDrafts).hasSize(2);
+        assertThat(allDrafts).extracting(AssessmentDraftJpaEntity::getVersionNumber).containsExactly(2, 1);
+
+        // Each version has its own distinct AgentExecutionLog.
+        assertThat(v2Entity.getAgentExecutionLogId()).isNotEqualTo(v1After.getAgentExecutionLogId());
         List<AgentExecutionLogJpaEntity> logs = logJpaRepository.findAll().stream()
                 .filter(l -> l.getAssessmentId().equals(assessment.getId().value()))
                 .toList();
-        assertThat(logs).hasSize(1);
-        assertThat(logs.get(0).getStatus()).isEqualTo("FAILED");
-        assertThat(logs.get(0).getErrorCode()).isEqualTo("AGENT_REJECTED");
-        assertThat(logs.get(0).getDraftId()).isNull();
+        assertThat(logs).hasSize(2);
+        assertThat(logs).extracting(AgentExecutionLogJpaEntity::getDraftId)
+                .containsExactlyInAnyOrder(v1Result.draftId(), v2Result.draftId());
     }
 }
