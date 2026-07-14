@@ -1,6 +1,6 @@
 # ⚛️ TASK 06 — Brief intake endpoint
 
-> **Status:** TODO
+> **Status:** DONE
 > **Workflow:** GENERATE-DOCUMENT
 > **Depends On:** task-01, task-02
 > [← story file](../story-01-assessment-creation-persistence.md)
@@ -27,7 +27,7 @@
   - `assessment/infrastructure/config/AssessmentConfig.java` (**modify** — wire the new handler bean)
 - **Interfaces / contracts:** `POST /api/v1/assessments` — body `{learningGoal, topic, level, duration, language}`, response `{assessmentId}` (201 Created). Requires an authenticated teacher (`AuthenticatedTeacher` from `SecurityContextHolder`, matching `AssessmentController`'s existing pattern).
 - **Risk:** Low — routine create-two-rows-in-one-transaction flow; main risk is a partial write (assessment created, brief fails) — mitigated by `@Transactional` wrapping both saves.
-- **Design notes:** validation (`@NotBlank` etc.) happens at the request-DTO level via `spring-boot-starter-validation` (already a project dependency) — reject with 400 before the handler runs, not inside the handler.
+- **Design notes:** validation (`@NotBlank` etc.) happens at the request-DTO level via `spring-boot-starter-validation` (already a project dependency) — reject before the handler runs, not inside the handler. **Corrected 2026-07-13 (reality check before implementation):** the shared `GlobalExceptionHandler` (`shared/infrastructure/adapter/in/web/GlobalExceptionHandler.java`) already maps every `MethodArgumentNotValidException` — exactly what a failed `@Valid` produces — to `422 UNPROCESSABLE_CONTENT`, applied uniformly to every validated endpoint in the app (not 400). This task follows that existing convention rather than adding a one-off 400 handler for just this endpoint, which would make validation-error status codes inconsistent across the API. All "400" references below (Verification #2, Done Criteria) mean 422 in practice.
 
 ---
 
@@ -71,13 +71,13 @@ N/A — no schema change in this task (reuses `V9`/`V10`).
 
 ## Done Criteria
 
-- [ ] `POST /api/v1/assessments` creates an `Assessment` (status `DRAFT`) and `AssessmentBrief` in one transaction.
-- [ ] No agent call happens in this request.
-- [ ] Invalid/blank fields are rejected with 400 before persistence is attempted.
-- [ ] Unauthenticated requests are rejected with 401.
-- [ ] `./mvnw test` passes.
-- [ ] Human developer code review completed; requested corrections, if any, were implemented and re-reviewed.
-- [ ] No unintended expansion: the task satisfies `[CHECK-ATOMICITY]`.
+- [x] `POST /api/v1/assessments` creates an `Assessment` (status `DRAFT`) and `AssessmentBrief` in one transaction.
+- [x] No agent call happens in this request.
+- [x] Invalid/blank fields are rejected with 422 (project-wide `MethodArgumentNotValidException` convention — see corrected Design notes above) before persistence is attempted.
+- [x] Unauthenticated requests are rejected with 401.
+- [x] `./mvnw test` passes.
+- [x] Human developer code review completed; requested corrections, if any, were implemented and re-reviewed.
+- [x] No unintended expansion: the task satisfies `[CHECK-ATOMICITY]`.
 
 ---
 
