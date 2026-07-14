@@ -42,7 +42,7 @@ Implement the full backend flow for assessment creation: persist the teacher's b
 | 8 | [Draft regeneration endpoint](story-01-assessment-creation-persistence/task-08-draft-regeneration-endpoint.md) | GENERATE-DOCUMENT | DONE | `POST /api/v1/assessments/{id}/draft/regenerate` |
 | 9 | [Draft edit endpoint](story-01-assessment-creation-persistence/task-09-draft-edit-endpoint.md) | GENERATE-DOCUMENT | DONE | `PATCH /api/v1/assessments/{id}/draft` |
 | 10 | [Retrieval endpoints + dashboard wiring](story-01-assessment-creation-persistence/task-10-retrieval-and-dashboard-wiring.md) | GENERATE-DOCUMENT | DONE | `GET .../draft`, `GET .../draft/versions`, real `GET /api/v1/assessments` data |
-| 11 | [End-to-end integration tests](story-01-assessment-creation-persistence/task-11-integration-tests.md) | GENERATE-DOCUMENT | IN PROGRESS | `AssessmentCreationFlowIntegrationTest.java` |
+| 11 | [End-to-end integration tests](story-01-assessment-creation-persistence/task-11-integration-tests.md) | GENERATE-DOCUMENT | DONE | `AssessmentCreationFlowIntegrationTest.java` |
 
 ---
 

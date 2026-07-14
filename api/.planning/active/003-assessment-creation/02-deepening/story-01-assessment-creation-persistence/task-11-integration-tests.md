@@ -1,6 +1,6 @@
 # ⚛️ TASK 11 — End-to-end integration tests
 
-> **Status:** IN PROGRESS
+> **Status:** DONE
 > **Workflow:** GENERATE-DOCUMENT
 > **Depends On:** task-06, task-07, task-08, task-09, task-10
 > [← story file](../story-01-assessment-creation-persistence.md)
@@ -63,7 +63,7 @@ N/A — no schema change in this task; exercises the full schema from prior task
 - [x] `AssessmentCreationFlowIntegrationTest` covers: happy path, agent-failure resilience, multi-regeneration version integrity, edit-scoped-to-latest-version.
 - [x] Full `./mvnw test` suite passes (all 11 tasks combined) — 288 tests, 0 failures, 0 errors.
 - [x] Every Done Criterion listed in `story-01-assessment-creation-persistence.md` is verifiable by an existing automated test or documented manual check — see mapping below.
-- [ ] Human developer code review completed; requested corrections, if any, were implemented and re-reviewed.
+- [x] Human developer code review completed; requested corrections, if any, were implemented and re-reviewed — no blocking findings; one residual noted (see story Residuals #3).
 - [x] No unintended expansion: the task satisfies `[CHECK-ATOMICITY]`.
 
 ### Story Done Criteria → verification mapping
