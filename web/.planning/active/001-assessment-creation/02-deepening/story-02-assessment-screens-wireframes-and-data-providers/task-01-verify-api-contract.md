@@ -1,6 +1,6 @@
 # ⚛️ TASK 01 — verify-api-contract
 
-> **Status:** TODO
+> **Status:** IN PROGRESS
 > **Workflow:** GENERATE-DOCUMENT
 > **Depends On:** —
 > [← story file](../story-02-assessment-screens-wireframes-and-data-providers.md)
@@ -75,13 +75,13 @@ N/A — this task produces no executable code.
 
 ## Done Criteria
 
-- [ ] All 7 verification rows above are re-confirmed directly against current `api/` source (not assumed from this story's Context section alone).
-- [ ] Any mismatch found between the Context section and the actual `api/` source is corrected in both this task file and the story's Context section before `task-05`/`task-10`/`task-11` start.
+- [x] All 7 verification rows above are re-confirmed directly against current `api/` source (not assumed from this story's Context section alone). Re-read on 2026-07-15 at commit `0a23627` of `api/`: `AssessmentController.java`'s 7 mappings (`listAssessments`, `createAssessmentBrief`, `generateDraft`, `regenerateDraft`, `updateDraft`, `getCurrentDraft`, `listDraftVersions`) and all 5 request/response records match exactly what's recorded above — no drift.
+- [x] Any mismatch found between the Context section and the actual `api/` source is corrected in both this task file and the story's Context section before `task-05`/`task-10`/`task-11` start. No mismatch found — nothing to correct.
 - [ ] Software smoke/build/startup/connectivity checks: N/A, no runtime surface (see Software Smoke Test Check); for git-enabled tasks, this task is committed, pushed, and published in a task PR before human developer PR review, with corrections pushed to the same PR.
-- [ ] Logging/observability: N/A — no executable code, no correlation/trace/INFO/DEBUG/WARN/ERROR log levels apply.
-- [ ] Task test suite: N/A — the generated test-suite quality gates in this task's Generated Test Suite section are architecture-review only.
-- [ ] Database/ORM: N/A — static DB/ORM consistency and runtime persistence smoke checks do not apply; no database, ORM, or persistence artifact is touched.
-- [ ] No unintended expansion: the task satisfies `[CHECK-ATOMICITY]`.
+- [x] Logging/observability: N/A — no executable code, no correlation/trace/INFO/DEBUG/WARN/ERROR log levels apply.
+- [x] Task test suite: N/A — the generated test-suite quality gates in this task's Generated Test Suite section are architecture-review only.
+- [x] Database/ORM: N/A — static DB/ORM consistency and runtime persistence smoke checks do not apply; no database, ORM, or persistence artifact is touched.
+- [x] No unintended expansion: the task satisfies `[CHECK-ATOMICITY]` — already validated during `/plan-atomize` (2026-07-15), no scope creep since.
 
 ---
 
