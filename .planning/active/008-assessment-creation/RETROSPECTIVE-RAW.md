@@ -25,6 +25,20 @@ Each entry should answer as many of these as possible:
 
 <!-- Add newest entries at the top. -->
 
+### 2026-07-14 — Story 04 (e2e-integration-verification) added post-initial-expansion via /plan-enrich-epic
+
+**Source:** `/plan-enrich-epic`
+
+**What happened:** While checking what remained for Story 01 to reach `DONE`, confirmed that `api/003-assessment-creation` (Story 02's tracked child) had just finished and merged (PR #44) — but reading its actual test code (`AssessmentCreationFlowIntegrationTest.java`, `GenerateAssessmentDraftHandlerIntegrationTest.java`, `AssessmentAgentClientTest.java`) showed every one of them mocks or stubs `AssessmentAgentClient` — no automated test anywhere exercises a real HTTP call between `api/` and `agents/`. Story 01's Done Criteria #2 ("internal agent endpoint is reachable from `api/` in the target environment") therefore still cannot be satisfied by either child planning's existing evidence, even with both children functionally complete. Separately discovered root `compose.yml` has no `agents` service at all — only `db`, `api`, `web` — so there wasn't even a straightforward way to run a real local check.
+
+**What was expected instead:** n/a — this is a genuine, previously-unnoticed coverage gap, not a process failure. Neither child planning's own scope included proving the cross-service network path; each proved its own side works in isolation (unit/integration tests) or was manually curl-tested standalone (`agents/`'s Groq end-to-end call).
+
+**How it was resolved:** added Story 04 (`e2e-integration-verification`, area `IN`, depends on Story 01 and Story 02) directly to this root planning — same reasoning as Story 03 (`web/`): no single child workspace owns cross-service reachability, so it belongs here. Scoped in two phases per human direction: (1) add `agents` to `compose.yml` and run a real local docker-compose smoke flow; (2) verify and smoke-test the already-documented `beta` environment on Render, scripted with the official Render CLI (`github.com/render-oss/cli`, confirmed via web search to exist and support non-interactive `RENDER_API_KEY` auth).
+
+**What should be carried forward:** when a coordination story's Done Criteria mention "reachable in the target environment," verify that claim against actual test code, not just each child planning's own "DONE" status — a child can be fully done by its own scope while a cross-cutting integration point neither child owns remains unverified. Consider whether future monorepo-root plannings with 2+ coordination stories that call each other should get an explicit integration-verification story from the start, rather than discovering the gap only when checking a coordination story's readiness for `DONE`.
+
+---
+
 ### 2026-07-12 — Story 01 checkpoint 2 closed, story remains BLOCKED on api/'s child planning not having started
 
 **What happened:** Ran `/plan-story 008-assessment-creation story-01-agents-assessment-agent` after the human confirmed the `agents/` child planning's tracked story reached completion. Verified directly: `agents/.planning/active/001-assessment-creation/02-deepening/story-01-assessment-agent.md` is `Status: DONE`, all 5 tasks `DONE`, all Done Criteria checked. Updated this coordination story's Sync Checkpoint 2 and Done Criteria bullet 1 to reflect that. `[EXECUTE-STORY]` then found Done Criteria bullet 2 ("internal agent endpoint is reachable from `api/`") unmet — `api/.planning/active/003-assessment-creation` is still status EXPANSION with story-01 `assessment-creation-persistence` still `TODO`; no `agentclient` call has been attempted yet, so reachability cannot be verified. Also found and logged a documentation inconsistency (Inconsistencies Found #3): `agents/.planning/active/001-assessment-creation`'s Residual #1 (Gemini success path unproven) is still `Status: OPEN` in that file, while the sibling child planning `agents/.planning/finished/002-groq-genai-provider`'s retrospective claims to have closed it — but only via a Groq call, not Gemini, so the two claims describe different things.
