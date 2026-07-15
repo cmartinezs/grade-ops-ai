@@ -1,6 +1,6 @@
 # ⚛️ TASK 01 — verify-api-contract
 
-> **Status:** TODO
+> **Status:** IN PROGRESS
 > **Workflow:** GENERATE-DOCUMENT
 > **Depends On:** —
 > [← story file](../story-02-assessment-screens-wireframes-and-data-providers.md)
@@ -73,15 +73,77 @@ N/A — this task produces no executable code.
 
 ---
 
+## Verification Summary
+
+Re-read directly from `api/` at commit `0a23627aa2d737f233e0a8a2be864f7187725139` (2026-07-15). Raw evidence below — not a paraphrase.
+
+**Controller mappings** (`AssessmentController.java`, full method list — 7 total, confirming row 7 by exhaustion):
+
+```
+@GetMapping("/assessments")                          -> listAssessments()      -> List<AssessmentSummaryResponse>
+@PostMapping("/assessments")                         -> createAssessmentBrief() -> CreateAssessmentBriefResponse
+@PostMapping("/assessments/{id}/draft")               -> generateDraft()        -> GenerateAssessmentDraftResponse
+@PostMapping("/assessments/{id}/draft/regenerate")    -> regenerateDraft()      -> GenerateAssessmentDraftResponse
+@PatchMapping("/assessments/{id}/draft")              -> updateDraft()          -> GenerateAssessmentDraftResponse
+@GetMapping("/assessments/{id}/draft")                -> getCurrentDraft()      -> GenerateAssessmentDraftResponse
+@GetMapping("/assessments/{id}/draft/versions")       -> listDraftVersions()    -> List<GenerateAssessmentDraftResponse>
+```
+
+No 8th mapping exists — confirms Verification row 7 (no restore/rollback endpoint) by exhaustive listing, not by absence-of-evidence.
+
+**Request records** (verbatim):
+
+```java
+public record CreateAssessmentBriefRequest(
+    @NotBlank String learningGoal,
+    @NotBlank String topic,
+    @NotBlank String level,
+    @NotBlank String duration,
+    @NotBlank String language
+) {}
+
+public record RegenerateAssessmentDraftRequest(@NotBlank String adjustmentNotes) {}
+
+public record UpdateAssessmentDraftRequest(
+    @Size(min = 1, message = "must not be blank if provided") String title,
+    @Size(min = 1, message = "must not be blank if provided") String context,
+    @Size(min = 1, message = "must not be blank if provided") String instructions,
+    List<@NotBlank String> objectives,
+    List<@NotBlank String> deliverables,
+    List<@NotBlank String> constraints
+) {}
+```
+
+**Response records** (verbatim):
+
+```java
+public record CreateAssessmentBriefResponse(String assessmentId) {}
+
+public record GenerateAssessmentDraftResponse(
+    UUID draftId,
+    String title,
+    String context,
+    String instructions,
+    List<String> objectives,
+    List<String> deliverables,
+    List<String> constraints,
+    int versionNumber
+) {}
+```
+
+**Diff against this task's Verification table (rows 1-7):** none — every field name, type, and annotation above matches what rows 1-7 already asserted. No correction was required in this task file or in the story's Context section.
+
+---
+
 ## Done Criteria
 
-- [ ] All 7 verification rows above are re-confirmed directly against current `api/` source (not assumed from this story's Context section alone).
-- [ ] Any mismatch found between the Context section and the actual `api/` source is corrected in both this task file and the story's Context section before `task-05`/`task-10`/`task-11` start.
+- [x] All 7 verification rows above are re-confirmed directly against current `api/` source (not assumed from this story's Context section alone) — see § Verification Summary for the raw controller mappings and record definitions transcribed on 2026-07-15 at `api/` commit `0a23627aa2d737f233e0a8a2be864f7187725139`.
+- [x] Any mismatch found between the Context section and the actual `api/` source is corrected in both this task file and the story's Context section before `task-05`/`task-10`/`task-11` start — see § Verification Summary's "Diff against this task's Verification table" line: none found, nothing to correct.
 - [ ] Software smoke/build/startup/connectivity checks: N/A, no runtime surface (see Software Smoke Test Check); for git-enabled tasks, this task is committed, pushed, and published in a task PR before human developer PR review, with corrections pushed to the same PR.
-- [ ] Logging/observability: N/A — no executable code, no correlation/trace/INFO/DEBUG/WARN/ERROR log levels apply.
-- [ ] Task test suite: N/A — the generated test-suite quality gates in this task's Generated Test Suite section are architecture-review only.
-- [ ] Database/ORM: N/A — static DB/ORM consistency and runtime persistence smoke checks do not apply; no database, ORM, or persistence artifact is touched.
-- [ ] No unintended expansion: the task satisfies `[CHECK-ATOMICITY]`.
+- [x] Logging/observability: N/A — no executable code, no correlation/trace/INFO/DEBUG/WARN/ERROR log levels apply.
+- [x] Task test suite: N/A — the generated test-suite quality gates in this task's Generated Test Suite section are architecture-review only.
+- [x] Database/ORM: N/A — static DB/ORM consistency and runtime persistence smoke checks do not apply; no database, ORM, or persistence artifact is touched.
+- [x] No unintended expansion: the task satisfies `[CHECK-ATOMICITY]` — already validated during `/plan-atomize` (2026-07-15), no scope creep since.
 
 ---
 
