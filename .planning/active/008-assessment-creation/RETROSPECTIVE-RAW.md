@@ -108,3 +108,7 @@ Each entry should answer as many of these as possible:
 ---
 
 > [← README](README.md) | [← planning/README.md](../../README.md)
+
+## 2026-07-15 — /plan-enrich-epic
+
+Added story-05-automated-cross-service-test-suite after initial expansion.

@@ -102,6 +102,7 @@ Use `L`, `M`, or `H` for impact and likelihood. Carry high risks into the relate
 | 02 | — | — | — |
 | 03 | — | — | — |
 | 04 | — | — | — |
+| 05 | automated-cross-service-test-suite | IN | 01, 02, 04 | M | — | TODO |
 
 ---
 
