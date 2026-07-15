@@ -1,4 +1,4 @@
-# 🔍 DEEPENING: Story 03 — web-assessment-creation
+# 🔍 DEEPENING: Story 03 — web-assessment-creation-coordination
 
 > **Status:** TODO
 > [← 01-expansion.md](../01-expansion.md) | [← planning/README.md](../../README.md)
@@ -7,53 +7,29 @@
 
 ## Objective
 
-Build the teacher-facing UI for assessment creation in `web/`: the brief intake form (US-010), the editable draft view fed by the Assessment Agent's output (US-011), and the regeneration action with adjustment notes plus access to previous versions (US-012).
+**Coordination story — not an implementation story.** Track the `web/` half of the assessment-creation pipeline, which is implemented in the child planning [`web/.planning/active/001-assessment-creation`](../../../../web/.planning/active/001-assessment-creation/README.md) (`web/` now has its own `.planning/` workspace — see `01-expansion.md → Linked Child Plannings`).
+
+The full implementation detail (intake form, draft view/edit, regenerate action, version history, tasks, Done Criteria) lives in that child planning's `02-deepening/story-01-assessment-creation-ui.md` — it is intentionally not duplicated here.
 
 **Source stories:** `docs/02-product/user-stories/epic-02-assessment-creation/01-assessment-brief-intake.md`, `02-assessment-draft-generation.md`, `03-assessment-draft-regeneration.md`.
 
 ---
 
-## Context
+## Sync Checkpoints
 
-- **Depends on Story 02** — all screens integrate against the real `api/` endpoints (brief intake, draft generation, regeneration, edit, retrieval).
-- Every form in `web/` uses React Hook Form + Zod (`zodResolver`) — never native HTML validation. This is an established project convention, not new for this story.
-- Types mirror the API DTO contracts — no independent shared-type definitions in `web/`.
-- Gemini API key is never touched by `web/` — the frontend only calls `api/` endpoints.
-
----
-
-## Risk
-
-| Risk | Impact | Likelihood | Mitigation |
-|------|--------|------------|------------|
-| Draft/version-history UI ships ahead of the real API contract from Story 02, causing rework | M | L | Story 03 depends on Story 02; do not start UI integration tasks until Story 02's endpoints are done |
-
----
-
-## Tasks
-
-| # | Task | Workflow | Status | Output |
-|---|------|----------|--------|--------|
-| 1 | Intake form (learning goal, topic, level/difficulty, expected duration, programming language/pseudocode) with RHF + Zod | GENERATE-DOCUMENT | TODO | Intake form component + Zod schema |
-| 2 | Submit handler: persists the brief via the API before triggering draft generation; loading and error states | GENERATE-DOCUMENT | TODO | Submit handler + API client function |
-| 3 | Draft view/edit screen: editable fields for title, context, instructions, objectives, deliverables, constraints | GENERATE-DOCUMENT | TODO | Draft edit component |
-| 4 | Regenerate action: adjustment-notes input + trigger regeneration endpoint, with its own loading/error state | GENERATE-DOCUMENT | TODO | Regenerate action component |
-| 5 | Version history view: list/switch between previous draft versions after one or more regenerations | GENERATE-DOCUMENT | TODO | Version history component |
-| 6 | Component/unit tests: form validation (required fields), draft edit persistence, regenerate flow | GENERATE-DOCUMENT | TODO | Test files |
+| # | Checkpoint | Status |
+|---|-----------|--------|
+| 1 | `api/.planning/003-assessment-creation` (Story 02, this planning) reaches DONE — real endpoints available to integrate against | ✅ DONE (2026-07-14) — `api/.planning/finished/003-assessment-creation/02-deepening/story-01-assessment-creation-persistence.md` Status: DONE, 11/11 tasks, PR #44 merged |
+| 2 | `web/.planning/001-assessment-creation` reaches EXPANSION/DEEPENING with Story 01 dimensioned | ✅ DONE (2026-07-14) — split out from this story's original content, `web/.planning/active/001-assessment-creation/02-deepening/story-01-assessment-creation-ui.md` created, `TODO` |
+| 3 | Child planning's Story 01 (`assessment-creation-ui`) reaches DONE — teacher can actually use the flow end-to-end through a real UI | TODO |
 
 ---
 
 ## Done Criteria
 
-- [ ] Teacher can fill in and submit the intake form; required-field validation blocks submission with missing learning goal, topic, level, duration, or language.
-- [ ] Submitting the brief persists it via the API before any agent call is triggered, and the teacher sees a clear loading/confirmation state.
-- [ ] Generated draft is rendered fully editable (all six fields) and edits persist via the API.
-- [ ] Teacher can trigger regeneration with adjustment notes from the draft view.
-- [ ] Previous draft version(s) remain visible/accessible after a regeneration — nothing is silently lost.
-- [ ] Draft (and its versions) are retrievable after a page refresh.
-- [ ] All forms use React Hook Form + Zod exclusively — no native HTML validation.
-- [ ] `npm run test` and `npm run lint` pass.
-- [ ] TRACEABILITY.md updated.
+- [ ] `web/.planning/active/001-assessment-creation` reports its story `assessment-creation-ui` as DONE.
+- [ ] Intake form, draft view/edit, regenerate action, and version history are all reachable and usable from a running `web/` app against real `api/` endpoints.
+- [ ] This coordination story's status here is updated to DONE only after the child planning confirms completion — do not mark this DONE independently.
 
 ---
 
@@ -63,7 +39,7 @@ Build the teacher-facing UI for assessment creation in `web/`: the brief intake 
 
 | # | Description | Docs Involved | Status | Resolution Path |
 |---|-------------|--------------|--------|----------------|
-| — | *None yet* | — | — | — |
+| 1 | This story originally contained the full frontend implementation task breakdown (intake form, draft edit, regenerate, version history — 6 tasks), duplicating what should live in a child planning, since `web/` had no `.planning/` workspace of its own at the time. Corrected 2026-07-14, same pattern already applied to `agents/` and `api/` on 2026-07-09: content moved to `web/.planning/active/001-assessment-creation/02-deepening/story-01-assessment-creation-ui.md`; this file rewritten as a coordination story. | This file (previous version), `web/.planning/active/001-assessment-creation/` | RESOLVED | Content moved, not duplicated; this file now only tracks child planning status |
 
 ---
 

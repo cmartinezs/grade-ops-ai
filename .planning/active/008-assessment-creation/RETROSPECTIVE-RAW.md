@@ -25,6 +25,20 @@ Each entry should answer as many of these as possible:
 
 <!-- Add newest entries at the top. -->
 
+### 2026-07-14 — Story 03 split into a child planning: web/.planning/001-assessment-creation
+
+**Source:** manual (human-requested, "haz un child planning a web con story-03")
+
+**What happened:** `web/` had no `.planning/` workspace of its own — Story 03 (`web-assessment-creation`) was implemented directly in this root planning, with a full 6-task breakdown, the same situation `agents/` and `api/` were originally in before the 2026-07-09 correction. Applied the identical fix: initialized `web/.planning/` via `/plan-init` (area `WB` → `src/`, git base branch `develop`, no `docs/` subdirectory found so only one area besides `W`), created `web/.planning/active/001-assessment-creation` porting Story 03's full content (Objective, Context, Risk, 6 Tasks, Done Criteria) unchanged, and rewrote this root planning's Story 03 as a coordination story (renamed `web-assessment-creation-coordination`) pointing to it — same shape as Stories 01/02.
+
+**What was expected instead:** n/a — this wasn't discovered as a mistake mid-expansion like the 2026-07-09 case; the human explicitly asked for it once Stories 01/02/04 were already in a good state, applying the established pattern proactively.
+
+**How it was resolved:** `web/.planning/` created directly in the main worktree (not a separate `../gradeops-web` worktree — that convention applies to actual task-execution branching, not the planning/expansion authoring phase, consistent with how `agents/.planning/` and `api/.planning/003-assessment-creation`'s planning files were themselves authored in 2026-07-09). Updated `01-expansion.md`'s Story Summary, Dependency Map, Impact table, Linked Child Plannings, and Notes sections; updated `active/README.md`'s story-03 row and link.
+
+**What should be carried forward:** unlike `agents/`/`api/`, `web/`'s new child planning starts with both its dependencies (`agents/001`, `api/003`) already `DONE` — flagged this explicitly in the new child planning's own Risk Register (R-01) so implementation verifies against `api/`'s actual source rather than assuming the (already-known-stale-in-places) `docs/04-architecture/api-design.md` is current.
+
+---
+
 ### 2026-07-14 — Story 02 sync checkpoints updated: api/'s child planning confirmed DONE
 
 **Source:** manual (human-requested sync after confirming `api/003` merged)
