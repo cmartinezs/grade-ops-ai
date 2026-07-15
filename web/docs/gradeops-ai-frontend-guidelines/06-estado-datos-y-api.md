@@ -95,7 +95,110 @@ interface AssessmentRowViewModel {
 
 El DTO representa contrato. El view model representa pantalla.
 
-## 7. Loading state
+## 7. Page Data Loader / Screen Data Facade
+
+Cuando una pantalla necesita varias llamadas API para renderizarse, no llamar `getA()`, `getB()`, `getC()` directamente desde la `Page` ni desde el TSX del componente.
+
+Usar una fachada por pantalla:
+
+```text
+Page -> usePageHook -> loadPageData() -> lib/api/*
+```
+
+Nombre recomendado:
+
+- `loadDashboardPage`
+- `loadAssessmentBuilderPage`
+- `loadStudentDetailPage`
+- `loadReportsPage`
+
+También se puede llamar `Screen Data Facade` cuando la función representa una pantalla compleja y no solo carga datos.
+
+Responsabilidades del loader:
+
+- Orquestar llamadas API.
+- Ejecutar llamadas en paralelo con `Promise.all` cuando sean independientes.
+- Ejecutar llamadas secuenciales cuando una depende de otra.
+- Normalizar errores técnicos a errores de UI o de dominio frontend.
+- Combinar DTOs en un view model de pantalla.
+- Aplicar formateos y labels estables de presentación.
+- Resolver defaults seguros.
+- Ocultar detalles de endpoints a la página.
+
+La página o hook de página debe recibir datos ya cocinados:
+
+```ts
+interface AssessmentBuilderPageViewModel {
+  assessment: AssessmentHeaderViewModel;
+  rubric: RubricEditorViewModel;
+  availableQuestions: QuestionOptionViewModel[];
+  permissions: AssessmentBuilderPermissionsViewModel;
+}
+```
+
+Ejemplo:
+
+```ts
+export async function loadAssessmentBuilderPage(
+  assessmentId: string
+): Promise<AssessmentBuilderPageViewModel> {
+  const [assessment, rubric, questions, permissions] = await Promise.all([
+    getAssessment(assessmentId),
+    getAssessmentRubric(assessmentId),
+    getQuestionBankOptions(),
+    getAssessmentPermissions(assessmentId),
+  ]);
+
+  return toAssessmentBuilderPageViewModel({
+    assessment,
+    rubric,
+    questions,
+    permissions,
+  });
+}
+```
+
+La pantalla consume:
+
+```tsx
+const page = useAssessmentBuilderPage(assessmentId);
+```
+
+No consume:
+
+```tsx
+const assessment = await getAssessment(id);
+const rubric = await getAssessmentRubric(id);
+const questions = await getQuestionBankOptions();
+const permissions = await getAssessmentPermissions(id);
+```
+
+Regla práctica:
+
+- Una pantalla simple puede llamar un servicio API desde su hook.
+- Una pantalla con dos o más fuentes remotas debe tener un loader/fachada de pantalla.
+- Una pantalla con permisos, métricas, listas y datos del usuario debe retornar un view model de pantalla, no DTOs crudos.
+
+El loader no reemplaza a `lib/api`. `lib/api` sigue siendo el adapter técnico por endpoint o recurso. El loader es la capa de composición para una pantalla concreta.
+
+Ubicación recomendada:
+
+```text
+features/assessments/loaders/loadAssessmentBuilderPage.ts
+features/assessments/mappers/toAssessmentBuilderPageViewModel.ts
+features/assessments/hooks/useAssessmentBuilderPage.ts
+```
+
+Para pantallas pequeñas sin carpeta de feature:
+
+```text
+components/dashboard/useDashboardPage.ts
+components/dashboard/loadDashboardPage.ts
+```
+
+No crear un loader genérico global para todas las pantallas. La fachada debe hablar el lenguaje de la pantalla que alimenta.
+
+## 8. Loading state
 
 No usar booleanos sueltos cuando hay más de dos estados.
 
@@ -117,7 +220,7 @@ type RemoteData<T> =
 
 Esto evita combinaciones inválidas como `loading=true` y `error` presente.
 
-## 8. Errores API
+## 9. Errores API
 
 Normalizar errores en una forma útil:
 
@@ -139,7 +242,7 @@ La UI puede traducir:
 - `422`: validación de negocio.
 - `500`: error inesperado.
 
-## 9. Mutaciones
+## 10. Mutaciones
 
 Toda mutación debe definir:
 
@@ -153,7 +256,7 @@ Toda mutación debe definir:
 
 No disparar mutaciones sin feedback visual.
 
-## 10. Optimistic UI
+## 11. Optimistic UI
 
 Usar optimistic UI solo cuando:
 
@@ -169,7 +272,7 @@ Evitar optimistic UI para:
 - Publicación a estudiantes.
 - Cambios irreversibles.
 
-## 11. Datos derivados
+## 12. Datos derivados
 
 Calcular derivados en render o `useMemo` si son costosos:
 
@@ -179,7 +282,7 @@ const inReviewCount = assessments.filter((a) => a.status === "GRADING").length;
 
 No guardar derivados en `useState` salvo que haya razón real. Duplicar estado produce inconsistencias.
 
-## 12. Sincronización con backend
+## 13. Sincronización con backend
 
 La UI debe respetar el backend como fuente de verdad:
 
@@ -188,7 +291,7 @@ La UI debe respetar el backend como fuente de verdad:
 - Manejar conflictos 409.
 - Mostrar cambios realizados por otros usuarios si aplica.
 
-## 13. Contratos temporales
+## 14. Contratos temporales
 
 Si el backend aún no existe:
 

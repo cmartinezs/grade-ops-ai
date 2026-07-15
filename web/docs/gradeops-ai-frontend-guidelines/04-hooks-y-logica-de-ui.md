@@ -62,7 +62,7 @@ Debe vivir en hook:
 
 No meter en hook:
 
-- JSX.
+- Markup TSX.
 - Componentes React.
 - Estilos.
 - Microcopy largo.
@@ -86,7 +86,7 @@ interface AssessmentRowViewModel {
 }
 ```
 
-El view model evita llenar JSX con ternarios y formateos repetidos.
+El view model evita llenar TSX con ternarios y formateos repetidos.
 
 ## 6. Hooks de data fetching
 
@@ -120,7 +120,41 @@ function useDashboardPage() {
 }
 ```
 
-Si el proyecto adopta una librería de server state como TanStack Query, esta regla cambia: el hook de feature debe envolver esa librería y exponer un contrato propio.
+Si una pantalla necesita varias fuentes remotas, el hook no debe transformarse en una lista de llamadas sueltas. Debe delegar en un `Page Data Loader` o `Screen Data Facade` que orqueste las APIs y retorne un view model listo para la pantalla.
+
+Ejemplo:
+
+```tsx
+function useAssessmentBuilderPage(assessmentId: string) {
+  const [state, setState] = useState<RemoteData<AssessmentBuilderPageViewModel>>({
+    status: "loading",
+  });
+
+  useEffect(() => {
+    let active = true;
+
+    loadAssessmentBuilderPage(assessmentId)
+      .then((viewModel) => {
+        if (!active) return;
+        setState({ status: "ready", data: viewModel });
+      })
+      .catch((error) => {
+        if (!active) return;
+        setState({ status: "error", error: toUiError(error) });
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [assessmentId]);
+
+  return state;
+}
+```
+
+El hook maneja lifecycle de React. El loader decide qué datos cargar, cómo combinarlos y qué shape consume la pantalla.
+
+Si el proyecto adopta una librería de server state como TanStack Query, esta regla no desaparece: el hook de feature puede envolver `useQuery`, pero la función `queryFn` debe seguir siendo un loader/fachada de pantalla cuando hay múltiples fuentes.
 
 ## 7. Hooks de componente vs hooks compartidos
 
@@ -134,7 +168,7 @@ Hook compartido:
 
 - Vive en `src/hooks` o `features/<feature>/hooks`.
 - Tiene contrato genérico.
-- No conoce JSX ni microcopy específico.
+- No conoce markup TSX ni microcopy específico.
 
 Ejemplos compartidos:
 
@@ -172,7 +206,7 @@ Handlers deben nombrarse por intención:
 - `handleRetryLoad`
 - `handleFilterChange`
 
-Evitar handlers anónimos largos dentro del JSX. Si el handler tiene más de una línea relevante, moverlo al hook.
+Evitar handlers anónimos largos dentro del TSX. Si el handler tiene más de una línea relevante, moverlo al hook.
 
 ## 10. Errores
 

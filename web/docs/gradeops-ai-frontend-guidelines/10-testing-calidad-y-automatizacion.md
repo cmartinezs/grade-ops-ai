@@ -22,6 +22,7 @@ Baseline del repo:
 - `@testing-library/user-event`.
 - Mocks de Firebase.
 - TypeScript.
+- TSX para tests que renderizan componentes React.
 
 ## 3. Pirámide frontend
 

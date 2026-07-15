@@ -46,6 +46,7 @@ Esta documentación está escrita para:
 
 - Next.js App Router.
 - React con TypeScript estricto.
+- TSX obligatorio para páginas, layouts, componentes y tests React.
 - Componentes pequeños, explícitos y testeables.
 - Design System con tokens semánticos.
 - Hooks propios para lógica interna de componentes no triviales.
@@ -67,4 +68,5 @@ Esta documentación está escrita para:
 | Design System | Componentes, tokens y patrones visuales compartidos. |
 | Token | Variable semántica de diseño: color, spacing, radius, shadow, font, ring. |
 | Hook de componente | Hook local que concentra estado, derivaciones, handlers y efectos de un componente. |
+| Page Data Loader | Fachada por pantalla que orquesta varias llamadas API y devuelve un view model listo para render. |
 | Maqueta funcional | Implementación navegable con datos fake o simulados, útil para validar UX antes de conectar backend. |

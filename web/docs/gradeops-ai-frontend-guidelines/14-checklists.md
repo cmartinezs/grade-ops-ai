@@ -16,6 +16,9 @@
 ### Arquitectura
 
 - [ ] La `Page` compone y no concentra toda la lógica.
+- [ ] Páginas, layouts, componentes y tests React usan TSX.
+- [ ] No se agregan componentes `.jsx` nuevos al código productivo.
+- [ ] Código JSX importado desde maquetas/UI kits se migró a TSX antes de usarse en producción.
 - [ ] Existen `Section`/`SubSection` cuando la pantalla lo requiere.
 - [ ] Componentes no triviales tienen hook propio.
 - [ ] La lógica de API está en `lib/api`.
@@ -56,6 +59,9 @@
 ### API y datos
 
 - [ ] No hay `fetch` directo en componentes.
+- [ ] Pantallas con dos o más fuentes remotas usan `Page Data Loader` o `Screen Data Facade`.
+- [ ] La página recibe view models ya compuestos, no una colección de DTOs crudos.
+- [ ] Llamadas API independientes se orquestan en paralelo cuando corresponde.
 - [ ] 401/403/404/409/422 tienen tratamiento razonable.
 - [ ] Mutaciones tienen loading, success y error.
 - [ ] Después de mutación crítica se sincroniza con backend.

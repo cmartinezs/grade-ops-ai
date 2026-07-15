@@ -113,7 +113,7 @@ No crear frameworks internos antes de tener presión real. Crear abstracciones c
 - Un flujo requiere coordinación entre varias secciones.
 - Un patrón de error/loading/empty ya aparece en varias features.
 
-Duplicar dos líneas de JSX puede ser más sano que crear un componente genérico confuso.
+Duplicar dos líneas de TSX puede ser más sano que crear un componente genérico confuso.
 
 ## 8. DRY no significa ocultar intención
 

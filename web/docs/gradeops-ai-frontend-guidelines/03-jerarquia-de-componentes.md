@@ -133,7 +133,7 @@ Extraerlo a archivo propio cuando:
 - Tiene props relevantes.
 - Tiene tests propios.
 - Se usa en más de un componente.
-- Su JSX distrae del componente principal.
+- Su markup TSX distrae del componente principal.
 
 ## 8. MicroComponent
 
@@ -181,7 +181,7 @@ Evitar componentes que:
 - Más de 250 líneas sin separación.
 - Props booleanas múltiples para controlar variantes ambiguas.
 - Importan API, Firebase y muchos componentes DS al mismo tiempo.
-- Tienen handlers largos dentro del JSX.
+- Tienen handlers largos dentro del TSX.
 
 Cuando aparezca este patrón, dividir por jerarquía y hooks.
 

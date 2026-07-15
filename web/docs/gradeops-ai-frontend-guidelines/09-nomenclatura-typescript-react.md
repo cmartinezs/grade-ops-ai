@@ -16,6 +16,10 @@ AssessmentRow.tsx
 DashboardEmptyState.tsx
 ```
 
+TSX es obligatorio para todo componente React. No crear archivos `.jsx` para componentes nuevos, aunque el código venga de una maqueta, UI kit o generación AI. Primero migrar a TSX y tipar el contrato público.
+
+Los archivos `.jsx` solo pueden existir como referencia externa dentro de paquetes no integrados directamente a la app, por ejemplo un UI kit importado para consulta. Si el componente se usa en producción, debe tener versión TSX.
+
 ## 2. Hooks
 
 Hooks en camelCase con prefijo `use`:
@@ -128,6 +132,8 @@ src/app/login/__tests__/SignInPage.test.tsx
 ```
 
 Mantener nombres orientados a comportamiento.
+
+Tests que renderizan React deben usar `.test.tsx`. Tests de utilidades puras sin TSX pueden usar `.test.ts`.
 
 ## 10. Constantes
 

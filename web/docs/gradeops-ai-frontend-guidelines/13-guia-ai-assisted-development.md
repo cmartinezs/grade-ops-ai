@@ -151,6 +151,7 @@ Tarea:
 Reglas:
 - Page compone.
 - Componentes no triviales tienen hook propio.
+- Todo componente React debe entregarse en TSX, no JSX.
 - Incluir loading/empty/error.
 - No fetch directo fuera de lib/api.
 - No inventar colores fuera del DS.

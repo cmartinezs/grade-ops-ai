@@ -38,7 +38,24 @@ src/
 
 El repo actual ya usa `app`, `components`, `lib`, `styles`, `test` y `types`. Para features nuevas de mayor tamaño se recomienda agregar `src/features/<feature>/` para evitar que `components/` se convierta en una carpeta plana sin contexto.
 
-## 2. Responsabilidad de `app/`
+## 2. TSX como estándar obligatorio
+
+Todo archivo que renderice React debe escribirse en TSX:
+
+- Páginas: `page.tsx`.
+- Layouts: `layout.tsx`.
+- Componentes: `AssessmentRow.tsx`, `AppShell.tsx`, `Button.tsx`.
+- Tests de React: `AssessmentRow.test.tsx`.
+- Maquetas funcionales que vivan en el repo principal.
+- Wrappers o adaptadores del Design System usados por la app.
+
+No agregar nuevos componentes `.jsx` en `src/`, `app/`, `components/` o `features/`.
+
+Si se trae código externo en JSX, como assets de un design system o UI kit, debe tratarse como material fuente o referencia. Para usarlo en la aplicación productiva, migrarlo a TSX o envolverlo en un componente TSX con contrato tipado.
+
+Esta regla puede producir trabajo adicional al integrar prototipos, pero evita contratos implícitos, props sin tipo, errores tardíos y componentes difíciles de revisar.
+
+## 3. Responsabilidad de `app/`
 
 `src/app` debe contener rutas, layouts y composición de alto nivel.
 
@@ -59,7 +76,7 @@ Una `page.tsx` no debe:
 - Implementar componentes reusables internos de muchas líneas.
 - Hablar directamente con Firebase o `fetch` si ya existe un servicio.
 
-## 3. Responsabilidad de `components/`
+## 4. Responsabilidad de `components/`
 
 `components/` contiene piezas compartidas o de una zona visible existente.
 
@@ -76,7 +93,7 @@ components/
 
 Si una feature crece, mover sus componentes a `features/<feature>/components` y dejar en `components/` solo lo realmente compartido.
 
-## 4. Responsabilidad de `features/`
+## 5. Responsabilidad de `features/`
 
 Usar `features/<feature>/` cuando exista una capacidad de negocio con varias piezas:
 
@@ -105,7 +122,7 @@ Una feature puede contener:
 
 Una feature no debe duplicar el API client global ni redefinir DTOs backend incompatibles.
 
-## 5. Responsabilidad de `lib/`
+## 6. Responsabilidad de `lib/`
 
 `lib/` contiene integración técnica:
 
@@ -116,7 +133,7 @@ Una feature no debe duplicar el API client global ni redefinir DTOs backend inco
 
 Regla: código en `lib/` no debe importar componentes React. Puede importar tipos, constantes y utilidades puras.
 
-## 6. Server Components y Client Components
+## 7. Server Components y Client Components
 
 En este repo las rutas autenticadas son client-driven por Firebase. Aun así, usar `"use client"` con intención.
 
@@ -136,7 +153,7 @@ Puede ser server component si:
 
 No marcar todo como client por costumbre. Cada `"use client"` aumenta el bundle y obliga a pensar en hidratación.
 
-## 7. Providers
+## 8. Providers
 
 Los providers deben ubicarse cerca del scope que necesitan:
 
@@ -147,7 +164,7 @@ Los providers deben ubicarse cerca del scope que necesitan:
 
 Evitar providers globales para estado local de una pantalla.
 
-## 8. Imports
+## 9. Imports
 
 Usar aliases del proyecto:
 
@@ -163,7 +180,7 @@ Evitar rutas relativas profundas:
 import Button from "../../../components/ds/Button";
 ```
 
-## 9. Barriles (`index.ts`)
+## 10. Barriles (`index.ts`)
 
 Usar `index.ts` cuando simplifique importaciones estables:
 
@@ -172,11 +189,11 @@ Usar `index.ts` cuando simplifique importaciones estables:
 
 No usar barriles para ocultar dependencias circulares ni para exportar todo sin criterio.
 
-## 10. Regla de crecimiento
+## 11. Regla de crecimiento
 
 Cuando una página supere aproximadamente estos umbrales, dividir:
 
-- Más de 150 líneas de JSX.
+- Más de 150 líneas de TSX.
 - Más de 5 estados locales.
 - Más de 3 efectos.
 - Más de 4 handlers.
