@@ -32,6 +32,45 @@
 
 ---
 
+## Boceto visual (estado idle)
+
+```
+┌────────────────────────────────────────────────────────────────────┐
+│  AppShell (protegido)                                              │
+│ ┌──────────────────────────────────────────────────────────────┐   │
+│ │  Nueva evaluación                                             │   │
+│ │  Describe el objetivo de aprendizaje                          │   │
+│ └──────────────────────────────────────────────────────────────┘   │
+│                                                                      │
+│  ┌─ BriefFormSection ───────────────────────────────────────────┐  │
+│  │                                                                │  │
+│  │  Objetivo de aprendizaje *                                    │  │
+│  │  ┌──────────────────────────────────────────────────────────┐ │  │
+│  │  │ (textarea, varias líneas)                                 │ │  │
+│  │  │                                                            │ │  │
+│  │  └──────────────────────────────────────────────────────────┘ │  │
+│  │                                                                │  │
+│  │  Tema *                          Nivel *                     │  │
+│  │  ┌───────────────────────┐       ┌───────────────────────┐   │  │
+│  │  │                       │       │                       │   │  │
+│  │  └───────────────────────┘       └───────────────────────┘   │  │
+│  │                                                                │  │
+│  │  Duración *                      Lenguaje *                  │  │
+│  │  ┌───────────────────────┐       ┌───────────────────────┐   │  │
+│  │  │                       │       │                       │   │  │
+│  │  └───────────────────────┘       └───────────────────────┘   │  │
+│  │                                                                │  │
+│  │                                    ┌─────────────────────────┐│  │
+│  │                                    │ Generar borrador con IA ││  │ ← deshabilitado
+│  │                                    └─────────────────────────┘│  │    (form inválido)
+│  └────────────────────────────────────────────────────────────────┘  │
+└──────────────────────────────────────────────────────────────────────┘
+```
+
+Un solo formulario de una columna con dos campos pareados por fila (Tema/Nivel, Duración/Lenguaje) — sin cards anidadas ni decoración, coherente con la sección "Densidad y microcopy" más abajo.
+
+---
+
 ## Estados
 
 | Estado | Disparador | Tratamiento visual |
@@ -53,6 +92,53 @@ No aplica §7 (estados de aprobación humana) en esta pantalla — todavía no e
 
 ---
 
+## Bocetos de variantes de estado
+
+Solo se muestra lo que cambia respecto al boceto idle de arriba — layout y campos restantes se mantienen iguales.
+
+**validando** (campo vacío al intentar enviar):
+
+```
+│  Objetivo de aprendizaje *                                    │
+│  ┌──────────────────────────────────────────────────────────┐ │
+│  │                                                            │ │
+│  └──────────────────────────────────────────────────────────┘ │
+│  ⚠ Este campo es requerido                                    │
+```
+
+**enviando** (formulario válido, submit en curso — todos los campos deshabilitados):
+
+```
+│                                    ┌─────────────────────────┐│
+│                                    │  ⏳ Generando…          ││ ← deshabilitado
+│                                    └─────────────────────────┘│
+```
+
+**error de validación de negocio (422 — `List<FieldErrorResponse>`)** — igual a "validando" pero el error viene de la respuesta del servidor, no del cliente:
+
+```
+│  Tema *                                                        │
+│  ┌──────────────────────────────────────────────────────────┐ │
+│  │ Física                                                     │ │
+│  └──────────────────────────────────────────────────────────┘ │
+│  ⚠ Debe tener al menos 3 caracteres                            │
+```
+
+**error de agente rechazado / agente caído / inesperado** — banner sobre el formulario, no inline por campo (el error no es de un campo específico):
+
+```
+│  ┌─ ⚠ No pudimos generar un borrador con esta información.  ─┐│
+│  │   Ajusta el objetivo de aprendizaje e intenta de nuevo.    ││
+│  └─────────────────────────────────────────────────────────────┘│
+│                                                                  │
+│  Objetivo de aprendizaje *                                      │
+│  ┌──────────────────────────────────────────────────────────┐  │
+```
+
+(El texto del banner cambia según el caso — ver tabla de Estados arriba para el mensaje exacto de cada uno — pero la posición y forma del banner es la misma para los tres.)
+
+---
+
 ## Densidad y microcopy
 
 - Un solo formulario, sin cards ni decoración adicional — coherente con `02-ux-wireframes-y-maquetas.md` §7: "la densidad organizada suele ser mejor que una composición decorativa" para un producto operativo.
@@ -65,7 +151,7 @@ No aplica §7 (estados de aprobación humana) en esta pantalla — todavía no e
 - **Componentes necesarios:** ver `task-03` (jerarquía de componentes).
 - **Hooks necesarios:** `useIntakeAssessmentPage` (ver `task-03`).
 - **DTOs requeridos:** `CreateAssessmentBriefRequestDto`/`ResponseDto` (ver `task-01`, construidos en `task-05`).
-- **Estados de UI:** los 6 listados arriba.
+- **Estados de UI:** los 8 listados arriba (idle, validando, enviando, éxito, y 4 variantes de error).
 - **Validaciones:** RHF + Zod, 5 campos requeridos, sin validación HTML nativa.
 - **Eventos de usuario:** editar campo, enviar formulario.
 - **Tests mínimos:** validación bloquea envío con campos vacíos; botón deshabilitado durante envío (ver `task-04`).
