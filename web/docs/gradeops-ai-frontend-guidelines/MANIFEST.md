@@ -1,0 +1,19 @@
+# MANIFEST
+
+- README.md
+- 00-principios-rectores.md
+- 01-arquitectura-next-react.md
+- 02-ux-wireframes-y-maquetas.md
+- 03-jerarquia-de-componentes.md
+- 04-hooks-y-logica-de-ui.md
+- 05-design-system-tokens-y-estilos.md
+- 06-estado-datos-y-api.md
+- 07-formularios-validacion-y-feedback.md
+- 08-accesibilidad-responsive-y-usabilidad.md
+- 09-nomenclatura-typescript-react.md
+- 10-testing-calidad-y-automatizacion.md
+- 11-seguridad-auth-y-privacidad.md
+- 12-observabilidad-errores-y-telemetria.md
+- 13-guia-ai-assisted-development.md
+- 14-checklists.md
+- 15-backend-frontend-contracts.md
