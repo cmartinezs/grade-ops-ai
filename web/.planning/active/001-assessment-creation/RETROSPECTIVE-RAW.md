@@ -38,3 +38,7 @@ Each entry should answer as many of these as possible:
 ---
 
 > [← README](README.md) | [← planning/README.md](../../README.md)
+
+## 2026-07-15 — /plan-enrich-epic
+
+Added story-02-assessment-screens-wireframes-and-data-providers after initial expansion.
