@@ -1,6 +1,6 @@
 # ⚛️ TASK 02 — Local end-to-end smoke script and evidence
 
-> **Status:** TODO
+> **Status:** IN PROGRESS
 > **Workflow:** GENERATE-DOCUMENT
 > **Depends On:** task-01
 > [← story file](../story-04-e2e-integration-verification.md)
@@ -58,14 +58,58 @@ N/A — no database or ORM changes in this task; it exercises the existing schem
 
 ---
 
+## Evidence
+
+Real run against the local compose stack (`db`, `api`, `agents` — `web` excluded, pre-existing unrelated docker build break per task-01's retrospective), executed twice to prove re-runnability, plus two negative checks:
+
+```
+==> Checking docker compose services (db, api, agents)...
+    db, api, agents are running.
+==> Provisioning test teacher smoke-e2e-1784135910@gradeops.test...
+    provisioned firebaseUid=YBhgmL2D4MaB5HKfKGxa0P6pgLF3
+==> Setting test teacher password...
+    password set.
+==> Obtaining a real Firebase ID token...
+    idToken obtained (1021 chars).
+==> POST /api/v1/assessments (brief intake)...
+    assessmentId=e0df2ae9-d2f3-4351-a5bd-2ae5137f444d
+==> POST /api/v1/assessments/e0df2ae9-d2f3-4351-a5bd-2ae5137f444d/draft (triggers agents/ over the real network)...
+    draft generated: title="Recursive Tree Traversal Challenge", objectives=2
+==> GET /api/v1/assessments/e0df2ae9-d2f3-4351-a5bd-2ae5137f444d/draft (confirms persistence)...
+    retrieval matches generated draft.
+
+PASS: real brief -> generate -> retrieve flow completed against the local compose stack.
+  draft title       : Recursive Tree Traversal Challenge
+  draft objectives  : 2
+  full draft payload:
+{
+  "draftId": "1ba20417-cc6a-42de-8074-4feda2482fa4",
+  "title": "Recursive Tree Traversal Challenge",
+  "context": "Intermediate Python students practice recursive algorithms under a course on algorithms and data structures.",
+  "instructions": "Implement a recursive function to traverse a binary tree and return the sum of all node values.",
+  "objectives": ["Apply recursive problem-solving strategies", "Understand recursive function calls and returns"],
+  "deliverables": ["A single Python file with the recursive tree traversal function"],
+  "constraints": ["Must be implemented recursively", "Must run within 60 minutes of development time", "Submission deadline: end of 60-minute session", "Only use built-in Python data structures"],
+  "versionNumber": 1
+}
+```
+
+- **Re-run:** second full run immediately after produced a different, equally real draft ("Recursive Factorial Function Generator") — confirms the script is re-runnable without depending on state from the previous run (fresh timestamp-suffixed teacher email each time).
+- **`agents`-down failure:** `docker compose stop agents` then running the script → `FAIL: service 'agents' is not running. Run 'docker compose up -d db api agents' first...`, exit code 1.
+- **Missing-credentials failure:** running with `.env` renamed away → `INTERNAL_API_SECRET: INTERNAL_API_SECRET is required — set it in .../.env (see .env.example)`, exit code 1 (bash's `: "${VAR:?msg}"` guard).
+- **Log check:** `docker compose logs api agents` across all runs contains zero `ERROR`/`Exception` lines.
+- **Design-vs-reality correction:** the task's Technical Design assumed the draft-generation response would carry a "plausible `AgentExecutionLog`-derived `costEstimate`/`model` value." Checking the real `GenerateAssessmentDraftResponse` DTO (`api/.../response/GenerateAssessmentDraftResponse.java`) shows it does not — only `draftId, title, context, instructions, objectives, deliverables, constraints, versionNumber`. Cost/model live only in the persisted `AgentExecutionLog`, which has no query endpoint today. The script instead asserts on the strongest available real signal: a fully-populated structured draft, a shape `agents/`'s schema-validated Gemini/Groq pipeline is the only thing that can produce.
+
+---
+
 ## Done Criteria
 
-- [ ] `scripts/smoke-e2e-local.sh` exists, is executable, and is committed.
-- [ ] One real run's output is captured as evidence in this task's report — showing a genuine generated draft (not a placeholder/mocked shape) and a plausible `AgentExecutionLog`-derived cost/model value.
-- [ ] The script fails clearly (not silently) if compose isn't running or credentials are missing.
-- [ ] All verification checks listed above pass.
+- [x] `scripts/smoke-e2e-local.sh` exists, is executable, and is committed.
+- [x] One real run's output is captured as evidence in this task's report — showing a genuine generated draft (not a placeholder/mocked shape). Cost/model evidence isn't available (see Evidence section's design-vs-reality correction — no endpoint exposes it today).
+- [x] The script fails clearly (not silently) if compose isn't running or credentials are missing.
+- [x] All verification checks listed above pass.
 - [ ] Human developer code review completed; requested corrections, if any, were implemented and re-reviewed.
-- [ ] No unintended expansion: the task satisfies `[CHECK-ATOMICITY]` — no Render/beta work here, that's tasks 03–04.
+- [x] No unintended expansion: the task satisfies `[CHECK-ATOMICITY]` — no Render/beta work here, that's tasks 03–04.
 
 ---
 
