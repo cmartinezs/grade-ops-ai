@@ -205,6 +205,7 @@ Nada se ejecuta sin estar dentro de un planning activo.
 | Ver todos los plannings activos | `/plan-status` |
 | Revisar el estado antes de decidir | `/plan-status [NNN-slug]` |
 | Verificar que un planning está bien formado | `/plan-validate NNN-slug` |
+| Registrar una decision transversal | `/plan-decision NNN-slug -- titulo` |
 | Las tareas de una story son muy gruesas para ejecutar | `/plan-atomize NNN-slug story-NN` |
 | Ejecutar una sola tarea atómica | `/plan-task NNN-slug story-NN task-NN` |
 | Verificar que las tareas atómicas están bien formadas | `/plan-task-validate NNN-slug story-NN` |
@@ -215,7 +216,7 @@ Nada se ejecuta sin estar dentro de un planning activo.
 | Story nueva de backlog + story nueva de planning coordinadas | `/us-new` → `/plan-enrich-epic` |
 | Algo raro ocurrió fuera de un comando del plugin | `/plan-edge-case NNN-slug -- nota` |
 | Preparar retrospectiva final | `/plan-retrospective NNN-slug` |
-| Workspace `2.x` antiguo | `/plan-update-version 2.1.0 3.6.0 --dry-run` → `/plan-update-version 2.1.0 3.6.0` |
+| Workspace `2.x` antiguo | `/plan-update-version 2.1.0 3.10.0 --dry-run` → `/plan-update-version 2.1.0 3.10.0` |
 | Cerrar el planning | `/plan-retrospective NNN-slug` → `/plan-archive NNN-slug` |
 | Ejecutar todo el ciclo sin intervención | `/plan-run NNN-slug` |
 | Solo la fase de planificación autónoma | `/plan-agent-plan NNN-slug` |
@@ -252,16 +253,29 @@ Nada se ejecuta sin estar dentro de un planning activo.
 |---------|---------|
 | `/us-new` | `path/to/container/ [--interactive\|--blank]` |
 | `/us-enrich` | `path/to/story.md` ó ID/nombre parcial |
+| `/us-split` | `path/to/story.md` |
+| `/us-status` | `[path/to/container/]` ó `[path/to/story.md]` |
 | `/epic-enrich` | `path/to/container/` ó `path/to/file.md` |
+| `/plan-init` | `[--blank] [--force]` |
 | `/plan-from-epic` | `NNN path/to/container/ [--filter field=value]` |
-| `/plan-template` | `slug [--interactive\|--blank]` |
+| `/plan-template` | `[slug] [--interactive\|--blank]` |
 | `/plan-new` | `NNN-slug -- intent` ó `NNN-slug @path.md` |
 | `/plan-expand` | `NNN-slug` |
 | `/plan-status` | `[NNN-slug]` |
+| `/plan-health` | *(sin argumentos)* |
 | `/plan-validate` | `[NNN-slug]` (vacío = todos) |
-| `/plan-atomize` | `NNN-slug story-NN` |
+| `/plan-decision` | `NNN-slug -- titulo` |
+| `/plan-atomize` | `NNN-slug [story-NN]` |
 | `/plan-task` | `NNN-slug story-NN task-NN` |
 | `/plan-task-validate` | `NNN-slug [story-NN] [task-NN]` |
+| `/plan-test-suite` | `NNN-slug [story-NN] [task-NN] [--all]` |
+| `/doc-generate` | `NNN-slug [story-NN] [task-NN]` |
+| `/doc-story` | `NNN-slug story-NN` |
+| `/doc-task` | `NNN-slug story-NN task-NN` |
+| `/plan-standup` | `NNN-slug` |
+| `/plan-report` | `NNN-slug [--metrics]` |
+| `/plan-history` | `NNN-slug` |
+| `/plan-export` | `NNN-slug [--format pr\|tickets\|github-issue\|jira\|linear\|markdown]` |
 | `/release-init` | *(sin argumentos)* |
 | `/release-new` | `vX.Y.Z -- <purpose>` |
 | `/release-add` | `vX.Y.Z NNN-slug [NNN-slug ...]` |
@@ -272,6 +286,7 @@ Nada se ejecuta sin estar dentro de un planning activo.
 | `/plan-git-config` | `[--base-branch <branch>]` (vacío = mostrar config actual) |
 | `/plan-smoke-config` | `[--blank]` (vacío = generar con preguntas e inferencia) |
 | `/plan-story` | `NNN-slug story-NN` |
+| `/plan-story-skip` | `NNN-slug story-NN [-- reason]` |
 | `/plan-done` | `NNN-slug story-NN` ó `NNN-slug story-NN task-N` |
 | `/plan-edge-case` | `[NNN-slug] [story-NN] -- nota` |
 | `/plan-retrospective` | `NNN-slug` |
@@ -280,10 +295,16 @@ Nada se ejecuta sin estar dentro de un planning activo.
 | `/plan-enrich-epic` | `NNN-slug` |
 | `/plan-enrich-story` | `NNN-slug story-NN` |
 | `/plan-split-story` | `NNN-slug story-NN` |
+| `/plan-merge` | `NNN-source story-NN NNN-target` |
+| `/plan-rollback` | `NNN-slug story-NN` |
+| `/plan-retry` | `NNN-slug` |
+| `/plan-clone` | `NNN-source-slug NNN-target-slug` |
 | `/plan-run` | `[NNN-slug]` ó `"descripción libre"` (vacío = lista plannings) |
 | `/plan-agent-plan` | `NNN-slug` ó `"descripción libre"` |
 | `/plan-agent-execute` | `NNN-slug` |
 | `/plan-agent-validate` | `NNN-slug` |
+
+`/plan-task` coordina etapas internas deterministas (`inspect`, `readiness`, `git-setup`, `start`, `publish`, `correction`, `closeout`) mediante `.planning/scripts/planning-task.mjs`; la invocación pública sigue siendo `/plan-task NNN-slug story-NN task-NN`.
 
 **Resolución de argumentos en comandos de producto:**
 Los comandos `us-enrich`, `us-new`, `epic-enrich`, y `plan-from-epic` reciben rutas — no IDs ni slugs hardcodeados. Cuando se pasa un ID (`US-040`) o nombre parcial en lugar de ruta, el comando busca recursivamente desde el directorio actual el archivo cuyo contenido o nombre coincida.

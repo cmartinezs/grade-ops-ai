@@ -23,9 +23,12 @@ flowchart TD
 2. Compare outputs against the original intent in `00-initial.md` and `01-expansion.md`.
 3. Identify deviations: scope creep, unsolved residuals, decisions made on-the-fly.
 4. Read `RETROSPECTIVE-RAW.md` and include any blockers, corrections, skipped work, retries, rollbacks, validation findings, or manual edge cases.
-5. Document: what worked well, what didn't, open improvements.
-6. Complete the `## Retrospective` section in the planning's `README.md`; add the section first if the planning was created from an older template.
-7. If archiving: update `planning/finished/README.md` with the key outputs.
+5. Scan for accepted cross-cutting decisions that do not yet have `pdr-*.md` files.
+   - If evidence is complete, invoke `/plan-decision` before writing the final retrospective.
+   - If evidence is incomplete or human approval is still needed, list the candidate under follow-ups.
+6. Document: what worked well, what didn't, open improvements.
+7. Complete the `## Retrospective` section in the planning's `README.md`; add the section first if the planning was created from an older template.
+8. If archiving: update `planning/finished/README.md` with the key outputs.
 
 ---
 

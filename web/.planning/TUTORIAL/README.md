@@ -77,6 +77,7 @@ Los comandos leen la estructura que encuentran y se adaptan — no requieren una
 | `/plan-done NNN-slug story-NN` | Marca story completo tras revisión humana y PRs de task mergeados; recuerda limpiar la rama local de story tras el merge final |
 | `/plan-done NNN-slug story-NN task-N` | Marca una tarea específica |
 | `/plan-edge-case NNN-slug -- nota` | Registra un evento inesperado para la retrospectiva |
+| `/plan-decision NNN-slug -- titulo` | Registra una decision transversal como PDR |
 | `/plan-retrospective NNN-slug` | Genera la retrospectiva final |
 | `/plan-archive NNN-slug` | Audita y archiva a `finished/` |
 

@@ -19,6 +19,19 @@ Each entry should answer as many of these as possible:
 - How was it resolved or contained?
 - What should be carried forward?
 
+Example entry:
+
+```md
+### 2026-07-12 16:30 - Reset-token expiry changed during review
+
+- **Source:** plan-done
+- **Related story/task:** story-01 / task-02
+- **What happened:** Reviewer rejected the original 1-hour token expiry because the support runbook already promised 15 minutes.
+- **Expected instead:** Expiry policy should have been checked against docs before implementation.
+- **Resolution:** API config, tests, and docs were aligned to 15 minutes.
+- **Retrospective signal:** decision candidate; create a PDR if the 15-minute policy applies across clients.
+```
+
 ---
 
 ## Log

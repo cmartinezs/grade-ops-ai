@@ -55,7 +55,7 @@ flowchart LR
 |-------|---------|-------------|
 | **INITIAL** | `00-initial.md` | General idea without dimensioning. What needs to be achieved, why, approximate context. Clarity of intent — not exhaustiveness. |
 | **EXPANSION** | `01-expansion.md` | All user stories are identified and listed. Dependencies between them are mapped. Impact per SDLC phase is documented. |
-| **DEEPENING** | `02-deepening/` | One `.md` file per story. Each one details its specific tasks with assigned workflow types. Optionally, `/plan-atomize` decomposes a story into atomic task files under `story-NN-name/`, each with technical design, implementation steps, verification, and software local-runtime checks when applicable. |
+| **DEEPENING** | `02-deepening/` | One `.md` file per story. Each one details its specific tasks with assigned workflow types. Optionally, `/plan-atomize` decomposes a story into atomic task files under `story-NN-name/`, each with technical design, implementation steps, verification, generated test-suite gates, and software local-runtime checks when applicable. |
 
 ---
 
@@ -68,6 +68,7 @@ planning/
 ├── GUIDE.md                         # This file
 ├── GLOSSARY.md                      # Operational vocabulary
 ├── PROMPTING.md                     # AI prompting guidelines
+├── LOGGING.md                       # Software logging policy and task checklist
 ├── _template/                       # Template for new plannings
 ├── update-version/                  # Versioned migrations for older planning-system structures
 │
@@ -83,8 +84,12 @@ planning/
 │       ├── RETROSPECTIVE-RAW.md
 │       ├── 02-deepening/
 │       │   ├── story-01-[name].md
+│       │   ├── TEST-SUITE.md                # Planning-level quality gates from /plan-test-suite
 │       │   ├── story-01-[name]/         # Atomic tasks (optional, via /plan-atomize)
 │       │   │   ├── task-01-[name].md
+│       │   │   ├── TEST-SUITE.md
+│       │   │   ├── test-suites/
+│       │   │   │   └── task-01-[name]-test-suite.md
 │       │   │   └── task-NN-[name].md
 │       │   └── story-NN-[name].md
 │       └── TRACEABILITY.md
@@ -175,7 +180,7 @@ docs/ (canonical product/architecture documentation)
       > infrastructure configuration
 ```
 
-- An active PDR overrides any content document for the element it covers.
+- An accepted PDR in an active planning overrides other planning notes for the element it covers. PDRs are optional; create one with `/plan-decision` only for cross-cutting decisions.
 - Within `docs/`: thematic folders are the source of truth. Historical or auto-generated directories are reference-only.
 
 ---
