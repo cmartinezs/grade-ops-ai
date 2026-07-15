@@ -235,25 +235,44 @@ function detectBaseBranch() {
   return 'main';
 }
 
+function isForcePreservedPath(relative) {
+  if (!force) return false;
+  if (!relative) return false;
+  const normalized = relative.split(path.sep).join('/');
+  if (normalized === 'active' || normalized.startsWith('active/')) return true;
+  if (normalized === 'finished' || normalized.startsWith('finished/')) return true;
+  if (normalized === '_template' || normalized.startsWith('_template/')) return true;
+  if (normalized === 'WORKFLOWS/05-SDLC-PHASE-GUIDANCE' || normalized.startsWith('WORKFLOWS/05-SDLC-PHASE-GUIDANCE/')) return true;
+  return [
+    'README.md',
+    'GUIDE.md',
+    'GLOSSARY.md',
+    'TRACEABILITY-GLOBAL.md',
+    'SMOKE-TESTS.md',
+    'LOGGING.md',
+    'PDR-TEMPLATE.md',
+    'PROMPTING.md',
+    'config.yml',
+  ].includes(normalized);
+}
+
 function copyRecursive(source, target, copied, skipped, relative = '') {
   const sourceStat = statSync(source);
   if (sourceStat.isDirectory()) {
     mkdirSync(target, { recursive: true });
     for (const entry of readdirSync(source, { withFileTypes: true })) {
       const childRelative = relative ? path.join(relative, entry.name) : entry.name;
-      if (force && (childRelative === 'active' || childRelative.startsWith(`active${path.sep}`))) {
-        skipped.push(childRelative);
-        continue;
-      }
-      if (force && (childRelative === 'finished' || childRelative.startsWith(`finished${path.sep}`))) {
-        skipped.push(childRelative);
-        continue;
-      }
+      const normalizedChild = childRelative.split(path.sep).join('/');
       if (
         force
-        && childRelative.startsWith(path.join('WORKFLOWS', '05-SDLC-PHASE-GUIDANCE', 'AREA-'))
-        && childRelative.endsWith('.md')
+        && entry.isDirectory()
+        && (normalizedChild === 'active' || normalizedChild === 'finished')
+        && existsSync(path.join(target, entry.name))
       ) {
+        skipped.push(childRelative);
+        continue;
+      }
+      if (!entry.isDirectory() && isForcePreservedPath(childRelative) && existsSync(path.join(target, entry.name))) {
         skipped.push(childRelative);
         continue;
       }
@@ -392,6 +411,12 @@ function writeAreaConfiguration(areas) {
 }
 
 function writeConfig() {
+  const configPath = path.join(planningDir, 'config.yml');
+  if (force && existsSync(configPath)) {
+    const existing = readFileSync(configPath, 'utf8');
+    const branch = existing.match(/^\s*base_branch:\s*([^#\n]+)/m)?.[1]?.trim().replace(/^["']|["']$/g, '') || 'main';
+    return { branch, written: false };
+  }
   const mode = projectMode;
   const requiresTests = mode === 'software';
   const requiresGit = mode === 'software' || mode === 'documentation';
@@ -427,8 +452,8 @@ integrations:
 docs:
   output_dir: docs
 `;
-  writeFileSync(path.join(planningDir, 'config.yml'), config);
-  return branch;
+  writeFileSync(configPath, config);
+  return { branch, written: true };
 }
 
 function report(payload) {
@@ -448,6 +473,9 @@ function report(payload) {
   console.log(`Initialized: \`${payload.planningDir}\``);
   console.log(`Mode: ${payload.blank ? 'blank' : 'area-configured'}${payload.force ? ' (force)' : ''}`);
   console.log(`Base branch: \`${payload.baseBranch}\``);
+  if (payload.force) {
+    console.log(`Preserved existing project-specific files: ${payload.preservedCount}`);
+  }
   if (payload.areas.length > 0) {
     console.log('\nAreas configured:\n');
     for (const area of payload.areas) console.log(`- \`${area.code}\` | \`${area.dir}/\` - ${area.description}`);
@@ -479,7 +507,7 @@ if (!existsSync(path.join(planningDir, 'active', 'README.md'))) copyFileSync(pat
 if (!existsSync(path.join(planningDir, 'finished', 'README.md'))) copyFileSync(path.join(templateDir, 'finished', 'README.md'), path.join(planningDir, 'finished', 'README.md'));
 
 if (!blank && !force) writeAreaConfiguration(areas);
-const branch = writeConfig();
+const configResult = writeConfig();
 
 report({
   ok: true,
@@ -488,7 +516,9 @@ report({
   blank,
   force,
   areas: blank || force ? [] : areas,
-  baseBranch: branch,
+  baseBranch: configResult.branch,
+  configWritten: configResult.written,
   copiedCount: copied.length,
   skippedCount: skipped.length,
+  preservedCount: skipped.length,
 });

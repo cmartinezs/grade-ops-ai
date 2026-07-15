@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import { spawnSync } from 'node:child_process';
 import { existsSync, mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 
@@ -26,6 +27,12 @@ Planning commands:
   planning-add-story <planning-id> --title <title> [--area <code>] [--dependencies <list>] [--tasks <text>] [--done <text>]
   planning-enrich-story <planning-id> <story-NN> [--section "Heading::Body"]
   planning-split-story <planning-id> <story-NN> --new-title <title> --move-tasks <1,2>
+
+Plan-story execution helpers:
+  execute-inspect <planning-id> <story-NN> [--child-worktree] [--worktree-prefix <prefix>]
+  execute-start <planning-id> <story-NN> [--write]
+  execute-done <planning-id> <story-NN> [--write]
+  execute-finalize <planning-id> <story-NN> [--child-worktree] [--worktree-prefix <prefix>]
 
 All mutating commands are dry-run by default. Add --write after human approval.`;
 }
@@ -705,6 +712,310 @@ function runPlanningSplitStory() {
   print(result, renderSplit);
 }
 
+function planningRoot() {
+  const root = path.join(cwd, '.planning');
+  if (!existsSync(root) || !statSync(root).isDirectory()) fail('No .planning/ directory found in the current workspace. Run /plan-init first or move to the project root.');
+  return root;
+}
+
+function normalizeStoryId(value) {
+  const match = String(value || '').match(/^story-0*(\d+)$/i);
+  if (!match) fail(`Invalid story id: ${value}`);
+  return `story-${match[1].padStart(2, '0')}`;
+}
+
+function escapeRegex(value) {
+  return String(value).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+function valueFor(text, key, fallback) {
+  const match = new RegExp(`^\\s*${escapeRegex(key)}:\\s*([^#\\n]+)`, 'm').exec(text);
+  return match ? match[1].trim().replace(/^["']|["']$/g, '') : fallback;
+}
+
+function parseConfig() {
+  const root = planningRoot();
+  const file = path.join(root, 'config.yml');
+  const text = existsSync(file) ? read(file) : '';
+  return {
+    file: existsSync(file) ? rel(file) : null,
+    baseBranch: valueFor(text, 'base_branch', 'main'),
+    projectType: valueFor(text, 'type', 'software'),
+    requiresGit: valueFor(text, 'requires_git', 'true'),
+    smokeTestsFile: valueFor(text, 'smoke_tests_file', 'SMOKE-TESTS.md'),
+  };
+}
+
+function gitOutput(argsList) {
+  const result = spawnSync('git', argsList, { cwd, encoding: 'utf8' });
+  return result.status === 0 ? result.stdout.trim() : '';
+}
+
+function currentBranch() {
+  return gitOutput(['branch', '--show-current']);
+}
+
+function storySlugFromFile(storyFile) {
+  return path.basename(storyFile, '.md');
+}
+
+function branchPrefixOption() {
+  const explicit = opt('worktree-prefix');
+  if (explicit) return explicit.replace(/^\/+|\/+$/g, '');
+  if (opt('child-worktree') === 'true') return slugify(path.basename(cwd));
+  return '';
+}
+
+function deriveStoryBranch(storyFile, config) {
+  const storyBase = storySlugFromFile(storyFile);
+  const branch = currentBranch();
+  let storyBranch = storyBase;
+  const storyIndex = branch.indexOf(storyBase);
+  if (storyIndex > 0) storyBranch = branch.slice(0, storyIndex + storyBase.length);
+  if (branch === storyBase || branch.endsWith(`/${storyBase}`)) storyBranch = branch;
+  const prefix = branchPrefixOption();
+  if (prefix && storyBranch === storyBase) storyBranch = `${prefix}/${storyBase}`;
+  return {
+    baseBranch: config.baseBranch,
+    currentBranch: branch,
+    storyBranch,
+    storyBase,
+    worktreePrefix: storyBranch === storyBase ? '' : storyBranch.slice(0, -storyBase.length).replace(/\/$/, ''),
+  };
+}
+
+function extractStatus(text) {
+  const match = /^>\s*\*\*Status:\*\*\s*(.+)$/im.exec(text);
+  return match ? match[1].trim() : 'UNKNOWN';
+}
+
+function setStatus(text, status) {
+  return /^>\s*\*\*Status:\*\*.*$/m.test(text)
+    ? text.replace(/^>\s*\*\*Status:\*\*.*$/m, `> **Status:** ${status}`)
+    : text;
+}
+
+function extractField(text, name) {
+  const pattern = new RegExp(`^>\\s*\\*\\*${escapeRegex(name)}:\\*\\*\\s*(.+)$|^-\\s+\\*\\*${escapeRegex(name)}:\\*\\*\\s*(.+)$`, 'im');
+  const match = pattern.exec(text);
+  return match ? (match[1] || match[2] || '').trim() : '';
+}
+
+function normalizeTaskId(value) {
+  const match = String(value || '').match(/^task-0*(\d+)/i);
+  if (!match) return '';
+  return `task-${match[1].padStart(2, '0')}`;
+}
+
+function taskIdFromRow(row) {
+  const linked = linkTarget(row.task);
+  const source = linked ? path.basename(linked) : row.task;
+  const match = source.match(/task-0*(\d+)/i);
+  return match ? `task-${match[1].padStart(2, '0')}` : `task-${String(row.number).padStart(2, '0')}`;
+}
+
+function linkTarget(markdown) {
+  const match = String(markdown || '').match(/\]\(([^)]+)\)/);
+  return match ? match[1].trim() : '';
+}
+
+function taskTitle(markdown) {
+  return titleize(String(markdown || '').replace(/\[([^\]]+)\]\([^)]+\)/g, '$1'));
+}
+
+function findTaskForRow(storyFile, row) {
+  const storyDir = storyFile.replace(/\.md$/, '');
+  const target = linkTarget(row.task);
+  if (target) {
+    const direct = path.resolve(path.dirname(storyFile), target);
+    if (existsSync(direct) && statSync(direct).isFile()) return direct;
+  }
+  if (!existsSync(storyDir) || !statSync(storyDir).isDirectory()) return null;
+  const id = taskIdFromRow(row);
+  const file = readdirSync(storyDir)
+    .filter((name) => name.startsWith(`${id}-`) && name.endsWith('.md'))
+    .sort()[0];
+  return file ? path.join(storyDir, file) : null;
+}
+
+function dependencyIds(taskText) {
+  const depends = extractField(taskText, 'Depends On');
+  if (!depends || ['-', '—', 'none', 'n/a'].includes(depends.toLowerCase())) return [];
+  return depends.split(/,|\n/)
+    .map((item) => normalizeTaskId(item.trim()))
+    .filter(Boolean);
+}
+
+function taskBranchName(branches, taskFile, taskId) {
+  const base = taskFile ? path.basename(taskFile, '.md') : taskId;
+  return `${branches.storyBranch}/${base}`;
+}
+
+function storyExecutionContext(planningId, storyIdArg) {
+  const storyId = normalizeStoryId(storyIdArg);
+  const config = parseConfig();
+  const dir = planningDir(planningId);
+  const storyFile = findStoryFile(dir, storyId);
+  const storyText = read(storyFile);
+  const branches = deriveStoryBranch(storyFile, config);
+  const rows = taskRows(storyText);
+  const tasks = rows.map((row) => {
+    const file = findTaskForRow(storyFile, row);
+    const taskText = file ? read(file) : '';
+    const id = taskIdFromRow(row);
+    const status = file ? extractStatus(taskText) : (row.status || 'MISSING');
+    return {
+      id,
+      number: row.number,
+      title: taskTitle(row.task),
+      status,
+      rowStatus: row.status || '',
+      file: file ? rel(file) : null,
+      missingFile: !file,
+      dependsOn: file ? dependencyIds(taskText) : [],
+      branch: taskBranchName(branches, file, id),
+    };
+  });
+  const statusById = new Map(tasks.map((task) => [task.id, task.status]));
+  const atomized = rows.length > 0 && tasks.every((task) => !task.missingFile);
+  const pending = tasks.filter((task) => task.status !== 'DONE');
+  const blocked = pending
+    .map((task) => ({
+      ...task,
+      unmetDependencies: task.dependsOn.filter((dep) => statusById.get(dep) !== 'DONE'),
+    }))
+    .filter((task) => task.unmetDependencies.length);
+  const nextTask = pending.find((task) => task.dependsOn.every((dep) => statusById.get(dep) === 'DONE')) || null;
+  const completed = tasks.filter((task) => task.status === 'DONE');
+  return {
+    ok: atomized && !tasks.some((task) => task.missingFile),
+    command: command || '',
+    write,
+    planning: planningId,
+    story: storyId,
+    storyFile: rel(storyFile),
+    storyTitle: heading(storyText) || path.basename(storyFile, '.md'),
+    storyStatus: extractStatus(storyText),
+    config,
+    branches,
+    atomized,
+    tasks,
+    completedTasks: completed,
+    nextTask,
+    blockedTasks: nextTask ? [] : blocked,
+    closeoutReady: atomized && pending.length === 0,
+    doneCriteria: markdownSection(storyText, 'Done Criteria').trim(),
+    verificationSummaries: completed.map((task) => ({
+      task: task.id,
+      file: task.file,
+      summary: task.file ? verificationSummary(read(path.join(cwd, task.file))) : '',
+    })),
+    commands: planStoryCommands(config, branches, completed, nextTask),
+  };
+}
+
+function verificationSummary(taskText) {
+  for (const name of ['Verification Summary', 'Verification', 'Human Review', 'Review Summary']) {
+    const section = markdownSection(taskText, name).trim();
+    if (section) return section.split('\n').slice(0, 12).join('\n');
+  }
+  return '';
+}
+
+function planStoryCommands(config, branches, completed, nextTask) {
+  const commands = {
+    openTaskPrCheck: [`gh pr list --base ${branches.storyBranch} --state open`],
+    storyBranchSetup: [],
+    completedTaskCleanup: completed.map((task) => `git branch -d ${task.branch}`),
+    nextTask: nextTask ? `/plan-task <planning-id> <story-id> ${nextTask.id}` : '',
+    finalize: [
+      'git fetch origin',
+      `git checkout ${branches.storyBranch}`,
+      `git pull --ff-only origin ${branches.storyBranch}`,
+      `git rebase origin/${branches.baseBranch}`,
+      `git push -u origin ${branches.storyBranch}`,
+      `gh pr create --title "<story-NN>: <story-name>" --body "Closes story <story-id> of planning <planning-id>." --base ${branches.baseBranch} --head ${branches.storyBranch}`,
+    ],
+    storyBranchCleanupAfterMerge: [
+      `git checkout ${branches.baseBranch}`,
+      `git pull --ff-only origin ${branches.baseBranch}`,
+      `git branch -d ${branches.storyBranch}`,
+    ],
+  };
+  if (config.requiresGit === 'true') {
+    commands.storyBranchSetup = [
+      'git status --porcelain',
+      'git fetch origin',
+      `git checkout ${branches.baseBranch}`,
+      `git pull --ff-only origin ${branches.baseBranch}`,
+      `git checkout -B ${branches.storyBranch}`,
+      `git push -u origin ${branches.storyBranch}`,
+    ];
+  }
+  return commands;
+}
+
+function updateExpansionStoryStatus(expansionText, storyId, status) {
+  const number = Number(storyId.replace(/^story-0*/, ''));
+  return expansionText.split(/\r?\n/).map((line) => {
+    const cells = line.split('|');
+    if (cells.length < 8 || !/^\s*\|\s*\d+/.test(line)) return line;
+    if (Number(cells[1].trim()) !== number) return line;
+    cells[7] = ` ${status} `;
+    return cells.join('|');
+  }).join('\n');
+}
+
+function mutateStoryStatus(planningId, storyId, status) {
+  const dir = planningDir(planningId);
+  const storyFile = findStoryFile(dir, storyId);
+  const expansion = path.join(dir, '01-expansion.md');
+  const touched = [rel(storyFile)];
+  if (write) writeFile(storyFile, setStatus(read(storyFile), status));
+  if (existsSync(expansion)) {
+    touched.push(rel(expansion));
+    if (write) writeFile(expansion, updateExpansionStoryStatus(read(expansion), storyId, status));
+  }
+  return touched;
+}
+
+function runExecuteInspect() {
+  const planningId = positional[0];
+  const storyId = positional[1];
+  if (!planningId || !storyId) fail('Missing <planning-id> <story-NN>.', { help: usage() });
+  print(storyExecutionContext(planningId, storyId), renderExecute);
+}
+
+function runExecuteStart() {
+  const planningId = positional[0];
+  const storyId = normalizeStoryId(positional[1]);
+  if (!planningId || !storyId) fail('Missing <planning-id> <story-NN>.', { help: usage() });
+  const ctx = storyExecutionContext(planningId, storyId);
+  const touched = ctx.storyStatus === 'TODO' ? mutateStoryStatus(planningId, storyId, 'IN PROGRESS') : [];
+  print({ ...ctx, command: 'execute-start', touched }, renderExecute);
+}
+
+function runExecuteDone() {
+  const planningId = positional[0];
+  const storyId = normalizeStoryId(positional[1]);
+  if (!planningId || !storyId) fail('Missing <planning-id> <story-NN>.', { help: usage() });
+  const ctx = storyExecutionContext(planningId, storyId);
+  if (!ctx.closeoutReady) {
+    print({ ...ctx, command: 'execute-done', ok: false, blockers: ['Story still has pending or missing task files.'] }, renderExecute);
+    process.exit(1);
+  }
+  const touched = mutateStoryStatus(planningId, storyId, 'DONE');
+  print({ ...ctx, command: 'execute-done', touched }, renderExecute);
+}
+
+function runExecuteFinalize() {
+  const planningId = positional[0];
+  const storyId = positional[1];
+  if (!planningId || !storyId) fail('Missing <planning-id> <story-NN>.', { help: usage() });
+  const ctx = storyExecutionContext(planningId, storyId);
+  print({ ...ctx, command: 'execute-finalize' }, renderExecute);
+}
+
 function print(result, markdownRenderer) {
   if (format === 'json') console.log(JSON.stringify(result, null, 2));
   else console.log(markdownRenderer(result));
@@ -776,6 +1087,53 @@ function renderPlanningAdd(result) {
   ].join('\n');
 }
 
+function renderExecute(result) {
+  const lines = [`# Plan Story ${result.command.replace(/^execute-/, '') || 'inspect'}`, '', `Planning: \`${result.planning}\``, `Story: \`${result.story}\``, `Story file: \`${result.storyFile}\``, `Status: \`${result.storyStatus}\``];
+  lines.push(`Branch: \`${result.branches.storyBranch}\` -> \`${result.branches.baseBranch}\``);
+  lines.push(`Atomized: ${result.atomized ? 'yes' : 'no'}`);
+  if (result.tasks?.length) {
+    lines.push('', '| Task | Status | File | Depends On |', '|------|--------|------|------------|');
+    for (const task of result.tasks) lines.push(`| ${task.id} | ${task.status} | ${task.file ? `\`${task.file}\`` : 'MISSING'} | ${task.dependsOn.join(', ') || '—'} |`);
+  }
+  if (result.blockers?.length) {
+    lines.push('', 'Blockers:');
+    for (const item of result.blockers) lines.push(`- ${item}`);
+  }
+  if (result.nextTask) lines.push('', `Next task: \`${result.nextTask.id}\` — ${result.nextTask.title}`, `Invoke: \`/plan-task ${result.planning} ${result.story} ${result.nextTask.id}\``);
+  else if (result.blockedTasks?.length) {
+    lines.push('', 'Blocked tasks:');
+    for (const task of result.blockedTasks) lines.push(`- \`${task.id}\` waits for ${task.unmetDependencies.join(', ')}`);
+  } else if (result.closeoutReady) {
+    lines.push('', 'Closeout ready: all task files are DONE.');
+  }
+  const missing = result.tasks?.filter((task) => task.missingFile) || [];
+  if (missing.length) {
+    lines.push('', 'Missing task files:');
+    for (const task of missing) lines.push(`- \`${task.id}\` from story task table`);
+  }
+  if (result.doneCriteria && (result.command === 'execute-inspect' || result.command === 'execute-finalize')) {
+    lines.push('', '## Done Criteria', '', result.doneCriteria);
+  }
+  if (result.verificationSummaries?.some((item) => item.summary) && (result.command === 'execute-inspect' || result.command === 'execute-finalize')) {
+    lines.push('', '## Task Verification Summaries');
+    for (const item of result.verificationSummaries.filter((entry) => entry.summary)) {
+      lines.push('', `### ${item.task}`, '', item.summary);
+    }
+  }
+  if (result.commands && result.command === 'execute-finalize') {
+    lines.push('', 'Finalize commands:');
+    for (const cmd of result.commands.finalize) lines.push(`- \`${cmd}\``);
+    lines.push('', 'Story branch cleanup after merge:');
+    for (const cmd of result.commands.storyBranchCleanupAfterMerge) lines.push(`- \`${cmd}\``);
+  }
+  if (result.touched?.length) {
+    lines.push('', 'Touched paths:');
+    for (const file of result.touched) lines.push(`- \`${file}\``);
+    if (!result.write) lines.push('', 'Dry run only. Re-run with `--write` after approval.');
+  }
+  return lines.join('\n');
+}
+
 switch (command) {
   case 'backlog-inspect':
     print(inspectContainer(positional[0]), renderInspect);
@@ -800,6 +1158,18 @@ switch (command) {
     break;
   case 'planning-split-story':
     runPlanningSplitStory();
+    break;
+  case 'execute-inspect':
+    runExecuteInspect();
+    break;
+  case 'execute-start':
+    runExecuteStart();
+    break;
+  case 'execute-done':
+    runExecuteDone();
+    break;
+  case 'execute-finalize':
+    runExecuteFinalize();
     break;
   case '--help':
   case '-h':
