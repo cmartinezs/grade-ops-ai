@@ -29,14 +29,12 @@ Prove — with a real network call, not a mock — that `api/` can reach `agents
 
 ## Tasks
 
-> Atomize via `/plan-atomize` before execution begins.
-
 | # | Task | Workflow | Status | Output |
 |---|------|----------|--------|--------|
-| 1 | Add `agents` service to root `compose.yml` | GENERATE-DOCUMENT | TODO | `compose.yml` — new `agents` service (build context `./agents`, real env vars, internal network, `api`'s `AGENTS_BASE_URL` wired to it) |
-| 2 | Local end-to-end smoke script and evidence | GENERATE-DOCUMENT | TODO | New smoke script (e.g. `scripts/smoke-e2e-local.sh`) driving a real brief→generate flow through the compose stack; captured evidence of a real `AssessmentDraft` + `AgentExecutionLog` produced via a genuine Groq/Gemini call |
-| 3 | Verify `beta` on Render is actually live | GENERATE-DOCUMENT | TODO | Confirmed (via Render CLI or dashboard) that `grade-ops-ai-api`/`grade-ops-ai-agents` Render services exist, have a deploy history, and auto-deploy is wired to this repo — or a documented finding that they don't, same spirit as `009`'s GCP finding |
-| 4 | Render post-deploy smoke script and evidence | GENERATE-DOCUMENT | TODO | New smoke script using the Render CLI (`RENDER_API_KEY` auth) to confirm the latest deploy is live, then drive the same brief→generate flow against the public Render API URL; captured evidence |
+| 1 | [Add `agents` service to root `compose.yml`](story-04-e2e-integration-verification/task-01-compose-agents-service.md) | GENERATE-DOCUMENT | TODO | `compose.yml` — new `agents` service (build context `./agents`, real env vars, internal network, `api`'s `AGENTS_BASE_URL` wired to it) |
+| 2 | [Local end-to-end smoke script and evidence](story-04-e2e-integration-verification/task-02-local-e2e-smoke.md) | GENERATE-DOCUMENT | TODO | `scripts/smoke-e2e-local.sh` driving a real brief→generate flow through the compose stack; captured evidence of a real `AssessmentDraft` + `AgentExecutionLog` produced via a genuine Groq/Gemini call |
+| 3 | [Verify `beta` on Render is actually live](story-04-e2e-integration-verification/task-03-verify-render-beta-live.md) | GENERATE-DOCUMENT | TODO | Confirmed (via Render CLI) that `grade-ops-ai-api`/`grade-ops-ai-agents` Render services exist, have a deploy history, and auto-deploy is wired to this repo — or a documented finding that they don't, same spirit as `009`'s GCP finding |
+| 4 | [Render post-deploy smoke script and evidence](story-04-e2e-integration-verification/task-04-render-post-deploy-smoke.md) | GENERATE-DOCUMENT | TODO | `scripts/smoke-e2e-render-beta.sh` using the Render CLI (`RENDER_API_KEY` auth) to confirm the latest deploy is live, then drive the same brief→generate flow against the public Render API URL; captured evidence |
 
 ---
 
