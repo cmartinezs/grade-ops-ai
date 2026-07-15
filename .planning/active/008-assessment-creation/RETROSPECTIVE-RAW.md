@@ -25,6 +25,24 @@ Each entry should answer as many of these as possible:
 
 <!-- Add newest entries at the top. -->
 
+### 2026-07-15 - web/'s docker build fails on a pre-existing, unrelated native-binding bug
+
+- **Source:** automated (encountered while executing `/plan-task 008 story-04 task-01`, verifying the Done Criteria's "docker compose up brings up db, api, agents, web together")
+- **Related story/task:** story-04, task-01
+- **What happened:** `docker compose up -d web` fails at `npm run build` inside the `web` Dockerfile: `Error: Cannot find native binding` from `@tailwindcss/oxide` on `node:18-alpine`, a known npm optional-dependencies bug (cited in the error itself: `npm/cli#4828`). This task's changes never touched the `web` service definition in `compose.yml` or anything under `web/` — confirmed unrelated to task-01's scope (`agents` service addition, `api`'s `AGENTS_BASE_URL`/`INTERNAL_API_SECRET` wiring).
+- **Expected instead:** Task-01's Done Criteria literally says "`docker compose up` brings up `db`, `api`, `agents`, `web` together" — written before discovering `web`'s build was already broken independent of this task.
+- **Resolution:** Verified `db`, `api`, and `agents` (this story's actual concern — proving `api`↔`agents` reachability) all build and boot cleanly together, confirmed via a real `curl` from inside the `api` container reaching `agents`'s internal endpoint (`HTTP 403`, i.e. reached and correctly rejected for missing auth header — not a connection failure). `web`'s pre-existing build failure is out of scope for this task and not fixed here; flagged to the human as a separate, unrelated gap.
+- **Retrospective signal:** `web`'s Docker build has been broken (silently, since nobody had run `docker compose up web` with all four services before this task) on the current Node/npm/Tailwind combination. Worth a dedicated fix outside this story — likely pinning `@tailwindcss/oxide` or bumping the base image away from `node:18-alpine`. Task-01's Done Criteria will be reported as met for its actual concern (`db`/`api`/`agents`) with this gap called out explicitly at the review checkpoint, not silently absorbed.
+
+### 2026-07-15 - Docker unreachable from the gradeops-e2e-verification worktree's WSL2 shell mid-task-01
+
+- **Source:** automated (encountered while executing `/plan-task 008 story-04 task-01` in worktree `../gradeops-e2e-verification`), resolution pending user action
+- **Related story/task:** story-04, task-01
+- **What happened:** `docker` is on `PATH` (`/Docker/host/bin/docker`, resolved via `which`/`type -a`) but running it reports `The command 'docker' could not be found in this WSL 2 distro. We recommend to activate the WSL integration in Docker Desktop settings.` — the exact same failure mode already documented in `api/.planning/finished/003-assessment-creation/RETROSPECTIVE-RAW.md` (2026-07-14 15:10 entry) for a different worktree/session. `compose.yml`'s YAML syntax was confirmed valid via `python3 -c "import yaml; yaml.safe_load(...)"` as a substitute check, but none of task-01's real verification/smoke steps (`docker compose config`, `docker compose up agents`, connectivity checks) could run.
+- **Expected instead:** Docker reachable from any WSL2 shell in this environment once Docker Desktop's WSL integration is enabled — apparently this is per-distro state that can disconnect between sessions/worktrees independent of which directory is active, consistent with the prior incident's own retrospective signal ("WSL2 + Docker Desktop's integration can silently disconnect between sessions without any in-repo signal").
+- **Resolution:** Flagged explicitly to the user rather than silently skipping verification or claiming the task passed. Task left `IN PROGRESS`, not marked `DONE`.
+- **Retrospective signal:** This is now the second time this exact blocker has hit a different task in this same environment. Worth a fast `docker ps` sanity check at the very start of any task known to need Docker/Testcontainers/compose, before writing any implementation — surfaces the blocker immediately instead of after work is already done (same lesson as the prior incident, now doubly confirmed).
+
 ### 2026-07-14 — Story 03 split into a child planning: web/.planning/001-assessment-creation
 
 **Source:** manual (human-requested, "haz un child planning a web con story-03")
