@@ -9,7 +9,8 @@
 
 | # | Story | SDLC Phase(s) | Depends On | Risk | External Issue | Status |
 |---|-------|--------------|------------|------|----------------|--------|
-| 01 | assessment-creation-ui | WB | — | M | — | TODO |
+| 01 | assessment-creation-ui | WB | Story 02 | M | — | SKIPPED |
+| 02 | assessment-screens-wireframes-and-data-providers | WB | — | M | — | TODO |
 
 ---
 
@@ -17,7 +18,8 @@
 
 ```mermaid
 flowchart LR
-    EXT[api/ 003-assessment-creation\nDONE — brief/draft endpoints] -.consumed via src/lib/api.-> S01[Story 01: assessment-creation-ui\nIntake form, draft edit, regenerate, version history]
+    EXT[api/ 003-assessment-creation\nDONE — brief/draft endpoints] -.consumed via src/lib/api.-> S02[Story 02: assessment-screens-wireframes-and-data-providers\nWireframes, fake-data mockups, Screen Data Facade, real API wiring]
+    S02 --> S01[Story 01: assessment-creation-ui\nComponent/hook implementation and tests]
 ```
 
 ---
@@ -45,6 +47,7 @@ flowchart LR
 - Every form uses React Hook Form + Zod (`zodResolver`) — never native HTML validation. Established project-wide convention, not new for this story.
 - Types mirror the `api/` DTO contracts — no independent shared-type definitions in `web/`.
 - Gemini/Groq API keys are never touched by `web/` — only `agents/` calls the LLM providers; `web/` only calls `api/` endpoints.
+- **Story 02 added 2026-07-15** via `/plan-enrich-epic`, following `docs/gradeops-ai-frontend-guidelines/02-ux-wireframes-y-maquetas.md`'s design flow (objetivo de usuario → wireframe → jerarquía → maqueta funcional con datos fake → conectar API real) and `06-estado-datos-y-api.md` §7 (Page Data Loader / Screen Data Facade). It owns the wireframes, fake-data mockups, DTOs/view models, and the Screen Data Facade/mutation functions for both screens (Intake, Draft Builder), plus the final real-API wiring end-to-end. Story 01 now depends on it and consumes its output for component/hook implementation and tests, instead of starting from an unspecified screen shape.
 
 ---
 
@@ -52,7 +55,7 @@ flowchart LR
 
 | ID | Risk | Impact | Likelihood | Mitigation | Owner | Status |
 |----|------|--------|------------|------------|-------|--------|
-| R-01 | Draft/version-history UI is built against a stale understanding of `api/`'s response shapes | M | L | `api/003-assessment-creation` is already `DONE` and merged — verify request/response shapes directly against `api/`'s actual controller/DTO source before implementing, not against `docs/04-architecture/api-design.md` alone (already found stale relative to `api/`'s real implementation during that planning's own execution) | web/ owner | Open |
+| R-01 | Draft/version-history UI is built against a stale understanding of `api/`'s response shapes | M | L | Verified directly against `api/`'s `AssessmentController` and DTOs during Story 02's design (2026-07-15) — see `story-02-assessment-screens-wireframes-and-data-providers.md` § Context for the exact request/response shapes; `docs/04-architecture/api-design.md` alone was already found stale relative to `api/`'s real implementation during that planning's own execution | web/ owner | Mitigated |
 
 Use `L`, `M`, or `H` for impact and likelihood. Carry high risks into the related story and task files.
 
@@ -63,6 +66,7 @@ Use `L`, `M`, or `H` for impact and likelihood. Carry high risks into the relate
 | Story | External System | External ID / URL | Sync Notes |
 |-------|-----------------|-------------------|------------|
 | 01 | — | — | — |
+| 02 | — | — | — |
 
 ---
 

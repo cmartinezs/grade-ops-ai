@@ -20,6 +20,8 @@ execution:
 
 software:
   smoke_tests_file: SMOKE-TESTS.md   # Optional override for the smoke-test plan file under .planning/
+  test_suite_generator: scripts/generate-test-suite.sh   # Deterministic test-suite matrix generator under .planning/
+  logging_file: LOGGING.md   # Project logging policy under .planning/
 
 integrations:
   external_issues: disabled     # disabled | github | jira | linear

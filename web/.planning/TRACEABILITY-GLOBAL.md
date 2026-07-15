@@ -35,6 +35,7 @@ Cell values:
 | Planning System | framework bootstrap | N/A | ✅ |
 | Workflow (meta) | framework bootstrap | N/A | ✅ |
 | Fundamental Rule | framework bootstrap | N/A | ✅ |
+| Screen Data Facade | 001-assessment-creation | ✅ | N/A | Any future `web/` screen with 2+ remote sources on load should reuse this pattern (`docs/gradeops-ai-frontend-guidelines/06-estado-datos-y-api.md` §7), not just this planning's `loadAssessmentDraftBuilderPage`. |
 
 ---
 
@@ -53,6 +54,7 @@ Cell values:
 | Date | Planning | Change |
 |------|----------|--------|
 | 2026-06-11 | — | Matrix initialized. Area codes configured by plan-init based on project structure. |
+| 2026-07-15 | 001-assessment-creation | Added `Screen Data Facade` after atomizing story-02 (13 tasks); first concrete use of the pattern in `web/`. |
 
 ---
 

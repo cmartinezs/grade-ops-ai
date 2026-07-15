@@ -8,6 +8,7 @@
 ## Objective
 
 > *What specifically must be produced or changed in this story.*
+> Example: `Create API support for password reset tokens: request token, validate token, update password, and expire used tokens.`
 
 [Describe the concrete goal.]
 
@@ -17,7 +18,8 @@
 
 | Risk | Impact | Likelihood | Mitigation |
 |------|--------|------------|------------|
-| [What could block or degrade this story?] | M | M | [How the story reduces or monitors this risk] |
+| [e.g. Reset endpoint leaks whether an email exists] | H | M | [e.g. Always return the same public response and log details privately] |
+| [e.g. Token persistence is inconsistent with ORM schema] | M | M | [e.g. Include DB/ORM validation task before marking story DONE] |
 
 ---
 
@@ -27,15 +29,31 @@
 
 | # | Task | Workflow | Status | Output |
 |---|------|----------|--------|--------|
-| 1 | [Task description] | [WORKFLOW-NAME] | TODO | [Expected file or change] |
-| 2 | [Task description] | [WORKFLOW-NAME] | TODO | [Expected file or change] |
+| 1 | [Design reset-token persistence](story-NN-name/task-01-reset-token-persistence.md) | GENERATE-DOCUMENT | TODO | [Migration/entity/repository design captured] |
+| 2 | [Implement reset endpoints](story-NN-name/task-02-reset-endpoints.md) | GENERATE-DOCUMENT | TODO | [API routes, service logic, and tests] |
+
+---
+
+## Test Suite
+
+> Generated or refreshed with `/plan-test-suite <planning-id> story-NN`. The story-level file is `story-NN-name/TEST-SUITE.md`; each task-level file lives under `story-NN-name/test-suites/`.
+
+- [ ] Story-level test suite covers unit, coverage, integration, acceptance/e2e, static analysis, style, architecture/design guide review, smoke, security, and mutation/test-strength gates as applicable.
+- [ ] Task-level test suites exist for every task before execution.
+- [ ] Acceptance and integration gates use isolated environments when possible: Docker Compose, Testcontainers, local emulators, sandbox profiles, or disposable fixtures.
+- [ ] Acceptance dependency inventory covers every internal module, external service, database, queue, storage dependency, environment variable, port, seed dataset, readiness check, and teardown action needed to run acceptance tests.
+- [ ] For Maven services with Cucumber/Gherkin, acceptance gates use profile `acceptanceTests` to boot the artifact in isolation and mock external dependencies.
 
 ---
 
 ## Done Criteria
 
-- [ ] [Criterion 1: specific and verifiable]
-- [ ] [Criterion 2: specific and verifiable]
+- [ ] Reset request returns the same public response for known and unknown emails
+- [ ] Used or expired tokens cannot update a password
+- [ ] Automated tests cover success, expiry, reuse, and unknown-email behavior
+- [ ] Code tasks include logging that supports execution tracing and correlation across calls, following `.planning/LOGGING.md`
+- [ ] Story and task test suites are generated/refreshed, and applicable gates have evidence
+- [ ] Acceptance dependency inventory has no unresolved dependency gaps
 - [ ] TRACEABILITY.md updated with new terms from this story
 
 ---
@@ -46,6 +64,7 @@
 
 | # | Description | Docs Involved | Status | Resolution Path |
 |---|-------------|--------------|--------|----------------|
+| 1 | [e.g. API docs say reset tokens expire in 15 minutes, but support guide says 1 hour] | [docs/api/auth.md, docs/support/password-reset.md] | Open | [Resolve with RECORD-INCONSISTENCY; possible PDR if policy applies across clients] |
 | — | *None yet* | — | — | — |
 
 ---
@@ -56,6 +75,7 @@
 
 | # | Description | Deferred To | Status |
 |---|-------------|------------|--------|
+| 1 | [e.g. Add branded reset email template after provider is selected] | [Future email-template planning] | OPEN |
 | — | *None* | — | — |
 
 ---

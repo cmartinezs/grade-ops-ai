@@ -15,6 +15,15 @@ Short working summary for this planning. Keep this file current as the planning 
 - **Started:** YYYY-MM-DD
 - **Completed:** *(not completed yet)*
 
+Example:
+
+- **Planning ID:** 006-password-reset
+- **Current status:** Deepening
+- **Intent:** Add password reset by email to API and web login flow
+- **Owner:** team
+- **Started:** 2026-07-12
+- **Completed:** *(not completed yet)*
+
 ---
 
 ## Key Links
@@ -24,6 +33,7 @@ Short working summary for this planning. Keep this file current as the planning 
 - [Story details](02-deepening/)
 - [Traceability](TRACEABILITY.md)
 - [Retrospective raw notes](RETROSPECTIVE-RAW.md)
+- Decision records: `pdr-*.md` *(optional; create with `/plan-decision` only when needed)*
 
 ---
 
@@ -47,17 +57,34 @@ Complete this section before archiving.
 
 - [What shipped, changed, or was decided?]
 
+Example:
+
+- Password reset token lifecycle shipped for API and web flows.
+- PDR-001 accepted the 15-minute token expiry policy across clients.
+
 ### Deviations
 
 - [What changed from the original scope, and why?]
+
+Example:
+
+- Branded email template work was deferred because provider ownership was not selected.
 
 ### Follow-ups
 
 - [Open improvements, deferred work, or next planning candidates.]
 
+Example:
+
+- Create a follow-up planning for email template branding and localization.
+
 ### Lessons
 
 - [What should carry forward to future planning work?]
+
+Example:
+
+- Cross-client security policies should become PDR candidates before story implementation starts.
 
 ---
 

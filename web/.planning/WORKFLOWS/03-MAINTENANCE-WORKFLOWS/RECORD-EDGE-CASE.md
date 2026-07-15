@@ -28,6 +28,7 @@ Record an edge case when any command observes one of these:
 - Scope changes, a story is skipped, split, merged, rolled back, or retried.
 - A command creates recovery work that was not part of the original path.
 - A warning or failure should inform future planning decisions.
+- An unexpected event reveals a possible cross-cutting decision.
 
 Do not record normal progress, successful routine checks, or duplicate entries.
 
@@ -49,6 +50,10 @@ Append a new entry under `## Log`, newest first:
 ```
 
 If some fields are unknown, write `unknown` rather than inventing details.
+
+## PDR Follow-up
+
+If the edge-case entry contains an explicit accepted decision that affects multiple stories, repository areas, shared terminology, planning policy, or future plannings, invoke `/plan-decision` after writing the raw note. If it is only a signal, lesson, open question, or candidate, leave it as `Retrospective signal: decision candidate` and suggest `/plan-decision` in the report.
 
 ---
 

@@ -25,7 +25,8 @@ flowchart TD
 2. Add a row to the local `TRACEABILITY.md` of the active planning.
 3. Execute `[PROPAGATE-TERM]` to evaluate which SDLC phase codes are affected.
 4. Mark cells: `✅` if present/consistent, `⚠️` if present but needs review, `❌` if missing, `N/A` if not applicable.
-5. If the term is globally relevant (affects multiple plannings): add to `TRACEABILITY-GLOBAL.md`.
+5. If the tracked item is an accepted decision affecting multiple stories, repository areas, shared terminology, planning policy, or future plannings, invoke `/plan-decision` to create or update a PDR. If the decision is not accepted yet, keep it in traceability and suggest `/plan-decision` as a follow-up.
+6. If the term is globally relevant (affects multiple plannings): add to `TRACEABILITY-GLOBAL.md`.
 
 ---
 

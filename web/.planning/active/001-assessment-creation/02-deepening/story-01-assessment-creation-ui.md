@@ -1,6 +1,7 @@
 # 🔍 DEEPENING: Story 01 — assessment-creation-ui
 
-> **Status:** TODO
+> **Status:** SKIPPED
+> **Skipped reason:** Scope fully absorbed by story-02 after atomization: story-02's functional-mockup and connect-real-api tasks (task-04, 06, 09, 10, 11, 12) already build the real components and wire them to the real API end-to-end, and task-13 explicitly re-verifies story-01's Done Criteria. Story-01 was never atomized/started, so nothing is lost by skipping it. (2026-07-15)
 > [← 01-expansion.md](../01-expansion.md) | [← planning/README.md](../../README.md)
 
 ---
@@ -17,7 +18,8 @@ Build the teacher-facing UI for assessment creation in `web/`: the brief intake 
 
 ## Context
 
-- **Depends on `api/003-assessment-creation`** (sibling child planning, already `DONE`) — all screens integrate against the real `api/` endpoints (brief intake, draft generation, regeneration, edit, retrieval). Verify request/response shapes directly against `api/`'s actual controller/DTO source (`api/src/main/java/cl/gradeops/ai/api/assessment/infrastructure/adapter/in/web/AssessmentController.java` and its request/response types) before implementing — `docs/04-architecture/api-design.md` was found stale relative to `api/`'s real implementation during that planning's own execution, more than once.
+- **Depends on Story 02 (`assessment-screens-wireframes-and-data-providers`)** — Story 02 delivers the wireframes, fake-data mockups, DTOs/view models, and the Screen Data Facade/mutation functions for both screens (Intake, Draft Builder), plus the real-API wiring. This story's component/hook implementation and test tasks build on that output rather than starting from an unspecified screen shape.
+- **Depends on `api/003-assessment-creation`** (sibling child planning, already `DONE`) — all screens integrate against the real `api/` endpoints (brief intake, draft generation, regeneration, edit, retrieval). Request/response shapes are verified directly against `api/`'s actual controller/DTO source (`api/src/main/java/cl/gradeops/ai/api/assessment/infrastructure/adapter/in/web/AssessmentController.java` and its request/response types) as part of Story 02 — `docs/04-architecture/api-design.md` was found stale relative to `api/`'s real implementation during that planning's own execution, more than once.
 - Every form in `web/` uses React Hook Form + Zod (`zodResolver`) — never native HTML validation. This is an established project convention, not new for this story.
 - Types mirror the API DTO contracts — no independent shared-type definitions in `web/`.
 - Gemini/Groq API key is never touched by `web/` — the frontend only calls `api/` endpoints.

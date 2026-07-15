@@ -28,6 +28,16 @@ The smallest executable unit of work, produced by decomposing a story with `/pla
 
 ---
 
+### Generated Test Suite
+A deterministic quality-gate artifact produced by `/plan-test-suite` or `.planning/scripts/generate-test-suite.sh`. It can exist at planning, story, or task scope and records applicable test commands and evidence expectations: unit tests, coverage, integration, acceptance/e2e, static analysis, code style, architecture/design guide review, smoke, security/dependency scan, and mutation/test-strength checks.
+
+---
+
+### Logging Policy
+The project-level software logging contract in `.planning/LOGGING.md`. It defines the logging mechanism, supported levels, correlation or trace context, sensitive-data guardrails, and task checklist. Code tasks must follow it so execution can be traced across internal calls, external dependencies, async flows, and failures.
+
+---
+
 ### Workflow
 A defined sequence of steps for executing a specific type of task. Every task in a story must specify which workflow governs its execution. See [`WORKFLOWS/README.md`](WORKFLOWS/README.md) for the full catalog.
 
@@ -93,12 +103,12 @@ The process of registering how a term, decision, or concept affects each SDLC ph
 ---
 
 ### PDR (Project Decision Record)
-A record of a significant decision affecting multiple phases or the framework level (e.g., a naming convention change, a new glossary term). Stored in `planning/NNN-name/` folder. Different from an **ADR** (Architecture Decision Record), which is stored at `01-templates/06-development/` and documents technical implementation decisions.
+A record of a significant decision affecting multiple stories, repository areas, workflow policy, glossary terms, or future plannings. PDRs are optional and are created inside the relevant planning as `pdr-NNN-title.md` with `/plan-decision`; use `.planning/PDR-TEMPLATE.md` as the source template. Different from an **ADR** (Architecture Decision Record), which documents technical implementation decisions.
 
 ---
 
 ### ADR (Architecture Decision Record)
-A record of a technical decision affecting the architecture of a specific project being documented. Stored in `01-templates/06-development/`. Different from a **PDR**, which affects the template framework itself.
+A record of a technical decision affecting the architecture of a specific project being documented. Different from a **PDR**, which records cross-cutting planning, workflow, terminology, or repository-area decisions.
 
 ---
 

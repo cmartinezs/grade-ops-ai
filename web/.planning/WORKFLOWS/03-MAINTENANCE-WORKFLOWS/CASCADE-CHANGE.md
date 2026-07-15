@@ -23,10 +23,13 @@ flowchart TD
 1. Identify the original change (e.g., a term was renamed, a section was restructured).
 2. Use grep to find all documents referencing the changed element.
 3. Order affected documents by **source hierarchy** (see `GUIDE.md`) — most authoritative first.
-4. Apply the change to each document in order.
-5. Execute `[PROPAGATE-TERM]` if a term was renamed or redefined.
-6. Execute `REVIEW-COHERENCE` on all modified files.
-7. Update `TRACEABILITY.md` to document the cascade scope.
+4. Before applying changes, decide whether the cascade expresses a cross-cutting decision:
+   - If yes and the decision is accepted or forced by source hierarchy, invoke `/plan-decision` to create or update the PDR.
+   - If it is only a candidate, record the candidate in `TRACEABILITY.md` or `RETROSPECTIVE-RAW.md` and suggest `/plan-decision`.
+5. Apply the change to each document in order.
+6. Execute `[PROPAGATE-TERM]` if a term was renamed or redefined.
+7. Execute `REVIEW-COHERENCE` on all modified files.
+8. Update `TRACEABILITY.md` to document the cascade scope and any PDR created.
 
 ---
 

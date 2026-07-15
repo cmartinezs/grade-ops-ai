@@ -25,6 +25,15 @@ Each entry should answer as many of these as possible:
 
 <!-- Add newest entries at the top. -->
 
+### 2026-07-15 - Story skipped
+
+- **Source:** plan-story-skip
+- **Related story/task:** story-01
+- **What happened:** story-01-assessment-creation-ui was marked SKIPPED.
+- **Expected instead:** The story would have remained executable if still applicable.
+- **Resolution:** Story status was set to SKIPPED. Reason: Scope fully absorbed by story-02 after atomization: story-02's functional-mockup and connect-real-api tasks (task-04, 06, 09, 10, 11, 12) already build the real components and wire them to the real API end-to-end, and task-13 explicitly re-verifies story-01's Done Criteria. Story-01 was never atomized/started, so nothing is lost by skipping it..
+- **Retrospective signal:** check whether this skip implies a follow-up planning or a PDR-worthy scope decision.
+
 ### 2026-07-14 — web/.planning/ initialized, this planning split out of the parent monorepo planning
 
 **What happened:** `web/` had no `.planning/` workspace of its own — the root monorepo planning `008-assessment-creation`'s Story 03 (`web-assessment-creation`) originally contained the full implementation task breakdown directly. Per the same monorepo parent/child coordination rule already applied to `agents/` and `api/` on 2026-07-09, initialized `web/.planning/` via `/plan-init` (area `WB` → `src/`, git base branch `develop` matching the rest of the repo) and moved Story 03's full content (Objective, Context, Risk, 6 Tasks, Done Criteria) here as this planning's Story 01 (`assessment-creation-ui`), unchanged.
@@ -38,3 +47,7 @@ Each entry should answer as many of these as possible:
 ---
 
 > [← README](README.md) | [← planning/README.md](../../README.md)
+
+## 2026-07-15 — /plan-enrich-epic
+
+Added story-02-assessment-screens-wireframes-and-data-providers after initial expansion.

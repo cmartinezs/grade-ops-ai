@@ -27,6 +27,7 @@ flowchart TD
 1. Define the intent of the planning in a short statement (what + why).
 2. Copy `.planning/_template/` to `.planning/NNN-name/`.
 3. Fill `00-initial.md` — captures purpose, approximate scope, and initiator.
+   - Do not create a PDR by default. PDRs are optional decision records created later with `/plan-decision` only when a real cross-cutting decision exists.
 4. If there is enough clarity:
    - Fill `01-expansion.md` — list all user stories and dependencies.
    - **Monorepo child split:** If this is a parent workspace and the planning affects child artifact directories that have their own `.planning/`, create or reuse dedicated sibling git worktrees for those children, then create linked child plannings inside those worktrees. The parent planning keeps coordination and parent-scope work only; child implementation belongs to the child planning. Preserve the worktree prefix at the start of each child branch name, for example `<worktree-prefix>/story-NN-<slug>`.
@@ -36,6 +37,10 @@ flowchart TD
 5. If not enough clarity: stop at INITIAL. Return to CREATE-PLANNING later.
 6. Update `.planning/README.md` (INITIAL table or active link).
 7. Update `.planning/active/README.md` index.
+
+## PDR Use
+
+Use a PDR only for significant decisions that affect multiple stories, repository areas, workflow policy, glossary terms, or future plannings. To create one, copy `.planning/PDR-TEMPLATE.md` into the relevant planning as `pdr-NNN-title.md` through `/plan-decision`. Routine task-level choices belong in the task `Technical Design` section or in an ADR when the project has an ADR workflow.
 
 ---
 

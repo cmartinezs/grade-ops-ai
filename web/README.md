@@ -145,6 +145,14 @@ web/
 
 ---
 
+## Documentation
+
+| Guide | Purpose |
+|-------|---------|
+| [`docs/gradeops-ai-frontend-guidelines`](docs/gradeops-ai-frontend-guidelines/README.md) | Frontend coding standards and UI/UX best practices for GradeOps AI: component hierarchy, hooks, Design System, forms, accessibility, API contracts, testing, security, and AI-assisted development. |
+
+---
+
 ## Getting Started
 
 ### Prerequisites
