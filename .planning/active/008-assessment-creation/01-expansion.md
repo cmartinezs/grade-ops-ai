@@ -12,7 +12,7 @@
 | 01 | agents-assessment-agent-coordination | AG | — | M | — | IN PROGRESS |
 | 02 | api-assessment-creation-coordination | AP | 01 | M | — | IN PROGRESS |
 | 03 | web-assessment-creation-coordination | WB | 02 | L | — | TODO |
-| 04 | e2e-integration-verification | IN | 01, 02 | M | — | TODO |
+| 04 | e2e-integration-verification | IN | 01, 02 | M | — | IN PROGRESS |
 
 > **Correction (2026-07-09, extended 2026-07-14):** Stories 01 and 02 were originally scoped in this root planning as full implementation stories. That violated the monorepo parent/child coordination rule — `agents/` and `api/` each have (or now have) their own `.planning/` workspace, so their implementation must live in a child planning there, not duplicated in the parent. Both were converted to coordination stories; see `Linked Child Plannings` below for where the real implementation tasks now live. **Story 03 received the same correction on 2026-07-14** — `web/` now has its own `.planning/` workspace (`web/.planning/active/001-assessment-creation`), and Story 03's original 6-task implementation breakdown was moved there unchanged; this story is now a coordination story like 01 and 02.
 >
