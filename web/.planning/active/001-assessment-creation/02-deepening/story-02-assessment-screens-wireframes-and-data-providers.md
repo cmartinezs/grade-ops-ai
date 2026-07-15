@@ -55,7 +55,7 @@ This story delivers the wireframes, the navigable fake-data mockups, the DTOs/vi
 | # | Task | Workflow | Status | Output |
 |---|------|----------|--------|--------|
 | 1 | [verify-api-contract](story-02-assessment-screens-wireframes-and-data-providers/task-01-verify-api-contract.md) | GENERATE-DOCUMENT | DONE | Confirmed request/response shapes for all 6 endpoints, verified against `AssessmentController.java` |
-| 2 | [wireframe-intake-screen](story-02-assessment-screens-wireframes-and-data-providers/task-02-wireframe-intake-screen.md) | GENERATE-DOCUMENT | TODO | Wireframe textual + estados documentados |
+| 2 | [wireframe-intake-screen](story-02-assessment-screens-wireframes-and-data-providers/task-02-wireframe-intake-screen.md) | GENERATE-DOCUMENT | IN PROGRESS | Wireframe textual + estados documentados |
 | 3 | [component-hierarchy-intake-screen](story-02-assessment-screens-wireframes-and-data-providers/task-03-component-hierarchy-intake-screen.md) | GENERATE-DOCUMENT | TODO | Jerarquía de componentes documentada |
 | 4 | [functional-mockup-intake-screen](story-02-assessment-screens-wireframes-and-data-providers/task-04-functional-mockup-intake-screen.md) | GENERATE-DOCUMENT | TODO | Maqueta funcional navegable (TSX, datos fake) |
 | 5 | [data-provider-intake-screen](story-02-assessment-screens-wireframes-and-data-providers/task-05-data-provider-intake-screen.md) | GENERATE-DOCUMENT | TODO | DTOs + `submitAssessmentBrief` en `lib/api` |

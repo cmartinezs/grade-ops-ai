@@ -1,6 +1,6 @@
 # ⚛️ TASK 02 — wireframe-intake-screen
 
-> **Status:** TODO
+> **Status:** IN PROGRESS
 > **Workflow:** GENERATE-DOCUMENT
 > **Depends On:** —
 > [← story file](../story-02-assessment-screens-wireframes-and-data-providers.md)
@@ -66,16 +66,33 @@ N/A — this task produces no executable code.
 
 ---
 
+## Verification Summary
+
+`wireframes/intake-screen.md` written (see file). Evidence per Done Criteria item:
+
+- **States documented:** 6, not 5 — the original "error" state was split into **error de negocio (422)** and **error inesperado (500)** as distinct rows, each with its own message/recovery treatment, since `15-backend-frontend-contracts.md` §4 requires different translated messages per error class. Table excerpt (full table in the wireframe file):
+
+  | Estado | Disparador | Tratamiento visual |
+  |--------|-----------|---------------------|
+  | idle | Carga inicial | Formulario vacío, botón deshabilitado |
+  | validando | Envío con campos vacíos | Error inline por campo |
+  | enviando | Submit en curso | Botón deshabilitado + spinner |
+  | éxito | `submitAssessmentBrief` resuelve | Navegación a `/assessments/{assessmentId}/draft` |
+  | error de negocio (422) | API rechaza por regla de negocio | Mensaje traducido, formulario reeditable |
+  | error inesperado (500) | Falla de red/servidor | Mensaje genérico de reintento |
+
+- **Field cross-check against `task-01`:** wireframe lists `learningGoal, topic, level, duration, language` — identical set and order to `task-01`'s Verification row 1 (`CreateAssessmentBriefRequest{learningGoal, topic, level, duration, language}`). No invented or missing field.
+
 ## Done Criteria
 
-- [ ] `wireframes/intake-screen.md` exists and follows the guide's §3 format.
-- [ ] All 5 states (idle, validating, submitting, success, error) are documented with their visual treatment.
-- [ ] Every field matches `CreateAssessmentBriefRequest`'s confirmed shape from `task-01`.
+- [x] `wireframes/intake-screen.md` exists and follows the guide's §3 format — see file, sections "Pantalla," "Estados," "Densidad y microcopy," "Resultado esperado del diseño (checklist §10)."
+- [x] All 5 states (idle, validating, submitting, success, error) are documented with their visual treatment — 6 rows produced (error split into 422/business and 500/unexpected per §Verification Summary above); each state's original intent is still covered.
+- [x] Every field matches `CreateAssessmentBriefRequest`'s confirmed shape from `task-01` — see §Verification Summary field cross-check.
 - [ ] Software smoke/build/startup/connectivity checks: N/A, no runtime surface; for git-enabled tasks, this task is committed, pushed, and published in a task PR before human developer PR review, with corrections pushed to the same PR.
-- [ ] Logging/observability: N/A — no executable code, no correlation/trace/INFO/DEBUG/WARN/ERROR log levels apply.
-- [ ] Task test suite: N/A — the generated test-suite quality gates in this task's Generated Test Suite section are architecture-review only.
-- [ ] Database/ORM: N/A — static DB/ORM consistency and runtime persistence smoke checks do not apply; no database, ORM, or persistence artifact is touched.
-- [ ] No unintended expansion: the task satisfies `[CHECK-ATOMICITY]`.
+- [x] Logging/observability: N/A — no executable code, no correlation/trace/INFO/DEBUG/WARN/ERROR log levels apply.
+- [x] Task test suite: N/A — the generated test-suite quality gates in this task's Generated Test Suite section are architecture-review only.
+- [x] Database/ORM: N/A — static DB/ORM consistency and runtime persistence smoke checks do not apply; no database, ORM, or persistence artifact is touched.
+- [x] No unintended expansion: the task satisfies `[CHECK-ATOMICITY]` — single deliverable (the wireframe doc), no scope creep.
 
 ---
 
