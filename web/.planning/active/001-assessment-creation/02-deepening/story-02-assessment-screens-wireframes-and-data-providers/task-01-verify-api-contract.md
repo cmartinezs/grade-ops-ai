@@ -1,6 +1,6 @@
 # ⚛️ TASK 01 — verify-api-contract
 
-> **Status:** IN PROGRESS
+> **Status:** DONE
 > **Workflow:** GENERATE-DOCUMENT
 > **Depends On:** —
 > [← story file](../story-02-assessment-screens-wireframes-and-data-providers.md)
@@ -139,7 +139,7 @@ public record GenerateAssessmentDraftResponse(
 
 - [x] All 7 verification rows above are re-confirmed directly against current `api/` source (not assumed from this story's Context section alone) — see § Verification Summary for the raw controller mappings and record definitions transcribed on 2026-07-15 at `api/` commit `0a23627aa2d737f233e0a8a2be864f7187725139`.
 - [x] Any mismatch found between the Context section and the actual `api/` source is corrected in both this task file and the story's Context section before `task-05`/`task-10`/`task-11` start — see § Verification Summary's "Diff against this task's Verification table" line: none found, nothing to correct.
-- [ ] Software smoke/build/startup/connectivity checks: N/A, no runtime surface (see Software Smoke Test Check); for git-enabled tasks, this task is committed, pushed, and published in a task PR before human developer PR review, with corrections pushed to the same PR.
+- [x] Software smoke/build/startup/connectivity checks: N/A, no runtime surface (see Software Smoke Test Check); for git-enabled tasks, this task is committed, pushed, and published in a task PR before human developer PR review, with corrections pushed to the same PR. PR #66 (`tasks/story-02-.../task-01-verify-api-contract` → `story-02-assessment-screens-wireframes-and-data-providers`) opened, reviewed, approved, and merged 2026-07-15 (merge commit `911557b`).
 - [x] Logging/observability: N/A — no executable code, no correlation/trace/INFO/DEBUG/WARN/ERROR log levels apply.
 - [x] Task test suite: N/A — the generated test-suite quality gates in this task's Generated Test Suite section are architecture-review only.
 - [x] Database/ORM: N/A — static DB/ORM consistency and runtime persistence smoke checks do not apply; no database, ORM, or persistence artifact is touched.
