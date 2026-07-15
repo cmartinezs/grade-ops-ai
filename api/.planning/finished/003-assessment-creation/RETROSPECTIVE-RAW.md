@@ -25,6 +25,33 @@ Each entry should answer as many of these as possible:
 
 <!-- Add newest entries at the top. -->
 
+### 2026-07-14 15:35 - Human code review on task-11 flagged a test-isolation limitation; recorded as a residual, not a blocking correction
+
+- **Source:** manual (human developer review on PR #59)
+- **Related story/task:** story-01, task-11
+- **What happened:** After task-11's `AssessmentCreationFlowIntegrationTest` was published for review (4/4 passing, full suite 288/288), the reviewer noted that `@DataJpaTest` wraps every test method in a framework-managed transaction (rolled back at teardown). `DraftGenerationCoordinator`'s `TransactionTemplate` uses default `REQUIRED` propagation, so inside these tests it joins that ambient transaction instead of proving the "no DB transaction is open while the agent call runs" invariant the class's own design comment describes. The reviewer explicitly flagged this as non-blocking, since the same `@DataJpaTest` pattern is already used by task-07/08/09's own integration tests and none of them prove that boundary either.
+- **Expected instead:** Nothing corrective — the reviewer's note was informational, not a requested change.
+- **Resolution:** Recorded as story Residual #3 (deferred; would need a `@SpringBootTest`-based test with no ambient test transaction, e.g. asserting no connection is checked out from the pool during the agent call, to actually prove the invariant).
+- **Retrospective signal:** a review response can be substantive (a real, correctly-identified gap) without being a blocking correction — worth distinguishing "requested corrections" from "residual notes" explicitly in the review loop, since treating every review comment as a required code change would have produced unnecessary churn here. This is also a second story-level example (after task-07's cross-reference gap) of "a test class that passes green can still fail to prove the specific invariant a design comment claims" — worth watching for in any future task whose design relies on an ordering/isolation property that the test framework's own scaffolding can silently mask.
+
+### 2026-07-14 15:20 - Task-11 execution surfaced two workspace-wide tooling gaps: missing test-suite generator and missing RECORD-EDGE-CASE workflow file
+
+- **Source:** automated (encountered while executing `/plan-task` for task-11)
+- **Related story/task:** story-01, task-11 (but the gap is workspace-wide, not task-specific)
+- **What happened:** `/plan-task`'s readiness checks call for `.planning/scripts/generate-test-suite.sh` (task-level test-suite generation) and, on failure, `[RECORD-EDGE-CASE]` (`.planning/WORKFLOWS/03-MAINTENANCE-WORKFLOWS/RECORD-EDGE-CASE.md`). Neither exists in this workspace — confirmed via `/plan-test-suite` failing with "workspace needs the latest planning scripts" and a direct `find` against `.planning/WORKFLOWS/03-MAINTENANCE-WORKFLOWS/` showing no `RECORD-EDGE-CASE.md` (only `RECORD-INCONSISTENCY.md` and others). This workspace's `.planning/` scaffold predates that plugin version; none of tasks 01–10 used either mechanism either (no `test-suites/` directory anywhere in this planning, no edge-case entries citing that workflow).
+- **Expected instead:** A task-level test-suite artifact generated before implementation, and a `RECORD-EDGE-CASE`-workflow entry for any readiness-check failure.
+- **Resolution:** Proceeded without either, following the same established (if implicit) precedent as tasks 01–10: used the existing sibling integration tests (task-07/08/09's `*HandlerIntegrationTest` classes) as the de facto test plan, and used this `RETROSPECTIVE-RAW.md` log directly in place of the missing `RECORD-EDGE-CASE` workflow, since it already exists in this workspace and serves the same purpose.
+- **Retrospective signal:** if this workspace is ever upgraded via `/plan-update-version`, both gaps would resolve automatically. Until then, future tasks in this planning (or any planning in this workspace) should expect the same two gaps and follow the same substitution: sibling tests as the de facto test-suite artifact, `RETROSPECTIVE-RAW.md` in place of `RECORD-EDGE-CASE`.
+
+### 2026-07-14 15:10 - Docker/Testcontainers unreachable mid-task-11; required user intervention on the host, not a code fix
+
+- **Source:** automated (encountered while executing `/plan-task` for task-11), resolved with user action
+- **Related story/task:** story-01, task-11
+- **What happened:** After writing `AssessmentCreationFlowIntegrationTest`, running it required Docker (Testcontainers-managed Postgres). The `docker` CLI in this WSL2 dev session failed with an I/O error and no `/var/run/docker.sock` existed, even though Docker Desktop was confirmed running as a process on the Windows host — its WSL integration for this distro was disconnected. This blocked all verification (the smoke-test/done-criteria evidence this task's workflow requires) until resolved.
+- **Expected instead:** Docker reachable from the dev shell whenever a Testcontainers-based task is executed — this had presumably worked for tasks 01–10 (all of which have their own `@DataJpaTest`/Testcontainers integration tests already merged).
+- **Resolution:** Flagged the blocker explicitly to the user via a clarifying question rather than silently working around it (e.g. skipping the test run and claiming success) — offered three options (user fixes Docker, user runs the test manually and reports back, or proceed unverified with an explicit note). User chose to fix Docker Desktop's WSL integration on the host; `docker ps` succeeded afterward and the test suite ran normally (4/4, then full suite 288/288).
+- **Retrospective signal:** WSL2 + Docker Desktop's integration can silently disconnect between sessions without any in-repo signal — worth a fast `docker ps` sanity check at the start of any task known to need Testcontainers, before investing time writing the test, so the blocker surfaces immediately rather than after the implementation is already done. Also: when genuinely blocked on host/environment state outside the repo, asking the user with concrete options is the right move, not silently downgrading the verification bar.
+
 ### 2026-07-13 21:00 - Human code review requested corrections on task-07: missing real-repository integration test for the log/draft cross-reference
 
 - **Source:** manual (human developer review on PR #52)

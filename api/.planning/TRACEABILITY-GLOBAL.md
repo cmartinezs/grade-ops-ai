@@ -65,6 +65,16 @@ Cell values:
 | `app.auth.reset-code-retention-days` | 002-drop-old-password-recovery-requests | ✅ | N/A | ✅ |
 | `Clock` (bean Spring, testabilidad) | 002-drop-old-password-recovery-requests | ✅ | N/A | ✅ |
 | `V8__add_index_prc_created_at` | 002-drop-old-password-recovery-requests | ✅ | N/A | ✅ |
+| `Assessment` (real, replaces stub) | 003-assessment-creation | ✅ | N/A | ✅ |
+| `AssessmentBrief` | 003-assessment-creation | ✅ | ✅ | ✅ |
+| `AssessmentDraft` | 003-assessment-creation | ✅ | ✅ | ✅ |
+| `AgentExecutionLog` | 003-assessment-creation | ✅ | N/A | ✅ |
+| `agentclient` module | 003-assessment-creation | ✅ | N/A | ✅ |
+| `POST /api/v1/assessments` | 003-assessment-creation | ✅ | N/A | ✅ |
+| `POST /api/v1/assessments/{id}/draft` | 003-assessment-creation | ✅ | N/A | ✅ |
+| `POST /api/v1/assessments/{id}/draft/regenerate` | 003-assessment-creation | ✅ | N/A | ✅ |
+| `PATCH /api/v1/assessments/{id}/draft` | 003-assessment-creation | ✅ | N/A | ✅ |
+| `GET /api/v1/assessments/{id}/draft`, `.../versions` | 003-assessment-creation | ✅ | N/A | ✅ |
 
 ---
 
@@ -75,6 +85,9 @@ Cell values:
 | ID | Term / Issue | Source Planning | Status | Notes |
 |----|-------------|----------------|--------|-------|
 | R-01 | Migrar cleanup a Cloud Scheduler / Cloud Run Job | 002-drop-old-password-recovery-requests | OPEN | Activar si `min-instances` baja a 0 o se requiere ejecución garantizada en multi-réplica |
+| R-02 | `agentclient` authenticates with a shared-secret header, not a fetched Cloud Run OIDC identity token | 003-assessment-creation | OPEN | Revisit post-MVP if a stronger service-to-service auth guarantee is needed beyond Cloud Run's network-level IAM enforcement |
+| R-03 | `docs/04-architecture/api-design.md` and `data-model.md` (root `grade-ops-ai-docs` repo) are stale relative to the implemented 5-field brief payload and the hexagonal `Assessment`/`AssessmentBrief`/`AssessmentDraft` split | 003-assessment-creation | OPEN | Documentation-sync pass needed in the docs repo; a PDR recording the hexagonal-split-vs-monolithic-table decision is recommended before or alongside that pass |
+| R-04 | `agents/`'s `MALFORMED_OUTPUT` reason code conflates genuine malformed output with live provider failures (rate limits, quota, network errors) | 003-assessment-creation | OPEN | Blocked on `agents/` adding a dedicated reason code — not fixable from `api/`'s side |
 
 ---
 
@@ -85,6 +98,7 @@ Cell values:
 | 2026-06-11 | — | Matrix initialized. Area codes configured by plan-init based on project structure. |
 | 2026-06-26 | 001-hexagonal-refactor | Planning DONE — 5 stories completed; 21 domain terms registered (shared kernel, auth BC, teacher BC, assessment BC stub, cleanup). |
 | 2026-06-30 | 002-drop-old-password-recovery-requests | Planning DONE — 1 story, 10 tasks; 9 términos nuevos (cleanup job, port extension, Clock bean, Flyway V8); 1 residual abierto (Cloud Scheduler migration). |
+| 2026-07-14 | 003-assessment-creation | Planning DONE — 1 story, 11 tasks; 10 domain terms registered (Assessment/AssessmentBrief/AssessmentDraft/AgentExecutionLog aggregates, agentclient module, 6 REST endpoints); 3 residuals opened (agentclient auth hardening, docs-repo staleness/PDR recommendation, agents/'s MALFORMED_OUTPUT conflation). |
 
 ---
 
