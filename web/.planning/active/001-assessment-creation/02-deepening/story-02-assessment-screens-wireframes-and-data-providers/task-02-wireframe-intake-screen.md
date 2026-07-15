@@ -1,6 +1,6 @@
 # ⚛️ TASK 02 — wireframe-intake-screen
 
-> **Status:** IN PROGRESS
+> **Status:** DONE
 > **Workflow:** GENERATE-DOCUMENT
 > **Depends On:** —
 > [← story file](../story-02-assessment-screens-wireframes-and-data-providers.md)
@@ -92,7 +92,7 @@ N/A — this task produces no executable code.
 - [x] `wireframes/intake-screen.md` exists and follows the guide's §3 format — see file, sections "Pantalla," "Boceto visual (estado idle)," "Estados," "Bocetos de variantes de estado," "Densidad y microcopy," "Resultado esperado del diseño (checklist §10)." Added ASCII box-drawing sketches for the idle layout plus 4 state variants (validando, enviando, error de campo, error de banner) — the guide's §3 format accepts text/Markdown wireframes, but a plain state table alone didn't convey layout/spacing; the sketches show field pairing, banner-vs-inline error placement, and button disabled treatment concretely.
 - [x] All 5 states (idle, validating, submitting, success, error) are documented with their visual treatment — 8 rows produced: the single "error" state was replaced by the real, traced error surface of both endpoints (validation/422 with a distinct body shape, agent-rejected/422, agent-down/502-503, not-found/404, and unexpected/500), per §Verification Summary above; every original state's intent is still covered, just correctly subdivided.
 - [x] Every field matches `CreateAssessmentBriefRequest`'s confirmed shape from `task-01` — see §Verification Summary field cross-check.
-- [ ] Software smoke/build/startup/connectivity checks: N/A, no runtime surface; for git-enabled tasks, this task is committed, pushed, and published in a task PR before human developer PR review, with corrections pushed to the same PR.
+- [x] Software smoke/build/startup/connectivity checks: N/A, no runtime surface; for git-enabled tasks, this task is committed, pushed, and published in a task PR before human developer PR review, with corrections pushed to the same PR. PR #67 (`tasks/story-02-.../task-02-wireframe-intake-screen` → `story-02-assessment-screens-wireframes-and-data-providers`) opened, reviewed (including two rounds of corrections — real error-surface tracing and ASCII layout sketches, both pushed to the same PR), approved, and merged 2026-07-15 (merge commit `0265e2a`).
 - [x] Logging/observability: N/A — no executable code, no correlation/trace/INFO/DEBUG/WARN/ERROR log levels apply.
 - [x] Task test suite: N/A — the generated test-suite quality gates in this task's Generated Test Suite section are architecture-review only.
 - [x] Database/ORM: N/A — static DB/ORM consistency and runtime persistence smoke checks do not apply; no database, ORM, or persistence artifact is touched.
