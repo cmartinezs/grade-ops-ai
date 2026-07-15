@@ -9,7 +9,7 @@
 
 ## Objective
 
-The Intake screen calls the real `api/` via `submitAssessmentBrief`, redirects to the Draft Builder screen with the real `assessmentId`, and surfaces 422/500 errors to the teacher — the fake `setTimeout` submit from `task-04` is fully removed.
+The Intake screen calls the real `api/` via `submitAssessmentBrief`, redirects to the Draft Builder screen with the real `assessmentId`, and surfaces the real error surface (validation 422, agent-rejected 422, agent-down 502/503, not-found 404, unexpected 500 — per `task-02`'s traced evidence, not the generic 422/500) to the teacher — the fake `setTimeout` submit from `task-04` is fully removed.
 
 ---
 
@@ -21,8 +21,11 @@ The Intake screen calls the real `api/` via `submitAssessmentBrief`, redirects t
   - `src/app/(protected)/assessments/new/page.tsx` (add redirect on success)
   - `src/features/assessment-creation/components/__tests__/BriefForm.test.tsx` (extend for error states)
 - **Interfaces / contracts:** The hook's public return shape (`RemoteData`-style submit state) stays the same as `task-04` — only what feeds it changes, from a fake timer to `submitAssessmentBrief`.
-- **Risk:** Medium — per `15-backend-frontend-contracts.md` §4/§5, backend validation is authoritative; a 422 here means a business-rule rejection the client-side Zod schema didn't (and shouldn't try to) catch. The UI must translate it into a Spanish, teacher-facing message, not show the raw error code.
-- **Design notes:** Per `06-estado-datos-y-api.md` §9: 422 → business validation error (translate message), 500 → unexpected error (generic retry message). Do not show raw HTTP status codes or English backend strings to the teacher.
+- **Risk:** Medium — per `15-backend-frontend-contracts.md` §4/§5, backend validation is authoritative. `task-02`'s traced evidence (`GlobalExceptionHandler.java`, `DraftGenerationCoordinator.java`, `AgentClientException.java`) found two distinct 422 body shapes plus 502/503 that the original 2-state (422/500) design missed entirely — treating everything as "422 = business error, 500 = unexpected" would misparse `List<FieldErrorResponse>` responses and show the wrong message for an `agents/` outage.
+- **Design notes:** Real error surface, from `task-02`'s § Verification Summary (verified against `api/` source, not assumed from `06-estado-datos-y-api.md` §9's generic list):
+  - `POST /assessments` — 422 with body `List<FieldErrorResponse>` (Bean Validation; shouldn't normally trigger since client-side Zod mirrors the same `@NotBlank` fields, but the parser must handle it distinctly from the shape below); 400 `ApiErrorResponse{error:"MALFORMED_REQUEST"}`; 500 `ApiErrorResponse{error:"INTERNAL_ERROR"}`.
+  - `POST /assessments/{id}/draft` — 404 `ApiErrorResponse{error:"NOT_FOUND"}` (assessment/brief not found or ownership mismatch — shouldn't occur in the normal flow since the id comes from step 1's own response, handle as generic retry if seen); 422 `ApiErrorResponse{error:"AGENT_CALL_FAILED", message:"AGENT_REJECTED"}`; 502/503 `ApiErrorResponse{error:"AGENT_CALL_FAILED", message:"AGENT_ERROR"|"UNREACHABLE"}` (translate as "servicio no disponible," distinct from the validation message — the brief is already persisted, nothing is lost); 500 `ApiErrorResponse{error:"INTERNAL_ERROR"}`.
+  - Do not show raw HTTP status codes, `error` codes, or English backend strings to the teacher in any case.
 
 ---
 
@@ -30,8 +33,8 @@ The Intake screen calls the real `api/` via `submitAssessmentBrief`, redirects t
 
 1. Replace `useIntakeAssessmentPage`'s fake submit with a call to `submitAssessmentBrief(brief)`.
 2. On success, use `useRouter().push()` to navigate to `/assessments/${assessmentId}/draft` (the Draft Builder screen route from `task-08`).
-3. On failure, map the thrown error to a Spanish, teacher-facing message per `15-backend-frontend-contracts.md` §4 (422 → business validation message; 500 → generic retry message), surfaced via the existing error-state UI from `task-04`.
-4. Extend `BriefForm.test.tsx`/add a hook test covering: successful submit navigates with the real `assessmentId`; a 422 response shows a translated message; a 500 response shows a generic retry message.
+3. On failure, branch on the response shape/status per `task-02`'s traced evidence, not a flat 422/500 switch: `List<FieldErrorResponse>` (422 from `POST /assessments`) → per-field messages; `ApiErrorResponse{error:"AGENT_CALL_FAILED", message:"AGENT_REJECTED"}` → business-rejection message; `ApiErrorResponse{error:"AGENT_CALL_FAILED", message:"AGENT_ERROR"|"UNREACHABLE"}` (502/503) → service-unavailable message, distinct wording from the rejection case; anything else (400/404/500) → generic retry message. All translated to Spanish per `15-backend-frontend-contracts.md` §4, surfaced via the existing error-state UI from `task-04`.
+4. Extend `BriefForm.test.tsx`/add a hook test covering: successful submit navigates with the real `assessmentId`; the `List<FieldErrorResponse>` 422 shows per-field messages; the `AGENT_REJECTED` 422 shows the business message; a 502/503 shows the service-unavailable message; a 500 shows the generic retry message.
 5. Remove the `setTimeout` fake-submit code path entirely — no leftover dead code or feature flag.
 
 ---
@@ -41,9 +44,11 @@ The Intake screen calls the real `api/` via `submitAssessmentBrief`, redirects t
 | # | Verification | How to validate |
 |---|-------------|----------------|
 | 1 | Successful submit navigates to `/assessments/{assessmentId}/draft` with the real id from the API response | `npm run test` |
-| 2 | A 422 response renders a translated, non-technical message | `npm run test` |
-| 3 | A 500 response renders a generic retry message | `npm run test` |
-| 4 | No fake/mocked submit code remains in the hook | Manual code review |
+| 2 | A `List<FieldErrorResponse>` 422 (from `POST /assessments`) renders per-field translated messages, not a generic one | `npm run test` |
+| 3 | An `AGENT_REJECTED` 422 (from `POST /assessments/{id}/draft`) renders a business-rejection message, distinct from the field-validation case | `npm run test` |
+| 4 | An `AGENT_ERROR`/`UNREACHABLE` 502/503 renders a service-unavailable message, distinct from both 422 cases | `npm run test` |
+| 5 | A 500 response renders a generic retry message | `npm run test` |
+| 6 | No fake/mocked submit code remains in the hook | Manual code review |
 
 ### Software Smoke Test Check
 
@@ -61,7 +66,7 @@ N/A — no database or ORM involved in `web/`.
 
 - **Logging mechanism:** Resolves the deferral from `task-05` — this task introduces the first real outbound network call from a user action. If no decision was recorded in `.planning/LOGGING.md` by the time this task starts, the agent must propose Pino (structured JSON, fits this Node.js/TypeScript stack) and get explicit human sign-off recorded in `LOGGING.md` before implementing.
 - **Correlation / trace context:** Propagate a client-generated correlation id header through `submitAssessmentBrief`'s two calls (from `task-05`) so both are traceable as one logical submit in any server-side logs that echo it back.
-- **Levels by event criticality:** INFO on successful navigation; WARN on 422 (recoverable, teacher can retry); ERROR on 500.
+- **Levels by event criticality:** INFO on successful navigation; WARN on 422 (either shape) and 502/503 (all recoverable, teacher can retry); ERROR on 500.
 - **Execution trace points:** Submit handler entry, `submitAssessmentBrief` call, success/failure branch, navigation.
 - **Sensitive data guardrails:** Do not log the brief's free-text fields; log status codes and the resulting `assessmentId` only.
 - **Verification evidence:** A test or manual log sample showing the correlation id present on both outbound calls for one submit.
@@ -80,7 +85,7 @@ N/A — no database or ORM involved in `web/`.
 ## Done Criteria
 
 - [ ] Submitting the real form creates a brief, generates a draft, and navigates to the real draft screen with the real `assessmentId`.
-- [ ] 422 and 500 responses show translated, teacher-facing messages, not raw codes/English strings.
+- [ ] Both 422 shapes (`List<FieldErrorResponse>` and `ApiErrorResponse{AGENT_REJECTED}`), 502/503 (`agents/` down), and 500 responses each show a distinct, translated, teacher-facing message — not raw codes/English strings, and not collapsed into one generic "422/500" bucket.
 - [ ] No fake/mocked submit code remains.
 - [ ] All tests pass; `npm run lint` passes.
 - [ ] Logging mechanism decision is recorded in `.planning/LOGGING.md` with human sign-off before this task is marked done.

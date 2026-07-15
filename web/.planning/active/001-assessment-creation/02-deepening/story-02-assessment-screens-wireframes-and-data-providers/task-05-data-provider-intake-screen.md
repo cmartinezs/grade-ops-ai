@@ -38,7 +38,7 @@ DTOs for the brief-intake/draft-generation endpoints and a `submitAssessmentBrie
   ```
   `submitAssessmentBrief` calls `createAssessmentBrief(brief)` then `generateAssessmentDraft(assessmentId)` sequentially (the second call depends on the first's result — this cannot be `Promise.all`'d) and returns the confirmed `assessmentId`.
 - **Risk:** Medium — if `generateAssessmentDraft` fails after `createAssessmentBrief` already succeeded, the assessment brief exists but has no draft yet. `submitAssessmentBrief` must surface this as a distinguishable error (not silently retry) so `task-06`'s UI can tell the teacher the brief was saved but generation failed, rather than implying nothing happened.
-- **Design notes:** Reuse the existing `apiClient` from `src/lib/api/client.ts` (already handles Firebase auth token + 401 handling) — do not create a second HTTP client. Field names must exactly match `task-01`'s confirmed `CreateAssessmentBriefRequest`/`Response` shapes, no renaming.
+- **Design notes:** Reuse the existing `apiClient` from `src/lib/api/client.ts` (already handles Firebase auth token + 401 handling) — do not create a second HTTP client. Field names must exactly match `task-01`'s confirmed `CreateAssessmentBriefRequest`/`Response` shapes, no renaming. Per `task-02`'s traced error evidence, the two calls have different error-body shapes on failure: `createAssessmentBrief`'s 422 is `List<FieldErrorResponse>` (Bean Validation), while `generateAssessmentDraft`'s errors (404/422/502/503/500) are all `ApiErrorResponse{error, message}`. `createAssessmentBrief`/`generateAssessmentDraft` must propagate the parsed body as-is (don't collapse into a single generic `Error`) so `task-06` can branch on shape/status, not guess.
 
 ---
 

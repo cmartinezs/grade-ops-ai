@@ -55,7 +55,7 @@ This story delivers the wireframes, the navigable fake-data mockups, the DTOs/vi
 | # | Task | Workflow | Status | Output |
 |---|------|----------|--------|--------|
 | 1 | [verify-api-contract](story-02-assessment-screens-wireframes-and-data-providers/task-01-verify-api-contract.md) | GENERATE-DOCUMENT | DONE | Confirmed request/response shapes for all 6 endpoints, verified against `AssessmentController.java` |
-| 2 | [wireframe-intake-screen](story-02-assessment-screens-wireframes-and-data-providers/task-02-wireframe-intake-screen.md) | GENERATE-DOCUMENT | TODO | Wireframe textual + estados documentados |
+| 2 | [wireframe-intake-screen](story-02-assessment-screens-wireframes-and-data-providers/task-02-wireframe-intake-screen.md) | GENERATE-DOCUMENT | IN PROGRESS | Wireframe textual + estados documentados |
 | 3 | [component-hierarchy-intake-screen](story-02-assessment-screens-wireframes-and-data-providers/task-03-component-hierarchy-intake-screen.md) | GENERATE-DOCUMENT | TODO | Jerarquía de componentes documentada |
 | 4 | [functional-mockup-intake-screen](story-02-assessment-screens-wireframes-and-data-providers/task-04-functional-mockup-intake-screen.md) | GENERATE-DOCUMENT | TODO | Maqueta funcional navegable (TSX, datos fake) |
 | 5 | [data-provider-intake-screen](story-02-assessment-screens-wireframes-and-data-providers/task-05-data-provider-intake-screen.md) | GENERATE-DOCUMENT | TODO | DTOs + `submitAssessmentBrief` en `lib/api` |
@@ -90,7 +90,7 @@ This story delivers the wireframes, the navigable fake-data mockups, the DTOs/vi
 
 | # | Description | Docs Involved | Status | Resolution Path |
 |---|-------------|--------------|--------|----------------|
-| — | *None yet* | — | — | — |
+| 1 | `task-01` (verify-api-contract, `DONE`/merged) only transcribed success-path request/response shapes. Tracing `task-02`'s two endpoints' actual exception paths in `api/` found a much richer error surface than the generic 401/403/404/409/422/500 taxonomy in `docs/gradeops-ai-frontend-guidelines/06-estado-datos-y-api.md` §9: 422 has two distinct body shapes (`List<FieldErrorResponse>` for Bean Validation vs. `ApiErrorResponse{error, message}` for everything else), and draft generation can return 502/503 when `agents/` is down. | `task-01-verify-api-contract.md`, `task-02-wireframe-intake-screen.md`, `06-estado-datos-y-api.md` §9 | Open | Not reopening `task-01` (its narrower success-shape scope is already satisfied). Each remaining task that implements error handling (`task-05`, `task-06`, and `task-10`/`task-11`/`task-12` for the Draft Builder screen's other 4 endpoints) must trace its own endpoints' real exception paths in `api/` source the same way, rather than assuming the generic taxonomy. |
 
 ---
 
