@@ -23,7 +23,10 @@ Term and concept traceability for this planning. For global consolidated view, s
 <!-- MATRIX-HEADER: plan-init adds one column per area between "Term / Concept" and "Notes" -->
 | Term / Concept | WB | W | Notes |
 |---------------|----|---|-------|
-| *[term]* | | | |
+| Intake screen | ✅ | | `/assessments/new` — brief form entry point that kicks off draft generation (US-010). Introduced by story-02 task breakdown. |
+| Draft Builder screen | ✅ | | `/assessments/[id]/draft` — single screen combining draft editor, regenerate action, and version history (US-011 + US-012). Introduced by story-02 task breakdown. |
+| Screen Data Facade | ✅ | | `loadAssessmentDraftBuilderPage(assessmentId)` — combines the current-draft and version-list GETs into one page view model per `docs/gradeops-ai-frontend-guidelines/06-estado-datos-y-api.md` §7. First concrete use of this pattern in `web/`. |
+| AssessmentDraftDto | ✅ | | Mirrors `api/`'s `GenerateAssessmentDraftResponse` verbatim (verified in task-01) — `draftId, title, context, instructions, objectives[], deliverables[], constraints[], versionNumber`. |
 
 ---
 

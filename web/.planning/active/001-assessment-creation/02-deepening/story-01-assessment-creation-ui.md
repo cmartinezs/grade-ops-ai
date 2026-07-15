@@ -1,6 +1,7 @@
 # 🔍 DEEPENING: Story 01 — assessment-creation-ui
 
-> **Status:** TODO
+> **Status:** SKIPPED
+> **Skipped reason:** Scope fully absorbed by story-02 after atomization: story-02's functional-mockup and connect-real-api tasks (task-04, 06, 09, 10, 11, 12) already build the real components and wire them to the real API end-to-end, and task-13 explicitly re-verifies story-01's Done Criteria. Story-01 was never atomized/started, so nothing is lost by skipping it. (2026-07-15)
 > [← 01-expansion.md](../01-expansion.md) | [← planning/README.md](../../README.md)
 
 ---

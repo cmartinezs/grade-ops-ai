@@ -9,7 +9,7 @@
 
 | # | Story | SDLC Phase(s) | Depends On | Risk | External Issue | Status |
 |---|-------|--------------|------------|------|----------------|--------|
-| 01 | assessment-creation-ui | WB | Story 02 | M | — | TODO |
+| 01 | assessment-creation-ui | WB | Story 02 | M | — | SKIPPED |
 | 02 | assessment-screens-wireframes-and-data-providers | WB | — | M | — | TODO |
 
 ---

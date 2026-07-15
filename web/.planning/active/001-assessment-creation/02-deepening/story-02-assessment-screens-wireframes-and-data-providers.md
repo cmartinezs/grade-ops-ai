@@ -50,22 +50,23 @@ This story delivers the wireframes, the navigable fake-data mockups, the DTOs/vi
 
 ## Tasks
 
-> Atomize via `/plan-atomize` before execution begins.
+> Atomized via `/plan-atomize` on 2026-07-15. Each row links to its task file under `story-02-assessment-screens-wireframes-and-data-providers/`.
 
 | # | Task | Workflow | Status | Output |
 |---|------|----------|--------|--------|
-| 1 | UX definition — Intake screen: objetivo de usuario, flujo principal, estados secundarios (loading, error de validación, éxito) y wireframe textual de baja fidelidad según `02-ux-wireframes-y-maquetas.md` §3 | GENERATE-DOCUMENT | TODO | Wireframe textual + estados documentados |
-| 2 | Jerarquía de componentes — Intake screen: `Page` (`IntakeAssessmentPage`) → `Section` (`BriefFormSection`) → `Component` (`BriefForm`) y sus campos, según `03-jerarquia-de-componentes.md` | GENERATE-DOCUMENT | TODO | Jerarquía de componentes documentada |
-| 3 | Maqueta funcional con datos fake — Intake screen: formulario RHF + Zod navegable, sin API real, cubre errores de validación por campo y estado de envío | GENERATE-DOCUMENT | TODO | Maqueta funcional navegable (TSX, datos fake) |
-| 4 | Data provider — Intake screen: DTOs `CreateAssessmentBriefRequestDto`/`CreateAssessmentBriefResponseDto` alineados a `AssessmentController` (`POST /api/v1/assessments`, `POST /api/v1/assessments/{id}/draft`); función `submitAssessmentBrief` en `lib/api` que orquesta ambas llamadas en secuencia | GENERATE-DOCUMENT | TODO | DTOs + función de mutación en `lib/api` |
-| 5 | Conectar API real — Intake screen: `useIntakeAssessmentPage` invoca `submitAssessmentBrief`, redirige a `/assessments/{id}/draft` con el `assessmentId` real devuelto por la API, maneja 422 y 500 | GENERATE-DOCUMENT | TODO | Intake screen conectada a `api/` real |
-| 6 | UX definition — Draft Builder screen: objetivo de usuario, flujo (ver draft, editar, regenerar, ver versiones), estados secundarios (loading, empty sin draft, error, conflicto 409) y wireframe textual de baja fidelidad | GENERATE-DOCUMENT | TODO | Wireframe textual + estados documentados |
-| 7 | Jerarquía de componentes — Draft Builder screen: `Page` (`AssessmentDraftPage`) → `Section`s (`DraftEditorSection`, `RegenerateSection`, `VersionHistorySection`), según `03-jerarquia-de-componentes.md` | GENERATE-DOCUMENT | TODO | Jerarquía de componentes documentada |
-| 8 | Maqueta funcional con datos fake — Draft Builder screen: draft editable navegable e historial de versiones simulados, cubre texto largo generado por IA, muchas versiones y cero versiones previas | GENERATE-DOCUMENT | TODO | Maqueta funcional navegable (TSX, datos fake) |
-| 9 | Data provider — Draft Builder screen: DTO `AssessmentDraftDto` alineado a `GenerateAssessmentDraftResponse` (`draftId, title, context, instructions, objectives[], deliverables[], constraints[], versionNumber`); Screen Data Facade `loadAssessmentDraftBuilderPage` combinando `GET .../draft` + `GET .../draft/versions` en paralelo con `Promise.all` | GENERATE-DOCUMENT | TODO | DTO + `loadAssessmentDraftBuilderPage` + view model |
-| 10 | Mutaciones — Draft Builder screen: `updateAssessmentDraft` (PATCH parcial) y `regenerateAssessmentDraft` (POST regenerate) en `lib/api`, con estado submitting/success/error y refetch de versiones tras regenerar | GENERATE-DOCUMENT | TODO | Funciones de mutación + refetch tras regenerar |
-| 11 | Conectar API real — Draft Builder screen: `useAssessmentDraftBuilderPage` consume el loader y las mutaciones reales, maneja 404, 409 y 422 | GENERATE-DOCUMENT | TODO | Draft Builder screen conectada a `api/` real |
-| 12 | Conexión end-to-end: verificar el flujo Intake → Draft Builder con IDs reales, remover mocks residuales (`features/assessment-creation/mocks`), smoke manual de submit brief, editar y guardar draft, regenerar y ver versión anterior | GENERATE-DOCUMENT | TODO | Flujo completo verificado sin datos fake residuales |
+| 1 | [verify-api-contract](story-02-assessment-screens-wireframes-and-data-providers/task-01-verify-api-contract.md) | GENERATE-DOCUMENT | TODO | Confirmed request/response shapes for all 6 endpoints, verified against `AssessmentController.java` |
+| 2 | [wireframe-intake-screen](story-02-assessment-screens-wireframes-and-data-providers/task-02-wireframe-intake-screen.md) | GENERATE-DOCUMENT | TODO | Wireframe textual + estados documentados |
+| 3 | [component-hierarchy-intake-screen](story-02-assessment-screens-wireframes-and-data-providers/task-03-component-hierarchy-intake-screen.md) | GENERATE-DOCUMENT | TODO | Jerarquía de componentes documentada |
+| 4 | [functional-mockup-intake-screen](story-02-assessment-screens-wireframes-and-data-providers/task-04-functional-mockup-intake-screen.md) | GENERATE-DOCUMENT | TODO | Maqueta funcional navegable (TSX, datos fake) |
+| 5 | [data-provider-intake-screen](story-02-assessment-screens-wireframes-and-data-providers/task-05-data-provider-intake-screen.md) | GENERATE-DOCUMENT | TODO | DTOs + `submitAssessmentBrief` en `lib/api` |
+| 6 | [connect-real-api-intake-screen](story-02-assessment-screens-wireframes-and-data-providers/task-06-connect-real-api-intake-screen.md) | GENERATE-DOCUMENT | TODO | Intake screen conectada a `api/` real |
+| 7 | [wireframe-draft-builder-screen](story-02-assessment-screens-wireframes-and-data-providers/task-07-wireframe-draft-builder-screen.md) | GENERATE-DOCUMENT | TODO | Wireframe textual + estados documentados |
+| 8 | [component-hierarchy-draft-builder-screen](story-02-assessment-screens-wireframes-and-data-providers/task-08-component-hierarchy-draft-builder-screen.md) | GENERATE-DOCUMENT | TODO | Jerarquía de componentes documentada |
+| 9 | [functional-mockup-draft-builder-screen](story-02-assessment-screens-wireframes-and-data-providers/task-09-functional-mockup-draft-builder-screen.md) | GENERATE-DOCUMENT | TODO | Maqueta funcional navegable (TSX, datos fake) |
+| 10 | [data-provider-draft-builder-screen](story-02-assessment-screens-wireframes-and-data-providers/task-10-data-provider-draft-builder-screen.md) | GENERATE-DOCUMENT | TODO | DTO + `loadAssessmentDraftBuilderPage` Screen Data Facade |
+| 11 | [mutations-draft-builder-screen](story-02-assessment-screens-wireframes-and-data-providers/task-11-mutations-draft-builder-screen.md) | GENERATE-DOCUMENT | TODO | `updateAssessmentDraft` + `regenerateAssessmentDraft` en `lib/api` |
+| 12 | [connect-real-api-draft-builder-screen](story-02-assessment-screens-wireframes-and-data-providers/task-12-connect-real-api-draft-builder-screen.md) | GENERATE-DOCUMENT | TODO | Draft Builder screen conectada a `api/` real |
+| 13 | [end-to-end-connection](story-02-assessment-screens-wireframes-and-data-providers/task-13-end-to-end-connection.md) | GENERATE-DOCUMENT | TODO | Flujo completo verificado sin datos fake residuales |
 
 ---
 
