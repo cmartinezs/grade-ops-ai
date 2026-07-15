@@ -25,6 +25,20 @@ Each entry should answer as many of these as possible:
 
 <!-- Add newest entries at the top. -->
 
+### 2026-07-14 — Story 02 sync checkpoints updated: api/'s child planning confirmed DONE
+
+**Source:** manual (human-requested sync after confirming `api/003` merged)
+
+**What happened:** With `api/003-assessment-creation` confirmed `DONE` (11/11 tasks, PR #44 merged, archived to `api/.planning/finished/`), updated Story 02's Sync Checkpoints (2 and 3 → DONE, with dated evidence), Done Criteria bullet 1 (checked), `01-expansion.md`'s Story Summary and Linked Child Plannings rows, and `active/README.md`'s status column. Also corrected two stale rows found in the same pass while here: `01-expansion.md`'s Story Summary table still listed both Story 01 and Story 02 as `TODO` even though Story 01 had already been `IN PROGRESS` since 2026-07-12 (that table was never updated when the story file's own status changed) — fixed both to `IN PROGRESS`.
+
+**What was expected instead:** n/a — this is the coordination story working as designed, same pattern as Story 01's 2026-07-12 update. The stale Story Summary rows were an oversight from that earlier update not being propagated to every index file that duplicates story status.
+
+**How it was resolved:** Story 02's own file, `01-expansion.md` (Story Summary + Linked Child Plannings), and `active/README.md` all updated in the same pass, cross-checked against each other for consistency. Left Checkpoint 4 and Done Criteria bullet 2 (both about `web/` reachability) unchecked — `web/`'s Story 03 hasn't started, so there's genuinely nothing to confirm yet, same reasoning as Story 01's still-unmet reachability criterion before Story 04 existed.
+
+**What should be carried forward:** three files (`story-NN-*.md`, `01-expansion.md`'s Story Summary table, `active/README.md`) all independently duplicate each story's status — a status change in one doesn't propagate automatically. When updating any story's status, check all three rather than assuming the story file alone is the single source of truth.
+
+---
+
 ### 2026-07-14 — Story 04 (e2e-integration-verification) added post-initial-expansion via /plan-enrich-epic
 
 **Source:** `/plan-enrich-epic`

@@ -9,8 +9,8 @@
 
 | # | Story | Área | Depends On | Risk | External Issue | Status |
 |---|-------|------|------------|------|----------------|--------|
-| 01 | agents-assessment-agent-coordination | AG | — | M | — | TODO |
-| 02 | api-assessment-creation-coordination | AP | 01 | M | — | TODO |
+| 01 | agents-assessment-agent-coordination | AG | — | M | — | IN PROGRESS |
+| 02 | api-assessment-creation-coordination | AP | 01 | M | — | IN PROGRESS |
 | 03 | web-assessment-creation | WB | 02 | L | — | TODO |
 | 04 | e2e-integration-verification | IN | 01, 02 | M | — | TODO |
 
@@ -62,7 +62,7 @@ Use this section when a parent monorepo planning coordinates work owned by child
 | Child Worktree | Child Branch | Child Planning | Ownership | Sync Notes | Status |
 |----------------|--------------|----------------|-----------|------------|--------|
 | `../gradeops-agents` (`agents/`) | `gradeops-agents/story-01-assessment-agent` | [001-assessment-creation](../../../agents/.planning/active/001-assessment-creation/README.md) | child | Defines `AssessmentCommand`/`AssessmentResult` contract and the internal endpoint `api/` calls via `agentclient`. Must reach a stable contract before `api/`'s child planning can integration-test against a real agent. | DONE (2026-07-12) — story-01 `assessment-agent` DONE, all tasks and Done Criteria complete; child planning itself still open (Deepening) pending archive |
-| `../gradeops-api` (`api/`) | `gradeops-api/story-01-assessment-creation-persistence` | [003-assessment-creation](../../../api/.planning/active/003-assessment-creation/README.md) | child | Persists brief/draft, calls `agents/` via `agentclient`, exposes the endpoints `web/` (Story 03) consumes. Depends on the `agents/` child planning's contract. | TODO |
+| `../gradeops-api` (`api/`) | `gradeops-api/story-01-assessment-creation-persistence` | [003-assessment-creation](../../../api/.planning/finished/003-assessment-creation/README.md) | child | Persists brief/draft, calls `agents/` via `agentclient`, exposes the endpoints `web/` (Story 03) consumes. Depends on the `agents/` child planning's contract. | DONE (2026-07-14) — story-01 `assessment-creation-persistence` DONE, 11/11 tasks, PR #44 merged; child planning archived to `api/.planning/finished/`. Note: `api/`'s own tests mock the `agents/` HTTP call — real cross-service reachability is not yet proven, tracked by this planning's new Story 04. |
 
 `agents/.planning/` did not exist before this correction — it was initialized via `/plan-init` (area `AG` → `src/`) specifically so this work could be owned there instead of duplicated in this root planning. `api/.planning/` already existed (with prior plannings `001-hexagonal-refactor`, `002-drop-old-password-recovery-requests`); `003-assessment-creation` is the next planning in that workspace's own sequence.
 
