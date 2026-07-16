@@ -55,6 +55,8 @@ N/A — no database or ORM artifacts involved.
 
 ## Evidence
 
+Full raw, unedited command output (JSON responses, deploy history, git branch-drift log) is captured separately in [`evidence/task-03-verify-render-beta-live.md`](evidence/task-03-verify-render-beta-live.md). The summary below is a condensed reading of that raw evidence.
+
 Render CLI v2.21.0 installed via the documented install script and authenticated non-interactively with a scoped `RENDER_API_KEY` (added to root `.env`, gitignored). No `render workspace list` subcommand exists in this CLI version, so the workspace id was resolved via a direct `GET https://api.render.com/v1/owners` call, then set with `render workspace set <id> --confirm`:
 
 ```
