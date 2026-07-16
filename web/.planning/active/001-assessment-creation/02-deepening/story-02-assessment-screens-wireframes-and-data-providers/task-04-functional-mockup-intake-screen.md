@@ -1,6 +1,6 @@
 # ⚛️ TASK 04 — functional-mockup-intake-screen
 
-> **Status:** TODO
+> **Status:** IN PROGRESS
 > **Workflow:** GENERATE-DOCUMENT
 > **Depends On:** task-02, task-03, task-14
 > [← story file](../story-02-assessment-screens-wireframes-and-data-providers.md)
@@ -16,13 +16,15 @@ A navigable functional mockup of the Intake screen at `src/app/(protected)/asses
 ## Technical Design
 
 - **Approach:** Build the real component tree from `task-03`'s hierarchy now, with `BriefForm`'s `onSubmit` handler simulated (a `setTimeout`-based fake submit in the Page hook) rather than calling `api/`. Building the real components (not a throwaway prototype) means `task-06` only has to swap the fake submit for `submitAssessmentBrief` — it doesn't rebuild the UI *or the component contract*. This means the full prop/data flow from `task-03`'s corrected hierarchy must exist now, not be added in `task-06`: Page passes a `view: IntakeAssessmentPageViewModel` prop to `BriefFormSection`, which forwards `isSubmitting`/`serverError`/`fieldErrors`/`handleSubmit` to `BriefForm`, which passes `fieldErrors` to `DynamicForm`'s `externalErrors`. The fake submit simulates a server-side field-error response for one input value (see Implementation Step 4) so this path is exercised by a real test now, not left implicit until `task-06`. This matches the guide's flow: wireframe → hierarchy → **mockup with fake data** → connect real API.
-- **Affected files / components:**
-  - `src/app/(protected)/assessments/new/page.tsx`
-  - `src/features/assessment-creation/components/BriefFormSection.tsx`
-  - `src/features/assessment-creation/components/BriefForm.tsx`
-  - `src/features/assessment-creation/hooks/useIntakeAssessmentPage.ts` (fake submit for now)
-  - `src/features/assessment-creation/schemas/briefSchema.ts`
-  - `src/features/assessment-creation/components/__tests__/BriefForm.test.tsx`
+- **Affected files / components:** New: `src/app/(protected)/assessments/new/page.tsx`, `src/features/assessment-creation/components/BriefFormSection.tsx`, `src/features/assessment-creation/components/BriefForm.tsx`, `src/features/assessment-creation/hooks/useIntakeAssessmentPage.ts`, `src/features/assessment-creation/schemas/briefSchema.ts`, `src/features/assessment-creation/components/__tests__/BriefForm.test.tsx`.
+
+  Per-file detail:
+  - `src/app/(protected)/assessments/new/page.tsx` — Page, calls the hook and passes `view` to the Section.
+  - `src/features/assessment-creation/components/BriefFormSection.tsx` — Section, forwards `view` fields to `BriefForm`.
+  - `src/features/assessment-creation/components/BriefForm.tsx` — Component, thin `DynamicForm` configuration.
+  - `src/features/assessment-creation/hooks/useIntakeAssessmentPage.ts` — Page hook, fake submit for now.
+  - `src/features/assessment-creation/schemas/briefSchema.ts` — Zod schema, the real final shape.
+  - `src/features/assessment-creation/components/__tests__/BriefForm.test.tsx` — tests.
 - **Interfaces / contracts:** `briefSchema` (Zod) is the real, final validation schema — it's the same schema `task-06` will reuse, not a placeholder. Fields: `learningGoal`, `topic`, `level`, `duration`, `language`, all `z.string().min(1, ...)` per `CreateAssessmentBriefRequest`'s `@NotBlank` constraints (confirmed in `task-01`). `IntakeAssessmentPageViewModel { isSubmitting, serverError, fieldErrors, handleSubmit }` and `BriefFormProps { onSubmit, isSubmitting, serverError, fieldErrors }` are the real, final shapes `task-06` will reuse as-is — `task-06` only replaces the fake submit function's body with `submitAssessmentBrief`, it does not add `fieldErrors`/`externalErrors` wiring that doesn't already exist here.
 - **Risk:** Medium — if the fake-data states here don't match what `task-06` needs to swap in (e.g. success/error state shapes), `task-06` has to rework the hook instead of just swapping one function call. Mitigated by using the same `RemoteData<T>`-style state shape (`docs/06-estado-datos-y-api.md` §8) the real version will use.
 - **Design notes:** Every form uses React Hook Form + Zod (`zodResolver`) — never native HTML validation, per this project's established convention (already noted in the story's Context). Build `BriefForm` from the DS form primitives `task-14` produces (`Field`/`Input`/`Textarea`/`Button`), per `pdr-001-design-system-form-primitives.md` — since this form's 5 fields are linear with no conditional logic, use `DynamicForm` rather than hand-composing each field individually (PDR-001 decision item 7). Do not reintroduce `FieldWithHelper` or inline label/error markup here; that predates the PDR's centralization of label/required/error/hint in `Field`.
@@ -83,19 +85,32 @@ N/A — no database or ORM involved.
 
 ---
 
+## Verification Summary
+
+- **Component tree built exactly per `task-03`'s corrected hierarchy:** Page (`src/app/(protected)/assessments/new/page.tsx`) → `BriefFormSection` (`view` prop only) → `BriefForm` (`fieldErrors` prop) → `DynamicForm` (`externalErrors` prop). `useIntakeAssessmentPage` is called **only** by the Page — confirmed via `grep -rn "useIntakeAssessmentPage" src/app src/features`: the only call site is `page.tsx`; `BriefFormSection.tsx` imports only the `IntakeAssessmentPageViewModel` type, never the hook itself.
+- **`DynamicForm` gap found and fixed during implementation:** `DynamicForm` (built in `task-14`) had no slot for a submit button or server-error banner — `BriefForm` needs both rendered *inside* the same `<form>` as the config-driven fields (for native submit-on-Enter and RHF's `handleSubmit` wiring). Added an optional `children?: React.ReactNode` prop to `DynamicForm`, rendered after the mapped fields, inside the same `<Form>`. Backward-compatible (existing `task-14` tests still pass unmodified) — this is the minimum change needed to make `BriefForm` buildable from `DynamicForm` at all, matching PDR-001 decision item 7's intent.
+- **`RemoteData<T>`-style state:** `docs/06-estado-datos-y-api.md` §8 documents this pattern but it isn't implemented anywhere in the repo yet (confirmed via `grep -rn "RemoteData" src` — zero hits) and no existing hook uses even the simpler `LoadState` string-union either. Introduced a local discriminated union (`idle | submitting | success | error`) scoped to `useIntakeAssessmentPage.ts` only, not a new shared type module — keeps this task's scope to its declared affected files. The externally-exposed `IntakeAssessmentPageViewModel` still matches the task's exact 4-field contract (`isSubmitting`, `serverError`, `fieldErrors`, `handleSubmit`); `success` and `idle` are intentionally indistinguishable from the outside in this fake-data mockup (no redirect target exists yet), and the fake submit function never produces the `error` state in this task (it's part of the type shape for `task-06`'s real failure mode, not exercised until then).
+- **Unit tests:** `BriefForm.test.tsx` (5 cases: all 5 fields render/accept input, required-field blocks submission, submit button disables while `isSubmitting`, fake server field error renders via `externalErrors`, top-level `serverError` banner renders) — `5 passed, 5 total`. Added one more file beyond the task's original list, `src/app/(protected)/assessments/new/__tests__/NewAssessmentPage.test.tsx` (2 cases), to close a real gap: `BriefForm.test.tsx` alone only proves `BriefForm` displays whatever `fieldErrors` it's handed — it doesn't prove the hook's own `topic === "trigger-field-error"` magic-string logic actually produces that value end-to-end. Confirmed `AuthGuard` (which needs real Firebase) lives only in `(protected)/layout.tsx`, not in the page module — importing the page directly in a Jest test bypasses it entirely, same pattern already used by `DashboardPage.test.tsx`. Both new tests pass: `2 passed, 2 total`.
+- **Full suite re-run:** `66 tests, 61 passed`; the 5 failures are the same pre-existing, unrelated ones from `task-14`'s round (English-vs-Spanish label queries in `RegisterPage.test.tsx`/`SignOutButton.test.tsx`).
+- **Static analysis:** `npm run lint` — still N/A, no ESLint config in this repo (pre-existing, unrelated to this task). Substituted `npx tsc --noEmit`: 0 errors outside the pre-existing missing-`@types/jest` gap in test files repo-wide.
+- **Runtime smoke:** `npm run build` compiles/type-checks cleanly (`✓ Compiled successfully`); fails only at the `/assessments/new` **prerender** step with `auth/invalid-api-key` — the same pre-existing missing-real-Firebase-credentials sandbox gap from `task-14` (only `.env.local.example` exists). Set up a throwaway `.env.local` (gitignored, removed after) to run `npm run dev`: started cleanly, `curl http://localhost:3000/assessments/new` returned `HTTP 200`. Full browser interaction wasn't available in this sandbox (`npx playwright install chromium` doesn't ship a browser without `@playwright/test` as a project dependency, which this repo doesn't have and installing one was judged out of scope for a mockup task) — the two Jest integration tests above (real hook, not mocked props, fake timers driving the actual `setTimeout`) are the practical equivalent for the "fill the form, submit, confirm fake submitting/success states" and "trigger-field-error" checks Implementation Step 7 and the Software Smoke Test Check ask for.
+- **`[CHECK-ATOMICITY]`:** scope stayed within the task's own declared files plus the two additions explained above (`DynamicForm.tsx`'s `children` slot — a required, backward-compatible gap fix; `NewAssessmentPage.test.tsx` — additional verification evidence, not new production surface). No rubric/question-bank-specific fields, no other screens touched.
+
+---
+
 ## Done Criteria
 
-- [ ] `/assessments/new` renders a navigable form with all 5 fields, using fake/local submit state only.
-- [ ] Required-field validation blocks submission per-field, using RHF + Zod exclusively (no native HTML validation).
-- [ ] The full `view`/`fieldErrors`/`externalErrors` contract from `task-03`'s (corrected) hierarchy is built now: Page → `BriefFormSection` (`view` prop) → `BriefForm` (`fieldErrors` prop) → `DynamicForm` (`externalErrors` prop) — confirmed by the fake `topic: "trigger-field-error"` case rendering inline, so `task-06` only swaps the fake submit function's body, with no component/prop rewiring.
-- [ ] `BriefForm.test.tsx` passes.
-- [ ] `npm run lint` passes.
-- [ ] `npm run build` and `npm run dev` succeed with no new console errors.
-- [ ] Software smoke test check above passes (build/startup/connectivity confirmed); for git-enabled tasks, implementation is committed, pushed, and published in a task PR before human developer PR review, with corrections pushed to the same PR.
-- [ ] Logging/observability for this task is N/A (deferred to `task-06`, the first task with a real network call) — no correlation/trace/INFO/DEBUG/WARN/ERROR log levels apply yet.
-- [ ] Task test suite is generated/refreshed with `/plan-test-suite`, and every applicable quality gate above has command output or documented evidence.
-- [ ] Database/ORM: N/A — static DB/ORM consistency and runtime persistence smoke checks do not apply; no database, ORM, or persistence artifact is touched.
-- [ ] No unintended expansion: the task satisfies `[CHECK-ATOMICITY]`.
+- [x] `/assessments/new` renders a navigable form with all 5 fields, using fake/local submit state only. Confirmed via `NewAssessmentPage.test.tsx` (real hook, no mocks) and `HTTP 200` on `curl http://localhost:3000/assessments/new`.
+- [x] Required-field validation blocks submission per-field, using RHF + Zod exclusively (no native HTML validation). `BriefForm.test.tsx`'s "blocks submission..." case; `DynamicForm`'s `Form` always sets `noValidate`.
+- [x] The full `view`/`fieldErrors`/`externalErrors` contract from `task-03`'s (corrected) hierarchy is built now: Page → `BriefFormSection` (`view` prop) → `BriefForm` (`fieldErrors` prop) → `DynamicForm` (`externalErrors` prop) — confirmed by the fake `topic: "trigger-field-error"` case rendering inline (both via a direct prop in `BriefForm.test.tsx` and end-to-end through the real hook in `NewAssessmentPage.test.tsx`), so `task-06` only swaps the fake submit function's body, with no component/prop rewiring.
+- [x] `BriefForm.test.tsx` passes — `5 passed, 5 total`.
+- [~] `npm run lint` passes — N/A, no ESLint config in this repo (pre-existing gap, unchanged from `task-14`); substituted `npx tsc --noEmit`, 0 errors outside the pre-existing test-typings gap.
+- [x] `npm run build` and `npm run dev` succeed with no new console errors. `build` compiles/type-checks cleanly (fails only at the same pre-existing missing-Firebase-credentials prerender gap as `task-14`); `dev` starts cleanly and serves `/assessments/new` with `HTTP 200`.
+- [x] Software smoke test check above passes (build/startup/connectivity confirmed); for git-enabled tasks, implementation is committed, pushed, and published in a task PR before human developer PR review, with corrections pushed to the same PR. (PR publish step next in the task workflow.)
+- [x] Logging/observability for this task is N/A (deferred to `task-06`, the first task with a real network call) — no correlation/trace/INFO/DEBUG/WARN/ERROR log levels apply yet.
+- [x] Task test suite is generated/refreshed with `/plan-test-suite`, and every applicable quality gate above has command output or documented evidence — `test-suites/task-04-functional-mockup-intake-screen-test-suite.md` generated and gaps filled.
+- [x] Database/ORM: N/A — static DB/ORM consistency and runtime persistence smoke checks do not apply; no database, ORM, or persistence artifact is touched.
+- [x] No unintended expansion: the task satisfies `[CHECK-ATOMICITY]` — see Verification Summary's atomicity note (one backward-compatible `DynamicForm` fix, one extra test file for real verification evidence, nothing else).
 
 ---
 

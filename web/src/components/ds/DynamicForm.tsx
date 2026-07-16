@@ -23,6 +23,8 @@ interface DynamicFormProps<T extends FieldValues> {
   onSubmit: (values: T) => void;
   resolver?: Resolver<T>;
   externalErrors?: Partial<Record<keyof T, string>>;
+  /** Extra content (e.g. a submit button) rendered after the fields, inside the same <Form>. */
+  children?: React.ReactNode;
 }
 
 export default function DynamicForm<T extends FieldValues>({
@@ -30,6 +32,7 @@ export default function DynamicForm<T extends FieldValues>({
   onSubmit,
   resolver,
   externalErrors,
+  children,
 }: DynamicFormProps<T>) {
   const {
     register,
@@ -122,6 +125,7 @@ export default function DynamicForm<T extends FieldValues>({
           </Field>
         );
       })}
+      {children}
     </Form>
   );
 }
