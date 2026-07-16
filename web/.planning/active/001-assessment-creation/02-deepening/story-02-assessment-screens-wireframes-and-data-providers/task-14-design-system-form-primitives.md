@@ -1,6 +1,6 @@
 # ⚛️ TASK 14 — design-system-form-primitives
 
-> **Status:** IN PROGRESS
+> **Status:** DONE
 > **Workflow:** GENERATE-DOCUMENT
 > **Depends On:** —
 > **Blocks:** `task-04-functional-mockup-intake-screen`, `task-09-functional-mockup-draft-builder-screen`
@@ -114,7 +114,7 @@ N/A — pure UI component library code, no network calls, no correlation/trace/I
 - [x] All new/changed component tests pass — `10 passed, 10 total` (see Verification Summary).
 - [~] `npm run lint` passes — N/A, no ESLint config exists in this repo (pre-existing gap, not introduced here); substituted `npx tsc --noEmit`, 0 errors outside a pre-existing, repo-wide missing-`@types/jest` gap. See Verification Summary.
 - [x] `npm run build` and `npm run dev` succeed with no new console errors; `login`/`register` pages (existing `Input` `error` consumers) still render correctly or have a documented, explicitly scoped follow-up if they don't. `build` compiles/type-checks cleanly (fails only at an unrelated `/verify-email` prerender step due to a pre-existing missing-Firebase-credentials sandbox gap); `dev` starts cleanly and serves `/login` with `HTTP 200`. login/register/forgot-password/reset-password's per-field error rendering is fixed (not just documented) — see Verification Summary's P1 fix note; full suite re-run confirms the 4 previously-failing tests now pass.
-- [x] Software smoke test check above passes; for git-enabled tasks, implementation is committed, pushed, and published in a task PR before human developer PR review, with corrections pushed to the same PR. (PR publish step still pending as of this writing — see task workflow.)
+- [x] Software smoke test check above passes; for git-enabled tasks, implementation is committed, pushed, and published in a task PR before human developer PR review, with corrections pushed to the same PR. PR #71 (`tasks/story-02-assessment-screens-wireframes-and-data-providers/task-14-design-system-form-primitives` → `story-02-assessment-screens-wireframes-and-data-providers`) opened, reviewed (P1/P2 findings, both fixed in commit `4e448a9`), re-reviewed with no remaining findings, and merged 2026-07-16 (merge commit `2904564`).
 - [x] Logging/observability: N/A — pure UI component library code, no correlation/trace/INFO/DEBUG/WARN/ERROR log levels apply.
 - [x] Task test suite is generated/refreshed with `/plan-test-suite`, and every applicable quality gate above has command output or documented evidence — `test-suites/task-14-design-system-form-primitives-test-suite.md` generated and gaps filled; every gate above has command output or an explicit N/A reason.
 - [x] Database/ORM: N/A — static DB/ORM consistency and runtime persistence smoke checks do not apply; no database, ORM, or persistence artifact is touched.

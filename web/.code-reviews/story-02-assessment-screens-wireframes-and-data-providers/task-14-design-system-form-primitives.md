@@ -3,6 +3,24 @@
 Date: 2026-07-16  
 Scope: `task-14-design-system-form-primitives.md`, `pdr-001-design-system-form-primitives.md`, generated task test suite, and the implementation diff on `tasks/story-02-assessment-screens-wireframes-and-data-providers/task-14-design-system-form-primitives` against `origin/story-02-assessment-screens-wireframes-and-data-providers`.
 
+## Re-review - 2026-07-16
+
+### Findings
+
+No findings. The prior P1 and P2 findings are resolved in commit `4e448a9`.
+
+### Resolution Notes
+
+- P1 resolved: `FieldWithHelper` now accepts `error`, renders the inline error text, and wires `aria-describedby` to its child. The 10 current auth/reset `FieldWithHelper` call sites now pass `error={errors.field?.message}` to the wrapper as well as keeping `Input`'s invalid styling prop.
+- P2 resolved: `DynamicForm.registerField()` now derives a real RHF `required` validation rule from `FieldDefinition.required` for the no-resolver path, and `DynamicForm.test.tsx` includes a no-resolver required-field case.
+- Reviewed the implementation diff from `db7c424` to `4e448a9`, including `FieldWithHelper`, `DynamicForm`, the four auth/reset pages, the task doc update, and the added test.
+
+### Validation Notes
+
+- `npm run test -- Field DynamicForm ForgotPasswordPage ResetPasswordPage SignInPage`: PASS, 5 suites / 29 tests.
+- `npm run test -- RegisterPage`: FAIL, 1 suite / 3 tests. The failures are the known pre-existing English label queries (`/full name/i`, `/email/i`, `/password/i`) against the current Spanish UI labels (`Nombres`, `Apellidos`, `Correo electrónico`, `Contraseña`), not the task-14 error propagation path.
+- The unrelated working-tree change in `.planning/scripts/planning-task.mjs` was not reviewed or modified.
+
 ## Findings
 
 ### P1 - Removing `Input`'s inline error text breaks existing auth/reset field validation messages
@@ -60,4 +78,3 @@ Recommendation: choose one contract and encode it. Either make `resolver` requir
 - Ran `npm run test -- Field DynamicForm`: PASS, 2 suites / 9 tests.
 - Ran `npm run test -- SignInPage`: PASS, 1 suite / 5 tests. This suite does not cover client-side field error text.
 - Ran `npm run test -- ForgotPasswordPage ResetPasswordPage`: FAIL, 2 suites / 4 failed tests, matching the missing field error regression above.
-
