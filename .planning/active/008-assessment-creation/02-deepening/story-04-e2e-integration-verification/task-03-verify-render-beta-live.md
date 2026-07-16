@@ -95,6 +95,24 @@ Auto-deploy-on-push is genuinely configured and working — it just deploys the 
 
 **Vercel / Neon:** not checked — no credentials available for this task run. Documented as a scoping limitation per the task's Technical Design, not a blocker; the story's core concern is the `api/`↔`agents/` path, which is fully covered above.
 
+### Correction — Render normalized (2026-07-16)
+
+After the finding above, the human (Carlos) renamed both Render services to match `beta-environment-design.md` and repointed `gradeops-agents` from `master` to `develop`. Re-verified for real via the Render CLI/API rather than trusting the claim:
+
+```
+$ render services -o json | jq -r '.[].service | "\(.name) branch=\(.branch) autoDeploy=\(.autoDeploy)"'
+grade-ops-ai-agents branch=develop autoDeploy=yes
+grade-ops-ai-api    branch=develop autoDeploy=yes
+
+$ render deploys list srv-d8oqosernols73erqc3g -o json | jq -r '.[0] | "\(.status) \(.startedAt) \(.commit.id[:12]) \(.commit.message | split("\n")[0])"'
+live 2026-07-16T18:09:54.075725Z 6a9c8fd4e743 Merge pull request #63 from cmartinezs/planning/008-add-story-05-test-suite
+
+$ git log origin/develop -1 --format='%H %ci %s'
+6a9c8fd4e74311b371ca2f42ffbc887291c17031 2026-07-16 00:40:19 -0400 Merge pull request #63 ...
+```
+
+`grade-ops-ai-agents`'s new `live` deploy (`6a9c8fd4e743`) matches `develop`'s HEAD exactly — the branch-tracking gap is closed, the stale month of `agents/` work is now deployed. `grade-ops-ai-api` remains at its prior deploy (`cd771a0c`), which is correct: 0 commits touching `api/` have landed on `develop` since then, so no redeploy was needed. Both services are now named per the design doc and both track `develop`.
+
 ---
 
 ## Done Criteria
