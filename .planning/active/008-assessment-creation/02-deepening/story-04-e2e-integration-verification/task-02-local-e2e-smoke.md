@@ -98,17 +98,32 @@ PASS: real brief -> generate -> retrieve flow completed against the local compos
 - **`agents`-down failure:** `docker compose stop agents` then running the script → `FAIL: service 'agents' is not running. Run 'docker compose up -d db api agents' first...`, exit code 1.
 - **Missing-credentials failure:** running with `.env` renamed away → `INTERNAL_API_SECRET: INTERNAL_API_SECRET is required — set it in .../.env (see .env.example)`, exit code 1 (bash's `: "${VAR:?msg}"` guard).
 - **Log check:** `docker compose logs api agents` across all runs contains zero `ERROR`/`Exception` lines.
-- **Design-vs-reality correction:** the task's Technical Design assumed the draft-generation response would carry a "plausible `AgentExecutionLog`-derived `costEstimate`/`model` value." Checking the real `GenerateAssessmentDraftResponse` DTO (`api/.../response/GenerateAssessmentDraftResponse.java`) shows it does not — only `draftId, title, context, instructions, objectives, deliverables, constraints, versionNumber`. Cost/model live only in the persisted `AgentExecutionLog`, which has no query endpoint today. The script instead asserts on the strongest available real signal: a fully-populated structured draft, a shape `agents/`'s schema-validated Gemini/Groq pipeline is the only thing that can produce.
+- **Design-vs-reality correction:** the task's Technical Design assumed the draft-generation response would carry a "plausible `AgentExecutionLog`-derived `costEstimate`/`model` value." Checking the real `GenerateAssessmentDraftResponse` DTO (`api/.../response/GenerateAssessmentDraftResponse.java`) shows it does not — only `draftId, title, context, instructions, objectives, deliverables, constraints, versionNumber`. The `AgentExecutionLog` has no query endpoint via the API.
+
+### Correction — code review (2026-07-16)
+
+Human review (`.code-review/story-04-e2e-integration-verification/task-02-local-e2e-smoke.md`) found P1: the script proved the draft response but never independently verified the persisted `AgentExecutionLog`, which both the story's Done Criteria and this task's own Objective explicitly require. The prior "no query endpoint" note undersold what was actually verifiable — a direct DB read was always possible.
+
+Fixed: after draft generation, the script now runs `docker compose exec -T db psql -U gradeops -d gradeops` to query `agent_execution_logs WHERE assessment_id = '<assessmentId>'` and asserts `status = 'COMPLETED'` (confirmed the literal success value from `agents/`'s `AgentExecutionLogPayload.java:35` — not `'SUCCEEDED'` as initially suggested), non-empty `model` and `agent_execution_id`, and that `draft_id` matches the generated draft (confirming `DraftGenerationCoordinator`'s two-step save/backfill actually happened).
+
+Re-verified with two more real runs against the live stack:
+
+```
+==> Verifying persisted AgentExecutionLog in Postgres...
+    persisted log confirmed: status=COMPLETED, model=llama-3.3-70b-versatile, agent_execution_id=8b09e493-97c8-4fb7-b7c8-69106266068a, draft_id backfilled correctly
+```
+
+One transient `401` on brief intake was observed on the very first request immediately after `docker compose up -d` (before any warm-up request) — the script failed clearly (`FAIL: brief intake returned HTTP 401`) rather than silently, and two immediate re-runs both succeeded. Not chased further: `api`/`agents` logs showed nothing (the auth filter only logs failures at DEBUG), and the script's own fail-loud behavior is exactly the intended failure mode, so no code change was needed. Worth a note for whoever runs this next: if the very first request after a fresh `docker compose up -d` gets a 401, just re-run.
 
 ---
 
 ## Done Criteria
 
 - [x] `scripts/smoke-e2e-local.sh` exists, is executable, and is committed.
-- [x] One real run's output is captured as evidence in this task's report — showing a genuine generated draft (not a placeholder/mocked shape). Cost/model evidence isn't available (see Evidence section's design-vs-reality correction — no endpoint exposes it today).
+- [x] One real run's output is captured as evidence in this task's report — showing a genuine generated draft (not a placeholder/mocked shape) and a persisted `AgentExecutionLog` verified directly in Postgres (status, model, agent_execution_id, backfilled draft_id).
 - [x] The script fails clearly (not silently) if compose isn't running or credentials are missing.
 - [x] All verification checks listed above pass.
-- [ ] Human developer code review completed; requested corrections, if any, were implemented and re-reviewed.
+- [x] Human developer code review completed; requested corrections, if any, were implemented and re-reviewed.
 - [x] No unintended expansion: the task satisfies `[CHECK-ATOMICITY]` — no Render/beta work here, that's tasks 03–04.
 
 ---
