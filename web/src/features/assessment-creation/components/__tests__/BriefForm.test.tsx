@@ -33,6 +33,33 @@ describe("BriefForm", () => {
     expect(screen.getByRole("button", { name: /creando evaluación/i })).toBeDisabled();
   });
 
+  it("disables every field while isSubmitting, preventing edit/submit races", () => {
+    render(<BriefForm onSubmit={jest.fn()} isSubmitting fieldErrors={null} serverError={null} />);
+
+    expect(screen.getByLabelText(/^Objetivo de aprendizaje/)).toBeDisabled();
+    expect(screen.getByLabelText(/^Tema/)).toBeDisabled();
+    expect(screen.getByLabelText(/^Nivel/)).toBeDisabled();
+    expect(screen.getByLabelText(/^Duración/)).toBeDisabled();
+    expect(screen.getByLabelText(/^Idioma/)).toBeDisabled();
+  });
+
+  it("blocks submission when a required field is whitespace-only", async () => {
+    const onSubmit = jest.fn();
+    render(<BriefForm onSubmit={onSubmit} isSubmitting={false} serverError={null} fieldErrors={null} />);
+
+    fireEvent.change(screen.getByLabelText(/^Objetivo de aprendizaje/), { target: { value: "Entender recursividad" } });
+    fireEvent.change(screen.getByLabelText(/^Tema/), { target: { value: "   " } });
+    fireEvent.change(screen.getByLabelText(/^Nivel/), { target: { value: "Intermedio" } });
+    fireEvent.change(screen.getByLabelText(/^Duración/), { target: { value: "45 min" } });
+    fireEvent.change(screen.getByLabelText(/^Idioma/), { target: { value: "Java" } });
+    fireEvent.click(screen.getByRole("button", { name: /crear evaluación/i }));
+
+    await waitFor(() => {
+      expect(screen.getByText("Ingresa el tema.")).toBeInTheDocument();
+    });
+    expect(onSubmit).not.toHaveBeenCalled();
+  });
+
   it("renders the fake server-side field error inline via DynamicForm's externalErrors prop", async () => {
     render(
       <BriefForm

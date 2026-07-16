@@ -26,6 +26,7 @@ export default function BriefForm({ onSubmit, isSubmitting, serverError, fieldEr
       onSubmit={onSubmit}
       resolver={zodResolver(briefSchema)}
       externalErrors={fieldErrors ?? undefined}
+      disabled={isSubmitting}
     >
       {serverError && (
         <p role="alert" style={{ fontSize: "var(--text-sm)", color: "var(--danger-600)", margin: 0 }}>

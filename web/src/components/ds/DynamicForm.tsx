@@ -23,6 +23,8 @@ interface DynamicFormProps<T extends FieldValues> {
   onSubmit: (values: T) => void;
   resolver?: Resolver<T>;
   externalErrors?: Partial<Record<keyof T, string>>;
+  /** Disables every rendered control (e.g. while a submit is in flight) — prevents edit/submit races. */
+  disabled?: boolean;
   /** Extra content (e.g. a submit button) rendered after the fields, inside the same <Form>. */
   children?: React.ReactNode;
 }
@@ -32,6 +34,7 @@ export default function DynamicForm<T extends FieldValues>({
   onSubmit,
   resolver,
   externalErrors,
+  disabled,
   children,
 }: DynamicFormProps<T>) {
   const {
@@ -94,6 +97,7 @@ export default function DynamicForm<T extends FieldValues>({
                 id={field.name}
                 placeholder={field.placeholder}
                 error={fieldError}
+                disabled={disabled}
                 {...registerField(field)}
               />
             )}
@@ -102,11 +106,12 @@ export default function DynamicForm<T extends FieldValues>({
                 id={field.name}
                 placeholder={field.placeholder}
                 error={fieldError}
+                disabled={disabled}
                 {...registerField(field)}
               />
             )}
             {field.control === "select" && (
-              <Select id={field.name} error={fieldError} {...registerField(field)}>
+              <Select id={field.name} error={fieldError} disabled={disabled} {...registerField(field)}>
                 {field.options?.map((option) => (
                   <option key={option.value} value={option.value}>
                     {option.label}
@@ -119,6 +124,7 @@ export default function DynamicForm<T extends FieldValues>({
                 id={field.name}
                 label={field.label}
                 required={field.required}
+                disabled={disabled}
                 {...registerField(field)}
               />
             )}
