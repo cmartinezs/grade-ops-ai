@@ -80,6 +80,15 @@ describe("DynamicForm", () => {
     expect(onSubmit).not.toHaveBeenCalled();
   });
 
+  it("disables every rendered control when disabled is true", () => {
+    render(<DynamicForm fields={fields} onSubmit={jest.fn()} resolver={zodResolver(schema)} disabled />);
+
+    expect(screen.getByLabelText(/^Tema/)).toBeDisabled();
+    expect(screen.getByLabelText(/^Objetivo de aprendizaje/)).toBeDisabled();
+    expect(screen.getByLabelText(/^Nivel/)).toBeDisabled();
+    expect(screen.getByLabelText("Acepto los términos")).toBeDisabled();
+  });
+
   it("applies externalErrors to the matching field and clears it once the user edits that field", async () => {
     const { rerender } = render(
       <DynamicForm<FormValues>
