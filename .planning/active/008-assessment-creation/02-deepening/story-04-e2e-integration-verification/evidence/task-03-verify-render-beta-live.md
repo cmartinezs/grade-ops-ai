@@ -48,7 +48,8 @@ $ render workspace set tea-d8oqlmm7r5hc73caqlrg --confirm -o json
   "id": "tea-d8oqlmm7r5hc73caqlrg",
   "name": "GradeOps AI",
   "type": "team"
-}```
+}
+```
 
 ---
 
@@ -236,7 +237,8 @@ $ render workspace set tea-d8oqlmm7r5hc73caqlrg --confirm -o json
       ]
     }
   }
-]```
+]
+```
 
 ---
 
@@ -314,7 +316,8 @@ $ render workspace set tea-d8oqlmm7r5hc73caqlrg --confirm -o json
     "trigger": "manual",
     "updatedAt": "2026-06-16T20:24:41.843376Z"
   }
-]```
+]
+```
 
 ---
 
@@ -602,13 +605,14 @@ $ render workspace set tea-d8oqlmm7r5hc73caqlrg --confirm -o json
     "trigger": "service_updated",
     "updatedAt": "2026-06-23T00:04:49.145983Z"
   }
-]```
+]
+```
 
 ---
 
 ## 6. Branch drift analysis (`master` vs `develop`, before the fix)
 
-```
+```bash
 $ git log origin/master..origin/develop --oneline -- agents/ | wc -l
 38
 
