@@ -1,6 +1,6 @@
 # ⚛️ TASK 02 — Local end-to-end smoke script and evidence
 
-> **Status:** IN PROGRESS
+> **Status:** DONE
 > **Workflow:** GENERATE-DOCUMENT
 > **Depends On:** task-01
 > [← story file](../story-04-e2e-integration-verification.md)
