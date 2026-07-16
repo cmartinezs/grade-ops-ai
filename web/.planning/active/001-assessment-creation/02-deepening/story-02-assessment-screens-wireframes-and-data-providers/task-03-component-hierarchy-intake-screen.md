@@ -1,6 +1,6 @@
 # ⚛️ TASK 03 — component-hierarchy-intake-screen
 
-> **Status:** IN PROGRESS
+> **Status:** DONE
 > **Workflow:** GENERATE-DOCUMENT
 > **Depends On:** task-02
 > [← story file](../story-02-assessment-screens-wireframes-and-data-providers.md)
@@ -105,7 +105,7 @@ N/A — this task produces no executable code.
 
 - [x] `wireframes/intake-screen-hierarchy.md` names every file, its responsibility, and Server/Client designation. — §1 hierarchy table, all 6 files.
 - [x] The hierarchy has no anti-pattern from `03-jerarquia-de-componentes.md` §10. — §6 of the doc; see Verification Summary row 2 above.
-- [ ] Software smoke/build/startup/connectivity checks: N/A, no runtime surface; for git-enabled tasks, this task is committed, pushed, and published in a task PR before human developer PR review, with corrections pushed to the same PR.
+- [x] Software smoke/build/startup/connectivity checks: N/A, no runtime surface. PR #69 (`tasks/story-02-assessment-screens-wireframes-and-data-providers/task-03-component-hierarchy-intake-screen` → `story-02-assessment-screens-wireframes-and-data-providers`) opened, reviewed across two rounds of corrections (4 findings + 1 re-review finding, all fixed and re-verified in `.code-reviews/story-02-assessment-screens-wireframes-and-data-providers/task-03-component-hierarchy-intake-screen.md`, both pushed to the same PR), approved, and merged 2026-07-16 (merge commit `ae9e4e8`).
 - [x] Logging/observability: N/A — no executable code, no correlation/trace/INFO/DEBUG/WARN/ERROR log levels apply.
 - [x] Task test suite: N/A — the generated test-suite quality gates in this task's Generated Test Suite section are architecture-review only.
 - [x] Database/ORM: N/A — static DB/ORM consistency and runtime persistence smoke checks do not apply; no database, ORM, or persistence artifact is touched.
