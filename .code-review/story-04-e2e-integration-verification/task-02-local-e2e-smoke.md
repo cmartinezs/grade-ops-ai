@@ -3,11 +3,18 @@
 ## Scope
 
 - Branch: `story-04-e2e-integration-verification--task-02-local-e2e-smoke`
-- Reviewed commit: `60d4f8b` (`docs(e2e-integration-verification): local e2e smoke script and evidence`)
+- Initial reviewed commit: `60d4f8b` (`docs(e2e-integration-verification): local e2e smoke script and evidence`)
+- Re-reviewed commit: `daac47c` (`fix(e2e-integration-verification): verify persisted AgentExecutionLog for task-02`)
 - Task file: `.planning/active/008-assessment-creation/02-deepening/story-04-e2e-integration-verification/task-02-local-e2e-smoke.md`
 - Primary changed surface: `scripts/smoke-e2e-local.sh`
 
 ## Findings
+
+### Resolved - P1 - The smoke script now verifies the persisted `AgentExecutionLog`
+
+The follow-up commit resolves the prior blocker. After draft generation, `scripts/smoke-e2e-local.sh` now parses `draftId`, queries the compose Postgres database through `docker compose exec -T db psql`, and reads `status`, `model`, `agent_execution_id`, and `draft_id` from `agent_execution_logs` for the generated `assessmentId` (`scripts/smoke-e2e-local.sh:146-173`). It fails if no row exists, if status is not `COMPLETED`, if model or `agent_execution_id` is empty, or if the backfilled `draft_id` does not match the generated draft.
+
+The status literal is correct for this codebase: `agents/` emits `COMPLETED` for successful execution (`agents/src/main/java/cl/gradeops/ai/agents/assessment/application/orchestrator/AssessmentAgentOrchestrator.java:106`), and api-side tests assert the same persisted status. The task evidence was also corrected to document the direct DB verification and two successful real runs (`task-02-local-e2e-smoke.md:103-116`, `task-02-local-e2e-smoke.md:122-127`).
 
 ### P1 - The smoke script never verifies the persisted `AgentExecutionLog`
 
@@ -19,10 +26,11 @@ Recommended fix: after parsing `draftId` from the generation response, query the
 
 ## Verification
 
-- `bash -n scripts/smoke-e2e-local.sh` passed.
-- Confirmed `scripts/smoke-e2e-local.sh` is executable and tracked as mode `100755`.
-- Did not run the full e2e smoke locally because it requires live Docker services plus Firebase/Groq credentials.
+- Re-review: `bash -n scripts/smoke-e2e-local.sh` passed.
+- Re-review: confirmed `scripts/smoke-e2e-local.sh` remains executable and tracked as mode `100755`.
+- Re-review: confirmed `COMPLETED` is the success status used by agents/api code and tests.
+- Did not re-run the full e2e smoke locally because it requires live Docker services plus Firebase/Groq credentials; the task file includes fresh real-run evidence for the corrected DB assertion.
 
 ## Review Result
 
-Blocked pending the persisted `AgentExecutionLog` assertion/evidence gap above.
+Approved for task-02. The prior blocker is resolved; no new findings.
