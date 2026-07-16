@@ -67,6 +67,19 @@ describe("DynamicForm", () => {
     });
   });
 
+  it("blocks submission on a required field even without a resolver", async () => {
+    const onSubmit = jest.fn();
+    const noResolverFields: FieldDefinition[] = [{ name: "topic", label: "Tema", control: "input", required: true }];
+    render(<DynamicForm<{ topic: string }> fields={noResolverFields} onSubmit={onSubmit} />);
+
+    fireEvent.submit(screen.getByLabelText(/^Tema/).closest("form")!);
+
+    await waitFor(() => {
+      expect(screen.getByText("Tema es obligatorio.")).toBeInTheDocument();
+    });
+    expect(onSubmit).not.toHaveBeenCalled();
+  });
+
   it("applies externalErrors to the matching field and clears it once the user edits that field", async () => {
     const { rerender } = render(
       <DynamicForm<FormValues>

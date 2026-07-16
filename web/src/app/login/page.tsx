@@ -110,6 +110,7 @@ function LoginForm() {
               label="Correo electrónico"
               htmlFor="email"
               helper="Ingresa el correo con el que creaste tu cuenta en GradeOps AI."
+              error={errors.email?.message}
             >
               <Input
                 id="email"
@@ -125,6 +126,7 @@ function LoginForm() {
               label="Contraseña"
               htmlFor="password"
               helper="Ingresa la contraseña que elegiste al registrarte. Usa el enlace de abajo si la olvidaste."
+              error={errors.password?.message}
               style={{ marginTop: 14 }}
             >
               <Input

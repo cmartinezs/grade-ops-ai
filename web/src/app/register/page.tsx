@@ -96,6 +96,7 @@ export default function RegisterPage() {
                 label="Nombres"
                 htmlFor="firstName"
                 helper="Tu nombre o nombres de pila, tal como aparece en tu identificación."
+                error={errors.firstName?.message}
                 style={{ flex: 1 }}
               >
                 <Input
@@ -111,6 +112,7 @@ export default function RegisterPage() {
                 label="Apellidos"
                 htmlFor="lastName"
                 helper="Tu apellido o apellidos, tal como aparece en tu identificación."
+                error={errors.lastName?.message}
                 style={{ flex: 1 }}
               >
                 <Input
@@ -127,6 +129,7 @@ export default function RegisterPage() {
               label="Correo electrónico"
               htmlFor="email"
               helper="Te enviaremos un enlace de verificación a este correo. También lo usarás para iniciar sesión."
+              error={errors.email?.message}
               style={{ marginTop: 14 }}
             >
               <Input
@@ -143,6 +146,7 @@ export default function RegisterPage() {
               label="Contraseña"
               htmlFor="password"
               helper="Mínimo 6 caracteres. Elige algo que recuerdes; lo necesitarás cada vez que inicies sesión con correo."
+              error={errors.password?.message}
               style={{ marginTop: 14 }}
             >
               <Input

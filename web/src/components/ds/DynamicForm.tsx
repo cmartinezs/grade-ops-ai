@@ -50,8 +50,16 @@ export default function DynamicForm<T extends FieldValues>({
 
   // RHF only auto-revalidates fields that already failed through the resolver;
   // a manually `setError`'d server error needs an explicit clear on the next edit.
-  function registerField(name: Path<T>) {
-    const registration = register(name);
+  //
+  // `required` is passed to `register` as a real validation rule, not just a display marker:
+  // when no `resolver` is given this is the only thing that blocks empty submission. When a
+  // `resolver` IS given, RHF ignores register's own rules entirely and the resolver's schema
+  // is the sole source of truth — callers must still encode `required` there themselves.
+  function registerField(field: FieldDefinition) {
+    const name = field.name as Path<T>;
+    const registration = register(name, {
+      required: field.required ? `${field.label} es obligatorio.` : false,
+    });
     return {
       ...registration,
       onChange: (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -83,7 +91,7 @@ export default function DynamicForm<T extends FieldValues>({
                 id={field.name}
                 placeholder={field.placeholder}
                 error={fieldError}
-                {...registerField(field.name as Path<T>)}
+                {...registerField(field)}
               />
             )}
             {field.control === "textarea" && (
@@ -91,11 +99,11 @@ export default function DynamicForm<T extends FieldValues>({
                 id={field.name}
                 placeholder={field.placeholder}
                 error={fieldError}
-                {...registerField(field.name as Path<T>)}
+                {...registerField(field)}
               />
             )}
             {field.control === "select" && (
-              <Select id={field.name} error={fieldError} {...registerField(field.name as Path<T>)}>
+              <Select id={field.name} error={fieldError} {...registerField(field)}>
                 {field.options?.map((option) => (
                   <option key={option.value} value={option.value}>
                     {option.label}
@@ -108,7 +116,7 @@ export default function DynamicForm<T extends FieldValues>({
                 id={field.name}
                 label={field.label}
                 required={field.required}
-                {...registerField(field.name as Path<T>)}
+                {...registerField(field)}
               />
             )}
           </Field>

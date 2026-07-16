@@ -73,6 +73,7 @@ export default function ForgotPasswordPage() {
                   label="Correo electrónico"
                   htmlFor="email"
                   helper="Ingresa el correo con el que te registraste en GradeOps AI. Te enviaremos un enlace para restablecer tu contraseña."
+                  error={errors.email?.message}
                 >
                   <Input
                     id="email"

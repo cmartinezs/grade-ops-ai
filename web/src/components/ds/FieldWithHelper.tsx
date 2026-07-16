@@ -1,11 +1,12 @@
 "use client";
 
-import { useState, useId } from "react";
+import { useState, useId, cloneElement, isValidElement } from "react";
 
 interface FieldWithHelperProps {
   label: string;
   htmlFor: string;
   helper: string;
+  error?: string;
   children: React.ReactNode;
   style?: React.CSSProperties;
 }
@@ -14,11 +15,19 @@ export default function FieldWithHelper({
   label,
   htmlFor,
   helper,
+  error,
   children,
   style,
 }: FieldWithHelperProps) {
   const [visible, setVisible] = useState(false);
   const tooltipId = useId();
+  const errorId = useId();
+
+  const control = isValidElement(children)
+    ? cloneElement(children as React.ReactElement<{ "aria-describedby"?: string }>, {
+        "aria-describedby": error ? errorId : undefined,
+      })
+    : children;
 
   return (
     <div style={{ ...style, position: "relative" }}>
@@ -65,7 +74,16 @@ export default function FieldWithHelper({
         </button>
       </div>
 
-      {children}
+      {control}
+
+      {error && (
+        <p
+          id={errorId}
+          style={{ fontSize: "var(--text-sm)", color: "var(--danger-600)", marginTop: 4, marginBottom: 0 }}
+        >
+          {error}
+        </p>
+      )}
 
       {visible && (
         <div
