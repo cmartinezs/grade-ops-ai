@@ -125,4 +125,15 @@ Each entry should answer as many of these as possible:
 
 ---
 
+### 2026-07-15 — story-04 task-02: full teacher provisioning is scriptable end-to-end (no manual email/browser step)
+
+- **Source:** automated (encountered while executing `/plan-task 008 story-04 task-02`)
+- **Related story/task:** story-04, task-02
+- **What happened:** `docs/09-developer-guide/01-local-setup.md`'s "Operator provisioning path" stops at "the `inviteLink` is a Firebase password-reset link that lets the provisioned user set their password," implying a manual/browser step. Reading the actual code showed `POST /internal/teachers`'s `inviteLink` carries a `code` query param for GradeOps' own custom reset flow (not Firebase's built-in one — matches this project's established "no Firebase SDK for password reset" convention), completable via `POST /api/v1/auth/reset-password {code, email, password, passwordRepeat}`. Chaining provision → reset-password → Firebase `signInWithPassword` gives a fully scripted, real teacher account with a real ID token, no manual step.
+- **Expected instead:** the doc's phrasing suggested this couldn't be automated without opening a browser/email.
+- **Resolution:** `scripts/smoke-e2e-local.sh` provisions a fresh, timestamp-suffixed test teacher on every run (avoids any dependency on pre-existing local state) using this three-call chain, then drives a real brief→generate→retrieve flow. Verified with two full real runs (different generated drafts each time, proving re-runnability) plus two negative checks (`agents` stopped, `.env` missing) both failing clearly with actionable messages and non-zero exit codes.
+- **Retrospective signal:** `docs/09-developer-guide/01-local-setup.md`'s operator-provisioning section is worth updating to document the `reset-password` call explicitly — future developers reading only the doc would assume a manual step is required. Also: `GenerateAssessmentDraftResponse` does not expose `model`/`costEstimate` (only in the unqueryable `AgentExecutionLog`) — task-02's Technical Design assumed otherwise; corrected in the task file's Evidence section rather than silently claiming evidence that doesn't exist.
+
+---
+
 > [← README](README.md) | [← planning/README.md](../../README.md)
