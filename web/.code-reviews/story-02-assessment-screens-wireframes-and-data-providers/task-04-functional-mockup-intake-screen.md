@@ -1,7 +1,28 @@
 # Code Review: task-04-functional-mockup-intake-screen
 
-Date: 2026-07-16  
+Date: 2026-07-16
 Scope: `task-04-functional-mockup-intake-screen.md` and the implementation it introduces for `/assessments/new` (`page.tsx`, `BriefFormSection`, `BriefForm`, `useIntakeAssessmentPage`, `briefSchema`, `DynamicForm` child-slot change, and tests).
+
+## Re-review - 2026-07-16
+
+### Findings
+
+No findings. Both P2 findings from the original review are fixed.
+
+### Validation Notes
+
+- The `@NotBlank` mismatch is fixed: all five `briefSchema` fields now use `z.string().trim().min(1, ...)`, and `BriefForm.test.tsx` covers a whitespace-only `topic` value blocking submit.
+- The submitting edit race is fixed: `BriefForm` passes `disabled={isSubmitting}` into `DynamicForm`; `DynamicForm` propagates `disabled` to `Input`, `Textarea`, `Select`, and `Checkbox`; both `BriefForm.test.tsx` and `DynamicForm.test.tsx` assert disabled controls.
+- The original `fieldErrors` -> `DynamicForm.externalErrors` flow remains intact after the fix.
+
+### Verification
+
+- `npm run test -- BriefForm` — passed, 7 tests.
+- `npm run test -- NewAssessmentPage` — passed, 2 tests.
+- `npm run test -- DynamicForm` — passed, 6 tests.
+- `npm run test -- --runInBand` — still fails only on the known unrelated suite issues: `RegisterPage.test.tsx` queries English `/full name/i`, and `SignOutButton.test.tsx` queries English `/sign out/i` while the UI is Spanish (`64 passed`, `5 failed`).
+- `npm run build` — compiles successfully, then still fails during static prerender with pre-existing Firebase `auth/invalid-api-key`.
+- `npx tsc --noEmit` — failed after the interrupted build because `tsconfig.json` includes `.next/types/**/*.ts` paths that are missing after the failed prerender cleanup; this is a build-artifact state issue, not a new task-04 type error.
 
 ## Findings
 

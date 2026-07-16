@@ -1,6 +1,6 @@
 # ⚛️ TASK 04 — functional-mockup-intake-screen
 
-> **Status:** IN PROGRESS
+> **Status:** DONE
 > **Workflow:** GENERATE-DOCUMENT
 > **Depends On:** task-02, task-03, task-14
 > [← story file](../story-02-assessment-screens-wireframes-and-data-providers.md)
@@ -110,7 +110,7 @@ N/A — no database or ORM involved.
 - [x] `BriefForm.test.tsx` passes — `7 passed, 7 total` (5 original + whitespace-only + all-fields-disabled, added in code review).
 - [~] `npm run lint` passes — N/A, no ESLint config in this repo (pre-existing gap, unchanged from `task-14`); substituted `npx tsc --noEmit`, 0 errors outside the pre-existing test-typings gap.
 - [x] `npm run build` and `npm run dev` succeed with no new console errors. `build` compiles/type-checks cleanly (fails only at the same pre-existing missing-Firebase-credentials prerender gap as `task-14`); `dev` starts cleanly and serves `/assessments/new` with `HTTP 200`.
-- [x] Software smoke test check above passes (build/startup/connectivity confirmed); for git-enabled tasks, implementation is committed, pushed, and published in a task PR before human developer PR review, with corrections pushed to the same PR. (PR publish step next in the task workflow.)
+- [x] Software smoke test check above passes (build/startup/connectivity confirmed); for git-enabled tasks, implementation is committed, pushed, and published in a task PR before human developer PR review, with corrections pushed to the same PR. PR #73 (`tasks/story-02-assessment-screens-wireframes-and-data-providers/task-04-functional-mockup-intake-screen` → `story-02-assessment-screens-wireframes-and-data-providers`) opened, reviewed (2 P2 findings, both fixed in the correction commit), re-reviewed with no remaining findings, and merged 2026-07-16 (merge commit `d43c07c`).
 - [x] Logging/observability for this task is N/A (deferred to `task-06`, the first task with a real network call) — no correlation/trace/INFO/DEBUG/WARN/ERROR log levels apply yet.
 - [x] Task test suite is generated/refreshed with `/plan-test-suite`, and every applicable quality gate above has command output or documented evidence — `test-suites/task-04-functional-mockup-intake-screen-test-suite.md` generated and gaps filled.
 - [x] Database/ORM: N/A — static DB/ORM consistency and runtime persistence smoke checks do not apply; no database, ORM, or persistence artifact is touched.
