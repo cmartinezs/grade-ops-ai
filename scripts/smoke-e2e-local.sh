@@ -13,7 +13,10 @@
 #      GRADEOPS_GROQ_API_KEY, so the draft-generation call hits a real Groq model.
 #
 # What it does (no manual state from a previous run required — every run provisions its own
-# fresh test teacher with a timestamp-unique email, so re-running never collides):
+# fresh test teacher with a timestamp-unique email, so re-running never collides). Steps 2-6
+# (provision teacher -> auth -> brief -> draft -> retrieve) live in scripts/lib/e2e-smoke-flow.sh,
+# shared with scripts/smoke-e2e-render-beta.sh (task-04) — only the preconditions, target URL, and
+# the AgentExecutionLog Postgres check below are specific to the local compose stack:
 #   1. Provisions a fresh test teacher via POST /internal/teachers (X-Internal-Key).
 #   2. Completes the account's password via POST /api/v1/auth/reset-password, using the `code`
 #      from the provisioning response's invite link (GradeOps' own reset-code flow — not
@@ -37,6 +40,9 @@ fail() {
   exit 1
 }
 
+# shellcheck disable=SC1091
+source "$ROOT_DIR/scripts/lib/e2e-smoke-flow.sh"
+
 # --- 0. Load .env (never hardcode secrets) -----------------------------------------------
 if [[ -f "$ROOT_DIR/.env" ]]; then
   set -a
@@ -58,96 +64,15 @@ for svc in db api agents; do
 done
 echo "    db, api, agents are running."
 
-# --- 2. Provision a fresh test teacher ------------------------------------------------------
-run_id="$(date +%s)"
-teacher_email="smoke-e2e-${run_id}@gradeops.test"
-teacher_password="Sm0ke-e2e-${run_id}!"
-
-echo "==> Provisioning test teacher ${teacher_email}..."
-provision_response="$(curl -sS -w '\n%{http_code}' -X POST "${API_BASE_URL}/internal/teachers" \
-  -H "X-Internal-Key: ${INTERNAL_API_SECRET}" \
-  -H "Content-Type: application/json" \
-  -d "{\"firstName\":\"Smoke\",\"lastName\":\"Tester\",\"email\":\"${teacher_email}\"}")"
-provision_status="$(tail -n1 <<<"$provision_response")"
-provision_body="$(sed '$d' <<<"$provision_response")"
-
-if [[ "$provision_status" != "201" ]]; then
-  fail "teacher provisioning returned HTTP ${provision_status}: ${provision_body}"
-fi
-
-invite_link="$(jq -r '.inviteLink' <<<"$provision_body")"
-reset_code="$(sed -n 's/.*[?&]code=\([^&]*\).*/\1/p' <<<"$invite_link")"
-if [[ -z "$reset_code" ]]; then
-  fail "could not extract reset code from inviteLink: ${invite_link}"
-fi
-echo "    provisioned firebaseUid=$(jq -r '.firebaseUid' <<<"$provision_body")"
-
-# --- 3. Set the account's real password (GradeOps' own reset-code flow) --------------------
-echo "==> Setting test teacher password..."
-reset_response="$(curl -sS -w '\n%{http_code}' -X POST "${API_BASE_URL}/api/v1/auth/reset-password" \
-  -H "Content-Type: application/json" \
-  -d "{\"code\":\"${reset_code}\",\"email\":\"${teacher_email}\",\"password\":\"${teacher_password}\",\"passwordRepeat\":\"${teacher_password}\"}")"
-reset_status="$(tail -n1 <<<"$reset_response")"
-if [[ "$reset_status" != "204" ]]; then
-  fail "password reset returned HTTP ${reset_status}: $(sed '$d' <<<"$reset_response")"
-fi
-echo "    password set."
-
-# --- 4. Real Firebase ID token via the Identity Toolkit REST API ---------------------------
-echo "==> Obtaining a real Firebase ID token..."
-token_response="$(curl -sS -w '\n%{http_code}' -X POST \
-  "https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=${NEXT_PUBLIC_FIREBASE_API_KEY}" \
-  -H "Content-Type: application/json" \
-  -d "{\"email\":\"${teacher_email}\",\"password\":\"${teacher_password}\",\"returnSecureToken\":true}")"
-token_status="$(tail -n1 <<<"$token_response")"
-token_body="$(sed '$d' <<<"$token_response")"
-if [[ "$token_status" != "200" ]]; then
-  fail "Firebase signInWithPassword returned HTTP ${token_status}: ${token_body}"
-fi
-id_token="$(jq -r '.idToken' <<<"$token_body")"
-if [[ -z "$id_token" || "$id_token" == "null" ]]; then
-  fail "no idToken in Firebase response: ${token_body}"
-fi
-echo "    idToken obtained (${#id_token} chars)."
-
-auth_header="Authorization: Bearer ${id_token}"
-
-# --- 5. Brief intake -------------------------------------------------------------------------
-echo "==> POST /api/v1/assessments (brief intake)..."
-brief_response="$(curl -sS -w '\n%{http_code}' -X POST "${API_BASE_URL}/api/v1/assessments" \
-  -H "$auth_header" -H "Content-Type: application/json" \
-  -d '{"learningGoal":"Understand recursion","topic":"Recursive algorithms","level":"intermediate","duration":"60 minutes","language":"Python"}')"
-brief_status="$(tail -n1 <<<"$brief_response")"
-brief_body="$(sed '$d' <<<"$brief_response")"
-if [[ "$brief_status" != "201" ]]; then
-  fail "brief intake returned HTTP ${brief_status}: ${brief_body}"
-fi
-assessment_id="$(jq -r '.assessmentId' <<<"$brief_body")"
-if [[ -z "$assessment_id" || "$assessment_id" == "null" ]]; then
-  fail "no assessmentId in brief response: ${brief_body}"
-fi
-echo "    assessmentId=${assessment_id}"
-
-# --- 6. Draft generation (real agents/ call over the network) --------------------------------
-echo "==> POST /api/v1/assessments/${assessment_id}/draft (triggers agents/ over the real network)..."
-draft_response="$(curl -sS -w '\n%{http_code}' -X POST "${API_BASE_URL}/api/v1/assessments/${assessment_id}/draft" \
-  -H "$auth_header")"
-draft_status="$(tail -n1 <<<"$draft_response")"
-draft_body="$(sed '$d' <<<"$draft_response")"
-if [[ "$draft_status" != "201" ]]; then
-  fail "draft generation returned HTTP ${draft_status}: ${draft_body}"
-fi
-draft_title="$(jq -r '.title' <<<"$draft_body")"
-objectives_count="$(jq -r '.objectives | length' <<<"$draft_body")"
-if [[ -z "$draft_title" || "$draft_title" == "null" || "$objectives_count" == "0" ]]; then
-  fail "draft response is missing a real generated shape (title/objectives empty) — got: ${draft_body}"
-fi
-echo "    draft generated: title=\"${draft_title}\", objectives=${objectives_count}"
-draft_id="$(jq -r '.draftId' <<<"$draft_body")"
+# --- 2-6. Shared brief -> generate -> retrieve flow (scripts/lib/e2e-smoke-flow.sh) ---------
+run_brief_to_draft_flow
 
 # --- 6b. Persisted AgentExecutionLog (the story/task's actual required evidence, not just the
 #         draft response — DraftGenerationCoordinator persists the log, then back-fills draft_id
-#         in a second save, so this also confirms that backfill happened for real) --------------
+#         in a second save, so this also confirms that backfill happened for real). Local-only:
+#         the compose stack's Postgres is reachable via `docker compose exec`; beta's Neon
+#         database is not, so scripts/smoke-e2e-render-beta.sh does not repeat this check
+#         (documented there as a scoping limitation). ------------------------------------------
 echo "==> Verifying persisted AgentExecutionLog in Postgres..."
 log_row="$(cd "$ROOT_DIR" && docker compose exec -T db psql -U gradeops -d gradeops -t -A -F'|' -c \
   "SELECT status, model, agent_execution_id, draft_id FROM agent_execution_logs WHERE assessment_id = '${assessment_id}' ORDER BY started_at DESC LIMIT 1;" 2>&1)"
@@ -171,21 +96,6 @@ if [[ "$log_draft_id" != "$draft_id" ]]; then
   fail "agent_execution_logs.draft_id ('${log_draft_id}') does not match the generated draftId ('${draft_id}') — the log->draft backfill did not happen"
 fi
 echo "    persisted log confirmed: status=${log_status}, model=${log_model}, agent_execution_id=${log_agent_execution_id}, draft_id backfilled correctly"
-
-# --- 7. Retrieval confirms persistence --------------------------------------------------------
-echo "==> GET /api/v1/assessments/${assessment_id}/draft (confirms persistence)..."
-get_response="$(curl -sS -w '\n%{http_code}' "${API_BASE_URL}/api/v1/assessments/${assessment_id}/draft" \
-  -H "$auth_header")"
-get_status="$(tail -n1 <<<"$get_response")"
-get_body="$(sed '$d' <<<"$get_response")"
-if [[ "$get_status" != "200" ]]; then
-  fail "draft retrieval returned HTTP ${get_status}: ${get_body}"
-fi
-get_title="$(jq -r '.title' <<<"$get_body")"
-if [[ "$get_title" != "$draft_title" ]]; then
-  fail "retrieved draft title (\"${get_title}\") does not match generated draft title (\"${draft_title}\")"
-fi
-echo "    retrieval matches generated draft."
 
 # --- Summary -----------------------------------------------------------------------------------
 echo
