@@ -1,7 +1,368 @@
 # Raw Evidence — task-03: Verify `beta` on Render is actually live
 
 > Raw, unedited command output backing the findings in [task-03-verify-render-beta-live.md](../task-03-verify-render-beta-live.md#evidence).
-> Captured 2026-07-16, after Carlos renamed and repointed both Render services (post-fix state).
+> Sections 0 are the pre-fix state (captured earlier the same session, before Carlos renamed/repointed the services — archived here verbatim from that session's actual tool output, since the file itself wasn't created until after the fix and the pre-fix Render state can no longer be re-queried). Sections 1-6 are post-fix, captured 2026-07-16 directly to this file.
+
+---
+
+## 0. Pre-fix raw evidence (captured 2026-07-16, before Carlos's dashboard fix)
+
+### 0.1 `render services -o json` (pre-fix — old names, `gradeops-agents` on `master`)
+
+```json
+[
+  {
+    "service": {
+      "autoDeploy": "yes",
+      "autoDeployTrigger": "commit",
+      "branch": "master",
+      "createdAt": "2026-06-16T20:05:06.085306Z",
+      "dashboardUrl": "https://dashboard.render.com/web/srv-d8oqosernols73erqc3g",
+      "environmentId": "evm-d8oqosbtqb8s73fc6oig",
+      "id": "srv-d8oqosernols73erqc3g",
+      "name": "gradeops-agents",
+      "notifyOnFail": "default",
+      "ownerId": "tea-d8oqlmm7r5hc73caqlrg",
+      "repo": "https://github.com/cmartinezs/grade-ops-ai",
+      "rootDir": "agents",
+      "serviceDetails": {
+        "buildPlan": "starter",
+        "cache": {
+          "profile": "no-cache"
+        },
+        "env": "docker",
+        "envSpecificDetails": {
+          "dockerCommand": "",
+          "dockerContext": ".",
+          "dockerfilePath": "./Dockerfile"
+        },
+        "healthCheckPath": "",
+        "ipAllowList": [
+          {
+            "cidrBlock": "0.0.0.0/0",
+            "description": "everywhere"
+          }
+        ],
+        "maintenanceMode": {
+          "enabled": false,
+          "uri": ""
+        },
+        "numInstances": 1,
+        "openPorts": null,
+        "plan": "free",
+        "previews": {
+          "generation": "off"
+        },
+        "pullRequestPreviewsEnabled": "no",
+        "region": "oregon",
+        "runtime": "docker",
+        "sshAddress": "srv-d8oqosernols73erqc3g@ssh.oregon.render.com",
+        "url": "https://gradeops-agents.onrender.com"
+      },
+      "slug": "gradeops-agents",
+      "suspended": "not_suspended",
+      "suspenders": [],
+      "type": "web_service",
+      "updatedAt": "2026-06-17T01:13:42.43698Z"
+    },
+    "project": {
+      "createdAt": "2026-06-16T20:05:05.014287Z",
+      "environmentIds": [
+        "evm-d8oqosbtqb8s73fc6oig"
+      ],
+      "id": "prj-d8oqosbtqb8s73fc6oi0",
+      "name": "GradeOps Backend",
+      "owner": {
+        "email": "carlos.f.martinez.s+render@gmail.com",
+        "id": "tea-d8oqlmm7r5hc73caqlrg",
+        "name": "GradeOps AI",
+        "type": "team"
+      },
+      "updatedAt": "2026-07-16T17:55:09.991381Z"
+    },
+    "environment": {
+      "databasesIds": null,
+      "envGroupIds": null,
+      "id": "evm-d8oqosbtqb8s73fc6oig",
+      "ipAllowList": [
+        {
+          "cidrBlock": "0.0.0.0/0",
+          "description": "everywhere"
+        }
+      ],
+      "name": "Production",
+      "networkIsolationEnabled": false,
+      "projectId": "prj-d8oqosbtqb8s73fc6oi0",
+      "protectedStatus": "unprotected",
+      "redisIds": null,
+      "serviceIds": [
+        "srv-d8oqosernols73erqc3g",
+        "srv-d8oqvejeo5us73b41a80"
+      ]
+    }
+  },
+  {
+    "service": {
+      "autoDeploy": "yes",
+      "autoDeployTrigger": "commit",
+      "branch": "develop",
+      "createdAt": "2026-06-16T20:19:07.070149Z",
+      "dashboardUrl": "https://dashboard.render.com/web/srv-d8oqvejeo5us73b41a80",
+      "environmentId": "evm-d8oqosbtqb8s73fc6oig",
+      "id": "srv-d8oqvejeo5us73b41a80",
+      "name": "gradeops-api",
+      "notifyOnFail": "default",
+      "ownerId": "tea-d8oqlmm7r5hc73caqlrg",
+      "repo": "https://github.com/cmartinezs/grade-ops-ai",
+      "rootDir": "api",
+      "serviceDetails": {
+        "buildPlan": "starter",
+        "cache": {
+          "profile": "no-cache"
+        },
+        "env": "docker",
+        "envSpecificDetails": {
+          "dockerCommand": "",
+          "dockerContext": ".",
+          "dockerfilePath": "./Dockerfile"
+        },
+        "healthCheckPath": "",
+        "ipAllowList": [
+          {
+            "cidrBlock": "0.0.0.0/0",
+            "description": "everywhere"
+          }
+        ],
+        "maintenanceMode": {
+          "enabled": false,
+          "uri": ""
+        },
+        "numInstances": 1,
+        "openPorts": null,
+        "plan": "free",
+        "previews": {
+          "generation": "off"
+        },
+        "pullRequestPreviewsEnabled": "no",
+        "region": "oregon",
+        "runtime": "docker",
+        "sshAddress": "srv-d8oqvejeo5us73b41a80@ssh.oregon.render.com",
+        "url": "https://gradeops-api.onrender.com"
+      },
+      "slug": "gradeops-api",
+      "suspended": "not_suspended",
+      "suspenders": [],
+      "type": "web_service",
+      "updatedAt": "2026-07-15T00:45:08.210363Z"
+    },
+    "project": {
+      "createdAt": "2026-06-16T20:05:05.014287Z",
+      "environmentIds": [
+        "evm-d8oqosbtqb8s73fc6oig"
+      ],
+      "id": "prj-d8oqosbtqb8s73fc6oi0",
+      "name": "GradeOps Backend",
+      "owner": {
+        "email": "carlos.f.martinez.s+render@gmail.com",
+        "id": "tea-d8oqlmm7r5hc73caqlrg",
+        "name": "GradeOps AI",
+        "type": "team"
+      },
+      "updatedAt": "2026-07-16T17:55:09.991381Z"
+    },
+    "environment": {
+      "databasesIds": null,
+      "envGroupIds": null,
+      "id": "evm-d8oqosbtqb8s73fc6oig",
+      "ipAllowList": [
+        {
+          "cidrBlock": "0.0.0.0/0",
+          "description": "everywhere"
+        }
+      ],
+      "name": "Production",
+      "networkIsolationEnabled": false,
+      "projectId": "prj-d8oqosbtqb8s73fc6oi0",
+      "protectedStatus": "unprotected",
+      "redisIds": null,
+      "serviceIds": [
+        "srv-d8oqosernols73erqc3g",
+        "srv-d8oqvejeo5us73b41a80"
+      ]
+    }
+  }
+]
+```
+
+### 0.2 `render deploys list srv-d8oqosernols73erqc3g -o json` (pre-fix — `gradeops-agents`, tracking `master`, last live deploy 2026-06-17)
+
+```json
+[
+  {
+    "commit": {
+      "createdAt": "2026-06-17T01:12:38Z",
+      "id": "f7f76c02f008eba02dcb1432db7c189f743753f3",
+      "message": "fix(docker): revert to JVM build with startup optimizations\n\nGraalVM native-maven-plugin:1.1.1 requires GraalVM 25.0.1+ but available\nimages only have 25.0.0. Reverts to JVM with TieredStopAtLevel=1 and\nspring.jmx.enabled=false to reduce cold start time.\n\nCo-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>"
+    },
+    "createdAt": "2026-06-17T01:12:42.722923Z",
+    "finishedAt": "2026-06-17T01:13:42.435632Z",
+    "id": "dep-d8ov92h9rddc73f8ka70",
+    "startedAt": "2026-06-17T01:12:42.66498Z",
+    "status": "live",
+    "trigger": "new_commit",
+    "updatedAt": "2026-06-17T01:14:17.528233Z"
+  },
+  {
+    "commit": {
+      "createdAt": "2026-06-17T01:08:04Z",
+      "id": "1315e26576ecbd22f653bed7dad29d5802d7e0a8",
+      "message": "feat(docker): switch to GraalVM native image compilation\n\nReplaces JVM JAR build with GraalVM native:compile. Runtime image drops\nfrom ~400MB JVM to ~80MB binary, startup from ~120s to <1s.\nBuild stage uses ghcr.io/graalvm/native-image-community:21;\nruntime stage uses debian:bookworm-slim.\n\nCo-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>"
+    },
+    "createdAt": "2026-06-17T01:08:09.057552Z",
+    "finishedAt": "2026-06-17T01:09:16.446296Z",
+    "id": "dep-d8ov6u4vikkc73f0gol0",
+    "startedAt": "2026-06-17T01:08:09.000464Z",
+    "status": "build_failed",
+    "trigger": "new_commit",
+    "updatedAt": "2026-06-17T01:09:16.446811Z"
+  },
+  {
+    "commit": {
+      "createdAt": "2026-06-16T20:22:34Z",
+      "id": "6854d34025b311a6aecd6906fd0544f0ca8f4106",
+      "message": "fix(docker): activate Maven profile during build to include profile-gated dependencies\n\nWithout -P${MAVEN_PROFILE}, the AWS SDK (R2StorageAdapter) and Spring AI\nstarter are absent at compile time, causing build failures on Render.\nDefaults to beta; override with --build-arg MAVEN_PROFILE=demo for GCP.\n\nCo-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>"
+    },
+    "createdAt": "2026-06-16T20:22:38.47416Z",
+    "finishedAt": "2026-06-16T20:24:41.844518Z",
+    "id": "dep-d8or13navr4c73d5r6mg",
+    "startedAt": "2026-06-16T20:22:38.43527Z",
+    "status": "deactivated",
+    "trigger": "new_commit",
+    "updatedAt": "2026-06-17T01:13:42.434578Z"
+  },
+  {
+    "commit": {
+      "createdAt": "2026-06-16T19:24:18Z",
+      "id": "8808d43aa35af7c8b69248e2b41c34eb18926078",
+      "message": "chore(agents): add Dockerfile for JVM-based container build\n\nCo-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>"
+    },
+    "createdAt": "2026-06-16T20:05:06.791711Z",
+    "finishedAt": "2026-06-16T20:07:16.119098Z",
+    "id": "dep-d8oqosmrnols73erqce0",
+    "startedAt": "2026-06-16T20:05:06.787103Z",
+    "status": "deactivated",
+    "trigger": "manual",
+    "updatedAt": "2026-06-16T20:24:41.843376Z"
+  }
+]
+```
+
+### 0.3 `render deploys list srv-d8oqvejeo5us73b41a80 -o json` (pre-fix — `gradeops-api`, tracking `develop`; output truncated by `head -100` at capture time, cut off mid-entry — included as originally captured, not re-padded)
+
+```json
+[
+  {
+    "commit": {
+      "createdAt": "2026-07-15T00:42:59Z",
+      "id": "cd771a0c0c7727e105dbffaf90dd790518f77fcf",
+      "message": "Merge pull request #60 from cmartinezs/gradeops-api/003-close-planning\n\ndocs(003-assessment-creation): final retrospective and archive to finished/"
+    },
+    "createdAt": "2026-07-15T00:43:01.599753Z",
+    "finishedAt": "2026-07-15T00:45:08.203502Z",
+    "id": "dep-d9bdf5f41pts73eosbig",
+    "startedAt": "2026-07-15T00:43:01.536012Z",
+    "status": "live",
+    "trigger": "new_commit",
+    "updatedAt": "2026-07-15T00:45:34.231606Z"
+  },
+  {
+    "commit": {
+      "createdAt": "2026-07-14T22:42:41Z",
+      "id": "4e94c44f48d580d98b02e8c7a13f82083c98e41a",
+      "message": "Merge pull request #44 from cmartinezs/gradeops-api/story-01-assessment-creation-persistence\n\nstory-01: Assessment creation persistence (brief, draft generation, regeneration, editing, retrieval)"
+    },
+    "createdAt": "2026-07-14T22:42:43.932308Z",
+    "finishedAt": "2026-07-14T22:45:33.248573Z",
+    "id": "dep-d9bbmou7r5hc73eb6530",
+    "startedAt": "2026-07-14T22:42:43.894279Z",
+    "status": "deactivated",
+    "trigger": "new_commit",
+    "updatedAt": "2026-07-15T00:45:08.198768Z"
+  },
+  {
+    "commit": {
+      "createdAt": "2026-07-12T01:22:09Z",
+      "id": "cf7febf8ac8ed70bd05641e52e69f2cec9429daa",
+      "message": "Merge pull request #32 from cmartinezs/gradeops-agents/story-01-assessment-agent\n\nstory-01: Assessment Agent"
+    },
+    "createdAt": "2026-07-12T01:22:12.204572Z",
+    "finishedAt": "2026-07-12T01:24:30.793033Z",
+    "id": "dep-d99eoh647okc73e31fg0",
+    "startedAt": "2026-07-12T01:22:12.168187Z",
+    "status": "deactivated",
+    "trigger": "new_commit",
+    "updatedAt": "2026-07-14T22:45:33.247101Z"
+  },
+  {
+    "commit": {
+      "createdAt": "2026-07-10T03:49:41Z",
+      "id": "8a37d9a6997dd9bf1d82d0e45e5eb4bec0c26422",
+      "message": "Adopt plugin's native worktree-per-child-planning convention (3.6.0)"
+    },
+    "createdAt": "2026-07-10T03:53:21.75723Z",
+    "finishedAt": "2026-07-10T03:56:32.314305Z",
+    "id": "dep-d986pcd8nd3s7383ssv0",
+    "startedAt": "2026-07-10T03:53:21.62393Z",
+    "status": "deactivated",
+    "trigger": "new_commit",
+    "updatedAt": "2026-07-12T01:24:30.792171Z"
+  },
+  {
+    "commit": {
+      "createdAt": "2026-06-30T18:55:36Z",
+      "id": "faa4a6b55b663ca80bfb9156ed48801b52e647f9",
+      "message": "Merge pull request #24 from cmartinezs/codex/cleanup-planning-007\n\n[codex] Close planning 007 workspace cleanup"
+    },
+    "createdAt": "2026-06-30T18:55:38.64645Z",
+    "finishedAt": "2026-06-30T18:57:46.974061Z",
+    "id": "dep-d9212amq1p3s73b9n0f0",
+    "startedAt": "2026-06-30T18:55:38.584979Z",
+    "status": "deactivated",
+    "trigger": "new_commit",
+    "updatedAt": "2026-07-10T03:56:32.313415Z"
+  },
+  {
+    "commit": {
+      "createdAt": "2026-06-30T17:48:07Z",
+      "id": "3d5c47158ba49caa307ae6c721a49a9aa488da7c",
+      "message": "Merge pull request #23 from cmartinezs/story-01-cleanup-job\n\ndocs(planning): archive 002-drop-old-password-recovery-requests"
+    },
+    "createdAt": "2026-06-30T17:48:09.446574Z",
+    "finishedAt": "2026-06-30T17:50:21.925152Z",
+    "id": "dep-d9202mb7uimc73alndpg",
+    "startedAt": "2026-06-30T17:48:09.376565Z",
+    "status": "deactivated",
+    "trigger": "new_commit",
+    "updatedAt": "2026-06-30T18:57:46.97279Z"
+  },
+  {
+    "commit": {
+      "createdAt": "2026-06-30T17:36:32Z",
+      "id": "5f2bd483ea53ab2a4e9ddaef6590c3ce786c11de",
+      "message": "Merge pull request #22 from cmartinezs/story-01-cleanup-job\n\nstory-01: cleanup job para password_reset_codes"
+    },
+    "createdAt": "2026-06-30T17:36:35.048868Z",
+    "finishedAt": "2026-06-30T17:39:59.770215Z",
+    "id": "dep-d91vt8k2m8qs73dsnt10",
+    "startedAt": "2026-06-30T17:36:34.985739Z",
+    "status": "deactivated",
+    "trigger": "new_commit",
+    "updatedAt": "2026-06-30T17:50:21.923877Z"
+  }
+]
+```
+
+*(Output was piped through `head -100` at capture time and is cut off after this entry — the array above is not closed by the original command's actual output, just by this truncation. The visible entries are sufficient to establish `gradeops-api`'s `develop`-tracking, up-to-date state pre-fix. The full untruncated deploy history for this same service, with these same deploy IDs still present, is in section 5 below, captured post-fix.)*
 
 ---
 
