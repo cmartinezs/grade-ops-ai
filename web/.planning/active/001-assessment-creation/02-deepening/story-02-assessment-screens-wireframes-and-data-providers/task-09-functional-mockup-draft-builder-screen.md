@@ -2,7 +2,7 @@
 
 > **Status:** TODO
 > **Workflow:** GENERATE-DOCUMENT
-> **Depends On:** task-07, task-08
+> **Depends On:** task-07, task-08, task-14
 > [← story file](../story-02-assessment-screens-wireframes-and-data-providers.md)
 
 ---
@@ -24,7 +24,7 @@ A navigable functional mockup of the Draft Builder screen at `src/app/(protected
   - `src/features/assessment-creation/components/__tests__/{DraftEditorSection,RegenerateSection,VersionHistorySection}.test.tsx`
 - **Interfaces / contracts:** `AssessmentDraftViewModel`/`AssessmentDraftVersionViewModel` are the real, final view model shapes `task-10`'s loader will produce — not placeholders. The mapper (`toAssessmentDraftBuilderPageViewModel`) is written for real now, fed fake DTOs shaped like `task-01`'s confirmed `GenerateAssessmentDraftResponse`.
 - **Risk:** Medium — per `02-ux-wireframes-y-maquetas.md` §6, fake data must cover long AI-generated text, many versions, and zero prior versions, not one symmetric happy path; under-covering this here means UX problems surface only after `task-12`'s real wiring, which is more expensive to fix.
-- **Design notes:** `RemoteData<T>`-style states per `06-estado-datos-y-api.md` §8, not loose booleans, for the page-level loading/ready/error state.
+- **Design notes:** `RemoteData<T>`-style states per `06-estado-datos-y-api.md` §8, not loose booleans, for the page-level loading/ready/error state. Build the 3 Sections' fields from the DS primitives `task-14` produces (`Field`/`Input`/`Textarea`), per `pdr-001-design-system-form-primitives.md` — but compose them directly rather than through `DynamicForm`, since each Section has per-field custom behavior (draft-editor multi-field save, regenerate's own submitting state, version-switching) that a declarative field list doesn't fit (PDR-001 decision item 5).
 
 ---
 
