@@ -143,6 +143,34 @@ if [[ -z "$draft_title" || "$draft_title" == "null" || "$objectives_count" == "0
   fail "draft response is missing a real generated shape (title/objectives empty) — got: ${draft_body}"
 fi
 echo "    draft generated: title=\"${draft_title}\", objectives=${objectives_count}"
+draft_id="$(jq -r '.draftId' <<<"$draft_body")"
+
+# --- 6b. Persisted AgentExecutionLog (the story/task's actual required evidence, not just the
+#         draft response — DraftGenerationCoordinator persists the log, then back-fills draft_id
+#         in a second save, so this also confirms that backfill happened for real) --------------
+echo "==> Verifying persisted AgentExecutionLog in Postgres..."
+log_row="$(cd "$ROOT_DIR" && docker compose exec -T db psql -U gradeops -d gradeops -t -A -F'|' -c \
+  "SELECT status, model, agent_execution_id, draft_id FROM agent_execution_logs WHERE assessment_id = '${assessment_id}' ORDER BY started_at DESC LIMIT 1;" 2>&1)"
+if [[ -z "$log_row" ]]; then
+  fail "no agent_execution_logs row found for assessment_id=${assessment_id}"
+fi
+log_status="$(cut -d'|' -f1 <<<"$log_row")"
+log_model="$(cut -d'|' -f2 <<<"$log_row")"
+log_agent_execution_id="$(cut -d'|' -f3 <<<"$log_row")"
+log_draft_id="$(cut -d'|' -f4 <<<"$log_row")"
+if [[ "$log_status" != "COMPLETED" ]]; then
+  fail "agent_execution_logs.status = '${log_status}', expected 'COMPLETED' (row: ${log_row})"
+fi
+if [[ -z "$log_model" ]]; then
+  fail "agent_execution_logs.model is empty — not a real model response (row: ${log_row})"
+fi
+if [[ -z "$log_agent_execution_id" ]]; then
+  fail "agent_execution_logs.agent_execution_id is empty (row: ${log_row})"
+fi
+if [[ "$log_draft_id" != "$draft_id" ]]; then
+  fail "agent_execution_logs.draft_id ('${log_draft_id}') does not match the generated draftId ('${draft_id}') — the log->draft backfill did not happen"
+fi
+echo "    persisted log confirmed: status=${log_status}, model=${log_model}, agent_execution_id=${log_agent_execution_id}, draft_id backfilled correctly"
 
 # --- 7. Retrieval confirms persistence --------------------------------------------------------
 echo "==> GET /api/v1/assessments/${assessment_id}/draft (confirms persistence)..."
@@ -161,16 +189,14 @@ echo "    retrieval matches generated draft."
 
 # --- Summary -----------------------------------------------------------------------------------
 echo
-echo "PASS: real brief -> generate -> retrieve flow completed against the local compose stack."
-echo "  teacher email     : ${teacher_email}"
-echo "  assessmentId      : ${assessment_id}"
-echo "  draft title       : ${draft_title}"
-echo "  draft objectives  : ${objectives_count}"
+echo "PASS: real brief -> generate -> retrieve flow completed against the local compose stack,"
+echo "with a persisted AgentExecutionLog confirmed directly in Postgres (not inferred from shape)."
+echo "  teacher email        : ${teacher_email}"
+echo "  assessmentId         : ${assessment_id}"
+echo "  draft title          : ${draft_title}"
+echo "  draft objectives     : ${objectives_count}"
+echo "  log status           : ${log_status}"
+echo "  log model            : ${log_model}"
+echo "  log agent_execution_id: ${log_agent_execution_id}"
 echo "  full draft payload:"
 jq '.' <<<"$draft_body"
-echo
-echo "NOTE: api/'s GenerateAssessmentDraftResponse does not expose model/costEstimate fields (checked"
-echo "against the real API response above) — those are only in the persisted AgentExecutionLog, which"
-echo "has no query endpoint today. A real, non-empty structured draft (this script's actual assertion)"
-echo "is the strongest available proof the real Gemini/Groq pipeline ran, since agents/'s schema"
-echo "validation would reject any hand-crafted fake shape it didn't itself produce."
