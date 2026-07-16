@@ -1,6 +1,6 @@
 # ⚛️ TASK 03 — Verify `beta` on Render is actually live
 
-> **Status:** IN PROGRESS
+> **Status:** DONE
 > **Workflow:** GENERATE-DOCUMENT
 > **Depends On:** —
 > [← story file](../story-04-e2e-integration-verification.md)
@@ -130,7 +130,7 @@ Fixed: added `evidence/task-03-verify-render-beta-live.md` §0 (`0.1`–`0.3`) w
 - [x] Render CLI installed and authenticated via `RENDER_API_KEY`.
 - [x] A definitive, evidence-backed finding exists: `beta`'s `api`/`agents` Render services either are live with a confirmed deploy history and auto-deploy configured, or are not — documented either way, not assumed.
 - [x] If a gap is found (services missing, no successful deploy, auto-deploy not configured), it's recorded as an `Inconsistencies Found` row on the story, not silently absorbed.
-- [ ] Human developer code review completed; requested corrections, if any, were implemented and re-reviewed.
+- [x] Human developer code review completed; requested corrections, if any, were implemented and re-reviewed.
 - [x] No unintended expansion: the task satisfies `[CHECK-ATOMICITY]` — no smoke request against the live service yet, that's task-04, and only if this task confirms there's something live to test.
 
 ---
