@@ -115,6 +115,14 @@ $ git log origin/develop -1 --format='%H %ci %s'
 
 `grade-ops-ai-agents`'s new `live` deploy (`6a9c8fd4e743`) matches `develop`'s HEAD exactly — the branch-tracking gap is closed, the stale month of `agents/` work is now deployed. `grade-ops-ai-api` remains at its prior deploy (`cd771a0c`), which is correct: 0 commits touching `api/` have landed on `develop` since then, so no redeploy was needed. Both services are now named per the design doc and both track `develop`.
 
+### Correction — code review (2026-07-16)
+
+Human review (`.code-review/story-04-e2e-integration-verification/task-03-verify-render-beta-live.md`) found P2: the committed evidence file only captured the post-fix Render state ("Captured 2026-07-16, after Carlos renamed and repointed both Render services"), so the pre-fix inconsistency recorded above and on the story wasn't independently auditable from the repo.
+
+Verified before implementing: the pre-fix `render services -o json` and both services' `render deploys list` output *had* genuinely been captured earlier in the same session, via real tool calls against the live Render API before the dashboard fix — they just hadn't been persisted to a file yet. That state can't be re-queried now (it's been changed), so the fix is to archive that already-real output verbatim rather than re-describe it in prose.
+
+Fixed: added `evidence/task-03-verify-render-beta-live.md` §0 (`0.1`–`0.3`) with the exact pre-fix `render services -o json` output (showing `gradeops-agents`/`gradeops-api` names, `gradeops-agents` on `branch: master`) and both services' pre-fix deploy histories, clearly labeled as archived from this session's original tool output rather than freshly re-run, with an explicit note on why (state changed, can't be re-queried).
+
 ---
 
 ## Done Criteria
