@@ -92,6 +92,23 @@ Caused by: org.springframework.web.client.HttpClientErrorException$Unprocessable
 
 Root cause: `agents/`'s configured LLM provider credential is itself rejected with `401: Invalid API Key`. `agents/src/main/resources/application.yml:16` sets `app.agents.llm.default-provider: groq`, and `agents/src/main/resources/application-beta.yml` maps the `groq` provider's key to `${GRADEOPS_GROQ_API_KEY}` against `https://api.groq.com/openai/v1`. This points to the `grade-ops-ai-agents` Render service's `GRADEOPS_GROQ_API_KEY` environment variable being invalid, expired, or unset in the actual deployed beta environment — a real infra/config gap, not a script defect. `agents/` itself logged nothing at INFO level for this request (`render logs --resources srv-d8oqosernols73erqc3g` for the same window → 0 results); the structured error body embedded in `api/`'s exception is the only available record of what `agents/` returned.
 
+## Root-cause confirmation — actual Render env vars vs. current code (real Render API call)
+
+```
+$ curl -sS -H "Authorization: Bearer ${RENDER_API_KEY}" -H "Accept: application/json" \
+  "https://api.render.com/v1/services/srv-d8oqosernols73erqc3g/env-vars"
+[
+  { "envVar": { "key": "INTERNAL_API_SECRET", "value": "[REDACTED — matches the local INTERNAL_API_SECRET value]" } },
+  { "envVar": { "key": "AI_MODEL_NAME", "value": "gemini-2.0-flash" } },
+  { "envVar": { "key": "GOOGLE_AI_API_KEY", "value": "[REDACTED]" } },
+  { "envVar": { "key": "SPRING_PROFILES_ACTIVE", "value": "beta" } }
+]
+```
+
+*(Values for secret-bearing keys are redacted in this committed evidence file — only key names and non-secret values like `AI_MODEL_NAME`/`SPRING_PROFILES_ACTIVE` are shown. The finding below only depends on which key names exist, not their values.)*
+
+`GRADEOPS_GROQ_API_KEY` is not merely invalid — it is **completely absent** from this list, along with `GRADEOPS_GEMINI_API_KEY`/`GRADEOPS_GEMINI_MODEL`. What *is* set (`AI_MODEL_NAME`, `GOOGLE_AI_API_KEY`) matches `docs/04-architecture/beta-environment-design.md` exactly (lines 93-103, 177, 202-203 reference these same two names). This is design-doc-vs-code drift: the design doc documents the original variable names, `agents/src/main/resources/application-beta.yml` was refactored during `002-groq-genai-provider` to the current `GRADEOPS_*`-prefixed names for both providers, but neither the design doc nor the Render service's actual env vars were updated to match. Both providers (Gemini and Groq) are broken on the deployed service as a result — Groq is simply the one that surfaced, since it's the unconditional `default-provider` in `application.yml:16`.
+
 ---
 
 > [← task file](../task-04-render-post-deploy-smoke.md)
