@@ -34,7 +34,7 @@ Term and concept traceability for this planning. For global consolidated view, s
 
 | ID | Decision | Rationale | Affects | Date |
 |----|----------|-----------|---------|------|
-| — | *None yet* | — | — | — |
+| PDR-001 | DS form primitives: `Form`/`Field`/`Input`/`Textarea`/`Select`/`Checkbox`, plus a separate declarative `DynamicForm` for simple linear forms — `Field` centralizes label/required/error/hint; not all forms must go through `DynamicForm`. | Prevents per-screen form duplication (already found twice: login/register's duplicated email validation, and `Field.tsx`/`Input.tsx` splitting label/error inconsistently) before more screens (Intake, Draft Builder, future rubric/question screens) repeat it. | WB | 2026-07-15 |
 
 ---
 
