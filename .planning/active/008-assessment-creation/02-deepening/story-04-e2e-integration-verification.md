@@ -40,12 +40,12 @@ Prove — with a real network call, not a mock — that `api/` can reach `agents
 
 ## Done Criteria
 
-- [ ] `compose.yml` includes a working `agents` service; `docker compose up` brings up `db`, `api`, `agents`, `web` together without manual intervention beyond populating local secrets.
-- [ ] A real brief→generate request through `api/`'s public endpoint, running against the docker-compose stack, produces a genuine `AssessmentDraft` and a persisted `AgentExecutionLog` with a real (non-zero-cost-estimate-unless-Groq-free-tier) model response — not a mocked/stubbed result.
-- [ ] `beta` on Render is confirmed either genuinely live (with evidence: service list, deploy history) or genuinely not yet provisioned (documented as a finding, not assumed either way).
-- [ ] If `beta` is live: the same brief→generate flow succeeds against the deployed public API URL, verified with captured request/response evidence via a Render-CLI-scripted smoke check.
-- [ ] Both smoke scripts are committed and re-runnable — not one-off manual commands lost to shell history.
-- [ ] TRACEABILITY.md updated with new terms from this story.
+- [x] `compose.yml` includes a working `agents` service; `docker compose up` brings up `db`, `api`, `agents`, `web` together without manual intervention beyond populating local secrets. (task-01)
+- [x] A real brief→generate request through `api/`'s public endpoint, running against the docker-compose stack, produces a genuine `AssessmentDraft` and a persisted `AgentExecutionLog` with a real (non-zero-cost-estimate-unless-Groq-free-tier) model response — not a mocked/stubbed result. (task-02, `AgentExecutionLog` verified directly in Postgres)
+- [x] `beta` on Render is confirmed either genuinely live (with evidence: service list, deploy history) or genuinely not yet provisioned (documented as a finding, not assumed either way). (task-03 — confirmed live, with a real branch-tracking gap found and fixed)
+- [x] If `beta` is live: the same brief→generate flow succeeds against the deployed public API URL, verified with captured request/response evidence via a Render-CLI-scripted smoke check. (task-04 — two real passing runs after fixing a Groq credential gap)
+- [x] Both smoke scripts are committed and re-runnable — not one-off manual commands lost to shell history. `smoke-e2e-render-beta.sh` re-verified live twice post-fix. `smoke-e2e-local.sh` was refactored in task-04 (shared logic extracted to `scripts/lib/e2e-smoke-flow.sh`) but **not re-run live post-refactor** — Docker was unavailable in this environment (WSL2 issue) both when the refactor happened and as of this closeout. Verified instead by direct code review (verbatim extraction, no behavior change). Recommend a live re-run once Docker is available, tracked as a residual, not blocking.
+- [x] TRACEABILITY.md updated with new terms from this story.
 
 ---
 
@@ -69,6 +69,7 @@ Prove — with a real network call, not a mock — that `api/` can reach `agents
 | # | Description | Deferred To | Status |
 |---|-------------|------------|--------|
 | 1 | `docs/04-architecture/beta-environment-design.md` still documents the stale `AI_MODEL_NAME`/`GOOGLE_AI_API_KEY` env var names (lines 93-103, 177, 202-203) instead of the current code's `GRADEOPS_GEMINI_API_KEY`/`GRADEOPS_GEMINI_MODEL`/`GRADEOPS_GROQ_API_KEY`/`GRADEOPS_GROQ_MODEL`. Also worth revisiting: the design doc frames Google AI Studio as beta's primary provider, but `agents/src/main/resources/application.yml:16`'s `default-provider: groq` makes Groq the unconditional default regardless of profile. Not blocking — Inconsistencies #4 is resolved and re-verified — but the doc will keep misleading the next person who touches beta's AI config. | A future doc-maintenance task or the next planning that touches `agents/`'s provider config | TODO |
+| 2 | `scripts/smoke-e2e-local.sh` was refactored in task-04 (shared logic extracted to `scripts/lib/e2e-smoke-flow.sh`) but not re-run live afterward — Docker was unavailable in this development environment (WSL2/Docker Desktop `Input/output error`, unrelated to the refactor itself) both at refactor time and at this story's closeout. Verified instead by direct code review: each extracted function is a verbatim move of the original inline logic with no `local` declarations, preserving the exact variable scoping the local script's `AgentExecutionLog` check and summary depend on. | Whoever next has a working Docker environment in this repo — run `scripts/smoke-e2e-local.sh` once and confirm it still passes | TODO |
 
 ---
 
