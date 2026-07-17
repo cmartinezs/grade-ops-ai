@@ -7,12 +7,12 @@
 
 ## Current Mechanism
 
-- **Status:** not confirmed
-- **Logging library/framework:** [fill in]
-- **Configuration files:** [fill in]
-- **Log format:** [plain text / structured JSON / other]
-- **Correlation mechanism:** [request id / trace id / span id / MDC / AsyncLocalStorage / contextvars / other]
-- **Sensitive data policy:** never log secrets, tokens, passwords, credentials, personal data, or full payloads unless explicitly approved and redacted.
+- **Status:** confirmed (2026-07-16, human decision recorded for `001-assessment-creation/story-02/task-05` — the first task in `web/` to make real outbound network calls)
+- **Logging library/framework:** Pino (`pino`)
+- **Configuration files:** `src/lib/logging/logger.ts` (new, introduced by task-05) — a single shared Pino instance exported for reuse across `lib/api`.
+- **Log format:** Structured JSON (Pino's default), one log line per event.
+- **Correlation mechanism:** A client-generated correlation id (timestamp + random suffix, not a cryptographic UUID — this is for log tracing only, not security, and avoids depending on `crypto.randomUUID()`, which jsdom's test environment doesn't implement even though real browsers/Node do) created at the start of each `lib/api` mutation/orchestration and passed through as a bound Pino child-logger field (`correlationId`) to every log line for that operation. Not propagated as an HTTP header to the backend in this task — `web/`'s outbound calls don't yet have a documented backend-side correlation header contract; that is out of scope for task-05 and left for whichever task first needs cross-service trace stitching.
+- **Sensitive data policy:** never log secrets, tokens, passwords, credentials, personal data, or full payloads unless explicitly approved and redacted. Task-05 specifically: log `assessmentId` and status only, never the brief payload (learning goal text may contain course-identifying context).
 
 ---
 

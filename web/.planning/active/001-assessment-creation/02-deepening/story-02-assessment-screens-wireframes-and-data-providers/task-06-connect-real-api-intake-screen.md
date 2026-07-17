@@ -64,12 +64,12 @@ N/A — no database or ORM involved in `web/`.
 
 ### Logging / Observability
 
-- **Logging mechanism:** Resolves the deferral from `task-05` — this task introduces the first real outbound network call from a user action. If no decision was recorded in `.planning/LOGGING.md` by the time this task starts, the agent must propose Pino (structured JSON, fits this Node.js/TypeScript stack) and get explicit human sign-off recorded in `LOGGING.md` before implementing.
-- **Correlation / trace context:** Propagate a client-generated correlation id header through `submitAssessmentBrief`'s two calls (from `task-05`) so both are traceable as one logical submit in any server-side logs that echo it back.
+- **Logging mechanism:** Already decided and recorded in `task-05` — Pino, structured JSON, confirmed in `.planning/LOGGING.md` (status: confirmed). This task reuses it; no further human sign-off needed.
+- **Correlation / trace context:** `submitAssessmentBrief` (from `task-05`) already creates a client-generated correlation id and logs both outbound calls under it via a Pino child logger — this task does not need to propagate a header (no backend-side correlation header contract exists; `task-05`'s own Logging section explicitly scopes that out). This task's submit handler should just let `submitAssessmentBrief`'s existing logging run; no new correlation mechanism to build here.
 - **Levels by event criticality:** INFO on successful navigation; WARN on 422 (either shape) and 502/503 (all recoverable, teacher can retry); ERROR on 500.
 - **Execution trace points:** Submit handler entry, `submitAssessmentBrief` call, success/failure branch, navigation.
 - **Sensitive data guardrails:** Do not log the brief's free-text fields; log status codes and the resulting `assessmentId` only.
-- **Verification evidence:** A test or manual log sample showing the correlation id present on both outbound calls for one submit.
+- **Verification evidence:** Confirm (via `task-05`'s existing tests/log sample, or a quick manual check) that `submitAssessmentBrief`'s correlation id still appears on both outbound calls for one submit — no new header-based test needed.
 
 ### Generated Test Suite
 
