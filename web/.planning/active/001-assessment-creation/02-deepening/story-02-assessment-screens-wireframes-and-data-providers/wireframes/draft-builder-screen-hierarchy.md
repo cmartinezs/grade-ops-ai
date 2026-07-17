@@ -30,8 +30,8 @@ No `SubSection` is introduced — see §3. No DS primitive is created by this ta
 
 Every file above is a Client Component (`"use client"`), same reasoning as `wireframes/intake-screen-hierarchy.md` §2:
 
-- The Page invokes `useShellConfig` and the page-level feature hook — both are hooks, disqualifying it from Server Component status per §7.
-- All 3 Sections are rendered inside that Client Component subtree, handle user events (typing, clicking Guardar/Regenerar/a version row), and (via their hooks) trigger Firebase-authenticated fetch calls — explicit Client Component triggers per §7.
+- The Page invokes `useShellConfig` and the page-level feature hook — both are hooks, disqualifying it from Server Component status per §7. The page hook (`useAssessmentDraftBuilderPage`) is the one that performs Firebase-authenticated work: the initial `loadAssessmentDraftBuilderPage` load and, after the P1 correction in §4, the `onSave`/`onRegenerate` mutation calls too.
+- All 3 Sections are rendered inside that Client Component subtree and handle user events (typing, clicking Guardar/Regenerar/a version row) — that alone is enough to require `"use client"` per §7. Section hooks do **not** trigger any fetch themselves (corrected — see the P1 finding in §4): they own only local form/validation state and invoke the callbacks supplied by the page hook.
 - None of the 3 Sections has a server-renderable static path independent from the interactive editor/regenerate/history behavior; the whole screen is one interactive unit beyond the already-existing `(protected)/layout.tsx`.
 
 ---

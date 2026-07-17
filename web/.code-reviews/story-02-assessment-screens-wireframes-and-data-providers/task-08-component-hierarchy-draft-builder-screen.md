@@ -75,3 +75,34 @@ Recommendation: update task-11/task-12 to remove 409 from Draft Builder save/reg
 - Reviewed the task-08 diff: story status update, task-08 verification summary, and new `wireframes/draft-builder-screen-hierarchy.md`.
 - Cross-checked task-08 against task-07's wireframe, task-09's functional mockup plan, task-10/task-11/task-12 data/mutation/API wiring plans, PDR-001, and the frontend component hierarchy guide.
 - Verified the backend assumptions against `/home/carlos/projects/grade-ops-ai/api`: `AssessmentController.java` has no restore endpoint; `GenerateAssessmentDraftResponse` contains no timestamp/edit marker; `UpdateAssessmentDraftRequest` is partial; `GlobalExceptionHandler.java` maps draft validation/application/agent errors but no draft-specific 409.
+
+## Re-review - 2026-07-17
+
+### Findings
+
+### P2 - Server/Client rationale still tells section hooks to trigger authenticated fetches
+
+- Files:
+  - `.planning/active/001-assessment-creation/02-deepening/story-02-assessment-screens-wireframes-and-data-providers/wireframes/draft-builder-screen-hierarchy.md:17`
+  - `.planning/active/001-assessment-creation/02-deepening/story-02-assessment-screens-wireframes-and-data-providers/wireframes/draft-builder-screen-hierarchy.md:19`
+  - `.planning/active/001-assessment-creation/02-deepening/story-02-assessment-screens-wireframes-and-data-providers/wireframes/draft-builder-screen-hierarchy.md:22`
+  - `.planning/active/001-assessment-creation/02-deepening/story-02-assessment-screens-wireframes-and-data-providers/wireframes/draft-builder-screen-hierarchy.md:34`
+  - `.planning/active/001-assessment-creation/02-deepening/story-02-assessment-screens-wireframes-and-data-providers/wireframes/draft-builder-screen-hierarchy.md:124`
+
+The original P1 is mostly fixed: the hierarchy now says section hooks only own local form/validation state, while `useAssessmentDraftBuilderPage` owns `onSave`/`onRegenerate`, calls task-11, and refetches through the facade. Task-09/task-11/task-12 were updated consistently with that.
+
+One sentence still contradicts the corrected contract: in the Server/Client rationale, it says the three Sections handle user events and, "via their hooks," trigger Firebase-authenticated fetch calls. That is now explicitly false for `useDraftEditorSection` and `useRegenerateSection`, and it also conflicts with the anti-pattern check that says neither Section hook calls task-11, `lib/api`, or Firebase directly.
+
+This matters because the stale sentence preserves the same implementation path the P1 correction was meant to eliminate: moving network orchestration back into Section hooks. Recommendation: change the rationale to say the subtree must be client-rendered because the Page hook performs authenticated loader/mutation work and the Sections handle user events through callbacks; do not describe Section hooks as fetch owners.
+
+### Resolved Findings
+
+- Original P1, mutation/refetch ownership split: fixed in the hierarchy and propagated into task-09/task-11/task-12.
+- Original P2, historical read-only behavior missing from task-09: fixed in task-09 implementation steps, verification, and done criteria.
+- Original P2, zero-prior-versions fixture conflicting with current-included versions: fixed by changing task-09 to a one-item current-only versions fixture.
+- Original P2, stale 409 requirements in task-11/task-12: fixed; those tasks now describe the real 404/422/500 plus 502/503 error surface and explicitly exclude 409.
+
+### Validation
+
+- `git diff --check story-02-assessment-screens-wireframes-and-data-providers...HEAD` - passed.
+- Manual re-read of `wireframes/draft-builder-screen-hierarchy.md`, `task-08-component-hierarchy-draft-builder-screen.md`, `task-09-functional-mockup-draft-builder-screen.md`, `task-11-mutations-draft-builder-screen.md`, and `task-12-connect-real-api-draft-builder-screen.md`.
