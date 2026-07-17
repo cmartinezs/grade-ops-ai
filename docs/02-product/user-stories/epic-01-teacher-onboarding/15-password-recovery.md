@@ -1,8 +1,8 @@
-# US-012: Password Recovery
+# US-015: Password Recovery
 
 - **Epic:** 01 — Teacher Onboarding and Workspace
 - **Priority:** P1
-- **ID:** US-012
+- **ID:** US-015
 
 ## Story
 

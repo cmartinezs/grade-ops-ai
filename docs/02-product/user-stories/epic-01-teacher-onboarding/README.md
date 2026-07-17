@@ -23,9 +23,9 @@ Establish the teacher's authenticated entry point and operational home base. Wit
 | US-007 | Cross-Teacher Access Denial | P0 | [07-cross-teacher-access-denial.md](07-cross-teacher-access-denial.md) |
 | US-008 | Teacher Self-Registration | P0 | [08-teacher-self-registration.md](08-teacher-self-registration.md) |
 | US-009 | Email Verification | P0 | [09-email-verification.md](09-email-verification.md) |
-| US-010 | Postman Collection for Teacher Onboarding Endpoints | P1 | [10-postman-collection.md](10-postman-collection.md) |
-| US-011 | Google Sign-In for Teachers | P0 | [11-google-sign-in.md](11-google-sign-in.md) |
-| US-012 | Password Recovery | P1 | [12-password-recovery.md](12-password-recovery.md) |
+| US-013 | Postman Collection for Teacher Onboarding Endpoints | P1 | [13-postman-collection.md](13-postman-collection.md) |
+| US-014 | Google Sign-In for Teachers | P0 | [14-google-sign-in.md](14-google-sign-in.md) |
+| US-015 | Password Recovery | P1 | [15-password-recovery.md](15-password-recovery.md) |
 
 ## Scope
 
