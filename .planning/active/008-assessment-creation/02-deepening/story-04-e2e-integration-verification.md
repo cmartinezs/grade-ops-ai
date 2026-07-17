@@ -1,6 +1,6 @@
 # 🔍 DEEPENING: Story 04 — e2e-integration-verification
 
-> **Status:** IN PROGRESS
+> **Status:** DONE
 > [← 01-expansion.md](../01-expansion.md) | [← planning/README.md](../../README.md)
 
 ---
