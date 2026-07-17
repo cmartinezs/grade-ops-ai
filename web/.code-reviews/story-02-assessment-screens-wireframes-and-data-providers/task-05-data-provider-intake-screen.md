@@ -3,6 +3,26 @@
 Date: 2026-07-16
 Scope: `task-05-data-provider-intake-screen.md` and the implementation it introduces for the intake mutation data provider (`src/lib/api/assessments.ts`, `src/types/assessment.ts`, `src/lib/logging/logger.ts`, `src/lib/api/__tests__/assessments.test.ts`, logging policy, package changes, and the generated task suite).
 
+## Re-review - 2026-07-16
+
+### Findings
+
+No findings. The previous P2 correlation-id handoff issue is fixed.
+
+### Validation Notes
+
+- `task-05` now describes the implemented timestamp + random suffix correlation id, including the jsdom reason for not using `crypto.randomUUID()`.
+- `task-06` no longer asks for a nonexistent correlation-id HTTP header. It now tells the next implementer to reuse `submitAssessmentBrief`'s existing child-logger correlation behavior.
+- `.planning/LOGGING.md` and `src/lib/api/assessments.ts` already matched this model and remain aligned.
+- The mutation/provider code remains unchanged in the relevant area: `submitAssessmentBrief` creates one correlation id, binds it to a Pino child logger, and both API calls log through that child logger.
+
+### Verification
+
+- `npm run test -- assessments` — passed; `9 passed`, `2 suites` because the pattern also matches the route test.
+- `npm run test -- --runInBand` — still fails only on known unrelated Spanish/English selector issues in `RegisterPage.test.tsx` and `SignOutButton.test.tsx` (`71 passed`, `5 failed`).
+- `npm run build` — compiled successfully, then failed during static prerender with the pre-existing Firebase `auth/invalid-api-key` issue.
+- `git diff --check` — passed.
+
 ## Findings
 
 ### P2 - Correlation-id handoff is inconsistent before `task-06` consumes this provider

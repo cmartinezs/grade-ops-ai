@@ -1,6 +1,6 @@
 # ⚛️ TASK 05 — data-provider-intake-screen
 
-> **Status:** IN PROGRESS
+> **Status:** DONE
 > **Workflow:** GENERATE-DOCUMENT
 > **Depends On:** task-01
 > [← story file](../story-02-assessment-screens-wireframes-and-data-providers.md)
@@ -124,7 +124,7 @@ N/A — no database or ORM involved in `web/`.
 - [x] All new/extended tests in `assessments.test.ts` pass — `7 passed, 7 total`.
 - [~] `npm run lint` passes — N/A, no ESLint config in this repo (pre-existing gap, unchanged from prior tasks); substituted `npx tsc --noEmit`, 0 errors outside the pre-existing test-typings gap.
 - [x] Logging mechanism decision is recorded in `.planning/LOGGING.md` before this task is marked done, or explicitly deferred to `task-06` with the human's sign-off recorded here. Recorded: Pino, structured JSON, human-confirmed 2026-07-16, before any implementation.
-- [x] Software smoke test check above passes (build/startup confirmed); for git-enabled tasks, implementation is committed, pushed, and published in a task PR before human developer PR review, with corrections pushed to the same PR. (PR publish step next in the task workflow.)
+- [x] Software smoke test check above passes (build/startup confirmed); for git-enabled tasks, implementation is committed, pushed, and published in a task PR before human developer PR review, with corrections pushed to the same PR. PR #74 (`tasks/story-02-assessment-screens-wireframes-and-data-providers/task-05-data-provider-intake-screen` → `story-02-assessment-screens-wireframes-and-data-providers`) opened, reviewed (1 P2 finding — stale UUID v4/header handoff docs — fixed), re-reviewed with no remaining findings, and merged 2026-07-16 (merge commit `2cd334a`).
 - [x] Logging follows `.planning/LOGGING.md`: correlation/trace context present, with INFO/DEBUG/WARN/ERROR levels chosen by criticality per this task's Logging / Observability section. See manual log sample above.
 - [x] Task test suite is generated/refreshed with `/plan-test-suite`, and every applicable quality gate above has command output or documented evidence — `test-suites/task-05-data-provider-intake-screen-test-suite.md` generated and gaps filled.
 - [x] Database/ORM: N/A — static DB/ORM consistency and runtime persistence smoke checks do not apply; no database, ORM, or persistence artifact is touched.
