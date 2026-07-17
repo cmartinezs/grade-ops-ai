@@ -89,7 +89,7 @@ Tres secciones apiladas verticalmente, no tabs ni rutas separadas (per Technical
 
 **Nota de trazabilidad:** el plan original de este task (Implementation Steps #1) asumía un estado "error de conflicto 409 (alguien más modificó el draft)". Se rastreó el código real antes de escribir esta tabla — igual que `task-02` hizo con el flujo de Intake — en vez de asumir la taxonomía genérica. **Ese estado 409 no existe:** ni `UpdateAssessmentDraftHandler` ni `RegenerateAssessmentDraftHandler` implementan bloqueo optimista (no hay chequeo de versión/ETag en `UpdateAssessmentDraftRequest` ni en `RegenerateAssessmentDraftRequest`), y `GlobalExceptionHandler.java` no mapea ningún 409 salvo `DuplicateEmailException` (dominio de auth, no de drafts). Una edición concurrente simplemente sobrescribe la fila silenciosamente (last-write-wins) — no hay señal de conflicto que la UI pueda mostrar. Se documenta como riesgo real más abajo, no se inventa un estado que la API no puede producir.
 
-En su lugar, la tabla documenta el error real de cada uno de los 3 endpoints de este screen (`GET .../draft`, `PATCH .../draft`, `POST .../draft/regenerate`, `GET .../draft/versions`), verificado directamente contra `AssessmentController.java`, `GlobalExceptionHandler.java`, `{GetCurrentDraftHandler,UpdateAssessmentDraftHandler,RegenerateAssessmentDraftHandler,ListDraftVersionsHandler,DraftGenerationCoordinator}.java`, `NoPriorDraftException.java`, y `OwnershipVerifier.java` (2026-07-16).
+En su lugar, la tabla documenta el error real de cada uno de los 4 endpoints de este screen (`GET .../draft`, `PATCH .../draft`, `POST .../draft/regenerate`, `GET .../draft/versions`), verificado directamente contra `AssessmentController.java`, `GlobalExceptionHandler.java`, `{GetCurrentDraftHandler,UpdateAssessmentDraftHandler,RegenerateAssessmentDraftHandler,ListDraftVersionsHandler,DraftGenerationCoordinator}.java`, `NoPriorDraftException.java`, y `OwnershipVerifier.java` (2026-07-16).
 
 | Estado | Disparador | Tratamiento visual |
 |--------|-----------|---------------------|
@@ -106,11 +106,11 @@ En su lugar, la tabla documenta el error real de cada uno de los 3 endpoints de 
 | **error 404 — assessment no existe u ownership** | Cualquiera de los 4 endpoints — `ResourceNotFoundException`, incluyendo el disfraz de `OwnershipVerifier` (per `task-02`'s hallazgo, no revela existencia a otro docente) | Pantalla completa de error (no banner de sección): "No encontramos esta evaluación." + acción para volver al listado |
 | **error inesperado (500)** | Fallo de infraestructura o excepción no prevista en cualquiera de los 4 endpoints | Banner genérico de reintento en la sección donde ocurrió la acción (guardar/regenerar), o error de pantalla completa si ocurrió en la carga inicial |
 
-Eso son **11 estados reales** documentados (no 8) — el original agrupaba todo error de escritura bajo un solo "409 de conflicto" inexistente; la tabla real subdivide en 8 variantes de error propias de 3 endpoints distintos, más los 3 estados estructurales (loading/empty/listo) y 2 de "en curso" (guardando/regenerando).
+Eso son **12 estados reales** documentados (no 8) — el original agrupaba todo error de escritura bajo un solo "409 de conflicto" inexistente; la tabla real subdivide en 7 estados de error propios de 4 endpoints distintos, más 3 estados estructurales (loading/empty/listo) y 2 de "en curso" (guardando/regenerando) — 3 + 2 + 7 = 12.
 
 **Riesgo real de concurrencia (reemplaza el estado 409 asumido):** dado que no hay bloqueo optimista, si el mismo docente tiene dos pestañas abiertas (o dos sesiones), la última escritura gana silenciosamente — no hay forma de que la UI detecte o comunique esto con los datos que la API expone hoy. Fuera de alcance de este wireframe corregir el backend; se deja registrado aquí para que `task-08`/`task-11` no asuman una respuesta 409 que nunca llegará.
 
-No aplica un estado "conflicto" adicional a los 11 de arriba — queda cubierto por la nota de riesgo, no por un estado de UI ficticio.
+No aplica un estado "conflicto" adicional a los 12 de arriba — queda cubierto por la nota de riesgo, no por un estado de UI ficticio.
 
 ---
 
@@ -206,7 +206,7 @@ Reemplaza las 3 secciones completas — no tiene sentido mostrar un editor vací
 - **Componentes necesarios:** ver `task-08` (jerarquía de componentes).
 - **Hooks necesarios:** hook de página para Draft Builder (nombre TBD en `task-08`), análogo a `useIntakeAssessmentPage`.
 - **DTOs requeridos:** `GenerateAssessmentDraftResponseDto`, `UpdateAssessmentDraftRequestDto`, `RegenerateAssessmentDraftRequestDto` (ver `task-01`; construidos en `task-10`/`task-11`).
-- **Estados de UI:** los 11 listados arriba (3 estructurales, 2 "en curso", 6 de error real — no 8 asumidos; el 409 asumido no existe, ver nota de trazabilidad).
+- **Estados de UI:** los 12 listados arriba (3 estructurales, 2 "en curso", 7 de error real — no 8 asumidos; el 409 asumido no existe, ver nota de trazabilidad).
 - **Validaciones:** `adjustmentNotes` requerido antes de habilitar "Regenerar con IA"; campos del editor con `@Size(min=1)` si se envían (validación servidor, ya que son todos opcionales/parciales por diseño de `UpdateAssessmentDraftRequest`).
 - **Eventos de usuario:** editar campo, guardar cambios, escribir notas de ajuste, regenerar, expandir/consultar una versión del historial.
 - **Tests mínimos:** guardar deshabilita el editor durante el request; regenerar deshabilita su sección sin afectar el editor; error de agente rechazado/caído no borra el draft actual (ver `task-09`/`task-12`).
