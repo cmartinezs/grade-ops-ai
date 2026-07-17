@@ -68,7 +68,11 @@ Full raw, unedited command output (both runs, plus the log investigations that f
 
 **Run 2**, after that fix, found a *different*, deeper real issue: both services responded to their warm-up requests in well under a second (confirmed warm), yet draft generation still failed identically. `api/`'s logs for this run show the actual cause: `agents/` returned `422 {"errorCode":"MALFORMED_OUTPUT","message":"Assessment generation response could not be parsed: 401: Invalid API Key", ...}`. Traced to `agents/src/main/resources/application.yml:16` (`app.agents.llm.default-provider: groq`) and `application-beta.yml` (Groq key sourced from `${GRADEOPS_GROQ_API_KEY}`) — **the deployed `grade-ops-ai-agents` Render service's `GRADEOPS_GROQ_API_KEY` environment variable is invalid, expired, or unset.** This is a genuine infra/credential gap in the beta environment, not a defect in this script or in `api/`'s/`agents/`'s application code — `agents/`'s own error-handling worked correctly (returned a structured `MALFORMED_OUTPUT` error rather than crashing), and `api/` correctly surfaced it as a failed generation rather than a false success.
 
-Per this task's own Risk section ("must not fabricate a 'passed' result... report it plainly, mark this task's Done Criteria as unmet"), this task does not claim a passing end-to-end run. Recorded as `Inconsistencies Found` row #4 on the story, `OPEN`, blocking full completion of this task's evidence bar until the human rotates/sets a valid `GRADEOPS_GROQ_API_KEY` on the `grade-ops-ai-agents` Render service.
+Per this task's own Risk section ("must not fabricate a 'passed' result... report it plainly, mark this task's Done Criteria as unmet"), this task did not claim a passing end-to-end run at that point. A real Render API call (`GET /v1/services/srv-d8oqosernols73erqc3g/env-vars`) confirmed the precise root cause: the deployed service had `AI_MODEL_NAME`/`GOOGLE_AI_API_KEY` (matching the design doc) but not `GRADEOPS_GROQ_API_KEY`/`GRADEOPS_GEMINI_API_KEY` (matching current code) — design-doc-vs-code naming drift, not just a bad key. The human then added `GRADEOPS_GROQ_API_KEY`/`GRADEOPS_GROQ_MODEL` on the `grade-ops-ai-agents` Render service and it auto-restarted (`manual` deploy, `live`, `2026-07-16T23:47:54Z`, same commit — a restart, not a redeploy).
+
+**Runs 3 and 4**, after that fix, both passed for real: genuine structured drafts ("Recursive Factorial Calculation", "Recursive Fibonacci Calculation"), each from a fresh timestamp-suffixed teacher, confirming both a real end-to-end pass and re-runnability. Run 3 also exercised the retry-on-first-attempt warm-up logic for real (one transient no-response on `api/`'s first warm-up request, self-healed on the automatic retry, matching task-02's documented local pattern).
+
+Recorded as `Inconsistencies Found` row #4 on the story, `DONE` — resolved by the human's Render env var fix, re-verified by two full real runs.
 
 **Scoping note:** unlike `smoke-e2e-local.sh`, this script does not independently verify a persisted `AgentExecutionLog` row in Postgres — beta's Neon database has no access path from this script without a Neon connection string, which wasn't available when this task was executed. Not applicable here anyway, since generation itself is currently failing before any log would reach `COMPLETED`.
 
@@ -79,9 +83,9 @@ Per this task's own Risk section ("must not fabricate a 'passed' result... repor
 ## Done Criteria
 
 - [x] `scripts/smoke-e2e-render-beta.sh` exists, is executable, and is committed.
-- [ ] If `beta` is live: one real run's output is captured as evidence in this task's report, showing a genuine generated draft produced by the deployed environment. **Not met** — two real runs both failed at draft generation due to an invalid `GRADEOPS_GROQ_API_KEY` on the deployed `agents/` service (a real infra gap, documented above and as Inconsistencies Found #4, not silently worked around).
+- [x] If `beta` is live: one real run's output is captured as evidence in this task's report, showing a genuine generated draft produced by the deployed environment. Runs 3 and 4 (post Groq-credential fix) both show genuine generated drafts from the deployed environment.
 - [x] The script fails clearly if the pre-deploy-status check shows the service isn't live, rather than proceeding to a confusing HTTP-level failure.
-- [ ] All verification checks listed above pass (or are explicitly marked blocked, per the conditional Risk above). Verifications 1, 2, 4 pass; verification 3 (real flow succeeds) is blocked by the Groq credential gap, not by this task's own implementation.
+- [x] All verification checks listed above pass (or are explicitly marked blocked, per the conditional Risk above). All four verifications now pass for real.
 - [ ] Human developer code review completed; requested corrections, if any, were implemented and re-reviewed.
 - [x] No unintended expansion: the task satisfies `[CHECK-ATOMICITY]`.
 

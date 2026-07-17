@@ -111,4 +111,123 @@ $ curl -sS -H "Authorization: Bearer ${RENDER_API_KEY}" -H "Accept: application/
 
 ---
 
+## Run 3 — after the human added `GRADEOPS_GROQ_API_KEY`/`GRADEOPS_GROQ_MODEL` on Render
+
+Verified via a real Render API call that the correctly-named vars are now present (values redacted), and that the service redeployed (`manual` trigger, `live`, `2026-07-16T23:47:54Z`, same commit `6a9c8fd4e743` — a restart to pick up the new env vars, not a code change) before re-running:
+
+```
+==> Setting Render CLI workspace...
+==> Checking Render service status (grade-ops-ai-api, grade-ops-ai-agents)...
+    grade-ops-ai-api (srv-d8oqvejeo5us73b41a80): latest deploy live at commit cd771a0c0c77
+    grade-ops-ai-agents (srv-d8oqosernols73erqc3g): latest deploy live at commit 6a9c8fd4e743
+==> Warm-up request to agents/ (https://gradeops-agents.onrender.com), up to 90s...
+    agents/ responded: HTTP 404 (any HTTP response confirms the service answered, not a 200 requirement)
+==> Warm-up request to api/ (https://gradeops-api.onrender.com/), up to 90s...
+    first attempt got no response — retrying once (matches the transient first-request behavior task-02 also observed locally)...
+    api/ responded: HTTP 401 (any HTTP response confirms the service answered, not a 200 requirement)
+==> Provisioning test teacher smoke-e2e-1784245893@gradeops.test...
+    provisioned firebaseUid=65KFE3RZa3fiSG7ZSAqFyw6LirF3
+==> Setting test teacher password...
+    password set.
+==> Obtaining a real Firebase ID token...
+    idToken obtained (1021 chars).
+==> POST /api/v1/assessments (brief intake)...
+    assessmentId=5a1a9221-36af-4740-b2a2-6c35879740b0
+==> POST /api/v1/assessments/5a1a9221-36af-4740-b2a2-6c35879740b0/draft (triggers agents/ over the real network)...
+    draft generated: title="Recursive Factorial Calculation", objectives=2
+==> GET /api/v1/assessments/5a1a9221-36af-4740-b2a2-6c35879740b0/draft (confirms persistence)...
+    retrieval matches generated draft.
+
+PASS: real brief -> generate -> retrieve flow completed against the deployed beta
+environment on Render (https://gradeops-api.onrender.com), confirming grade-ops-ai-api reached
+grade-ops-ai-agents over the real deployed network path.
+  teacher email     : smoke-e2e-1784245893@gradeops.test
+  assessmentId      : 5a1a9221-36af-4740-b2a2-6c35879740b0
+  draft title       : Recursive Factorial Calculation
+  draft objectives  : 2
+  full draft payload:
+{
+  "draftId": "4c9a28e7-2012-448d-ae43-9f6175b134c3",
+  "title": "Recursive Factorial Calculation",
+  "context": "Intermediate Python programmers practice implementing recursive algorithms",
+  "instructions": "Implement a recursive function that calculates the factorial of a given non-negative integer",
+  "objectives": [
+    "Understand the concept of recursion",
+    "Apply recursion to solve a mathematical problem"
+  ],
+  "deliverables": [
+    "A single Python file containing the recursive factorial function"
+  ],
+  "constraints": [
+    "Must use recursion",
+    "Must handle non-negative integers",
+    "Must not use iteration",
+    "Submission deadline: 60 minutes",
+    "Must be implemented in Python"
+  ],
+  "versionNumber": 1
+}
+```
+
+Notably, the `api/` warm-up's first-attempt-fails-retry-succeeds path (added after Run 1's investigation) fired for real here and self-healed automatically, exactly as designed.
+
+## Run 4 — immediate re-run, confirms re-runnability (Verification #4)
+
+```
+==> Setting Render CLI workspace...
+==> Checking Render service status (grade-ops-ai-api, grade-ops-ai-agents)...
+    grade-ops-ai-api (srv-d8oqvejeo5us73b41a80): latest deploy live at commit cd771a0c0c77
+    grade-ops-ai-agents (srv-d8oqosernols73erqc3g): latest deploy live at commit 6a9c8fd4e743
+==> Warm-up request to agents/ (https://gradeops-agents.onrender.com), up to 90s...
+    agents/ responded: HTTP 404 (any HTTP response confirms the service answered, not a 200 requirement)
+==> Warm-up request to api/ (https://gradeops-api.onrender.com/), up to 90s...
+    api/ responded: HTTP 401 (any HTTP response confirms the service answered, not a 200 requirement)
+==> Provisioning test teacher smoke-e2e-1784246229@gradeops.test...
+    provisioned firebaseUid=3SlYexswVHVDID79ReS3pmheDVg1
+==> Setting test teacher password...
+    password set.
+==> Obtaining a real Firebase ID token...
+    idToken obtained (1021 chars).
+==> POST /api/v1/assessments (brief intake)...
+    assessmentId=3f770426-83b1-4d47-addd-69219b6a3066
+==> POST /api/v1/assessments/3f770426-83b1-4d47-addd-69219b6a3066/draft (triggers agents/ over the real network)...
+    draft generated: title="Recursive Fibonacci Calculation", objectives=2
+==> GET /api/v1/assessments/3f770426-83b1-4d47-addd-69219b6a3066/draft (confirms persistence)...
+    retrieval matches generated draft.
+
+PASS: real brief -> generate -> retrieve flow completed against the deployed beta
+environment on Render (https://gradeops-api.onrender.com), confirming grade-ops-ai-api reached
+grade-ops-ai-agents over the real deployed network path.
+  teacher email     : smoke-e2e-1784246229@gradeops.test
+  assessmentId      : 3f770426-83b1-4d47-addd-69219b6a3066
+  draft title       : Recursive Fibonacci Calculation
+  draft objectives  : 2
+  full draft payload:
+{
+  "draftId": "379afca1-7cea-4334-bad3-afd59dceba24",
+  "title": "Recursive Fibonacci Calculation",
+  "context": "Intermediate Python students practice recursive algorithms under a data structures course.",
+  "instructions": "Implement a function that calculates the nth Fibonacci number using recursion.",
+  "objectives": [
+    "Understand recursive function calls",
+    "Apply recursive problem-solving strategies"
+  ],
+  "deliverables": [
+    "A single Python file with the Fibonacci function",
+    "A short explanation of the recursion process in comments"
+  ],
+  "constraints": [
+    "Must use recursive function calls",
+    "Must run within 60 minutes of development time",
+    "No iteration allowed",
+    "Submission deadline: 60 minutes from start of assessment"
+  ],
+  "versionNumber": 1
+}
+```
+
+Different, equally real generated draft — confirms the script is re-runnable without depending on state from the previous run (fresh timestamp-suffixed teacher email each time, same pattern as task-02's local script).
+
+---
+
 > [← task file](../task-04-render-post-deploy-smoke.md)
