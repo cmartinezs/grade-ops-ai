@@ -287,6 +287,10 @@ function normalizeTask(task) {
   const title = String(task.title || task.name || '').trim();
   if (!title) fail('Every task needs a title.');
   const tech = task.technicalDesign || {};
+  const frontendTask = frontendFlag(task, title, tech);
+  const frontend = task.frontendDesign || task.frontend_design || {};
+  const backendTask = backendFlag(task, title, tech);
+  const backend = task.backendDesign || task.backend_design || {};
   return {
     title,
     slug: slugify(title),
@@ -300,6 +304,33 @@ function normalizeTask(task) {
       interfaces: stringOr(tech.interfaces, 'None documented.'),
       risk: stringOr(tech.risk, 'Medium - validate scope and evidence during execution.'),
       designNotes: stringOr(tech.designNotes, 'No extra constraints documented.'),
+    },
+    reviewOnly: booleanFlag(task.reviewOnly || task.review_only || task.review),
+    summaryEvidence: stringOr(task.summaryEvidence || task.summary_evidence, ''),
+    frontendTask,
+    frontendDesign: {
+      ideaToImplementation: stringOr(frontend.ideaToImplementation || frontend.idea_to_implementation, frontendTask ? 'Describe problem/intent -> UX concept -> representation -> functional markup -> component implementation -> verification.' : 'N/A'),
+      viewDescription: stringOr(frontend.viewDescription || frontend.view_description, frontendTask ? 'Describe visible layout, primary states, empty/loading/error states, responsive behavior, and accessibility expectations.' : 'N/A'),
+      uiUxPrinciples: stringOr(frontend.uiUxPrinciples || frontend.ui_ux_principles, frontendTask ? 'Document hierarchy, clarity, feedback, consistency, keyboard/screen-reader behavior, and error prevention.' : 'N/A'),
+      wireframe: stringOr(frontend.wireframe || frontend.representation, frontendTask ? 'Add an ASCII wireframe, state diagram, flow outline, or link to a design artifact.' : 'N/A'),
+      functionalMockup: stringOr(frontend.functionalMockup || frontend.functional_mockup, frontendTask ? 'Plan static or locally mocked markup/state before connecting real backend or external activity.' : 'N/A'),
+      componentPattern: stringOr(frontend.componentPattern || frontend.component_pattern, frontendTask ? 'Identify existing component/pattern reuse or define new component boundary, props/events/state ownership, composition, and styling convention.' : 'N/A'),
+      pageLogicLayer: stringOr(frontend.pageLogicLayer || frontend.page_logic_layer, frontendTask ? 'Define routing, page/container state, loading/error handling, permissions, and orchestration.' : 'N/A'),
+      businessLogicLayer: stringOr(frontend.businessLogicLayer || frontend.business_logic_layer, frontendTask ? 'Define validation, derived state, transformations, rules, and domain decisions outside presentation where applicable.' : 'N/A'),
+      externalCommunicationLayer: stringOr(frontend.externalCommunicationLayer || frontend.external_communication_layer, frontendTask ? 'Define services, APIs, clients, libraries, generated SDKs, cache/query layer, auth headers, retries, and error mapping.' : 'N/A'),
+      reuseDecision: stringOr(frontend.reuseDecision || frontend.reuse_decision, frontendTask ? 'State which view/component/service/lib is reused, modified, or created and why.' : 'N/A'),
+    },
+    backendTask,
+    backendDesign: {
+      styleGuideSource: stringOr(backend.styleGuideSource || backend.style_guide_source, backendTask ? 'Existing backend style/coding guide path(s), or prerequisite task-NN that creates/proposes one before implementation.' : 'N/A'),
+      functionalDesign: stringOr(backend.functionalDesign || backend.functional_design, backendTask ? 'Define use case, actor/system trigger, inputs, outputs, state changes, success path, alternate/error paths, idempotency, permissions, and business rules.' : 'N/A'),
+      technicalDesign: stringOr(backend.technicalDesign || backend.technical_design, backendTask ? 'Define language/framework conventions, module/package placement, architectural pattern, transaction/async boundaries, error handling, observability, and fit with the guide.' : 'N/A'),
+      contractDefinition: stringOr(backend.contractDefinition || backend.contract_definition || backend.contracts, backendTask ? 'Define endpoints, commands/events, DTOs/schemas, status codes, validation rules, headers, versioning, compatibility, and examples.' : 'N/A'),
+      layerDesign: stringOr(backend.layerDesign || backend.layer_design, backendTask ? 'Define controller/handler/route, application/use-case, domain/business, persistence/integration responsibilities.' : 'N/A'),
+      dataPersistenceDesign: stringOr(backend.dataPersistenceDesign || backend.data_persistence_design, backendTask ? 'Define entities/models, migrations/schema changes, repositories/queries, indexes, constraints, generated clients, and DB/ORM consistency approach; write N/A only if no data changes.' : 'N/A'),
+      externalCommunication: stringOr(backend.externalCommunication || backend.external_communication, backendTask ? 'Define services, APIs, clients/libs/SDKs, queues/events, auth, retries/timeouts, fallback behavior, and error mapping.' : 'N/A'),
+      reuseDecision: stringOr(backend.reuseDecision || backend.reuse_decision, backendTask ? 'State which module/service/API/lib is reused, modified, or created and why.' : 'N/A'),
+      guideComplianceChecks: stringOr(backend.guideComplianceChecks || backend.guide_compliance_checks, backendTask ? 'List style/lint/format/architecture commands or checklist items proving guide and language convention compliance.' : 'N/A'),
     },
     implementationSteps: arrayOr(task.implementationSteps || task.steps, [`Implement ${title}.`, 'Add or update verification evidence.']),
     verification: verificationRows(task.verification),
@@ -320,6 +351,34 @@ function arrayOr(value, fallback) {
   if (Array.isArray(value)) return value.map((item) => String(item).trim()).filter(Boolean);
   if (typeof value === 'string') return value.split(/\n|\|/).map((item) => item.trim()).filter(Boolean);
   return fallback;
+}
+
+function booleanFlag(value) {
+  return /^(true|yes|y|si|sí|review-only)$/i.test(String(value || '').trim());
+}
+
+function frontendFlag(task, title, tech) {
+  if (booleanFlag(task.frontend || task.frontendTask || task.frontend_task || task.uiTask || task.ui_task)) return true;
+  const fields = [
+    title,
+    task.objective,
+    task.deliverable,
+    task.output,
+    ...(Array.isArray(tech.affectedFiles || task.affectedFiles) ? (tech.affectedFiles || task.affectedFiles) : []),
+  ].join(' ');
+  return /\b(frontend|front-end|ui|ux|web|client|browser|page|view|screen|route|component|layout|form|modal|dashboard|react|vue|angular|svelte|jsx|tsx|css|tailwind)\b/i.test(fields);
+}
+
+function backendFlag(task, title, tech) {
+  if (booleanFlag(task.backend || task.backendTask || task.backend_task || task.apiTask || task.api_task)) return true;
+  const fields = [
+    title,
+    task.objective,
+    task.deliverable,
+    task.output,
+    ...(Array.isArray(tech.affectedFiles || task.affectedFiles) ? (tech.affectedFiles || task.affectedFiles) : []),
+  ].join(' ');
+  return /\b(backend|back-end|api|server|endpoint|controller|handler|route|use-?case|repository|dao|adapter|port|dto|schema|migration|entity|model|database|persistence|queue|event|worker|spring|express|fastapi|django|rails|nestjs|maven|gradle)\b/i.test(fields);
 }
 
 function normalizeDepends(value) {
@@ -376,10 +435,42 @@ ${task.objective}
 ## Technical Design
 
 - **Approach:** ${task.technicalDesign.approach}
+- **Review-only:** ${task.reviewOnly ? 'Yes' : 'No'}
 - **Affected files / components:** ${affected}
 - **Interfaces / contracts:** ${task.technicalDesign.interfaces}
 - **Risk:** ${task.technicalDesign.risk}
 - **Design notes:** ${task.technicalDesign.designNotes}
+
+---
+
+## Frontend Design Plan
+
+- **Frontend task:** ${task.frontendTask ? 'Yes' : 'No'}
+- **Idea to implementation path:** ${task.frontendDesign.ideaToImplementation}
+- **View description:** ${task.frontendDesign.viewDescription}
+- **UI/UX principles:** ${task.frontendDesign.uiUxPrinciples}
+- **Wireframe / representation:** ${task.frontendDesign.wireframe}
+- **Functional mockup before real activity:** ${task.frontendDesign.functionalMockup}
+- **Component pattern:** ${task.frontendDesign.componentPattern}
+- **Page logic layer:** ${task.frontendDesign.pageLogicLayer}
+- **Business logic layer:** ${task.frontendDesign.businessLogicLayer}
+- **External communication layer:** ${task.frontendDesign.externalCommunicationLayer}
+- **Reuse / modify / create decision:** ${task.frontendDesign.reuseDecision}
+
+---
+
+## Backend/API Design Plan
+
+- **Backend/API task:** ${task.backendTask ? 'Yes' : 'No'}
+- **Style/coding guide source:** ${task.backendDesign.styleGuideSource}
+- **Functional design:** ${task.backendDesign.functionalDesign}
+- **Technical design:** ${task.backendDesign.technicalDesign}
+- **Contract definition:** ${task.backendDesign.contractDefinition}
+- **Layer design:** ${task.backendDesign.layerDesign}
+- **Data and persistence design:** ${task.backendDesign.dataPersistenceDesign}
+- **External communication:** ${task.backendDesign.externalCommunication}
+- **Reuse / modify / create decision:** ${task.backendDesign.reuseDecision}
+- **Guide compliance checks:** ${task.backendDesign.guideComplianceChecks}
 
 ---
 
@@ -426,9 +517,20 @@ ${rows(dbRows)}
 
 ---
 
+## Summary Evidence
+
+${task.summaryEvidence || (task.reviewOnly
+    ? '- **Reviewed scope:** Fill during execution.\n- **Evidence artifact:** Add inline Markdown summary or link to a longer \`.md\` artifact.\n- **Conclusion:** Fill during execution.\n- **Code snippets:** Use fenced snippets with language names when code is evidence; otherwise write \`N/A\`.'
+    : 'N/A - required only for review-only tasks.')}
+
+---
+
 ## Done Criteria
 
 ${task.doneCriteria.map((item) => `- [ ] ${item}`).join('\n')}
+- [ ] If this is a review-only task, \`## Summary Evidence\` captures the review scope, inspected evidence, conclusion, and links to any longer Markdown or snippet artifacts
+- [ ] If this is a frontend/UI task, \`## Frontend Design Plan\` documents idea-to-code flow, view behavior, UI/UX principles, wireframe or equivalent representation, functional mockup, component pattern, page/business/external communication layers, services/APIs/libs, and reuse/modify/create decisions
+- [ ] If this is a backend/API task, \`## Backend/API Design Plan\` documents the style/coding guide source or prerequisite guide task, functional design, technical design, contracts, layers, data/persistence, external communication, reuse/modify/create decisions, and guide compliance checks
 - [ ] Task test suite was generated/refreshed and every applicable gate has command output or documented evidence
 ${config.requiresGit === 'true' ? '- [ ] For git-enabled tasks, implementation was committed, pushed, and published in a task PR before human review\n- [ ] Human developer PR review completed; requested corrections, if any, were implemented, pushed to the same PR, and re-reviewed' : '- [ ] Human review completed when required by the planning workflow'}
 
