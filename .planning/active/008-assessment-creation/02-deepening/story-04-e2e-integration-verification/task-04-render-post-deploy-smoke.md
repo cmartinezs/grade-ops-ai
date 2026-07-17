@@ -74,9 +74,17 @@ Per this task's own Risk section ("must not fabricate a 'passed' result... repor
 
 Recorded as `Inconsistencies Found` row #4 on the story, `DONE` — resolved by the human's Render env var fix, re-verified by two full real runs.
 
-**Scoping note:** unlike `smoke-e2e-local.sh`, this script does not independently verify a persisted `AgentExecutionLog` row in Postgres — beta's Neon database has no access path from this script without a Neon connection string, which wasn't available when this task was executed. Not applicable here anyway, since generation itself is currently failing before any log would reach `COMPLETED`.
+**Scoping note:** unlike `smoke-e2e-local.sh`, this script does not independently verify a persisted `AgentExecutionLog` row in Postgres — beta's Neon database has no access path from this script without a Neon connection string, which wasn't available when this task was executed.
 
 **Known limitation on this task's own local regression check:** the shared-logic refactor (`scripts/lib/e2e-smoke-flow.sh`) touches task-02's `scripts/smoke-e2e-local.sh`. Docker was unavailable in this environment at implementation time (`docker compose ps` → `Input/output error`, a WSL2/Docker Desktop integration issue unrelated to this change) so the refactored local script could not be re-run live to confirm no regression. Verified instead by direct code review: each function extracted into the shared lib is a verbatim move of the original inline logic (confirmed against the pre-refactor script), none declare `local` variables, so all state (`assessment_id`, `draft_id`, `teacher_email`, etc.) remains in the sourcing script's scope exactly as before — needed by both the local script's `AgentExecutionLog` Postgres check and its summary. `bash -n` syntax-checked clean on both scripts and the shared lib. A live re-run of `smoke-e2e-local.sh` once Docker is available again is recommended before merging, not yet done.
+
+### Correction — code review (2026-07-16)
+
+Human review (`.code-review/story-04-e2e-integration-verification/task-04-render-post-deploy-smoke.md`) found P2: `scripts/smoke-e2e-render-beta.sh` tells operators to see `.env.example` for required config, and hard-fails without `RENDER_API_KEY`/`RENDER_WORKSPACE_ID`/`BETA_API_BASE_URL` — but the committed `.env.example` didn't document any of the three, leaving the "committed, re-runnable script" handoff incomplete from the repo alone.
+
+Verified before implementing: confirmed by direct `grep` that `.env.example` genuinely had zero matches for `RENDER`/`BETA_API` — the finding was accurate, not a false positive.
+
+Fixed: added a "Render beta smoke" section to `.env.example` documenting `RENDER_API_KEY`, `RENDER_WORKSPACE_ID` (with a pointer to task-03's evidence for how to resolve it), `BETA_API_BASE_URL` (with a note on the `*.onrender.com` slug-vs-display-name distinction discovered during this task), and the two optional service-name overrides — matching the file's existing style and language. Also fixed a stale sentence in this task's own Evidence section that still said generation "is currently failing" after the Groq fix had already resolved it.
 
 ---
 
