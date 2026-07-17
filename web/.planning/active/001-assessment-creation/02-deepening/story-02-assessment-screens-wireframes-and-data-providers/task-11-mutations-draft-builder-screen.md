@@ -15,7 +15,8 @@
 
 ## Technical Design
 
-- **Approach:** Two separate mutation functions, not one generic "updateDraft" — `PATCH` (edit) and regenerate (`POST .../regenerate`) hit different endpoints with different request shapes (`task-01`) and different semantics (editing the current version in place vs. producing a new version via AI). Both must trigger a refetch of the version list afterward per `06-estado-datos-y-api.md` §13 (sync with backend after a critical mutation) — regenerate always creates a new version; a PATCH edit while viewing a past version, if allowed by the UI, would need the same refresh.
+- **Approach:** Two separate mutation functions, not one generic "updateDraft" — `PATCH` (edit) and regenerate (`POST .../regenerate`) hit different endpoints with different request shapes (`task-01`) and different semantics (editing the current version in place vs. producing a new version via AI). Both must trigger a refetch of the version list afterward per `06-estado-datos-y-api.md` §13 (sync with backend after a critical mutation) — regenerate always creates a new version, and a save always edits the current version (per `task-08`'s hierarchy, `PATCH` is only reachable while viewing the current version — the editor is read-only while previewing history, so there is no "PATCH while viewing a past version" case to design for).
+- **No 409 handling (correction — this task previously assumed one):** `task-07` traced the real backend and found neither `UpdateAssessmentDraftHandler` nor `RegenerateAssessmentDraftHandler` implements optimistic locking, and `GlobalExceptionHandler` maps 409 only for `DuplicateEmailException` (an auth-domain exception unrelated to drafts) — no draft endpoint can ever return 409. Both mutation functions here surface the real error surface instead: 422 (field validation / empty notes / agent-rejected / no-prior-draft), 502/503 (agent down), and 500. The last-write-wins concurrency risk this replaces is a documented, unresolved backend limitation (`task-07`), not something a 409 branch in this task could ever catch.
 - **Affected files / components:**
   - `src/lib/api/assessments.ts` (add `updateAssessmentDraft()`, `regenerateAssessmentDraft()`)
   - `src/lib/api/__tests__/assessments.test.ts` (extend)
@@ -49,7 +50,7 @@
 1. Add `UpdateAssessmentDraftRequestDto` to `src/types/assessment.ts` — all fields optional, matching `task-01`'s confirmed `UpdateAssessmentDraftRequest` partial-update semantics exactly (only include keys actually being changed).
 2. Add `updateAssessmentDraft(assessmentId, changes)` to `src/lib/api/assessments.ts`, `PATCH`-ing `/api/v1/assessments/${assessmentId}/draft` with only the provided keys.
 3. Add `regenerateAssessmentDraft(assessmentId, adjustmentNotes)` `POST`-ing `/api/v1/assessments/${assessmentId}/draft/regenerate` with `{ adjustmentNotes }`.
-4. Write tests: `updateAssessmentDraft` sends only the changed keys (not a full object with empty-string defaults); `regenerateAssessmentDraft` sends the notes and parses the new draft; both surface 409 (conflict) distinctly from other errors per `06-estado-datos-y-api.md` §9.
+4. Write tests: `updateAssessmentDraft` sends only the changed keys (not a full object with empty-string defaults); `regenerateAssessmentDraft` sends the notes and parses the new draft; both surface 422 field/notes/agent-rejected errors and 502/503 agent-down distinctly from a generic 500, per `06-estado-datos-y-api.md` §9 and `task-07`'s traced error surface — neither surfaces a 409, since none exists for these endpoints.
 
 ---
 
@@ -59,7 +60,7 @@
 |---|-------------|----------------|
 | 1 | `updateAssessmentDraft` sends only the caller-provided keys, never blanking unspecified fields | `npm run test -- assessments` |
 | 2 | `regenerateAssessmentDraft` sends `{ adjustmentNotes }` and returns the new `AssessmentDraftDto` with an incremented `versionNumber` | `npm run test -- assessments` |
-| 3 | Both functions surface a 409 response as a distinguishable conflict error | `npm run test -- assessments` |
+| 3 | Both functions surface 422 (field/notes/agent-rejected) and 502/503 (agent-down) as distinguishable from a generic 500 — neither surfaces a 409, since none exists for these endpoints (`task-07`) | `npm run test -- assessments` |
 
 ### Software Smoke Test Check
 
@@ -76,7 +77,7 @@ N/A — no database or ORM involved in `web/`.
 
 - **Logging mechanism:** Same project-level decision as `task-05`/`task-10` — reuse whatever was resolved there; do not re-decide.
 - **Correlation / trace context:** Each mutation call gets its own correlation id (they're independent user actions, not part of one page-load operation like `task-10`'s loader).
-- **Levels by event criticality:** INFO on successful update/regenerate; WARN on 409 conflict (recoverable — teacher can refresh and retry); ERROR on 500.
+- **Levels by event criticality:** INFO on successful update/regenerate; WARN on 422 (field/notes/agent-rejected) and 502/503 (agent-down) — all recoverable, teacher can correct input or retry; ERROR on 500. No 409 level applies (`task-07`: no draft endpoint returns one).
 - **Execution trace points:** Mutation entry, outbound call (dependency, status, latency), completion/failure.
 - **Sensitive data guardrails:** Do not log full draft text or adjustment notes content; log `assessmentId`, `versionNumber`, and status only.
 - **Verification evidence:** A test or manual log sample showing each mutation logged with its own correlation id and outcome.
@@ -96,7 +97,7 @@ N/A — no database or ORM involved in `web/`.
 
 - [ ] `updateAssessmentDraft` only sends caller-provided keys, matching the partial-update contract.
 - [ ] `regenerateAssessmentDraft` sends adjustment notes and returns the new draft.
-- [ ] Both distinguish 409 conflicts from other errors.
+- [ ] Both distinguish 422 (field/notes/agent-rejected) and 502/503 (agent-down) from a generic 500 — no 409 handling exists, since `task-07` confirmed no draft endpoint returns one.
 - [ ] All new/extended tests pass; `npm run lint` passes.
 - [ ] Software smoke test check above passes (build/startup confirmed); for git-enabled tasks, implementation is committed, pushed, and published in a task PR before human developer PR review, with corrections pushed to the same PR.
 - [ ] Logging follows `.planning/LOGGING.md`: correlation/trace context present, with INFO/DEBUG/WARN/ERROR levels chosen by criticality per this task's Logging / Observability section.
