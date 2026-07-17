@@ -7,6 +7,26 @@ Scope: `task-06-connect-real-api-intake-screen.md` and the implementation that c
 
 No findings.
 
+## Re-review - 2026-07-17
+
+### Findings
+
+No findings. The previously noted documentation mismatch is not a `web/` defect: normalizing backend validation language belongs in `api/`, and keeping agent output aligned with the teacher's language likely belongs in the `api/` → `agents/` contract. This task's web-side obligation is to avoid leaking raw backend English strings to the teacher, which the current hook and test cover.
+
+### Validation Notes
+
+- The new runtime behavior in `useIntakeAssessmentPage` matches the task's "no English backend strings" rule: `CreateAssessmentBriefError` field-error messages are mapped by field name, not displayed verbatim.
+- The updated `NewAssessmentPage` test covers the regression shape with backend text `"must not be blank"` and asserts the Spanish `"Ingresa el tema."` copy is shown instead.
+- `FIELD_ERROR_MESSAGES` currently matches the five `briefSchema` required-field messages.
+- Backend/API localization remains a separate follow-up outside `web/`, especially if the selected teacher language also needs to shape generated agent content.
+
+### Verification
+
+- `git fetch origin` — passed; local task branch is aligned with `origin/tasks/story-02-assessment-screens-wireframes-and-data-providers/task-06-connect-real-api-intake-screen` at `113da3f`.
+- `npm run test -- NewAssessmentPage` — passed (`6 passed`, `1 suite`).
+- `git diff --check origin/story-02-assessment-screens-wireframes-and-data-providers...HEAD` — passed.
+- `npm run test -- --runInBand` — still fails only on the pre-existing unrelated English-selector tests in `RegisterPage.test.tsx` and `SignOutButton.test.tsx` (`75 passed`, `5 failed`).
+
 ## Validation Notes
 
 - `useIntakeAssessmentPage` now calls `submitAssessmentBrief(values)` directly, keeps the form component passive, and routes success to `/assessments/{assessmentId}/draft`.

@@ -1,6 +1,6 @@
 # ⚛️ TASK 06 — connect-real-api-intake-screen
 
-> **Status:** IN PROGRESS
+> **Status:** DONE
 > **Workflow:** GENERATE-DOCUMENT
 > **Depends On:** task-04, task-05
 > [← story file](../story-02-assessment-screens-wireframes-and-data-providers.md)
@@ -111,7 +111,7 @@ N/A — no database or ORM involved in `web/`.
 - [x] No fake/mocked submit code remains. Confirmed via grep (see Verification Summary).
 - [x] All tests pass; `npm run lint` passes. `80 tests, 75 passed` (same 5 pre-existing unrelated failures); `npm run lint` N/A (no ESLint config, pre-existing) — substituted `tsc --noEmit`, clean.
 - [x] Logging mechanism decision is recorded in `.planning/LOGGING.md` with human sign-off before this task is marked done. Already recorded in `task-05`; reused as-is, correctly per this task's own Logging section.
-- [x] Software smoke test check above passes (build/startup/connectivity confirmed against a real local `api/`); for git-enabled tasks, implementation is committed, pushed, and published in a task PR before human developer PR review, with corrections pushed to the same PR. Build/startup confirmed; connectivity against a real local `api/` confirmed once Docker became available mid-task — real submit, real navigation, real error shapes (422 field validation, 503 agent-unreachable), all against the actual running stack, not simulated. (PR publish step next in the task workflow.)
+- [x] Software smoke test check above passes (build/startup/connectivity confirmed against a real local `api/`); for git-enabled tasks, implementation is committed, pushed, and published in a task PR before human developer PR review, with corrections pushed to the same PR. Build/startup confirmed; connectivity against a real local `api/` confirmed once Docker became available mid-task — real submit, real navigation, real error shapes (422 field validation, 503 agent-unreachable), all against the actual running stack, not simulated. PR #77 (`tasks/story-02-assessment-screens-wireframes-and-data-providers/task-06-connect-real-api-intake-screen` → `story-02-assessment-screens-wireframes-and-data-providers`) opened, reviewed with no findings, corrected post-approval with a real-stack-discovered bug fix (English-string leak), re-reviewed with no remaining findings (noting the deeper backend/agent localization question is an `api/`/`agents/` follow-up, out of `web/`'s scope), and merged 2026-07-16 (merge commit `68e0a6c`).
 - [x] Logging follows `.planning/LOGGING.md`: correlation/trace context present, with INFO/DEBUG/WARN/ERROR levels chosen by criticality per this task's Logging / Observability section. Unchanged, reused from `task-05`.
 - [x] Task test suite is generated/refreshed with `/plan-test-suite`, and every applicable quality gate above has command output or documented evidence — `test-suites/task-06-connect-real-api-intake-screen-test-suite.md` generated and gaps filled, including the honest integration/acceptance gap.
 - [x] Database/ORM: N/A — static DB/ORM consistency and runtime persistence smoke checks do not apply; no database, ORM, or persistence artifact is touched.
