@@ -218,7 +218,7 @@ function printGitPlan(storyFile, storyDir) {
   const storySlug = path.basename(storyFile, '.md');
   const baseBranch = configValue('base_branch', 'main');
   const requiresGit = configValue('requires_git', 'true');
-  const taskBranches = taskFiles(storyDir).map((file) => `${storySlug}/${path.basename(file, '.md')}`);
+  const taskBranches = taskFiles(storyDir).map((file) => `${storySlug}--${path.basename(file, '.md')}`);
   const report = {
     ok: true,
     mode: 'git-plan',
@@ -256,7 +256,8 @@ function printGitPlan(storyFile, storyDir) {
   console.log('Commands/checks:\n');
   for (const command of report.commands) console.log(`- \`${command}\``);
   console.log('\nUse `git branch -d` only. Do not force-delete local or remote branches.');
-  console.log('For child planning worktrees, prepend the worktree prefix to the story/task branch names when that prefix is already part of the branch convention.');
+  console.log('Task branches use a sibling `--task-...` suffix, for example `<story-branch>--task-NN-<slug>`, so Git can keep the story branch ref at the same time.');
+  console.log('For child planning worktrees, prepend the worktree prefix to the story branch name; task branches then append `--task-...` to that prefixed story branch.');
 }
 
 function print(report) {
