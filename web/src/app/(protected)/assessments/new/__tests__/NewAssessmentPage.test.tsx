@@ -1,5 +1,22 @@
-import { render, screen, fireEvent, waitFor, act } from "@testing-library/react";
+import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import NewAssessmentPage from "../page";
+import {
+  submitAssessmentBrief,
+  CreateAssessmentBriefError,
+  GenerateAssessmentDraftError,
+} from "@/lib/api/assessments";
+
+jest.mock("@/lib/api/assessments", () => {
+  const actual = jest.requireActual("@/lib/api/assessments");
+  return { ...actual, submitAssessmentBrief: jest.fn() };
+});
+
+const mockPush = jest.fn();
+jest.mock("next/navigation", () => ({
+  useRouter: () => ({ push: mockPush }),
+}));
+
+const mockSubmitAssessmentBrief = submitAssessmentBrief as jest.Mock;
 
 function fillValidBrief() {
   fireEvent.change(screen.getByLabelText(/^Objetivo de aprendizaje/), { target: { value: "Entender recursividad" } });
@@ -9,40 +26,103 @@ function fillValidBrief() {
   fireEvent.change(screen.getByLabelText(/^Idioma/), { target: { value: "Java" } });
 }
 
-describe("NewAssessmentPage (real useIntakeAssessmentPage hook, not mocked props)", () => {
-  it("shows the submitting state while the fake submit is in flight, then returns to idle on success", async () => {
-    jest.useFakeTimers();
+function submit() {
+  fireEvent.click(screen.getByRole("button", { name: /crear evaluación/i }));
+}
+
+describe("NewAssessmentPage (real useIntakeAssessmentPage hook, submitAssessmentBrief mocked)", () => {
+  beforeEach(() => jest.clearAllMocks());
+
+  it("navigates to /assessments/{assessmentId}/draft with the real id on success", async () => {
+    mockSubmitAssessmentBrief.mockResolvedValue({ assessmentId: "assess-1" });
     render(<NewAssessmentPage />);
 
     fillValidBrief();
-    fireEvent.click(screen.getByRole("button", { name: /crear evaluación/i }));
+    submit();
+
+    await waitFor(() => {
+      expect(mockPush).toHaveBeenCalledWith("/assessments/assess-1/draft");
+    });
+  });
+
+  it("disables the submit button while submitAssessmentBrief is in flight", async () => {
+    let resolveSubmit: (value: { assessmentId: string }) => void;
+    mockSubmitAssessmentBrief.mockReturnValue(
+      new Promise((resolve) => {
+        resolveSubmit = resolve;
+      })
+    );
+    render(<NewAssessmentPage />);
+
+    fillValidBrief();
+    submit();
 
     expect(await screen.findByRole("button", { name: /creando evaluación/i })).toBeDisabled();
 
-    act(() => { jest.advanceTimersByTime(800); });
+    resolveSubmit!({ assessmentId: "assess-1" });
     await waitFor(() => {
-      expect(screen.getByRole("button", { name: /crear evaluación/i })).not.toBeDisabled();
+      expect(mockPush).toHaveBeenCalled();
     });
-
-    jest.useRealTimers();
   });
 
-  it("routes the fake server-side field error for topic='trigger-field-error' through the real hook into the DOM", async () => {
-    jest.useFakeTimers();
+  it("shows per-field translated messages for a List<FieldErrorResponse> 422 from brief creation, ignoring the backend's own (English, untranslated) message text", async () => {
+    // Real backend behavior (confirmed against the local api/ stack, not assumed): the
+    // @NotBlank constraint has no custom message, so the body is Hibernate Validator's
+    // default English text. The hook must never show that raw string to the teacher.
+    mockSubmitAssessmentBrief.mockRejectedValue(
+      new CreateAssessmentBriefError(422, [{ field: "topic", message: "must not be blank" }])
+    );
     render(<NewAssessmentPage />);
 
-    fireEvent.change(screen.getByLabelText(/^Objetivo de aprendizaje/), { target: { value: "Entender recursividad" } });
-    fireEvent.change(screen.getByLabelText(/^Tema/), { target: { value: "trigger-field-error" } });
-    fireEvent.change(screen.getByLabelText(/^Nivel/), { target: { value: "Intermedio" } });
-    fireEvent.change(screen.getByLabelText(/^Duración/), { target: { value: "45 min" } });
-    fireEvent.change(screen.getByLabelText(/^Idioma/), { target: { value: "Java" } });
-    fireEvent.click(screen.getByRole("button", { name: /crear evaluación/i }));
+    fillValidBrief();
+    submit();
 
-    act(() => { jest.advanceTimersByTime(800); });
     await waitFor(() => {
-      expect(screen.getByText("Ya existe una evaluación con este tema")).toBeInTheDocument();
+      expect(screen.getByText("Ingresa el tema.")).toBeInTheDocument();
     });
+    expect(screen.queryByText("must not be blank")).not.toBeInTheDocument();
+    expect(mockPush).not.toHaveBeenCalled();
+  });
 
-    jest.useRealTimers();
+  it("shows a distinct business-rejection message for AGENT_REJECTED", async () => {
+    mockSubmitAssessmentBrief.mockRejectedValue(
+      new GenerateAssessmentDraftError(422, { error: "AGENT_CALL_FAILED", message: "AGENT_REJECTED" }, "assess-1")
+    );
+    render(<NewAssessmentPage />);
+
+    fillValidBrief();
+    submit();
+
+    await waitFor(() => {
+      expect(screen.getByRole("alert")).toHaveTextContent(/no pudimos generar un borrador/i);
+    });
+  });
+
+  it("shows a distinct service-unavailable message for AGENT_ERROR/UNREACHABLE (502/503)", async () => {
+    mockSubmitAssessmentBrief.mockRejectedValue(
+      new GenerateAssessmentDraftError(503, { error: "AGENT_CALL_FAILED", message: "UNREACHABLE" }, "assess-1")
+    );
+    render(<NewAssessmentPage />);
+
+    fillValidBrief();
+    submit();
+
+    await waitFor(() => {
+      expect(screen.getByRole("alert")).toHaveTextContent(/servicio de generación de ia no está disponible/i);
+    });
+  });
+
+  it("shows a generic retry message for a 500 response", async () => {
+    mockSubmitAssessmentBrief.mockRejectedValue(
+      new CreateAssessmentBriefError(500, { error: "INTERNAL_ERROR", message: null })
+    );
+    render(<NewAssessmentPage />);
+
+    fillValidBrief();
+    submit();
+
+    await waitFor(() => {
+      expect(screen.getByRole("alert")).toHaveTextContent("Ocurrió un error inesperado. Intenta de nuevo.");
+    });
   });
 });
