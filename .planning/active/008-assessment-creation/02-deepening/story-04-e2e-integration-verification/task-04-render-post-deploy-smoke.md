@@ -1,6 +1,6 @@
 # ⚛️ TASK 04 — Render post-deploy smoke script and evidence
 
-> **Status:** IN PROGRESS
+> **Status:** DONE
 > **Workflow:** GENERATE-DOCUMENT
 > **Depends On:** task-03
 > [← story file](../story-04-e2e-integration-verification.md)
@@ -94,7 +94,7 @@ Fixed: added a "Render beta smoke" section to `.env.example` documenting `RENDER
 - [x] If `beta` is live: one real run's output is captured as evidence in this task's report, showing a genuine generated draft produced by the deployed environment. Runs 3 and 4 (post Groq-credential fix) both show genuine generated drafts from the deployed environment.
 - [x] The script fails clearly if the pre-deploy-status check shows the service isn't live, rather than proceeding to a confusing HTTP-level failure.
 - [x] All verification checks listed above pass (or are explicitly marked blocked, per the conditional Risk above). All four verifications now pass for real.
-- [ ] Human developer code review completed; requested corrections, if any, were implemented and re-reviewed.
+- [x] Human developer code review completed; requested corrections, if any, were implemented and re-reviewed.
 - [x] No unintended expansion: the task satisfies `[CHECK-ATOMICITY]`.
 
 ---
