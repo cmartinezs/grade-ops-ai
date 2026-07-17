@@ -21,6 +21,25 @@ This matters because `task-08`, `task-09`, and `task-10` are supposed to use thi
 
 Recommendation: normalize the wireframe and task summary to one explicit inventory. For example, either keep the current 12-row table and update the prose/checklist to `4 endpoints`, `12 states`, `7 error states`, or intentionally merge/remove one state and make the table match the claimed `11`.
 
+## Re-review - 2026-07-17
+
+### Findings
+
+No findings. The previous P2 state-inventory mismatch is fixed.
+
+### Validation Notes
+
+- `wireframes/draft-builder-screen.md` now says the screen uses 4 endpoints, matching the listed endpoints.
+- The state table still contains 12 rows, and the prose/checklist now consistently describes those as 3 structural states, 2 in-flight states, and 7 error states.
+- The task verification summary now repeats the same `12` total and `7 distinct error states` breakdown, so `task-08`, `task-09`, and `task-10` have one consistent source of truth for downstream state coverage.
+- A residual search found no stale `11 estados`, `6 de error`, `3 endpoints`, or `8 variantes de error` wording in the task-07 wireframe/task files.
+
+### Verification
+
+- `rg -n "11 estados|11 listados|6 de error|6 distinct|3 endpoints|8 variantes de error|States documented: 11|Final count: 3 structural.*6" .../task-07-wireframe-draft-builder-screen.md .../wireframes/draft-builder-screen.md` - no matches.
+- Manual re-read of `wireframes/draft-builder-screen.md` lines 92-113 and 204-213.
+- Manual re-read of `task-07-wireframe-draft-builder-screen.md` lines 70-96.
+
 ## Validation Notes
 
 - Verified the key backend assumptions against the local `grade-ops-ai/api` checkout: the controller exposes draft generate/regenerate/update/current/versions endpoints, no restore endpoint; `GlobalExceptionHandler` maps only `DuplicateEmailException` to 409; `GenerateAssessmentDraftResponse` has no `createdAt`; and `AssessmentDraft.applyEdit(...)` preserves the original id/version/log/createdAt without an edited-by-teacher marker.

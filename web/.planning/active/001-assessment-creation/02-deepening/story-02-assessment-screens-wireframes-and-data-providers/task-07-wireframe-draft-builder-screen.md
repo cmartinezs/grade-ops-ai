@@ -1,6 +1,6 @@
 # ⚛️ TASK 07 — wireframe-draft-builder-screen
 
-> **Status:** IN PROGRESS
+> **Status:** DONE
 > **Workflow:** GENERATE-DOCUMENT
 > **Depends On:** —
 > [← story file](../story-02-assessment-screens-wireframes-and-data-providers.md)
@@ -89,7 +89,7 @@ N/A — this task produces no executable code.
 - [x] All 8 states are documented with their visual treatment — 12 real states produced instead of 8 assumed; the assumed "409 conflict" state was traced and found not to exist in the real API, replaced with the actual error surface of all 4 endpoints — see § Verification Summary above and the wireframe's own trazabilidad note.
 - [x] No "restore version" action is implied — confirmed against `task-01`'s exhaustive endpoint listing; wireframe explicitly states the history section is read-only.
 - [x] Editable fields match the confirmed `GenerateAssessmentDraftResponse` shape — see § Verification Summary field cross-check.
-- [x] Software smoke/build/startup/connectivity checks: N/A, no runtime surface; for git-enabled tasks, this task is committed, pushed, and published in a task PR before human developer PR review, with corrections pushed to the same PR. Branch `story-02-assessment-screens-wireframes-and-data-providers--task-07-wireframe-draft-builder-screen` pushed; PR to be opened via `publish --execute`.
+- [x] Software smoke/build/startup/connectivity checks: N/A, no runtime surface; for git-enabled tasks, this task is committed, pushed, and published in a task PR before human developer PR review, with corrections pushed to the same PR. PR #79 (`story-02-...--task-07-wireframe-draft-builder-screen` → `story-02-assessment-screens-wireframes-and-data-providers`) opened, reviewed (one round of correction — normalized inconsistent state/endpoint counts, pushed to the same PR), re-reviewed with no further findings, approved, and merged 2026-07-17 (merge commit `829079e`).
 - [x] Logging/observability: N/A — no executable code, no correlation/trace/INFO/DEBUG/WARN/ERROR log levels apply.
 - [x] Task test suite: N/A — the generated test-suite quality gates in this task's Generated Test Suite section are architecture-review only.
 - [x] Database/ORM: N/A — static DB/ORM consistency and runtime persistence smoke checks do not apply; no database, ORM, or persistence artifact is touched.
