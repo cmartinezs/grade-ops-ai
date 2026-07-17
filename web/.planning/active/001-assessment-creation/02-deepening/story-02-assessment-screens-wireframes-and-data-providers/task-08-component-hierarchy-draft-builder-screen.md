@@ -1,6 +1,6 @@
 # ⚛️ TASK 08 — component-hierarchy-draft-builder-screen
 
-> **Status:** IN PROGRESS
+> **Status:** DONE
 > **Workflow:** GENERATE-DOCUMENT
 > **Depends On:** task-07
 > [← story file](../story-02-assessment-screens-wireframes-and-data-providers.md)
@@ -92,7 +92,7 @@ N/A — this task produces no executable code.
 - [x] Each of the 3 Sections has its own named hook — see § 1 table and § 3's rationale for keeping them separate.
 - [x] No restore/rollback affordance appears anywhere — confirmed against `task-01`'s exhaustive endpoint listing; also surfaced and closed the more subtle "editable historical preview = silent restore" gap (see § Verification Summary above).
 - [x] Post-review correction: mutation/refetch ownership centralized in the page hook, historical-read-only enforcement propagated into `task-09`, `task-09`'s version-list fixture wording made consistent with the always-current-included contract, and stale 409 handling removed from `task-11`/`task-12` — see § Verification Summary's "Correction round" bullet.
-- [x] Software smoke/build/startup/connectivity checks: N/A, no runtime surface; for git-enabled tasks, this task is committed, pushed, and published in a task PR before human developer PR review, with corrections pushed to the same PR.
+- [x] Software smoke/build/startup/connectivity checks: N/A, no runtime surface; for git-enabled tasks, this task is committed, pushed, and published in a task PR before human developer PR review, with corrections pushed to the same PR. PR #80 (`story-02-...--task-08-component-hierarchy-draft-builder-screen` → `story-02-assessment-screens-wireframes-and-data-providers`) opened, reviewed (P1 mutation/refetch ownership split + 3 P2 findings, all fixed in one correction round), re-reviewed (one residual P2 — stale Server/Client rationale sentence — fixed), re-reviewed again with no further findings, approved, and merged 2026-07-17 (merge commit `5c6df55`).
 - [x] Logging/observability: N/A — no executable code, no correlation/trace/INFO/DEBUG/WARN/ERROR log levels apply.
 - [x] Task test suite: N/A — the generated test-suite quality gates in this task's Generated Test Suite section are architecture-review only.
 - [x] Database/ORM: N/A — static DB/ORM consistency and runtime persistence smoke checks do not apply; no database, ORM, or persistence artifact is touched.

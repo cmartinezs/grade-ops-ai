@@ -106,3 +106,22 @@ This matters because the stale sentence preserves the same implementation path t
 
 - `git diff --check story-02-assessment-screens-wireframes-and-data-providers...HEAD` - passed.
 - Manual re-read of `wireframes/draft-builder-screen-hierarchy.md`, `task-08-component-hierarchy-draft-builder-screen.md`, `task-09-functional-mockup-draft-builder-screen.md`, `task-11-mutations-draft-builder-screen.md`, and `task-12-connect-real-api-draft-builder-screen.md`.
+
+## Re-review 2 - 2026-07-17
+
+### Findings
+
+No findings. The remaining P2 from the previous re-review is fixed.
+
+### Validation Notes
+
+- `wireframes/draft-builder-screen-hierarchy.md` now says the page hook performs the Firebase-authenticated loader/mutation work, and line 34 explicitly says Section hooks do not trigger fetches.
+- The hierarchy table still keeps `useDraftEditorSection` and `useRegenerateSection` scoped to local form/validation state, with `onSave`/`onRegenerate` supplied by the page hook.
+- Task-09 still carries the historical-read-only and one-item current-only versions fixture requirements.
+- Task-11/task-12 still exclude 409 handling and document the real 404/422/500 plus 502/503 error surface.
+
+### Verification
+
+- `git diff --check story-02-assessment-screens-wireframes-and-data-providers...HEAD` - passed.
+- `rg -n 'via their hooks|trigger Firebase|Section hooks.*fetch|section hooks.*fetch|Section hook.*Firebase|useDraftEditorSection.*Firebase|useRegenerateSection.*Firebase|onSaved|onRegenerated|empty version list|empty versions array' ...` - no stale ownership wording found; matches were only correction notes or the intentional "never an empty versions array" wording.
+- Manual re-read of `wireframes/draft-builder-screen-hierarchy.md` lines 29-35 and 120-124.
