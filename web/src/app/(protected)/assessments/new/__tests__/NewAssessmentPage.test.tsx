@@ -65,9 +65,12 @@ describe("NewAssessmentPage (real useIntakeAssessmentPage hook, submitAssessment
     });
   });
 
-  it("shows per-field translated messages for a List<FieldErrorResponse> 422 from brief creation", async () => {
+  it("shows per-field translated messages for a List<FieldErrorResponse> 422 from brief creation, ignoring the backend's own (English, untranslated) message text", async () => {
+    // Real backend behavior (confirmed against the local api/ stack, not assumed): the
+    // @NotBlank constraint has no custom message, so the body is Hibernate Validator's
+    // default English text. The hook must never show that raw string to the teacher.
     mockSubmitAssessmentBrief.mockRejectedValue(
-      new CreateAssessmentBriefError(422, [{ field: "topic", message: "El tema ya existe." }])
+      new CreateAssessmentBriefError(422, [{ field: "topic", message: "must not be blank" }])
     );
     render(<NewAssessmentPage />);
 
@@ -75,8 +78,9 @@ describe("NewAssessmentPage (real useIntakeAssessmentPage hook, submitAssessment
     submit();
 
     await waitFor(() => {
-      expect(screen.getByText("El tema ya existe.")).toBeInTheDocument();
+      expect(screen.getByText("Ingresa el tema.")).toBeInTheDocument();
     });
+    expect(screen.queryByText("must not be blank")).not.toBeInTheDocument();
     expect(mockPush).not.toHaveBeenCalled();
   });
 
