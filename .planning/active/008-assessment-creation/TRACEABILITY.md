@@ -51,7 +51,7 @@ Term and concept traceability for this planning. For global consolidated view, s
 
 | ID | Term / Issue | Blocker | Status | Target Resolution |
 |----|-------------|---------|--------|------------------|
-| R-01 | `docs/04-architecture/beta-environment-design.md` still documents stale `AI_MODEL_NAME`/`GOOGLE_AI_API_KEY` env var names instead of the current code's `GRADEOPS_GEMINI_API_KEY`/`GRADEOPS_GEMINI_MODEL`/`GRADEOPS_GROQ_API_KEY`/`GRADEOPS_GROQ_MODEL`; also worth revisiting whether `agents/`'s `default-provider` should be `gemini` for beta per the design doc's stated intent | None — doc-only fix | OPEN | A future doc-maintenance task or the next planning touching `agents/`'s provider config |
+| R-01 | ~~`docs/04-architecture/beta-environment-design.md` documented stale `AI_MODEL_NAME`/`GOOGLE_AI_API_KEY` env var names.~~ Resolved 2026-07-17 — doc updated to `GRADEOPS_GEMINI_API_KEY`/`GRADEOPS_GEMINI_MODEL`/`GRADEOPS_GROQ_API_KEY`/`GRADEOPS_GROQ_MODEL`, with an explicit callout on the still-open `default-provider: groq` vs. design intent question (deliberately not silently resolved) | — | DONE | — |
 
 ---
 

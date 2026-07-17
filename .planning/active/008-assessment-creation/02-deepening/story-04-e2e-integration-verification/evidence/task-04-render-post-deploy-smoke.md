@@ -230,4 +230,64 @@ Different, equally real generated draft — confirms the script is re-runnable w
 
 ---
 
+## Local regression check — `smoke-e2e-local.sh` post-refactor (2026-07-17)
+
+Docker was unavailable throughout this task's original implementation (WSL2/Docker Desktop `Input/output error`). Once Docker was available again, ran the refactored `scripts/smoke-e2e-local.sh` twice for real to confirm the `scripts/lib/e2e-smoke-flow.sh` extraction introduced no regression — including the local-only `AgentExecutionLog` Postgres check, which the code review alone couldn't exercise.
+
+```
+==> Checking docker compose services (db, api, agents)...
+    db, api, agents are running.
+==> Provisioning test teacher smoke-e2e-1784249097@gradeops.test...
+    provisioned firebaseUid=NQrr1Fn6p9XjYMklFhZT0YCukV32
+==> Setting test teacher password...
+    password set.
+==> Obtaining a real Firebase ID token...
+    idToken obtained (1021 chars).
+==> POST /api/v1/assessments (brief intake)...
+    assessmentId=5438284e-6f4e-4752-a969-316190ae170b
+==> POST /api/v1/assessments/5438284e-6f4e-4752-a969-316190ae170b/draft (triggers agents/ over the real network)...
+    draft generated: title="Recursive Sequence Calculation", objectives=2
+==> GET /api/v1/assessments/5438284e-6f4e-4752-a969-316190ae170b/draft (confirms persistence)...
+    retrieval matches generated draft.
+==> Verifying persisted AgentExecutionLog in Postgres...
+    persisted log confirmed: status=COMPLETED, model=llama-3.3-70b-versatile, agent_execution_id=bf51c371-1bb3-4d1e-b1aa-aa0a54f8bc9b, draft_id backfilled correctly
+
+PASS: real brief -> generate -> retrieve flow completed against the local compose stack,
+with a persisted AgentExecutionLog confirmed directly in Postgres (not inferred from shape).
+  draft title          : Recursive Sequence Calculation
+  log status           : COMPLETED
+  log model            : llama-3.3-70b-versatile
+```
+
+**Second run** (re-runnability):
+
+```
+==> Checking docker compose services (db, api, agents)...
+    db, api, agents are running.
+==> Provisioning test teacher smoke-e2e-1784249132@gradeops.test...
+    provisioned firebaseUid=p5U6Jr2DaAdBxZ2IOMocPNSXAIk1
+==> Setting test teacher password...
+    password set.
+==> Obtaining a real Firebase ID token...
+    idToken obtained (1021 chars).
+==> POST /api/v1/assessments (brief intake)...
+    assessmentId=77cd427d-cea4-47bb-ba35-7bc679bfbe1d
+==> POST /api/v1/assessments/77cd427d-cea4-47bb-ba35-7bc679bfbe1d/draft (triggers agents/ over the real network)...
+    draft generated: title="Recursive Tree Traversal", objectives=2
+==> GET /api/v1/assessments/77cd427d-cea4-47bb-ba35-7bc679bfbe1d/draft (confirms persistence)...
+    retrieval matches generated draft.
+==> Verifying persisted AgentExecutionLog in Postgres...
+    persisted log confirmed: status=COMPLETED, model=llama-3.3-70b-versatile, agent_execution_id=5bc130f1-8f82-46e3-ab16-abb1f0569c73, draft_id backfilled correctly
+
+PASS: real brief -> generate -> retrieve flow completed against the local compose stack,
+with a persisted AgentExecutionLog confirmed directly in Postgres (not inferred from shape).
+  draft title          : Recursive Tree Traversal
+  log status           : COMPLETED
+  log model            : llama-3.3-70b-versatile
+```
+
+Both runs passed cleanly with distinct real drafts and distinct `AgentExecutionLog` rows, confirming the code-review-based verification was correct — the refactor introduced no regression.
+
+---
+
 > [← task file](../task-04-render-post-deploy-smoke.md)
