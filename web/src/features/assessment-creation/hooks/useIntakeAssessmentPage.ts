@@ -9,6 +9,19 @@ import {
 } from "@/lib/api/assessments";
 import type { BriefFormValues } from "../schemas/briefSchema";
 
+// The backend's @NotBlank constraint has no custom message, so its 422 body carries
+// Hibernate Validator's default English text ("must not be blank") — confirmed against
+// the real local api/ stack, not assumed. Never shown to the teacher (per this task's own
+// "no English backend strings" rule); reuse briefSchema's own Spanish copy per field instead,
+// since every one of these fields has the exact same single constraint (required, non-blank).
+const FIELD_ERROR_MESSAGES: Record<keyof BriefFormValues, string> = {
+  learningGoal: "Ingresa el objetivo de aprendizaje.",
+  topic: "Ingresa el tema.",
+  level: "Ingresa el nivel.",
+  duration: "Ingresa la duración.",
+  language: "Ingresa el idioma.",
+};
+
 type SubmitState =
   | { status: "idle" }
   | { status: "submitting" }
@@ -45,7 +58,8 @@ export function useIntakeAssessmentPage(): IntakeAssessmentPageViewModel {
       if (err instanceof CreateAssessmentBriefError && Array.isArray(err.body)) {
         const mapped: Partial<Record<keyof BriefFormValues, string>> = {};
         for (const fieldError of err.body) {
-          mapped[fieldError.field as keyof BriefFormValues] = fieldError.message;
+          const field = fieldError.field as keyof BriefFormValues;
+          mapped[field] = FIELD_ERROR_MESSAGES[field] ?? GENERIC_RETRY_MESSAGE;
         }
         setFieldErrors(mapped);
         setState({ status: "idle" });
