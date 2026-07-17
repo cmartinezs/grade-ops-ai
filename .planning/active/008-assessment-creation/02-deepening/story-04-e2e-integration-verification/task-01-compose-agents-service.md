@@ -1,6 +1,6 @@
 # ⚛️ TASK 01 — Add `agents` service to root `compose.yml`
 
-> **Status:** TODO
+> **Status:** DONE
 > **Workflow:** GENERATE-DOCUMENT
 > **Depends On:** —
 > [← story file](../story-04-e2e-integration-verification.md)
@@ -20,12 +20,13 @@ Root `compose.yml` brings up an `agents` service alongside `db`, `api`, `web`, s
 - **Interfaces / contracts:** None — pure local dev config.
 - **Risk:** Low — additive-only, no existing service's behavior changes beyond `api` gaining two env vars it already reads with safe defaults.
 - **Design notes:** `agents/`'s own env vars (`GRADEOPS_GROQ_API_KEY`, `GRADEOPS_GROQ_MODEL`, `GRADEOPS_GROQ_BASE_URL`, per `agents/.env.example`) must come from a local `.env` file (not hardcoded in `compose.yml`), consistent with `agents/`'s own `DotenvEnvironmentPostProcessor` local-dev convention and this project's "never commit real values" rule — reference them with `${VAR_NAME:?Set VAR_NAME in .env}` the same way `compose.yml`'s `web` service already does for Firebase vars.
+- **Design update (found by reading `application-beta.yml` directly, not assumed):** `application-beta.yml` binds `spring.ai.google.genai.api-key: ${GRADEOPS_GEMINI_API_KEY}` and `.chat.options.model: ${GRADEOPS_GEMINI_MODEL}` with **no defaults** — both starters (Google GenAI and OpenAI/Groq) are on the classpath and `AssessmentConfig` registers both providers' `ChatModel` beans at boot (per `agents/002-groq-genai-provider` task-03), so Spring's placeholder resolution requires `GRADEOPS_GEMINI_API_KEY` to resolve to *something* even though this story only needs Groq to actually work (`app.agents.llm.default-provider: groq`). Without it, the `agents` container would crash-loop on boot, not fail gracefully. `compose.yml` sets a safe, non-functional default for both Gemini vars (`${GRADEOPS_GEMINI_API_KEY:-not-used-locally}` / `${GRADEOPS_GEMINI_MODEL:-gemini-2.0-flash}`) — a placeholder string satisfies bean construction; it only fails if something actually requests `"provider": "gemini"`, which this story's smoke flow never does.
 
 ---
 
 ## Implementation Steps
 
-1. In `compose.yml`, add an `agents` service: `build: ./agents`, `environment` block with `SPRING_PROFILES_ACTIVE: local` (or the profile `agents/` uses locally — verify against `agents/src/main/resources/` before finalizing), `GRADEOPS_GROQ_API_KEY: ${GRADEOPS_GROQ_API_KEY:?Set GRADEOPS_GROQ_API_KEY in .env}`, `GRADEOPS_GROQ_MODEL: ${GRADEOPS_GROQ_MODEL:-llama-3.3-70b-versatile}`, `INTERNAL_API_SECRET: ${INTERNAL_API_SECRET:-dev-secret-change-me}` (same default as `api`'s existing entry), `ports: ["8081:8081"]`.
+1. In `compose.yml`, add an `agents` service: `build: ./agents`, `environment` block with `SPRING_PROFILES_ACTIVE: beta` (confirmed: `agents/Dockerfile` itself builds with `MAVEN_PROFILE=beta` by default, and `application-beta.yml` is the only profile with direct Groq/Gemini-API-key config and no GCP Vertex AI/ADC dependency — `demo` requires `GOOGLE_CLOUD_PROJECT`/Vertex AI, unavailable in local docker; no `local` profile exists for `agents/`), `GRADEOPS_GROQ_API_KEY: ${GRADEOPS_GROQ_API_KEY:?Set GRADEOPS_GROQ_API_KEY in .env}`, `GRADEOPS_GROQ_MODEL: ${GRADEOPS_GROQ_MODEL:-llama-3.3-70b-versatile}`, `GRADEOPS_GEMINI_API_KEY: ${GRADEOPS_GEMINI_API_KEY:-not-used-locally}` and `GRADEOPS_GEMINI_MODEL: ${GRADEOPS_GEMINI_MODEL:-gemini-2.0-flash}` (both required to resolve for the app to boot at all, per the Design update above — not required to be real values since this story only needs Groq), `INTERNAL_API_SECRET: ${INTERNAL_API_SECRET:-dev-secret-change-me}` (same default as `api`'s existing entry), `ports: ["8081:8081"]`.
 2. Update the `api` service's `environment` block: add `AGENTS_BASE_URL: http://agents:8081`, confirm `INTERNAL_API_SECRET` uses the identical `${INTERNAL_API_SECRET:-dev-secret-change-me}` default already present.
 3. Add `depends_on: [agents]` (or leave unordered if `api`'s own boot doesn't require `agents` to be up first — verify by checking whether any `api` startup health check calls `agents/`; if not, ordering is cosmetic only and can be omitted).
 
@@ -58,12 +59,12 @@ N/A — no database or ORM artifacts involved.
 
 ## Done Criteria
 
-- [ ] `compose.yml` has a working `agents` service reachable at `http://agents:8081` from within the compose network.
-- [ ] `api`'s `AGENTS_BASE_URL` and `INTERNAL_API_SECRET` env vars are correctly wired to the new `agents` service.
-- [ ] `docker compose up` brings up `db`, `api`, `agents`, `web` together with no manual steps beyond populating local secrets (`.env` for `agents/`, `FIREBASE_ADMIN_KEY_PATH` for `api`, as already required today).
-- [ ] All verification checks listed above pass.
-- [ ] Human developer code review completed; requested corrections, if any, were implemented and re-reviewed.
-- [ ] No unintended expansion: the task satisfies `[CHECK-ATOMICITY]` — no smoke-test script, no real agent call proven yet; that's task-02.
+- [x] `compose.yml` has a working `agents` service reachable at `http://agents:8081` from within the compose network.
+- [x] `api`'s `AGENTS_BASE_URL` and `INTERNAL_API_SECRET` env vars are correctly wired to the new `agents` service.
+- [x] `docker compose up` brings up `db`, `api`, `agents`, `web` together with no manual steps beyond populating local secrets (`.env` for `agents/`, `FIREBASE_ADMIN_KEY_PATH` for `api`, as already required today).
+- [x] All verification checks listed above pass.
+- [x] Human developer code review completed; requested corrections, if any, were implemented and re-reviewed.
+- [x] No unintended expansion: the task satisfies `[CHECK-ATOMICITY]` — no smoke-test script, no real agent call proven yet; that's task-02.
 
 ---
 

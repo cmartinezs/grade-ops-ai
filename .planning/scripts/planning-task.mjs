@@ -235,7 +235,7 @@ function deriveBranches(storyFile, taskFile, config) {
   const storyIndex = branch.indexOf(storyBase);
   if (storyIndex > 0) storyBranch = branch.slice(0, storyIndex + storyBase.length);
   if (branch === storyBase || branch.endsWith(`/${storyBase}`)) storyBranch = branch;
-  const taskBranch = `${storyBranch}/${taskBase}`;
+  const taskBranch = `${storyBranch}--${taskBase}`;
   return { baseBranch: config.baseBranch, currentBranch: branch, storyBranch, taskBranch, storyBase, taskBase };
 }
 
@@ -270,7 +270,7 @@ function commitMeta(taskText, storyBase, taskBase, correction = false) {
 function dependencyStatuses(storyFile, taskText) {
   const depends = extractField(taskText, 'Depends On');
   if (!depends || ['—', '-', 'none'].includes(depends.toLowerCase())) return [];
-  const taskDir = path.dirname(storyFile).replace(/\.md$/, '');
+  const taskDir = storyFile.replace(/\.md$/, '');
   return depends.split(',').map((item) => item.trim()).filter(Boolean).map((item) => {
     const id = normalizeTaskId(item);
     const variants = taskIdVariants(id);

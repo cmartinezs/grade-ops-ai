@@ -27,6 +27,7 @@ services:
       INTERNAL_API_SECRET: ${INTERNAL_API_SECRET:-dev-secret-change-me}
       CORS_ALLOWED_ORIGINS: http://localhost:3000
       FIREBASE_CREDENTIALS_PATH: /run/secrets/firebase-admin-key.json
+      AGENTS_BASE_URL: http://agents:8081
     volumes:
       - ${FIREBASE_ADMIN_KEY_PATH:?Set FIREBASE_ADMIN_KEY_PATH in .env}:/run/secrets/firebase-admin-key.json:ro
     ports:
@@ -34,6 +35,21 @@ services:
     depends_on:
       db:
         condition: service_healthy
+      agents:
+        condition: service_started
+
+  # ── Agents (Spring Boot / Spring AI) ────────────────────────────────────────
+  agents:
+    build: ./agents
+    environment:
+      SPRING_PROFILES_ACTIVE: beta
+      GRADEOPS_GROQ_API_KEY: ${GRADEOPS_GROQ_API_KEY:?Set GRADEOPS_GROQ_API_KEY in .env}
+      GRADEOPS_GROQ_MODEL: ${GRADEOPS_GROQ_MODEL:-llama-3.3-70b-versatile}
+      GRADEOPS_GEMINI_API_KEY: ${GRADEOPS_GEMINI_API_KEY:-not-used-locally}
+      GRADEOPS_GEMINI_MODEL: ${GRADEOPS_GEMINI_MODEL:-gemini-2.0-flash}
+      INTERNAL_API_SECRET: ${INTERNAL_API_SECRET:-dev-secret-change-me}
+    ports:
+      - "8081:8081"
 
   # ── Web (Next.js) ──────────────────────────────────────────────────────────
   web:

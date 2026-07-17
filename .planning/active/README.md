@@ -19,7 +19,7 @@ Stories: US-010 Assessment Brief Intake (P0), US-011 Assessment Draft Generation
 | 01 | [agents-assessment-agent-coordination](008-assessment-creation/02-deepening/story-01-agents-assessment-agent.md) → tracks `agents/.planning/001-assessment-creation` | AG | IN PROGRESS |
 | 02 | [api-assessment-creation-coordination](008-assessment-creation/02-deepening/story-02-api-assessment-creation.md) → tracks `api/.planning/finished/003-assessment-creation` | AP | IN PROGRESS |
 | 03 | [web-assessment-creation-coordination](008-assessment-creation/02-deepening/story-03-web-assessment-creation.md) → tracks `web/.planning/active/001-assessment-creation` | WB | TODO |
-| 04 | [e2e-integration-verification](008-assessment-creation/02-deepening/story-04-e2e-integration-verification.md) | IN | TODO |
+| 04 | [e2e-integration-verification](008-assessment-creation/02-deepening/story-04-e2e-integration-verification.md) | IN | IN PROGRESS |
 
 ---
 
