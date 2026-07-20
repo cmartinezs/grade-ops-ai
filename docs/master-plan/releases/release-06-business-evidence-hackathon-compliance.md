@@ -309,6 +309,77 @@ Cada evento incluye actor, timestamp, correlation/request ID, source entity, pre
 | AUT-20 | Pilotos y evidencia de pago | Checklist, customer proof y revenue ledger |
 | AUT-21 | Reintentos/idempotencia/fallos | Ingestion, ledger, health y export confiables |
 
+## Capacidades de IA y Agent Runtime
+
+### Agentes involucrados
+
+- Ops Agent read-only/advisory.
+- No usar LLM para calcular totales, revenue, costos, readiness o cumplimiento.
+
+### Capacidades funcionales habilitadas
+
+- Explicar anomalias de agent runs, provider errors, costos y coverage.
+- Comparar proveedor/modelo y detectar degradaciones operacionales.
+- Resumir faltantes de evidencia sin alterar hechos ni ledgers.
+
+### Incrementos del runtime requeridos
+
+- Observabilidad consolidada por agente, provider, modelo, prompt y release.
+- Agent health visibility y history.
+- Provider/model cost and quality comparison.
+- Budget alerts y missing-evidence warnings.
+- Export de manifest con source IDs, environment, commit y freshness.
+- Policy que mantenga Ops Agent en `EXECUTE_READ_ONLY`.
+
+### Herramientas requeridas
+
+- `load_agent_metrics`.
+- `load_provider_errors`.
+- `compare_model_costs`.
+- `detect_usage_anomalies`.
+- `load_prompt_versions`.
+- `load_budget_alerts`.
+- `load_evidence_readiness`.
+
+### Validadores determinísticos
+
+- Totales de usage, cost y revenue se calculan en API/DB, no por LLM.
+- Readiness es una matriz deterministicamente evaluada contra D-01/D-07 y evidencia requerida.
+- Related-party no puede ser nulo.
+- Export public-safe usa allowlist.
+
+### Autonomía y controles humanos
+
+- Ops Agent: `EXECUTE_READ_ONLY`.
+- Operator revisa, corrige metadata por eventos auditados y aprueba export.
+- Founder/Release Manager resuelve D-01 y D-07.
+
+### Límites operacionales
+
+- No publicar ni enviar submission automaticamente.
+- No fabricar traction, costos, usuarios, revenue ni testimonios.
+- No exponer PII, secrets ni signed URLs en export publico.
+- No usar fallback de modelo para cambiar cifras.
+
+### Métricas y consumo
+
+- Agent success/failure/retry rate.
+- Cost coverage por provider/model.
+- Prompt/model version distribution.
+- Budget alert count y acknowledgements.
+- Evidence completeness.
+
+### Evidencia de finalización
+
+- Dashboard y export reconciliados contra consultas fuente.
+- Tests de allowlist private/public-safe.
+- Health/readiness smoke con environment, commit y timestamp.
+- D-01/D-07 registradas antes de release candidate.
+
+### Deuda o capacidades diferidas
+
+- Optimizacion avanzada de modelos, evaluacion continua automatica y routing adaptativo quedan post-MVP salvo que R06 detecte un riesgo operacional inmediato.
+
 ## 24. Trigger, inputs y outputs
 
 | Proceso | Trigger | Inputs | Outputs |
@@ -720,4 +791,5 @@ Entregables:
 
 | Fecha | Cambio | Motivo | Elementos afectados | Decision asociada |
 |---|---|---|---|---|
+| 2026-07-20 | Incorporacion de capacidades de Agent Runtime | Declarar Ops Agent read-only y observabilidad/costo/readiness del runtime | Runtime, Ops Agent, evidence dashboard | D-01, D-04, D-06, D-07 |
 | 2026-07-20 | Creacion inicial | Ejecucion de Fase 05 para R06 | Todo el documento | D-01, D-04, D-06, D-07 |

@@ -76,7 +76,7 @@ Las condiciones principales son de gobierno y readiness: D-01 bloquea el cierre 
 
 - README, ejecutivo, analisis y releases R01-R06 existen.
 - Los enlaces relativos explicitos dentro de `docs/master-plan/` resuelven correctamente; chequeo mecanico: `missing=0`.
-- Cada archivo R01-R06 contiene 46 secciones y cubre objetivo, alcance, exclusiones, US, automatizacion, HITL, seguridad, observabilidad, costos, datos, criterios, validacion, escenario demostrable, metricas, riesgos, prompt y changelog.
+- Cada archivo R01-R06 conserva una estructura operativa completa y cubre objetivo, alcance, exclusiones, US, automatizacion, Agent Runtime, HITL, seguridad, observabilidad, costos, datos, criterios, validacion, escenario demostrable, metricas, riesgos, prompt y changelog.
 - Las releases R01-R06 son verticales y demostrables: R01 assessment creation, R02 graded feedback, R03 cohort report, R04 closed snapshot, R05 closed attempts/analytics, R06 evidence package.
 - Ninguna release R01-R06 esta clasificada XL.
 - Las dependencias principales no forman ciclo: R01 desbloquea R02/R04/R06; R02 desbloquea R03; R04 desbloquea R05; R06 agrega evidencia desde R01-R05.
@@ -114,6 +114,14 @@ Las condiciones principales son de gobierno y readiness: D-01 bloquea el cierre 
 5. Resolver D-07 antes de narrativa/export final.
 6. Antes de cada release posterior, ejecutar `/us-enrich` y definir ownership de `US-PROPUESTA-*`.
 7. Decidir tratamiento documental de R07/R08.
+
+## Seguimiento posterior a la validacion
+
+| Fecha | Cambio aplicado | Hallazgo relacionado | Estado |
+|---|---|---|---|
+| 2026-07-20 | Se agrego `analysis/agent-runtime-strategy.md`, se actualizo README/ejecutivo y se incorporo el bloque `Capacidades de IA y Agent Runtime` en R01-R06 | MEDIUM-01 y estrategia transversal no formalizada | Corregido en el Master Plan |
+
+R07/R08 siguen como roadmap sin archivo detallado; HIGH-01 permanece como condicion hasta decidir si esas filas son releases formales o placeholders de roadmap.
 
 ## Primera release ejecutable
 
@@ -183,4 +191,5 @@ Criterios:
 
 | Fecha | Cambio | Motivo | Elementos afectados | Decision asociada |
 |---|---|---|---|---|
+| 2026-07-20 | Seguimiento post-validacion | Registrar la incorporacion de Agent Runtime transversal y correccion del estado README/ejecutivo | `validation-report.md`, README, ejecutivo, R01-R06 | D-04, D-06 |
 | 2026-07-20 | Creacion inicial | Ejecucion de Fase 06 del Master Plan Ejecutivo | `validation-report.md` | D-01, D-04, D-06, D-07 |

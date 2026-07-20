@@ -8,11 +8,15 @@ El plan queda organizado en ocho releases. Las primeras seis componen el corte M
 
 La decision de planificacion mas importante ya tomada es que **Open y Closed son P0** para el Master Plan. La decision mas critica aun pendiente es **D-01: entorno `demo` GCP/Gemini vs `beta` Render/Groq**. La estrategia avanza con el supuesto operativo recomendado: `beta` sostiene evidencia real de producto y `demo` debe resolverse como cumplimiento minimo si las bases exigen GCP/Gemini efectivo.
 
+La Plataforma de Agentes se trata como capacidad transversal: no se implementa como una release tecnica aislada, sino como incrementos del runtime generico dentro de cada release funcional. El objetivo es evolucionar desde el Assessment Agent actual, que ejecuta una llamada LLM estructurada, hacia un runtime headless capaz de iterar con herramientas autorizadas, validar salidas, declarar bloqueos y registrar pasos sin entregar autoridad de dominio al modelo.
+
 ## Estado documental
 
 - Fase 01 diagnostico que la documentacion de intencion es solida, pero el estado real del repo esta desactualizado en varios documentos.
 - Fase 02 fijo 15 capacidades, 62 historias in-scope y 5 out-of-scope, sin colisiones de ID tras renumerar Epic 01.
 - Fase 03 identifico 21 procesos automatizables y confirmo que C13/C14 no pueden dejarse para el final.
+- La estrategia transversal de Agent Runtime fija que cada release con IA declare agente, herramientas, validadores, limites, costo, HITL y evidencia.
+- Fase 05 documento R01-R06 y Fase 06 valido el plan con resultado `PASS WITH CONDITIONS`.
 - Los documentos con mayor drift pendiente son `CLAUDE.md`, `09-developer-guide/`, `05-evidence/agent-logs.md`, los cortes P0 de `02-product/user-stories*.md` y la narrativa/pricing de hackathon.
 
 ## Supuestos y decisiones
@@ -73,6 +77,17 @@ Ambas convergen en C13/C14: sin logs/costos/aprobaciones no hay prueba de valor,
 | Operacion | agent logs, cost estimation, evidence dashboard, pilot/payment evidence, retry/idempotency |
 
 El plan no recomienda autonomia pedagogica durante el MVP. El nivel objetivo para decisiones sensibles es **Supervisada**.
+
+## Agent Runtime transversal
+
+| Release | Incremento runtime | Valor funcional |
+|---|---|---|
+| R01 | Consolidar provider/model policy, logs ricos, errores, costo, idempotencia y compatibilidad del Assessment Agent actual | Primer draft/regeneration con evidencia confiable |
+| R02 | Extraer registry/gateway/contratos reutilizables al incorporar Rubric, Grading y Feedback | Segundo consumidor real sin duplicar infraestructura |
+| R03 | Incorporar handoffs tipados y herramientas read-only/agregadas para gaps, recovery y reportes | Interpretacion de cohorte basada en hechos y aprobacion docente |
+| R04 | Introducir tool loop controlado, policy engine basico y validadores para preguntas/banco/composicion | Closed authoring con IA supervisada y snapshot deterministico |
+| R05 | Agregar persistencia asincrona/reanudable cuando analytics o volumen lo requieran | Student attempts y analytics sin bloquear flujos largos |
+| R06 | Operacionalizar metricas, health, costos, warnings, readiness y Ops Agent read-only | Evidencia hackathon y operacion sostenible |
 
 ## Priorizacion
 
@@ -165,10 +180,11 @@ La secuencia prioriza:
 
 ## Siguiente accion
 
-Ejecutar Fase 05 para generar el archivo detallado de **R01 — Assessment Creation + Evidence Backbone**. Antes o durante ese corte, resolver D-04/D-06 a nivel de implementacion/documentacion minima y mantener D-01 visible como dependencia de R06.
+Ejecutar **R01 — Assessment Creation + Evidence Backbone** usando `docs/master-plan/releases/release-01-assessment-creation-evidence-backbone.md` y `docs/master-plan/analysis/agent-runtime-strategy.md` como fuentes operativas. R01 no debe bloquearse por D-01, pero si debe cerrar o registrar explicitamente D-04/D-06, enriquecer/materializar US-080/US-081 y estabilizar el baseline runtime del Assessment Agent antes de escalar a Rubric/Grading/Feedback.
 
 ## Historial de cambios
 
 | Fecha | Cambio | Motivo | Elementos afectados | Decision asociada |
 |---|---|---|---|---|
+| 2026-07-20 | Incorporacion de Agent Runtime transversal y actualizacion post Fase 05/06 | Alinear el ejecutivo con la estrategia headless/iterativa de agentes y el estado documentado real | Resumen, estado documental, automatizacion, siguiente accion | D-04, D-06 |
 | 2026-07-19 | Creacion inicial | Ejecucion de la Fase 04 del Master Plan Ejecutivo | Todo el documento | D-01, D-02, D-04, D-06 |

@@ -33,6 +33,21 @@ La secuencia se define con estos criterios, ordenados por peso practico para el 
 | R07 Open workflow refinements | Medio | Medio | Medio | Bajo | M | Roadmap post-MVP |
 | R08 Closed/curriculum refinements | Medio | Medio | Medio | Medio | M | Roadmap post-MVP |
 
+## Evolucion transversal del Agent Runtime
+
+El runtime de agentes no se planifica como una release tecnica independiente. Cada release funcional consume y generaliza solo la capacidad necesaria para entregar valor verificable:
+
+| Release | Incremento runtime | Razon de incorporacion |
+|---|---|---|
+| R01 | Consolidacion del Assessment Agent actual: provider/model policy, logs ricos, errores, costo e idempotencia | Hace confiable el primer flujo IA ya iniciado |
+| R02 | `AgentDefinition`, registry/gateway comun, contratos y validadores por agente | Primer segundo consumidor real: Rubric/Grading/Feedback |
+| R03 | Handoffs tipados y herramientas read-only/agregadas | Gaps, recovery y reportes deben separar hechos, hipotesis y estimaciones |
+| R04 | Tool loop controlado, `AgentAction`, herramientas y policy engine basico | Closed authoring necesita iterar con banco, validaciones y coverage |
+| R05 | Persistencia/asincronia de runs cuando analytics o volumen lo requieran | Student attempts y item analytics pueden exceder flujos HTTP cortos |
+| R06 | Observabilidad, health, costos, warnings, budget alerts y Ops Agent read-only | El cierre hackathon requiere evidencia operacional y de costos confiable |
+
+La regla de extraccion es conservadora: una capacidad comun se generaliza cuando existe un segundo consumidor real o una necesidad inmediata de la siguiente release.
+
 ## Secuencia de releases
 
 ### R01 — Assessment Creation + Evidence Backbone
@@ -310,4 +325,5 @@ No hay releases XL en esta estrategia. Los cortes L son verticales pero limitado
 
 | Fecha | Cambio | Motivo | Elementos afectados | Decision asociada |
 |---|---|---|---|---|
+| 2026-07-20 | Incorporacion de evolucion transversal del Agent Runtime | Alinear la estrategia de releases con `agent-runtime-strategy.md` | Secuencia, runtime por release | D-04, D-06 |
 | 2026-07-19 | Creacion inicial | Ejecucion de la Fase 04 del Master Plan Ejecutivo | Todo el documento | D-01, D-02, D-04, D-06 |

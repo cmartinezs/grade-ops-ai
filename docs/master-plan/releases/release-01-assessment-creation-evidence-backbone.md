@@ -245,6 +245,79 @@ Campos minimos para `AgentExecutionLog` en R01:
 | AUT-17 | Estimacion de tokens/costo | Obligatorio |
 | AUT-21 | Reintentos/idempotencia/fallos | Obligatorio en corte minimo |
 
+## Capacidades de IA y Agent Runtime
+
+### Agentes involucrados
+
+- Assessment Agent actual, manteniendo el endpoint especifico `POST /internal/agents/assessment`.
+- No incorporar Router Agent ni multiagente en R01.
+
+### Capacidades funcionales habilitadas
+
+- Generar y regenerar un draft desde brief docente.
+- Registrar evidencia tecnica suficiente para que el run sea auditable y reutilizable por R02-R06.
+- Declarar fallos recuperables sin perder el brief ni activar versiones parciales.
+
+### Incrementos del runtime requeridos
+
+- Baseline documentado del Assessment Agent existente.
+- Catalogo validado de provider/model para Groq y Gemini; no reenviar modelos arbitrarios sin politica centralizada.
+- Prompt, esquema de salida, agente y configuracion de modelo versionados en el log.
+- Error model normalizado para `INVALID_COMMAND`, provider failure, malformed output, timeout y budget/cost missing.
+- `AgentExecutionLog` enriquecido o decision tecnica D-06 que adopte explicitamente el esquema rico minimo.
+- Idempotency key por generacion/regeneracion.
+- Limites efectivos de timeout, tokens/costo estimado y reintentos para este flujo.
+
+### Herramientas requeridas
+
+R01 no necesita tool calling generico. Las "herramientas" siguen siendo deterministicas y orquestadas por `api/`:
+
+- cargar y validar `AssessmentBrief`;
+- cargar draft actual para regeneracion;
+- persistir draft/version/log;
+- verificar ownership y estado.
+
+### Validadores determinísticos
+
+- Campos obligatorios del brief.
+- Consistencia de regeneracion: `adjustmentNotes`, `previousDraftId` y `previousDraft` completos.
+- Esquema estructurado del draft.
+- Version monotona y no destructiva.
+- Provider/model permitido por politica.
+- Costo marcado como estimado o `missing` con razon, nunca inventado.
+
+### Autonomía y controles humanos
+
+- Autonomia: `DRAFT_ONLY`.
+- El agente puede proponer contenido, pero no publica assessment, no aprueba rubrica y no habilita grading.
+- Teacher decide editar, aceptar o regenerar.
+
+### Límites operacionales
+
+- Una llamada o pocos reintentos controlados; no bucle agentic completo.
+- Sin sandbox, sin herramientas de escritura del dominio dentro de `agents/`, sin memoria vectorial.
+- Cualquier error no recuperable termina en estado visible y logueado.
+
+### Métricas y consumo
+
+- Provider, model, prompt version, agent version.
+- Input/output tokens o estimacion/missing reason.
+- Estimated cost USD.
+- Latencia y retry count.
+- Status, error code y correlation/request ID.
+
+### Evidencia de finalización
+
+- Smoke real `api` -> `agents` con draft y log persistidos.
+- Tests de provider/model policy y errores normalizados.
+- Tests de idempotencia o evidencia reproducible de doble submit.
+- Documento o ADR minimo que cierre D-04 y D-06 o deje residual aceptado.
+
+### Deuda o capacidades diferidas
+
+- `AgentDefinition`, `AgentRegistry` y `AgentModelGateway` comun se difieren hasta R02, cuando exista segundo consumidor real.
+- Tool loop, `AgentAction`, `ToolRegistry` y `PolicyEngine` se difieren hasta que Assessment contextual, Rubric/quality o Closed lo requieran.
+
 ## 24. Trigger, inputs y outputs
 
 | Proceso | Trigger | Inputs | Outputs |
@@ -534,4 +607,5 @@ Criterios:
 
 | Fecha | Cambio | Motivo | Elementos afectados | Decision asociada |
 |---|---|---|---|---|
+| 2026-07-20 | Incorporacion de capacidades de Agent Runtime | Alinear R01 con la estrategia headless/iterativa sin anticipar tool loop completo | Runtime, automatizacion, DoD operativo | D-04, D-06 |
 | 2026-07-19 | Creacion inicial | Ejecucion de Fase 05 para R01 | Todo el documento | D-04, D-06 |

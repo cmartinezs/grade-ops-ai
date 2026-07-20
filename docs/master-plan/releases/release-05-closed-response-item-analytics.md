@@ -295,6 +295,73 @@ Campos minimos nuevos o extendidos:
 | AUT-17 | Estimacion de tokens/costo | Obligatorio para Item Analytics Agent y costos email si aplica |
 | AUT-21 | Reintentos/idempotencia/fallos | Obligatorio para email, submit, grading y analytics |
 
+## Capacidades de IA y Agent Runtime
+
+### Agentes involucrados
+
+- Item Analytics Agent.
+- No usar IA para scoring closed.
+
+### Capacidades funcionales habilitadas
+
+- Interpretar metricas de items cerrados.
+- Generar recomendaciones revisables sobre dificultad, discriminacion y distractores.
+- Mantener scoring, attempts, links y publication como flujos deterministicos de API.
+
+### Incrementos del runtime requeridos
+
+- Persistencia `AgentRun`/`AgentStep` cuando analytics o volumen excedan tiempos HTTP seguros.
+- Estados consultables para ejecuciones largas: `QUEUED`, `RUNNING`, `COMPLETED`, `FAILED`, `BLOCKED`, `TIMED_OUT`, `CANCELLED`.
+- Idempotencia por analytics snapshot.
+- Cancelacion/reanudacion solo si se justifica por volumen o costo; no anticiparla para runs cortos.
+- Handoff desde scoring deterministico hacia analytics con snapshot fijo.
+
+### Herramientas requeridas
+
+- `calculate_item_difficulty`.
+- `calculate_discrimination_index`.
+- `calculate_distractor_distribution`.
+- `load_item_history`.
+- `load_attempt_aggregates`.
+
+### Validadores determinísticos
+
+- Scoring reproduce answer key snapshot.
+- Analytics usa solo attempts/submissions cerrados en el snapshot consultado.
+- Small sample queda marcado como warning.
+- Result publication requiere confirmacion docente.
+
+### Autonomía y controles humanos
+
+- Item Analytics: `EXECUTE_READ_ONLY`.
+- Teacher revisa analytics antes de compartir o actuar.
+- API controla links, attempts, grading, publication y result access.
+
+### Límites operacionales
+
+- Analytics puede ser asincrono si el volumen lo exige.
+- Sin recalculo por anulacion en R05.
+- Sin acceso de estudiantes a logs, prompts, costos o respuestas de otros learners.
+- Sin red externa desde herramientas de analytics.
+
+### Métricas y consumo
+
+- Runs de analytics, duration, model calls y tool calls.
+- Cost per analytics report.
+- Small sample warnings.
+- Invitation/attempt/grading deterministic success rate.
+
+### Evidencia de finalización
+
+- Tests de scoring deterministico contra snapshot.
+- Tests de analytics con sample suficiente e insuficiente.
+- Smoke learner link -> attempt -> deterministic grade -> publication -> item analytics.
+
+### Deuda o capacidades diferidas
+
+- Reanudacion completa de runs se limita a analytics/lotes; no se generaliza si no hay necesidad real.
+- Annul/recalculate queda para R08.
+
 ## 24. Trigger, inputs y outputs
 
 | Proceso | Trigger | Inputs | Outputs |
@@ -662,4 +729,5 @@ Criterios:
 
 | Fecha | Cambio | Motivo | Elementos afectados | Decision asociada |
 |---|---|---|---|---|
+| 2026-07-20 | Incorporacion de capacidades de Agent Runtime | Declarar persistencia/asincronia solo donde analytics o volumen lo justifiquen | Runtime, Item Analytics, student flow | D-04, D-06 |
 | 2026-07-20 | Creacion inicial | Ejecucion de Fase 05 para R05 | Todo el documento | D-02 |

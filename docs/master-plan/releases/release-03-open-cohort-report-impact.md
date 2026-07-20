@@ -268,6 +268,79 @@ Campos minimos nuevos o extendidos:
 | AUT-16 | Registro de ejecuciones | Obligatorio |
 | AUT-17 | Estimacion de tokens/costo | Obligatorio |
 
+## Capacidades de IA y Agent Runtime
+
+### Agentes involucrados
+
+- Learning Gap Agent.
+- Recovery Agent.
+- Teacher Report Agent.
+- Grading Agent como fuente de resultados y teacher decisions, no como nuevo alcance principal.
+
+### Capacidades funcionales habilitadas
+
+- Detectar patrones agregados de brechas.
+- Proponer actividades de recuperacion.
+- Redactar reporte docente con hechos, interpretaciones y estimaciones separadas.
+
+### Incrementos del runtime requeridos
+
+- Handoff tipado desde grading/feedback aprobado hacia gap/report.
+- Herramientas read-only y compute-only para estadisticas, clusters y comparaciones.
+- Soporte de `Block`/`NEEDS_INPUT` cuando no hay muestra suficiente o faltan datos aprobados.
+- Validadores que distingan hechos estadisticos, hipotesis pedagogicas y estimaciones.
+- Registro de fuentes/snapshot para que reportes y gaps sean reproducibles.
+
+### Herramientas requeridas
+
+- `load_performance_history`.
+- `load_learning_outcome_map`.
+- `calculate_error_clusters`.
+- `compare_cohorts`.
+- `load_learning_gaps`.
+- `validate_recovery_alignment`.
+- `calculate_assessment_statistics`.
+- `load_criterion_performance`.
+- `load_common_errors`.
+
+### Validadores determinísticos
+
+- Muestra minima o warning `small_sample_size`.
+- Solo usar grading/feedback aprobado o etiquetar fuente pendiente.
+- Time-saved estimate con metodo/version y etiqueta de estimacion.
+- Reporte no mezcla PII innecesaria ni evidencia interna en vistas student-safe.
+
+### Autonomía y controles humanos
+
+- Learning Gap y Teacher Report: `EXECUTE_READ_ONLY` para consultar/calcular, con teacher validation antes de uso externo.
+- Recovery: `DRAFT_ONLY`; teacher aprueba antes de asignar o compartir.
+- El runtime no crea decisiones pedagogicas finales ni publica reportes.
+
+### Límites operacionales
+
+- No ejecucion masiva sin presupuesto por assessment.
+- No inferencias personales sobre estudiantes.
+- No reemplazar teacher overrides.
+- Si falta informacion, finalizar con `BLOCKED` o warning, no inventar baseline.
+
+### Métricas y consumo
+
+- Costo por gap summary, recovery draft y report.
+- Frecuencia de bloqueos por datos insuficientes.
+- Teacher confirmation/edit/rejection rate.
+- Time-saved estimate coverage.
+
+### Evidencia de finalización
+
+- Tests de handoff desde grading/feedback a report.
+- Tests de small sample, pending data y source snapshot.
+- Smoke con varias submissions procesadas y reporte validable.
+
+### Deuda o capacidades diferidas
+
+- Procesamiento masivo optimizado y memoria longitudinal profunda se difieren hasta tener volumen real.
+- Multiagente autonomo se evita; los handoffs son tipados y orquestados por API/runtime.
+
 ## 24. Trigger, inputs y outputs
 
 | Proceso | Trigger | Inputs | Outputs |
@@ -620,4 +693,5 @@ Criterios:
 
 | Fecha | Cambio | Motivo | Elementos afectados | Decision asociada |
 |---|---|---|---|---|
+| 2026-07-20 | Incorporacion de capacidades de Agent Runtime | Declarar handoffs tipados y herramientas read-only/agregadas para impacto Open | Runtime, gaps, recovery, reports | D-04, D-06 |
 | 2026-07-20 | Creacion inicial | Ejecucion de Fase 05 para R03 | Todo el documento | D-04, D-06 |

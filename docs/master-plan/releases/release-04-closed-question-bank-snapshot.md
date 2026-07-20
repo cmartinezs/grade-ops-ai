@@ -286,6 +286,84 @@ Campos minimos nuevos o extendidos:
 | AUT-17 | Estimacion de tokens/costo | Obligatorio |
 | AUT-21 | Reintentos/idempotencia/fallos | Obligatorio |
 
+## Capacidades de IA y Agent Runtime
+
+### Agentes involucrados
+
+- Question Generation Agent.
+- Distractor Quality Agent.
+- Ambiguity Review Agent.
+- Assessment Assembly Agent.
+
+### Capacidades funcionales habilitadas
+
+- Generar preguntas candidatas.
+- Revisar calidad/ambiguedad de items.
+- Proponer composicion cerrada desde banco aprobado.
+- Mantener snapshot y answer key como resultado deterministico de API, no del modelo.
+
+### Incrementos del runtime requeridos
+
+- `AgentAction` tipada para `UseTool`, `Finish` y `Block`.
+- `AgentLoop` acotado para iterar con herramientas read-only/compute-only.
+- `ToolRegistry` y `ToolExecutor` para banco, similitud, validaciones y cobertura.
+- `PolicyEngine` basico que autorice herramientas por agente/version/autonomia.
+- Budget manager con max steps, model calls, tool calls, tokens, costo y timeout.
+- Estados `BLOCKED`/`NEEDS_INPUT` cuando el banco no alcanza o faltan tags/outcomes.
+
+### Herramientas requeridas
+
+- `load_learning_outcomes`.
+- `search_similar_questions`.
+- `validate_answer_consistency`.
+- `validate_question_schema`.
+- `estimate_question_difficulty`.
+- `search_approved_questions`.
+- `load_question_usage_history`.
+- `calculate_difficulty_distribution`.
+- `calculate_outcome_coverage`.
+- `validate_assessment_composition`.
+
+### Validadores determinísticos
+
+- Una sola respuesta correcta para SC/MC cuando aplique.
+- Schema de pregunta y opciones valido.
+- Tags obligatorios antes de activar pregunta.
+- Composition usa solo preguntas approved/active.
+- Snapshot copia pregunta, opciones, answer key, scoring policy y grade scale.
+
+### Autonomía y controles humanos
+
+- Question Generation y Assembly: `DRAFT_ONLY`.
+- Distractor Quality y Ambiguity Review: `ADVISORY`.
+- Teacher cura preguntas y aprueba composicion/snapshot.
+- API crea snapshot y transiciones de estado.
+
+### Límites operacionales
+
+- Tool loop solo con herramientas `READ_ONLY`/`COMPUTE_ONLY`/`PROPOSE_CHANGE`.
+- Sin scoring IA para Closed.
+- Sin autoactivacion de preguntas.
+- Sin publicar snapshot sin aprobacion.
+
+### Métricas y consumo
+
+- Steps/model calls/tool calls por batch.
+- Flags por pregunta y severidad.
+- Costo por batch, review y assembly.
+- Bloqueos por banco insuficiente o coverage gap.
+
+### Evidencia de finalización
+
+- Tests de policy engine rechazando herramientas no permitidas.
+- Tests de validadores de pregunta, answer key, coverage y composition.
+- Smoke generation -> review -> curation -> bank -> composition -> snapshot.
+
+### Deuda o capacidades diferidas
+
+- Delegacion multiagente general se difiere; la coordinacion es explicita por flujo.
+- Recalculo/anulacion post-grading se difiere a R08.
+
 ## 24. Trigger, inputs y outputs
 
 | Proceso | Trigger | Inputs | Outputs |
@@ -644,4 +722,5 @@ Criterios:
 
 | Fecha | Cambio | Motivo | Elementos afectados | Decision asociada |
 |---|---|---|---|---|
+| 2026-07-20 | Incorporacion de capacidades de Agent Runtime | R04 es el primer consumidor claro de tool loop controlado y policy engine | Runtime, closed agents, tools, validators | D-04, D-06 |
 | 2026-07-20 | Creacion inicial | Ejecucion de Fase 05 para R04 | Todo el documento | D-02 |

@@ -280,6 +280,81 @@ Campos minimos nuevos o extendidos:
 | AUT-17 | Estimacion de tokens/costo | Obligatorio |
 | AUT-21 | Reintentos/idempotencia/fallos | Obligatorio |
 
+## Capacidades de IA y Agent Runtime
+
+### Agentes involucrados
+
+- Rubric Agent.
+- Grading Agent.
+- Feedback Agent.
+- Assessment Agent solo como dependencia previa de R01, no como foco de R02.
+
+### Capacidades funcionales habilitadas
+
+- Generar y validar rubrica candidata.
+- Proponer grading por criterio basado en evidencia.
+- Redactar feedback fundamentado y aprobable por docente.
+
+### Incrementos del runtime requeridos
+
+- `AgentDefinition` versionada para Rubric, Grading y Feedback.
+- `AgentRegistry` liviano para resolver agente/version sin ramas hardcoded por nombre.
+- `AgentModelGateway` comun para reutilizar provider/model, salida estructurada, uso, costo y errores.
+- Contratos de entrada/salida por agente, con validadores propios.
+- Politica de autonomia por agente: Rubric `DRAFT_ONLY`, Grading/Feedback `HUMAN_APPROVAL_REQUIRED`.
+- Handoff tipado minimo Grading -> Feedback mediante resultado/evidencia aprobable, sin multiagente general.
+
+### Herramientas requeridas
+
+- `load_assessment_draft`.
+- `load_approved_rubric`.
+- `load_submission`.
+- `validate_rubric_weights`.
+- `validate_criterion_observability`.
+- `match_evidence_to_criterion`.
+- `calculate_proposed_score`.
+- `validate_feedback_grounding`.
+
+Estas herramientas se implementan como adapters determinísticos/autorizados; el modelo no calcula nota final ni persiste estados.
+
+### Validadores determinísticos
+
+- Pesos de rubrica suman el total esperado.
+- Criterios son observables y tienen escala valida.
+- Grading requiere rubrica aprobada.
+- Score sugerido cae dentro de rango por criterio.
+- Feedback cita evidencia existente y no introduce afirmaciones nuevas.
+
+### Autonomía y controles humanos
+
+- Rubrica: `DRAFT_ONLY`; teacher aprueba antes de grading.
+- Grading: `HUMAN_APPROVAL_REQUIRED`; teacher finaliza nota.
+- Feedback: `HUMAN_APPROVAL_REQUIRED`; teacher aprueba antes de entrega.
+
+### Límites operacionales
+
+- Max steps bajo por agente; no ejecutar codigo de estudiantes en R02 salvo que exista sandbox aislado.
+- Sin herramientas `WRITE_CRITICAL` en `agents`.
+- Sin aprobacion bulk silenciosa.
+
+### Métricas y consumo
+
+- Costo por rubric generation, grading suggestion y feedback draft.
+- Tasa de approval/edit/rejection por agente.
+- Salidas invalidas y uncertainty flags.
+- Latencia y retries por provider/model.
+
+### Evidencia de finalización
+
+- Tests de registry/gateway con al menos dos agentes reales.
+- Tests de validadores de rubrica, grading y feedback grounding.
+- Smoke del flujo assessment -> rubric -> submission -> grading suggestion -> feedback approved.
+
+### Deuda o capacidades diferidas
+
+- Sandbox real para codigo se difiere si R02 no compila/ejecuta submissions.
+- Tool loop generico con observaciones multiples puede diferirse a R04 si R02 se resuelve con llamadas estructuradas y validadores.
+
 ## 24. Trigger, inputs y outputs
 
 | Proceso | Trigger | Inputs | Outputs |
@@ -629,4 +704,5 @@ Criterios:
 
 | Fecha | Cambio | Motivo | Elementos afectados | Decision asociada |
 |---|---|---|---|---|
+| 2026-07-20 | Incorporacion de capacidades de Agent Runtime | Declarar el segundo consumidor real del runtime y sus limites de autonomia | Runtime, agentes Rubric/Grading/Feedback | D-04, D-06 |
 | 2026-07-20 | Creacion inicial | Ejecucion de Fase 05 para R02 | Todo el documento | D-04, D-06 |
