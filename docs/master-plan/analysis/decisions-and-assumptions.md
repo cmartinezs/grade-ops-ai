@@ -35,9 +35,9 @@
 - **Contexto**: `02-product/workflows.md` y `02-product/mvp-scope.md` marcan los flujos de modo Closed (generación de preguntas, ensamblaje, intake y grading cerrado, analítica de ítems, invitación de estudiante) como **P0**. Sin embargo, `02-product/user-stories.md` (el corte oficial de historias P0 para el demo) **excluye por completo** las épicas 11, 12 y 13 (curriculum structure, question bank, student invitation/access), y el guion de demo (`07-hackathon/demo-script.md`) no muestra el flujo Closed en ninguna de sus 9 escenas pese a que su propio checklist de pre-grabación exige datos semilla de ese modo. `00-project/` (capa canónica de negocio) tampoco cubre el modo Closed en ningún documento.
 - **Evidencia**: `02-product/user-stories.md` (línea del corte P0); `02-product/workflows.md`; `02-product/mvp-scope.md` (matriz de scope y "MVP Cut Line"); `07-hackathon/demo-script.md` (checklist vs. escenas).
 - **Alternativas**: (a) el modo Closed entra al corte P0 real — hay que agregar sus historias al MVP cut y al guion de demo; (b) el modo Closed queda fuera del corte P0 del hackathon — hay que corregir `workflows.md`/`mvp-scope.md` para marcarlo P1/roadmap, y ajustar `01-business/` en consecuencia; (c) el modo Closed se demuestra parcialmente (solo generación de preguntas, sin ciclo completo de estudiante) como término medio.
-- **Recomendación**: Decidir en función del tiempo real disponible (~4 semanas). Si el modo Closed ya tiene código de agente implementado y probado tan pronto como el modo Open, (a) es viable; si no, (b) es más seguro y evita dispersión de esfuerzo a 4 semanas del deadline.
-- **Consecuencia si no se resuelve**: la Fase 02 no puede clasificar con confianza el readiness de las épicas 11-13, y la Fase 04 no puede secuenciar releases sin saber si el modo Closed compite por el mismo tiempo que el resto del roadmap P0.
-- **Estado**: Pendiente.
+- **Recomendación**: Adoptar (a) como decisión de planificación: el modo Closed entra al corte P0 real y debe aparecer en el mapa de capacidades, inventario de historias y planificación de releases. La viabilidad de implementación completa se validará en Fase 04 al dimensionar releases y camino crítico.
+- **Consecuencia si no se hubiera resuelto**: la Fase 02 no habría podido clasificar con confianza el readiness de las épicas 11-13, y la Fase 04 no habría podido secuenciar releases sin saber si el modo Closed compite por el mismo tiempo que el resto del roadmap P0.
+- **Estado**: Resuelta el 2026-07-17 para efectos del Master Plan: **Closed = P0 del hackathon**. Queda pendiente propagar esta decisión a los documentos de producto/hackathon divergentes fuera del alcance de la Fase 02.
 - **Responsable sugerido**: Carlos.
 - **Fecha máxima de resolución**: 2026-07-20 (antes de iniciar formalmente la Fase 02).
 - **Fases afectadas**: 02, 04, 05.
@@ -50,9 +50,9 @@
 - **Contexto**: `US-010`, `US-011` y `US-012` existen simultáneamente y con contenido distinto en `epic-01-teacher-onboarding/` (Postman Collection, Google Sign-In, Password Recovery) y en `epic-02-assessment-creation/` (Assessment Brief Intake, Draft Generation, Draft Regeneration). El resto del catálogo (épicas 03-13) sigue un esquema de bloques de 10 sin colisiones. El índice `02-product/user-stories.md` además declara "9 historias" para Epic 01 cuando en realidad hay 12.
 - **Evidencia**: `docs/02-product/user-stories/epic-01-teacher-onboarding/{10,11,12}-*.md` vs. `docs/02-product/user-stories/epic-02-assessment-creation/{01,02,03}-*.md`; `docs/02-product/user-stories/README.md`.
 - **Alternativas**: (a) renumerar las historias de Epic 01 (US-010→US-013, etc., liberando el bloque 010-012 para Epic 02); (b) renumerar las de Epic 02; (c) dejarlo como está y resolver la ambigüedad solo por contexto en cada referencia futura.
-- **Recomendación**: (a) — Epic 02 ya usa el bloque 010-012 de forma consistente con el esquema de bloques de 10 del resto del catálogo; Epic 01 es la excepción que rompió el patrón al crecer de 9 a 12 historias.
-- **Consecuencia si no se resuelve**: la Fase 02 no puede generar un inventario de user stories trazable (regla de consistencia del `master-plan-specification.md`: "Toda US priorizada debe ser trazable"), y no puede corregirlo por sí misma porque tiene explícitamente prohibido modificar user stories originales.
-- **Estado**: Pendiente. Requiere edición directa de archivos fuera del alcance de escritura de las fases del Master Plan.
+- **Recomendación**: (a) — Epic 02 ya usa el bloque 010-012 de forma consistente con el esquema de bloques de 10 del resto del catálogo; Epic 01 era la excepción que rompía el patrón al crecer de 9 a 12 historias.
+- **Consecuencia si no se hubiera resuelto**: la Fase 02 no habría podido generar un inventario de user stories trazable (regla de consistencia del `master-plan-specification.md`: "Toda US priorizada debe ser trazable").
+- **Estado**: Resuelta el 2026-07-17. Epic 01 fue renumerada de US-010/011/012 a US-013/014/015 en el commit `e07a68a` (`docs(user-stories): renumber Epic 01 US-010/011/012 to free block for Epic 02`).
 - **Responsable sugerido**: Carlos (o quien mantenga `02-product/user-stories/`).
 - **Fecha máxima de resolución**: antes de iniciar la Fase 02.
 - **Fases afectadas**: 02, 04, 05, 06.
@@ -230,4 +230,5 @@
 
 | Fecha | Cambio | Motivo | Elementos afectados | Decisión asociada |
 |---|---|---|---|---|
+| 2026-07-19 | Actualización de estado de D-02 y D-03 | Reconciliación posterior a la Fase 02 antes de iniciar la Fase 03 | D-02, D-03 | D-02, D-03 |
 | 2026-07-17 | Creación inicial | Ejecución de la Fase 01 del Master Plan Ejecutivo | Todo el documento | — |
