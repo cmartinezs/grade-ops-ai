@@ -1,6 +1,6 @@
 # Testing Guide
 
-This guide covers the testing patterns, tooling, and conventions used in the `api/` and `web/` repositories.
+This guide covers the testing patterns, tooling, and conventions used in the `api/`, `agents/`, and `web/` areas.
 
 ---
 
@@ -34,13 +34,13 @@ class AuthControllerTest {
         FirebaseToken mockToken = mock(FirebaseToken.class);
         when(mockToken.getUid()).thenReturn("uid-abc");
         when(mockToken.getEmail()).thenReturn("teacher@school.com");
-        when(mockToken.getName()).thenReturn("Grace Hopper");
+        when(mockToken.getEmail()).thenReturn("teacher@school.com");
         when(firebaseAuth.verifyIdToken("valid-token")).thenReturn(mockToken);
 
         mockMvc.perform(post("/auth/register")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("""
-                        {"idToken": "valid-token", "name": "Grace Hopper"}
+                        {"idToken": "valid-token", "firstName": "Grace", "lastName": "Hopper"}
                         """))
             .andExpect(status().isCreated())
             .andExpect(jsonPath("$.firebaseUid").value("uid-abc"));
@@ -65,14 +65,14 @@ class AssessmentControllerTest {
     @Autowired
     private MockMvc mockMvc;
 
-    @MockBean
-    private AssessmentService assessmentService;
+    @MockitoBean
+    private ListAssessmentsUseCase listAssessmentsUseCase;
 
     @Test
     void getAssessments_returns_200_with_empty_list() throws Exception {
-        when(assessmentService.findByTeacher("uid-123")).thenReturn(List.of());
+        when(listAssessmentsUseCase.execute("uid-123")).thenReturn(List.of());
 
-        mockMvc.perform(get("/api/assessments")
+        mockMvc.perform(get("/api/v1/assessments")
                 .header("Authorization", "Bearer valid-token"))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$").isArray());
@@ -110,7 +110,7 @@ Unit tests are the fastest category. Write unit tests for all business logic tha
 
 ### FirebaseTestConfig
 
-`FirebaseTestConfig` is at `cl.gradeops.ai.api.config.FirebaseTestConfig`. It is a `@TestConfiguration` class that registers a Mockito mock for `FirebaseAuth` as the `@Primary` bean:
+`FirebaseTestConfig` is at `cl.gradeops.ai.api.shared.infrastructure.config.FirebaseTestConfig`. It is a `@TestConfiguration` class that registers a Mockito mock for `FirebaseAuth` as the `@Primary` bean:
 
 ```java
 @TestConfiguration
@@ -145,7 +145,7 @@ The following pattern covers the three scenarios you will encounter:
 FirebaseToken mockToken = mock(FirebaseToken.class);
 when(mockToken.getUid()).thenReturn("uid-123");
 when(mockToken.getEmail()).thenReturn("teacher@example.com");
-when(mockToken.getName()).thenReturn("Ada Lovelace");
+when(mockToken.getEmail()).thenReturn("teacher@example.com");
 when(firebaseAuth.verifyIdToken("test-token")).thenReturn(mockToken);
 ```
 
@@ -171,7 +171,7 @@ The test in `AuthControllerTest` verifies the `401` response:
 mockMvc.perform(post("/auth/register")
         .contentType(MediaType.APPLICATION_JSON)
         .content("""
-                {"idToken": "bad-token", "name": "Nobody"}
+                {"idToken": "bad-token", "firstName": "Nobody", "lastName": "Example"}
                 """))
     .andExpect(status().isUnauthorized())
     .andExpect(jsonPath("$.error").value("INVALID_TOKEN"));
@@ -195,6 +195,36 @@ cd api/
 ```
 
 Test method names use underscores (`snake_case`) to improve readability in the Maven output. This is a project convention — follow it for new tests.
+
+---
+
+## Agents tests (Spring Boot + Spring AI adapters)
+
+The agents service has pure unit tests, application tests, prompt-template tests, and provider adapter tests. Keep provider calls hermetic by default.
+
+| Test area | Expected coverage |
+| --- | --- |
+| Command/result validation | Required fields, invalid inputs, stable JSON shape. |
+| Orchestrator/use case | Provider selection, prompt loading, structured output validation, cost/log payload. |
+| Provider adapters | Mapping of Spring AI responses to `AssessmentGenerationResponse`; no real API key in normal tests. |
+| Web adapter | `POST /internal/agents/assessment`, internal auth, correlation IDs, error responses. |
+| Prompt template | Template exists, renders expected placeholders, and avoids inline Java prompt drift. |
+
+`agents/src/test/resources/application-test.yml` disables real Spring AI autoconfiguration and keeps the assessment pipeline off for context-loading tests that do not provide real provider keys.
+
+Run agents tests:
+
+```bash
+cd agents/
+
+# Run all tests
+./mvnw test
+
+# Run one class
+./mvnw test -Dtest=AssessmentAgentOrchestratorTest
+```
+
+Manual verification tests that call a real provider must stay opt-in and must not run in the default test suite unless credentials, model, and cost expectations are explicit.
 
 ---
 
@@ -344,8 +374,19 @@ Put this block at the top of the test file, before the `describe` or `it` blocks
 | API controllers | HTTP status codes, response body structure, auth rejection (401/403), validation errors (400) |
 | API services | Business logic, error conditions, ownership rules, state transitions |
 | API repositories | Only if you add custom queries — use `@DataJpaTest` for repository slice tests |
+| Agent runtime | Prompt loading, provider selection, structured output validation, log payload and cost fields |
 | React components | Rendering output, user interactions (click, type, submit), conditional rendering based on state |
 | Custom hooks | State transitions, side effects, error states |
+
+### Assessment/evidence regression rule
+
+If a change runs an agent, changes an approval state, consumes plan usage, creates revenue/cost evidence, or publishes student-facing output, tests must assert the side effect explicitly. For example:
+
+- agent success persists an `AgentExecutionLog` with provider, model, prompt version, status, timestamps, and cost estimate;
+- agent failure persists a failed log without creating a draft;
+- teacher ownership is enforced with 404 for cross-teacher access;
+- Closed attempts are scored deterministically from the frozen answer-key snapshot, not by an LLM;
+- approval/edit/reject actions create auditable state transitions.
 
 ### What not to test
 

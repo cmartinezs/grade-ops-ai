@@ -54,4 +54,4 @@ Separating roles lets the team keep moving with a working environment while pres
 
 ---
 
-← [Agent Provider And Model Policy](2026-07-20-agent-provider-model-policy.md) | [↑ inicio](#environment-roles) | [README](README.md)
+← [Agent Provider And Model Policy](2026-07-20-agent-provider-model-policy.md) | [↑ inicio](#environment-roles) | [README](README.md) | [Archive Event-Specific Constraints →](2026-07-20-archive-event-specific-constraints.md)

@@ -2,7 +2,7 @@
 
 GradeOps AI is an AI-native assessment operations business for programming educators.
 
-It helps teachers, tutors, bootcamps, and small academies run practical programming assessments with AI agents while preserving teacher authority over grading, feedback, and student-facing decisions.
+It helps teachers, tutors, bootcamps, and small academies run practical Open assessments and objective Closed assessments with AI agents while preserving teacher authority over academic-impact decisions.
 
 This document defines the business model for early market validation. The canonical strategic foundation remains `../00-project/`.
 
@@ -11,10 +11,10 @@ This document defines the business model for early market validation. The canoni
 | Source Decision | Business Interpretation |
 | --- | --- |
 | Project name | GradeOps AI |
-| Initial wedge | Practical programming assessments |
+| Initial wedge | Programming assessments with Open and Closed modes |
 | Initial market | Programming educators, tutors, bootcamps, and small academies |
 | Category | Education & Human Potential |
-| Core promise | Run the next programming assessment with AI agents |
+| Core promise | Run the next programming assessment cycle with AI agents and evidence |
 | Pricing model | Bounded by assessments and graded submissions |
 | Human role | Teacher reviews and approves important outputs |
 | AI role | Agents execute repetitive workflow steps and produce structured evidence |
@@ -22,15 +22,15 @@ This document defines the business model for early market validation. The canoni
 
 ## Business Thesis
 
-Programming educators do not only need help writing tests. They need assessment operations capacity.
+Programming educators do not only need help writing tests or questions. They need assessment operations capacity.
 
 The recurring business pain is:
 
-> Creating practical assessments, reviewing code, applying rubrics, writing personalized feedback, identifying learning gaps, and deciding recovery actions takes too much manual time and is hard to scale consistently.
+> Creating practical assessments, authoring objective questions, reviewing code, applying rubrics, managing answer keys, writing personalized feedback, identifying learning gaps, and reporting results takes too much manual time and is hard to scale consistently.
 
 GradeOps AI converts that pain into a measurable business offer:
 
-> We operate your next programming assessment with AI agents: activity design, rubric, grading assistance, feedback drafts, learning-gap report, teacher approval, and evidence logs.
+> We operate your next programming assessment cycle with AI agents: Open activity and rubric support, Closed question-bank and assembly support, grading/attempt processing, feedback or analytics, teacher approval, and evidence logs.
 
 The business is viable if customers believe the workflow saves enough time, improves feedback quality, and creates enough reporting value to justify a recurring software spend or a paid pilot.
 
@@ -38,12 +38,12 @@ The business is viable if customers believe the workflow saves enough time, impr
 
 ### Primary ICP
 
-Independent or small-team programming educators who run recurring practical assessments and do not have dedicated academic operations support.
+Independent or small-team programming educators who run recurring programming assessments and do not have dedicated academic operations support.
 
 | Attribute | Target |
 | --- | --- |
 | Teaching domain | Programming, algorithms, introductory software development, web/mobile/backend basics |
-| Assessment type | Practical exercises, code submissions, short projects, rubric-based tasks |
+| Assessment type | Practical exercises, code submissions, short projects, rubric-based tasks, and objective TF/SC/MC checks |
 | Team size | Solo educator, tutor, small academy, small bootcamp, cohort-based training team |
 | Buying power | Can pay directly or approve a small pilot without institutional procurement |
 | Pain intensity | High grading and feedback workload |
@@ -71,6 +71,13 @@ Examples:
 | Small academy | Need consistent grading and reporting across cohorts | New cohort starts or quality issue appears | Cohort Pro |
 | Bootcamp instructor | Fast feedback cycle and student risk visibility | Sprint project, module exam, capstone milestone | Pilot Pack / Cohort Pro |
 | Program manager | Evidence of learning progress and instructor consistency | Reporting pressure or student retention risk | Cohort Pro / custom pilot |
+
+## Open And Closed Business Value
+
+| Mode | Customer Pain | GradeOps AI Value | Evidence Produced |
+| --- | --- | --- | --- |
+| Open | Practical submissions require slow rubric-based review and personalized feedback. | Agents draft activities, rubrics, grading suggestions, feedback, learning-gap summaries, and reports while teachers approve outputs. | Submissions processed, feedback drafts, approval events, time-saved estimates, agent logs, cost per graded submission. |
+| Closed | Objective assessment quality, answer-key control, student access, and item analysis are operationally tedious. | Agents help generate and review question banks, compose closed assessments, freeze answer-key snapshots, deliver signed links, and summarize item analytics. | Questions generated/reviewed, snapshots frozen, attempts graded deterministically, item analytics, usage events, cost per attempt. |
 
 ## Jobs To Be Done
 
@@ -116,7 +123,7 @@ I want to deliver better assessment operations without hiring more staff or manu
 ### Initial Validation Offer
 
 > **Pilot Pack — US$99 one-time**  
-> We operate 3 real programming assessments with AI agents, up to 150 graded submissions, onboarding, feedback drafts, teacher report, and evidence dashboard.
+> We operate 3 real programming assessments with AI agents, up to 150 graded submissions or Closed attempts, onboarding, feedback/analytics outputs, teacher report, and evidence dashboard.
 
 This is the primary early revenue vehicle because it is easier to sell than a self-serve subscription before the product has full polish.
 
@@ -144,15 +151,16 @@ The business should never sell unlimited AI grading. The commercial unit is asse
 
 ## Unit Economics
 
-The primary unit is:
+The primary planning unit is:
 
-> 1 assessment = activity + rubric + grading assistance for 30 submissions + personalized feedback + teacher report.
+> 1 assessment = one Open assessment with rubric and up to 30 submissions, or one Closed assessment with approved questions, frozen answer key, and up to 30 attempts.
 
 The business must track:
 
 - cost per agent run;
 - cost per assessment;
 - cost per graded submission;
+- cost per Closed attempt;
 - cost per active teacher;
 - cost per customer;
 - revenue per customer;
@@ -172,7 +180,9 @@ Every pilot should produce business evidence, not only product feedback.
 | Current workflow | Reveals switching friction |
 | Payment or commitment | Proves willingness to pay |
 | Assessment processed | Proves product usage |
-| Submissions processed | Proves volume and operational value |
+| Submissions or attempts processed | Proves volume and operational value |
+| Question bank and answer-key snapshot | Proves Closed assessment control and deterministic grading |
+| Item analytics | Proves Closed assessment quality feedback |
 | Agent logs | Proves AI-native operations |
 | Time saved estimate | Supports business value |
 | Testimonial | Supports pitch and category impact |

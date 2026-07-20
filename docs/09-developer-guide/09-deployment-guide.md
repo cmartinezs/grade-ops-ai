@@ -357,7 +357,7 @@ curl -I https://grade-ops-ai-web-HASH-uc.a.run.app
 curl -X POST https://grade-ops-ai-api-HASH-uc.a.run.app/internal/teachers \
   -H "X-Internal-Key: YOUR_INTERNAL_SECRET" \
   -H "Content-Type: application/json" \
-  -d '{"name": "Demo Teacher", "email": "demo@example.com"}'
+  -d '{"firstName": "Demo", "lastName": "Teacher", "email": "demo@example.com"}'
 # Expected: HTTP 201 with firebaseUid and inviteLink
 ```
 

@@ -2,7 +2,38 @@
 
 Complete inventory of screens in GradeOps AI, organized by role and assessment mode. Status indicates MVP priority relative to the cut line defined in `02-product/mvp-scope.md`.
 
+This is a product/UX inventory, not a claim that every route is implemented today. The current web app has authentication, dashboard shell, and protected placeholder routes for assessments, question bank, students, and reports. Screens below marked P0 still need implementation unless the corresponding release slice has already delivered them.
+
 **Status key:** `P0` = protect first / `P1` = build next / `P2` = later
+
+## Current Web Availability
+
+| Area | Current Route | Availability |
+| --- | --- | --- |
+| Landing | `/` | Implemented. |
+| Login/register/verify email | `/login`, `/register`, `/verify-email` | Implemented. |
+| Password reset | `/forgot-password`, `/reset-password` | Implemented. |
+| Dashboard | `/dashboard` | Implemented shell with assessment list integration. |
+| Assessments | `/assessments` | Protected route present; feature depth depends on assessment release slice. |
+| Question bank | `/bank` | Protected placeholder/early shell; Closed bank workflow not complete. |
+| Students | `/students` | Protected placeholder/early shell; no student accounts in MVP. |
+| Reports | `/reports` | Protected placeholder/early shell; report workflow not complete. |
+
+Target routes in the tables below may differ from current web routes. Keep the current app route stable until a release explicitly migrates navigation.
+
+## Shared State Vocabulary
+
+Use these states consistently across teacher screens:
+
+| State | UX Meaning |
+| --- | --- |
+| `draft` | Teacher input or saved object exists but is not ready for agent processing or publication. |
+| `generated` | AI produced an output; teacher has not acted on it yet. |
+| `needs_review` | The next required action is teacher review. |
+| `approved` | Teacher accepted the output or deterministic result. |
+| `published` | Approved output/result is visible or exportable to its intended audience. |
+| `blocked` | Workflow cannot continue until a validation, policy, missing input, or dependency problem is resolved. |
+| `error` | A system or agent call failed; retry or support action is needed. |
 
 ---
 
@@ -64,7 +95,7 @@ Complete inventory of screens in GradeOps AI, organized by role and assessment m
 
 ## Student Experience (Secure Link)
 
-Students receive links via email. All student screens are token-gated — no login, no account, no navigation.
+Students receive links via email. All student screens are token-gated: no login, no account, no password, no global navigation.
 
 ### Open Assessments
 

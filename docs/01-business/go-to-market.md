@@ -8,7 +8,7 @@ The first go-to-market objective is not broad brand awareness. It is to generate
 
 The fastest path to business evidence is:
 
-> Sell a guided assessment-operations pilot to programming educators who already have an upcoming assessment and feel grading/feedback pressure.
+> Sell a guided assessment-operations pilot to programming educators who already have an upcoming assessment and feel grading, feedback, question-bank, or reporting pressure.
 
 This avoids slow institutional procurement and keeps the offer concrete.
 
@@ -17,7 +17,7 @@ This avoids slow institutional procurement and keeps the offer concrete.
 | Attribute | Focus |
 | --- | --- |
 | Domain | Programming education |
-| Assessment type | Practical programming assessments |
+| Assessment type | Practical Open assessments and objective Closed checks |
 | Customer type | Independent teachers, tutors, bootcamps, small academies |
 | Buyer size | Small enough to approve a pilot quickly |
 | First offer | Pilot Pack |
@@ -29,7 +29,7 @@ GradeOps AI is not a quiz generator.
 
 It is:
 
-> An assessment operations layer where AI agents help create assessments, generate rubrics, analyze submissions, draft feedback, detect learning gaps, and prepare teacher reports while teachers stay in control.
+> An assessment operations layer where AI agents help create practical assessments, generate rubrics, review submissions, draft feedback, build and review objective question banks, assemble Closed assessments, produce item analytics, and prepare teacher reports while teachers stay in control.
 
 ## Entry Offer
 
@@ -40,7 +40,7 @@ It is:
 | Price | US$99 one-time, or CLP equivalent for LatAm testing |
 | Scope | 3 programming assessments |
 | Volume | Up to 150 graded submissions |
-| Included | Onboarding, assessment setup, rubric, grading assistance, feedback drafts, learning-gap report, teacher approval, evidence dashboard |
+| Included | Onboarding, assessment setup, Open rubric/grading/feedback support or Closed question-bank/attempt analytics support, teacher approval, evidence dashboard |
 | Goal | Revenue, testimonial, usage logs, cost data, and workflow validation |
 
 The Pilot Pack should be sold before the product is fully self-serve if necessary. Early guided operation is acceptable as long as AI-agent execution and product evidence are real.
@@ -51,8 +51,8 @@ The Pilot Pack should be sold before the product is fully self-serve if necessar
 | --- | --- |
 | Independent teacher | Save hours grading and generate better feedback without changing how you teach |
 | Tutor | Look more professional and give each student more actionable feedback |
-| Bootcamp instructor | Process cohort submissions faster and detect learning gaps before the next module |
-| Small academy founder | Standardize assessment quality without hiring academic operations staff |
+| Bootcamp instructor | Process cohort submissions or objective checks faster and detect learning gaps before the next module |
+| Small academy founder | Standardize assessment and question-bank quality without hiring academic operations staff |
 | Program manager | Get visibility into cohort performance and grading consistency |
 
 ## Channel Strategy
@@ -91,6 +91,7 @@ Target signal examples:
 - posts about education or coding;
 - runs a bootcamp or academy;
 - mentions grading, feedback, assignments, or student projects;
+- mentions exams, quizzes, question banks, item quality, or answer-key reviews;
 - teaches Java, Python, JavaScript, web, mobile, algorithms, or intro programming.
 
 ### Step 2: Start Conversation
@@ -107,7 +108,9 @@ Use the discovery script. Capture workflow, volume, pain, trust, and buying sign
 
 ### Step 4: Demo
 
-Show a real workflow:
+Show one real workflow that is already implemented enough to run end to end.
+
+Open workflow:
 
 1. teacher enters learning goal;
 2. agents create assessment and rubric;
@@ -116,11 +119,20 @@ Show a real workflow:
 5. teacher approves;
 6. report and agent logs are shown.
 
+Closed workflow:
+
+1. teacher enters curriculum scope and question mix;
+2. agents generate and review objective questions;
+3. teacher approves bank items;
+4. assessment is assembled and the answer-key snapshot is frozen;
+5. student attempt is submitted through a signed link;
+6. deterministic score, item analytics, report, and agent logs are shown.
+
 ### Step 5: Offer Pilot
 
 Offer the Pilot Pack only when pain and timing are clear.
 
-> For the pilot, we can operate your next 3 assessments with AI agents, up to 150 graded submissions, with teacher approval before anything reaches students.
+> For the pilot, we can operate your next 3 assessments with AI agents, up to 150 graded submissions or Closed attempts, with teacher approval before academic-impact outputs reach students.
 
 ### Step 6: Capture Evidence
 
@@ -129,6 +141,8 @@ Every pilot should produce:
 - payment or commitment evidence;
 - assessment run;
 - submission count;
+- closed attempt count, when applicable;
+- question and snapshot count, when applicable;
 - feedback count;
 - agent log events;
 - time-saved estimate;
@@ -142,7 +156,7 @@ Every pilot should produce:
 ```text
 Hola {Name}, estoy construyendo GradeOps AI para docentes de programación.
 
-La idea es simple: operar evaluaciones prácticas con agentes IA — actividad, rúbrica, corrección asistida, feedback y reporte — pero manteniendo al docente con aprobación final.
+La idea es simple: operar evaluaciones de programación con agentes IA — actividades prácticas, rúbricas, corrección asistida, bancos de preguntas objetivas, feedback, analítica y reportes — pero manteniendo al docente con aprobación final.
 
 Estoy hablando con profesores/tutores/bootcamps que tengan evaluaciones próximas. ¿Te puedo hacer 4-5 preguntas sobre tu flujo actual de corrección y feedback?
 ```
@@ -158,7 +172,7 @@ Lo que entendí:
 - Lo más importante para confiar sería {trustRequirement}.
 
 El piloto que calza sería:
-3 evaluaciones reales, hasta 150 entregas, rúbrica, corrección asistida, feedback individual, reporte docente y aprobación final antes de entregar nada a estudiantes.
+3 evaluaciones reales, hasta 150 entregas o intentos, soporte Open/Closed según tu caso, reporte docente y aprobación final antes de entregar resultados a estudiantes.
 
 ¿Tiene sentido probarlo con tu próxima evaluación?
 ```
@@ -168,7 +182,7 @@ El piloto que calza sería:
 ```text
 Para hacerlo serio y medir valor real, lo estoy ofreciendo como Pilot Pack.
 
-Incluye 3 evaluaciones, hasta 150 entregas, onboarding, reporte y evidencia de tiempo ahorrado.
+Incluye 3 evaluaciones, hasta 150 entregas o intentos, onboarding, reporte y evidencia de tiempo ahorrado.
 
 Precio piloto: US$99 o equivalente local.
 
@@ -184,13 +198,13 @@ Si lo tomamos, dejamos documentado:
 ### Hero
 
 ```text
-Run your next programming assessment with AI agents.
+Run your next programming assessment cycle with AI agents.
 ```
 
 ### Subheadline
 
 ```text
-GradeOps AI helps programming educators create assessments, generate rubrics, analyze submissions, draft feedback, detect learning gaps, and prepare teacher reports — with teachers in control.
+GradeOps AI helps programming educators create Open assessments, build Closed question banks, analyze submissions or attempts, draft feedback, detect learning gaps, and prepare teacher reports — with teachers in control.
 ```
 
 ### CTA
@@ -209,7 +223,7 @@ Book a 15-minute discovery call
 
 - Save grading and feedback time.
 - Keep teacher approval.
-- Get structured rubrics and reports.
+- Get structured rubrics, question banks, item analytics, and reports.
 - Track agent logs, cost, and evidence.
 - Built for programming educators, tutors, bootcamps, and small academies.
 
@@ -223,7 +237,7 @@ Book a 15-minute discovery call
 | Pilot candidates | 5+ |
 | Paid pilots or commitments | 3+ |
 | Real/semi-real assessments | 5+ |
-| Submissions processed | 100+ |
+| Submissions or attempts processed | 100+ |
 | Testimonials | 1-3 |
 
 ## Weekly GTM Plan
@@ -286,8 +300,8 @@ Recommended post themes:
 - “Why AI quiz generators miss the real problem.”
 - “The hardest part of teaching programming is not explaining loops; it is giving useful feedback at scale.”
 - “Teachers should not be replaced by AI. They should approve better prepared work.”
-- “What we learned after processing X programming submissions with AI agents.”
-- “From learning goal to rubric, feedback, and report.”
+- “What we learned after processing X programming submissions or attempts with AI agents.”
+- “From learning goal to rubric, question bank, feedback, analytics, and report.”
 
 ## Referral Motion
 

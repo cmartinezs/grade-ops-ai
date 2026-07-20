@@ -107,7 +107,7 @@ All errors return JSON. The exact shape depends on the error type:
 
 ---
 
-#### `POST /auth/register`
+#### `POST /api/v1/auth/register`
 
 Registers a new teacher. The client must first create a Firebase user using the Firebase client SDK (`createUserWithEmailAndPassword`), then call this endpoint with the resulting ID token to create the backend teacher record.
 
@@ -118,20 +118,23 @@ Registers a new teacher. The client must first create a Firebase user using the 
 ```json
 {
   "idToken": "eyJhbGciOiJSUzI1NiIsInR5cCI...",
-  "name": "Ana Pérez"
+  "firstName": "Ana",
+  "lastName": "Pérez"
 }
 ```
 
 | Field | Type | Required | Notes |
 |-------|------|----------|-------|
 | `idToken` | string | Yes | Firebase ID token from `createUserWithEmailAndPassword` |
-| `name` | string | No | Display name; falls back to Firebase display name, then email |
+| `firstName` | string | No | Teacher first/display name |
+| `lastName` | string | No | Teacher last name |
 
-**Response — HTTP 201 Created:**
+**Response — HTTP 200 OK:**
 
 ```json
 {
-  "firebaseUid": "pZ1mVr3qUBXyKn7oW8sNaC..."
+  "uid": "pZ1mVr3qUBXyKn7oW8sNaC...",
+  "created": true
 }
 ```
 
@@ -147,17 +150,18 @@ Registers a new teacher. The client must first create a Firebase user using the 
 **curl example:**
 
 ```bash
-curl -X POST http://localhost:8080/auth/register \
+curl -X POST http://localhost:8080/api/v1/auth/register \
   -H "Content-Type: application/json" \
   -d '{
     "idToken": "YOUR_FIREBASE_ID_TOKEN",
-    "name": "Ana Pérez"
+    "firstName": "Ana",
+    "lastName": "Pérez"
   }'
 ```
 
 ---
 
-#### `POST /auth/forgot-password`
+#### `POST /api/v1/auth/forgot-password`
 
 Sends a password reset email to the teacher. Generates a one-time UUID code with a 30-minute TTL, stores it in `password_reset_codes`, and sends a Thymeleaf HTML email with a link to `/reset-password?code=<UUID>`.
 
@@ -195,18 +199,17 @@ curl -X POST http://localhost:8080/api/v1/auth/forgot-password \
 
 ---
 
-#### `PUT /auth/reset-password`
+#### `POST /api/v1/auth/reset-password`
 
 Validates a password reset code and updates the teacher's password via Firebase Admin SDK.
 
 **Authentication:** None (public endpoint)
 
-**Query parameter:** `code` — the UUID from the email link (required)
-
 **Request body:**
 
 ```json
 {
+  "code": "550e8400-e29b-41d4-a716-446655440000",
   "email": "teacher@example.com",
   "password": "nuevaContraseña123",
   "passwordRepeat": "nuevaContraseña123"
@@ -215,17 +218,18 @@ Validates a password reset code and updates the teacher's password via Firebase 
 
 | Field | Type | Required | Validation |
 |-------|------|----------|-----------|
+| `code` | string | Yes | UUID/raw reset code from the email link |
 | `email` | string | Yes | Valid email format; must match the owner of the code |
 | `password` | string | Yes | Minimum 6 characters |
 | `passwordRepeat` | string | Yes | Not blank (equality check done in service) |
 
-**Response — HTTP 200 OK:** Empty body.
+**Response — HTTP 204 No Content:** Empty body.
 
 **Error responses:**
 
 | Status | Body | Condition |
 |--------|------|-----------|
-| 404 | `{"error":"RESET_CODE_NOT_FOUND"}` | `code` param does not exist in the database |
+| 404 | `{"error":"RESET_CODE_NOT_FOUND"}` | `code` does not exist in the database |
 | 410 | `{"error":"RESET_CODE_EXPIRED"}` | Code exists but has passed its 30-minute TTL |
 | 410 | `{"error":"RESET_CODE_USED"}` | Code was already consumed by a previous successful reset |
 | 422 | `{"error":"RESET_CODE_EMAIL_MISMATCH"}` | `body.email` does not match the teacher account linked to this code |
@@ -234,9 +238,10 @@ Validates a password reset code and updates the teacher's password via Firebase 
 **curl example:**
 
 ```bash
-curl -X PUT "http://localhost:8080/api/v1/auth/reset-password?code=550e8400-e29b-41d4-a716-446655440000" \
+curl -X POST http://localhost:8080/api/v1/auth/reset-password \
   -H "Content-Type: application/json" \
   -d '{
+    "code": "550e8400-e29b-41d4-a716-446655440000",
     "email": "teacher@example.com",
     "password": "nuevaContraseña123",
     "passwordRepeat": "nuevaContraseña123"
@@ -245,7 +250,7 @@ curl -X PUT "http://localhost:8080/api/v1/auth/reset-password?code=550e8400-e29b
 
 ---
 
-#### `POST /auth/sign-out`
+#### `POST /api/v1/auth/sign-out`
 
 Revokes all Firebase refresh tokens for the authenticated teacher. After this call, any cached ID tokens will fail to renew within approximately one minute (because the API uses `checkRevoked=true` on every `verifyIdToken` call).
 
@@ -265,7 +270,7 @@ Revokes all Firebase refresh tokens for the authenticated teacher. After this ca
 **curl example:**
 
 ```bash
-curl -X POST http://localhost:8080/auth/sign-out \
+curl -X POST http://localhost:8080/api/v1/auth/sign-out \
   -H "Authorization: Bearer YOUR_FIREBASE_ID_TOKEN"
 ```
 
@@ -277,7 +282,7 @@ curl -X POST http://localhost:8080/auth/sign-out \
 
 ---
 
-#### `GET /assessments`
+#### `GET /api/v1/assessments`
 
 Returns all assessments for the authenticated teacher.
 
@@ -307,17 +312,7 @@ Returns all assessments for the authenticated teacher.
 | `pendingApprovals` | integer | AI outputs awaiting teacher review |
 | `reportLink` | string or null | Link to generated report, if available |
 
-**Current state:** The endpoint is implemented and secured, but the service returns an empty array `[]`. Assessment data will be populated in Epic 02 when the `assessment` table is added.
-
-**Known DTO gap (tracked):** The teacher dashboard UI (`/dashboard`) expects three additional fields that `AssessmentSummaryDto` does not yet include:
-
-| Missing field | Expected type | Used for |
-|--------------|--------------|----------|
-| `type` | `"OPEN" \| "CLOSED" \| "MIXED"` | Assessment type badge in the row |
-| `average` | `number \| null` | Grade average displayed per assessment |
-| `courseName` | `string \| null` | Course label shown in the row subtitle |
-
-Until these fields are added to the API DTO and Flyway migration, the dashboard renders the assessment list without type badge, average, or course name. The frontend `AssessmentRow` component is already coded to handle their absence gracefully (fields are optional/unused). When the API adds them, update `web/src/types/assessment.ts` to match.
+**Current state:** The endpoint is implemented, secured, and backed by assessment persistence. A new teacher with no assessments returns `[]`.
 
 **Error responses:**
 
@@ -329,11 +324,11 @@ Until these fields are added to the API DTO and Flyway migration, the dashboard 
 **curl example:**
 
 ```bash
-curl http://localhost:8080/assessments \
+curl http://localhost:8080/api/v1/assessments \
   -H "Authorization: Bearer YOUR_FIREBASE_ID_TOKEN"
 ```
 
-Expected current response: `[]`
+Expected response for a new teacher: `[]`
 
 ---
 
@@ -353,14 +348,16 @@ Provisions a new teacher account. Creates a Firebase user with `emailVerified=tr
 
 ```json
 {
-  "name": "Ana Pérez",
+  "firstName": "Ana",
+  "lastName": "Pérez",
   "email": "ana.perez@universidad.cl"
 }
 ```
 
 | Field | Type | Required | Notes |
 |-------|------|----------|-------|
-| `name` | string | Yes | Teacher display name |
+| `firstName` | string | Yes | Teacher first/display name |
+| `lastName` | string | Yes | Teacher last name |
 | `email` | string | Yes | Must be unique across both Firebase and the teacher table |
 
 **Response — HTTP 201 Created:**
@@ -391,7 +388,8 @@ curl -X POST http://localhost:8080/internal/teachers \
   -H "X-Internal-Key: dev-secret-change-me" \
   -H "Content-Type: application/json" \
   -d '{
-    "name": "Ana Pérez",
+    "firstName": "Ana",
+    "lastName": "Pérez",
     "email": "ana.perez@universidad.cl"
   }'
 ```

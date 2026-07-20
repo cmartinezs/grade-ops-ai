@@ -1,5 +1,7 @@
 # 07 Hackathon
 
+> Historical archive. These files are no longer active product, business, deployment, or evidence constraints. See [`../../../99-decisions/2026-07-20-archive-event-specific-constraints.md`](../../../99-decisions/2026-07-20-archive-event-specific-constraints.md).
+
 Operational deliverables for the XPRIZE AI hackathon submission.
 
 This folder contains the executable artifacts for submission — not strategy (that lives in [`00-project/hackathon-strategy.md`](../00-project/hackathon-strategy.md)) but the actual content to write, record, and submit.

@@ -2,7 +2,7 @@
 
 GradeOps AI is an AI-operated assessment workflow for programming education.
 
-It helps educators move from a learning goal to reviewed feedback and teacher reports through a controlled agent workflow.
+It helps educators run Open and Closed assessment cycles through controlled agent workflows, from learning goal and question design through grading, feedback, analytics, and teacher reports.
 
 ## Core Approach
 
@@ -11,9 +11,11 @@ It helps educators move from a learning goal to reviewed feedback and teacher re
 - Teacher approval on important outputs.
 - Structured evidence capture from day one.
 - Auditable logs for AI actions, cost, usage, and decisions.
-- A narrow MVP focused on practical programming assessments.
+- A focused MVP covering practical Open assessments and objective Closed assessments.
 
-## MVP Workflow
+## MVP Workflows
+
+### Open Assessment
 
 1. Teacher defines what they want to evaluate.
 2. Assessment Agent generates the activity.
@@ -27,11 +29,24 @@ It helps educators move from a learning goal to reviewed feedback and teacher re
 10. Teacher Report Agent prepares the final report.
 11. Ops Evidence Agent records usage, costs, outcomes, and agent logs.
 
+### Closed Assessment
+
+1. Teacher defines curriculum scope, learning outcomes, difficulty, and question mix.
+2. Question Generation Agent drafts TF/SC/MC questions.
+3. Distractor Quality Agent and Ambiguity Review Agent flag weak or ambiguous items.
+4. Teacher reviews, edits, and approves the question bank.
+5. Assessment Assembly Agent composes a closed assessment from approved questions.
+6. Publishing freezes an answer-key snapshot before students respond.
+7. Students access the assessment through signed token links, without student login.
+8. Attempts are graded deterministically against the frozen answer key.
+9. Item Analytics Agent reports item performance, annulment candidates, and cohort signals.
+10. Ops Evidence Agent records usage, costs, attempts, approvals, and agent logs.
+
 ## MVP Scope Matrix
 
 | Area | Must Build For MVP | Demo Support | Later | Do Not Build Now |
 | --- | --- | --- | --- | --- |
-| Assessment creation | Learning goal input, generated activity | Example templates | Question bank versioning | Full curriculum design |
+| Open assessment creation | Learning goal input, generated practical activity | Example templates | Assessment template library | Full curriculum design |
 | Rubric | Structured rubric with weights | Rubric validation notes | Rubric library | Institutional rubric governance |
 | Submissions | Text/code paste and file upload | Seed sample submissions | Git repo integration | OCR-first workflow |
 | Grading assistance | Suggested score and evidence per criterion | Uncertainty flags | Automated tests/sandboxes | Fully autonomous final grades |
@@ -39,6 +54,10 @@ It helps educators move from a learning goal to reviewed feedback and teacher re
 | Learning gaps | Cohort summary | Common mistake clustering | Longitudinal analytics | Predictive student profiling |
 | Recovery | Suggested activity | Exportable recommendation | Recovery plan library | Adaptive course engine |
 | Reporting | Teacher report | Dashboard screenshots | Multi-cohort analytics | Executive BI suite |
+| Closed question bank | Approved TF/SC/MC questions with curriculum tags | Seeded question examples | Large reusable banks | Full LMS item authoring suite |
+| Closed assessment assembly | Frozen answer-key snapshot | Sample closed assessment | Advanced randomization | Proctoring platform |
+| Student access | Signed assessment/result links | Seed learner list | Full student portal | Student account system |
+| Item analytics | Basic item performance and annulment signal | Demo cohort attempts | Longitudinal item analysis | Psychometric research suite |
 | Evidence | Agent logs, API usage, cost estimate | Product validation dashboard | Audit export | Complex compliance workflows |
 | Payments | Manual or Stripe evidence | Pilot Pack checkout | Full billing portal | Marketplace |
 
@@ -53,6 +72,11 @@ It helps educators move from a learning goal to reviewed feedback and teacher re
 | Learning Gap Agent | Detect repeated misconceptions. | Gap summary and affected students/cohorts. |
 | Recovery Agent | Suggest reinforcement work. | Recovery activities tied to specific gaps. |
 | Teacher Report Agent | Summarize the assessment run. | Teacher-facing report and next-step recommendations. |
+| Question Generation Agent | Generate objective questions from approved scope. | TF/SC/MC questions, answer keys, rationales, metadata. |
+| Distractor Quality Agent | Review distractor plausibility and option quality. | Distractor issues and improvement suggestions. |
+| Ambiguity Review Agent | Detect ambiguous wording, multiple correct answers, or weak stems. | Ambiguity flags and revision notes. |
+| Assessment Assembly Agent | Compose closed assessments from approved bank items. | Assessment form and frozen answer-key snapshot. |
+| Item Analytics Agent | Analyze closed assessment attempts. | Item difficulty, distractor behavior, annulment candidates, cohort signals. |
 | Ops Evidence Agent | Capture operational proof. | Logs, cost estimates, usage events, time-saved evidence. |
 
 ## Agent Choreography
@@ -71,8 +95,18 @@ flowchart TD
   J[Teacher approval checkpoint]
   K[Teacher Report Agent]
   L[Ops Evidence Agent]
+  M[Question Generation Agent]
+  N[Distractor Quality Agent]
+  O[Ambiguity Review Agent]
+  P[Question bank approval]
+  Q[Assessment Assembly Agent]
+  R[Frozen answer-key snapshot]
+  S[Signed token access]
+  T[Deterministic grading]
+  U[Item Analytics Agent]
 
   A --> B --> C --> D --> E --> F --> G --> H --> I --> J --> K --> L
+  A --> M --> N --> O --> P --> Q --> R --> S --> T --> U --> K --> L
 ```
 
 The product should show this choreography visually in demos. Evaluators should understand that AI is operating the workflow, not only answering prompts.
@@ -111,8 +145,12 @@ Each agent execution should record:
 - teacher or account;
 - assessment;
 - submission when applicable;
+- attempt when applicable;
 - agent name;
+- agent version;
+- provider used;
 - model used;
+- prompt or template version;
 - input token estimate;
 - output token estimate;
 - input summary;
@@ -141,7 +179,15 @@ This evidence is not only observability. It is part of the business narrative fo
 | `LearningGapReport` | Cohort-level gaps and affected submissions. |
 | `RecoveryActivity` | Suggested reinforcement activity tied to gaps. |
 | `TeacherReport` | Summary report for teacher/customer. |
+| `Question` | Closed-assessment item with type, prompt, options, answer key, rationale, and metadata. |
+| `QuestionBank` | Approved pool of reusable objective questions. |
+| `AssessmentSnapshot` | Immutable closed assessment form and answer key used for deterministic grading. |
+| `AssessmentInvitation` | Signed student access token, expiry, and learner mapping. |
+| `LearnerRef` | Minimal student reference, not a login account. |
+| `AssessmentAttempt` | Closed assessment responses, score, timestamps, and grading state. |
+| `ItemAnalytics` | Per-question attempt statistics and quality signals. |
 | `AgentExecutionLog` | Operational evidence for agent decisions, tokens, costs, and status. |
+| `UsageEvent` | Product action used for activation, volume, plan limits, and traction metrics. |
 | `RevenueEvent` | Payment, commitment, related-party flag, customer source. |
 | `CostEvent` | AI/API/cloud/payment/marketing cost event. |
 
@@ -151,12 +197,16 @@ Each assessment run should calculate:
 
 - input tokens by agent;
 - output tokens by agent;
-- model used by agent;
+- provider and model used by agent;
+- model policy selected for the workload;
 - estimated cost per agent execution;
 - retries and failed calls;
 - cost per assessment;
 - cost per graded submission;
+- cost per closed attempt;
 - cost per active teacher;
+- cost per question generation batch;
+- cost per assessment assembly and item analytics run;
 - revenue attached to the customer or pilot;
 - whether the revenue is arms-length or related-party.
 
@@ -173,18 +223,19 @@ The MVP should use a simple, defensible architecture:
 - structured storage for assessments, submissions, rubrics, feedback, and logs;
 - operational dashboard for usage, agent runs, cost, and evidence.
 
-Valid implementation candidates:
+Current implementation direction:
 
 | Layer | Preferred Direction | Notes |
 | --- | --- | --- |
-| Frontend | Next.js or Angular | Choose speed and confidence over novelty. |
-| Backend | Spring Boot or Node/NestJS | Spring Boot fits existing strength; Node may speed agent orchestration. |
-| Runtime | Cloud Run | Clean fit for containerized backend/agent workers. |
-| AI | Provider adapters for Gemini and OpenAI-compatible APIs | Select provider by environment and evidence needs. |
-| Data | Firestore or Cloud SQL PostgreSQL | Firestore for speed, PostgreSQL for relational consistency. |
+| Frontend | Next.js + TypeScript | Teacher workspace, signed student access, dashboards, and review flows. |
+| Backend | Spring Boot + Java | Domain state machine, persistence, billing, approvals, and service orchestration. |
+| Agent runtime | Spring Boot + Spring AI | Internal REST service for file-based prompts and provider-backed structured calls. |
+| Runtime | Cloud Run | Containerized web, API, and agent services. |
+| AI | Provider adapters for Gemini and OpenAI-compatible APIs | Select provider by environment, workload, and evidence needs. |
+| Data | Cloud SQL PostgreSQL | Relational consistency for assessments, approvals, attempts, billing, and evidence. |
 | Storage | Cloud Storage | Student files, exports, report artifacts. |
 | Logs | Cloud Logging plus DB business logs | Technical logs and business evidence should not be mixed only in stdout. |
-| Auth | Firebase Auth or simple controlled auth | Avoid overbuilding identity. |
+| Auth | Teacher auth plus signed student links | No student login in MVP. |
 | Payments | Stripe or manual payment evidence | Stripe ideal, manual evidence acceptable for pilot validation. |
 
 Personal AI subscriptions can be used for development acceleration, but not as the production grading runtime. The deployed product must use traceable API/cloud billing and save agent execution evidence.
@@ -200,6 +251,11 @@ Use model routing to control cost:
 | Bulk grading | Flash-Lite-class model by default. |
 | Individual feedback | Flash-Lite by default, Flash fallback for difficult cases. |
 | Teacher reports | Flash-class model. |
+| Question generation | Flash-class model with structured output validation. |
+| Distractor and ambiguity review | Flash-class model with strict quality flags. |
+| Closed assessment assembly | Deterministic selection first; model assistance only for recommendations. |
+| Closed grading | Deterministic answer-key evaluation, no LLM scoring. |
+| Item analytics | Deterministic analytics first; model assistance only for narrative summary. |
 | Premium review | Stronger fallback model only when needed. |
 
 Model names and pricing change. The cost model must be verified against official pricing before deployment and before customer-facing commitments.
@@ -227,7 +283,7 @@ Minimum MVP rules:
 | Latency | Teacher-facing operations should show progress states instead of blocking silently. |
 | Auditability | Teacher approval and edits are retained. |
 | Exportability | Teacher report can be exported or shared as evidence. |
-| Demo readiness | Product can demonstrate one full workflow in under three minutes. |
+| Demo readiness | Product can demonstrate one Open or Closed vertical slice with evidence in under three minutes. |
 
 ## Value Proposition
 
@@ -256,7 +312,7 @@ Minimum MVP rules:
 
 ## Strategic Differentiator
 
-GradeOps AI is not a generic quiz generator.
+GradeOps AI is not a generic quiz generator or a chatbot wrapper.
 
 It is an AI-native assessment operations platform where agents run meaningful workflow steps and teachers retain final pedagogical authority.
 

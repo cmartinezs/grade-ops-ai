@@ -27,6 +27,8 @@ Start with:
 
 1. [`agents-overview.md`](agents-overview.md) — overall agent architecture, common envelope, logs, model routing, and control principles. Covers both open and closed assessment agents.
 
+Implementation status is release-driven. The current code has an Assessment Agent vertical slice and provider adapters; the remaining agents are contracts until their release slice creates a real consumer. See [`../09-developer-guide/06-agent-development.md`](../09-developer-guide/06-agent-development.md) for implemented runtime guidance.
+
 Then use the individual contracts.
 
 **Open assessment agents:**
@@ -72,3 +74,13 @@ Then use the individual contracts.
 Agents operate the repetitive workflow. Teachers retain judgment, standards, and final approval.
 
 No agent should silently create final grades, final feedback, or student-facing outputs without teacher review.
+
+## Traceability
+
+| Topic | Source |
+| --- | --- |
+| Provider/model policy | [`../99-decisions/2026-07-20-agent-provider-model-policy.md`](../99-decisions/2026-07-20-agent-provider-model-policy.md) |
+| Agent service separation | [`../99-decisions/2026-06-10-agent-runtime-separation.md`](../99-decisions/2026-06-10-agent-runtime-separation.md) |
+| Evidence schema | [`../05-evidence/agent-logs.md`](../05-evidence/agent-logs.md) |
+| Open/Closed workflows | [`../02-product/workflows.md`](../02-product/workflows.md) |
+| Runtime implementation guide | [`../09-developer-guide/06-agent-development.md`](../09-developer-guide/06-agent-development.md) |

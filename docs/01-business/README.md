@@ -49,3 +49,10 @@ Use these files when planning outreach, pilots, pricing, and business validation
 ## Operating Principle
 
 Business evidence is a product output. Every pilot should produce usage, revenue, cost, feedback, and testimonial evidence wherever possible.
+
+## Key Decisions
+
+| Decision | Business Impact |
+| --- | --- |
+| [`Price By Graded Submissions`](../99-decisions/2026-06-08-price-by-graded-submissions.md) | Plans and usage limits are bounded by assessments and graded submissions/Closed attempts. |
+| [`Archive Event-Specific Constraints`](../99-decisions/2026-07-20-archive-event-specific-constraints.md) | Archived event pricing or pitch variants are historical only; active pricing lives in [`pricing.md`](pricing.md). |

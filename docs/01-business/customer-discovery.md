@@ -21,7 +21,7 @@ The goal is not to confirm that educators find AI interesting. The goal is to pr
 GradeOps AI is currently built around these hypotheses:
 
 1. Programming assessment workflows are operationally heavy.
-2. Teachers spend significant recurring time creating assessments, grading code, writing feedback, and preparing reports.
+2. Teachers spend significant recurring time creating assessments, grading code, authoring objective questions, writing feedback, analyzing items, and preparing reports.
 3. Small education providers cannot easily hire academic operations support.
 4. Teachers will consider AI support if they keep final approval.
 5. Customers are more likely to buy a guided pilot than a self-serve subscription before trust is established.
@@ -49,7 +49,7 @@ Use a short screener before a full interview.
 ### Must-Have Criteria
 
 - Teaches programming or programming-adjacent skills.
-- Runs practical assessments, exercises, labs, assignments, or projects.
+- Runs practical assessments, objective checks, exercises, labs, assignments, or projects.
 - Reviews student work manually at least sometimes.
 - Has experienced feedback or grading workload pressure.
 - Can influence adoption or payment for a small pilot.
@@ -64,7 +64,7 @@ Use a short screener before a full interview.
 
 ### Poor-Fit Signals
 
-- Only uses auto-graded multiple-choice quizzes.
+- Only uses auto-graded multiple-choice quizzes and has no pain around question quality, item review, reporting, or assessment operations.
 - Has no recurring assessment workflow.
 - Cannot pay or influence payment.
 - Wants a full LMS replacement.
@@ -80,6 +80,7 @@ Keep the interview focused on current behavior, not hypothetical enthusiasm.
 - Who are your students?
 - How often do you run programming assessments?
 - What kinds of submissions do students deliver?
+- Do you also use objective questions such as true/false, single choice, or multiple choice?
 - How many submissions do you typically review per assessment?
 
 ### 2. Current Workflow
@@ -88,8 +89,10 @@ Keep the interview focused on current behavior, not hypothetical enthusiasm.
 - What tools did you use?
 - Where did students submit their work?
 - How did you define the rubric or criteria?
+- If it was objective, how did you create questions and verify the answer key?
 - How did you grade?
 - How did you send feedback?
+- Did you review item quality or annul any questions afterward?
 - Did you prepare any report or summary afterward?
 
 ### 3. Pain And Time
@@ -135,6 +138,17 @@ Ask:
 - At what price would it feel expensive but possible?
 - At what price would it be clearly too expensive?
 
+If the educator uses objective assessments, test the Closed offer variant:
+
+> We operate your next objective programming assessment with AI agents: question generation, distractor and ambiguity review, teacher-approved question bank, frozen answer key, signed student links, deterministic grading, item analytics, and teacher report. Up to 150 attempts.
+
+Ask:
+
+- How do you currently create and reuse question banks?
+- How do you decide whether a question was ambiguous or should be annulled?
+- Would item analytics change how you improve the next assessment?
+- Does signed-link access without student accounts reduce or increase trust?
+
 ## Do Not Pitch Too Early
 
 During discovery, avoid selling immediately. The first goal is to understand the real workflow.
@@ -166,6 +180,8 @@ Better question:
 | Segment | Independent, tutor, bootcamp, academy, etc. |
 | Current workflow | Summary of tools and process |
 | Assessment volume | Submissions per assessment and assessments per month |
+| Assessment modes | Open, Closed, or both |
+| Question-bank workflow | How objective questions are created, reviewed, reused, and retired |
 | Time estimate | Hours per assessment cycle |
 | Pain severity | 1-5 score |
 | Trust requirement | What must be reviewed/approved |

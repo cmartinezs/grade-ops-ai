@@ -6,7 +6,7 @@
 
 ## Context
 
-With Spring AI selected as the agent runtime (see [[technology-stack]]), there is a structural decision to make: should the agent runtime live inside `grade-ops-ai-api` as a module, or in a separate `grade-ops-ai-agents` repository and service?
+With Spring AI selected as the agent runtime (see [`04-architecture/README.md`](../04-architecture/README.md)), there is a structural decision to make: should the agent runtime live inside `grade-ops-ai-api` as a module, or in a separate `grade-ops-ai-agents` repository and service?
 
 Both options are technically viable. The choice affects operational complexity, architecture narrative, and demo clarity.
 

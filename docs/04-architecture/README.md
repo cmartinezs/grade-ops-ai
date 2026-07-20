@@ -53,11 +53,11 @@ Recommended implementation stance:
 
 | Layer | Recommended MVP Choice | Reason |
 | --- | --- | --- |
-| Web | Next.js + TypeScript | Fast teacher workspace and dashboard. See [[technology-stack]]. |
+| Web | Next.js + TypeScript | Fast teacher workspace and dashboard. See [`Technology Stack`](../99-decisions/2026-06-10-technology-stack.md). |
 | API | Spring Boot modular monolith | Strong fit for workflow, security, audit, and persistence. |
-| Agents | Separate agent worker/service or internal module | Keeps LLM orchestration observable and replaceable. |
+| Agents | Separate Spring Boot / Spring AI service | Keeps LLM orchestration observable and replaceable. |
 | AI | Provider adapters for Gemini and OpenAI-compatible APIs | Traceable runtime with environment-specific provider policy. |
-| DB | Cloud SQL PostgreSQL or Firestore | Structured workflow and evidence storage. |
+| DB | PostgreSQL / Cloud SQL PostgreSQL | Structured workflow and evidence storage. |
 | Files | Cloud Storage | Student files, report exports, evidence artifacts. |
 | Runtime | Cloud Run / hosted container runtime | Simple container deployment and environment evidence. |
 | Auth | Firebase Auth or backend JWT | Fast MVP authentication. |
@@ -73,6 +73,7 @@ Recommended implementation stance:
 | [`api-design.md`](api-design.md) | REST API resources, commands, endpoints, DTO expectations, and error behavior. |
 | [`security.md`](security.md) | Authentication, authorization, privacy, data handling, audit, and AI safety posture. |
 | [`deployment.md`](deployment.md) | Environments, Google Cloud deployment, CI/CD, config, observability, and release strategy. |
+| [`beta-environment-design.md`](beta-environment-design.md) | Product-evidence beta environment, demo environment role, provider/config implications. |
 
 ## What Belongs Here
 
@@ -109,11 +110,21 @@ Protect these architecture capabilities first:
 
 1. authenticated teacher workspace;
 2. assessment/rubric/submission persistence;
-3. agent execution with Gemini;
+3. agent execution with provider/model logging;
 4. teacher approval state;
 5. agent log and cost evidence;
 6. report generation;
-7. basic deployment on Google Cloud;
+7. `beta` and `demo` environment roles with evidence of what is actually deployed;
 8. demo-ready observability.
 
 Everything else is secondary until the first real pilot works end to end.
+
+## Key Decisions
+
+| Decision | Architecture Impact |
+| --- | --- |
+| [`Technology Stack`](../99-decisions/2026-06-10-technology-stack.md) | Next.js, Spring Boot, Java 21, Spring AI, PostgreSQL. |
+| [`Agent Runtime Separation`](../99-decisions/2026-06-10-agent-runtime-separation.md) | Agents run outside API; API owns domain/persistence. |
+| [`Agent Provider And Model Policy`](../99-decisions/2026-07-20-agent-provider-model-policy.md) | Runtime records provider/model and supports current Gemini/Groq adapters. |
+| [`Environment Roles`](../99-decisions/2026-07-20-environment-roles.md) | `beta` and `demo` have distinct evidence/deployment responsibilities. |
+| [`Firebase Authentication`](../99-decisions/2026-06-12-firebase-authentication.md) | Teacher identity and Firebase token validation boundary. |

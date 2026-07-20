@@ -2,7 +2,7 @@
 
 An open assessment is designed for practical, hands-on tasks: code submissions, programming exercises, extended written responses. AI agents draft the assessment content, build the grading rubric, analyze submissions, write feedback, detect learning gaps, and generate a final report. You review and approve every output before it has any effect on grading or student-facing content.
 
-This guide walks through the complete cycle from brief to published report.
+This guide walks through the target complete cycle from brief to published report. The current implemented slice covers assessment brief/draft generation and agent execution logging; rubric, grading, feedback, learning-gap, recovery, and teacher report workflows are release targets until visible in the product.
 
 ---
 

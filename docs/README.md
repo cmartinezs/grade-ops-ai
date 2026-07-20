@@ -53,7 +53,7 @@ GradeOps AI helps educators move from a learning goal to reviewed results throug
 1. Teacher defines what they want to evaluate.
 2. Assessment Agent generates the activity draft.
 3. Rubric Agent creates and validates criteria.
-4. Students submit answers, code, or files via secure link.
+4. Teachers load student answers, code, or files for the MVP Open flow.
 5. Grading Agent analyzes submissions against the rubric.
 6. Feedback Agent drafts personalized feedback.
 7. Learning Gap Agent identifies recurring cohort issues.
@@ -102,6 +102,7 @@ Included:
 - Agent execution logs and cost tracking.
 - Evidence capture for users, revenue, customer learning, and product validation.
 - Basic Google Cloud deployment and Gemini API integration.
+- Provider/model-aware agent runtime with current Gemini and Groq adapters.
 
 Not prioritized for the MVP:
 
@@ -144,7 +145,7 @@ Each agent execution should produce structured evidence:
 - agent name;
 - input summary;
 - output summary;
-- model used;
+- provider and model used;
 - status;
 - teacher approval state;
 - estimated time saved;
@@ -178,12 +179,41 @@ Success is measured by evidence, not feature volume.
 - [`/01-business/`](01-business/README.md) — business model, pricing, go-to-market, discovery, and revenue evidence.
 - [`/02-product/`](02-product/README.md) — personas, MVP scope, stories, workflows, and product metrics.
 - [`/03-ai-agents/`](03-ai-agents/README.md) — agent roles, responsibilities, boundaries, prompts, and logs.
-- [`/04-architecture/`](04-architecture/README.md) — system design, data model, API, security, deployment, and Google Cloud assumptions.
-- [`/05-evidence/`](05-evidence/README.md) — templates for proof of demand, usage, revenue, outcomes, and demo evidence.
+- [`/04-architecture/`](04-architecture/README.md) — system design, data model, API, security, deployment, provider policy, and environment roles.
+- [`/05-evidence/`](05-evidence/README.md) — contracts for proof of demand, usage, revenue, costs, agent logs, and value evidence.
 - [`/06-ux/`](06-ux/README.md) — screen inventory, interaction model, and UX design intent for teacher workspace and student access.
+- [`/08-user-guide/`](08-user-guide/README.md) — teacher-facing workflow guide with implementation availability notes.
+- [`/09-developer-guide/`](09-developer-guide/README.md) — local setup, API, database, agent, web, testing, and deployment guidance.
+- [`/10-best-practices/`](10-best-practices/README.md) — reusable Spring Boot and GradeOps-specific implementation checklists.
+- Assessment creation smoke guides — [`local e2e`](guides/008-assessment-creation/story-04/task-02.md), [`beta live check`](guides/008-assessment-creation/story-04/task-03.md), and [`beta post-deploy smoke`](guides/008-assessment-creation/story-04/task-04.md).
 - [`/archive/2026-event/`](archive/2026-event/README.md) — historical event materials, no longer active product constraints.
 - [`/99-decisions/`](99-decisions/README.md) — architecture, product, business, and scope decision records.
+- [`/master-plan/`](master-plan/README.md) — derived executive plan and release sequencing; use it to coordinate, not to replace source docs.
+- Source docs refresh — [`audit`](source-docs-refresh/audit-report.md) and [`final validation`](source-docs-refresh/validation-report.md).
 - [`/.github/copilot-instructions.md`](.github/copilot-instructions.md) — repository guidance for contributors and AI coding agents.
+
+## Canonical Sources
+
+Use active source documentation first. The `master-plan/` folder is a derived planning layer that coordinates releases and decisions, but it does not replace the thematic source folders.
+
+| Need | Start Here |
+| --- | --- |
+| Product/business scope | [`00-project/`](00-project/README.md), [`01-business/`](01-business/README.md), [`02-product/`](02-product/README.md) |
+| Agent contracts and runtime | [`03-ai-agents/`](03-ai-agents/README.md), [`09-developer-guide/06-agent-development.md`](09-developer-guide/06-agent-development.md) |
+| Architecture and implementation contracts | [`04-architecture/`](04-architecture/README.md), [`09-developer-guide/`](09-developer-guide/README.md) |
+| Evidence and validation | [`05-evidence/`](05-evidence/README.md), [`source-docs-refresh/audit-report.md`](source-docs-refresh/audit-report.md) |
+| Durable decisions | [`99-decisions/`](99-decisions/README.md) |
+| Historical event context | [`archive/2026-event/`](archive/2026-event/README.md) |
+
+Key current decisions:
+
+- [`2026-06-10-technology-stack.md`](99-decisions/2026-06-10-technology-stack.md) — Next.js, Spring Boot, Spring AI.
+- [`2026-06-10-closed-assessment-mode.md`](99-decisions/2026-06-10-closed-assessment-mode.md) — Closed assessments are part of product scope.
+- [`2026-06-10-deterministic-grading-for-closed.md`](99-decisions/2026-06-10-deterministic-grading-for-closed.md) — Closed grading is deterministic.
+- [`2026-06-10-student-access-via-secure-link.md`](99-decisions/2026-06-10-student-access-via-secure-link.md) — students use signed links, not accounts.
+- [`2026-07-20-agent-provider-model-policy.md`](99-decisions/2026-07-20-agent-provider-model-policy.md) — agent evidence records provider and model; Gemini and Groq adapters are current.
+- [`2026-07-20-environment-roles.md`](99-decisions/2026-07-20-environment-roles.md) — `beta` and `demo` have distinct roles.
+- [`2026-07-20-archive-event-specific-constraints.md`](99-decisions/2026-07-20-archive-event-specific-constraints.md) — archived event material is historical only.
 
 ## Documentation conventions
 
@@ -202,7 +232,7 @@ Success is measured by evidence, not feature volume.
 - Response intake documented: digital P0, physical paper P1 (OCR/OMR + QR).
 - Curriculum taxonomy defined: P0 string tagging, P1 structured Subject/CurriculumNode/LearningObjective model.
 - Data model, security posture, deployment architecture, and API design documented.
-- Six key architecture/product decisions recorded in `99-decisions/`.
+- Current architecture/product/business decisions recorded in `99-decisions/`.
 - MVP scope, user stories (Epics 1–13), and workflows defined.
 - Evidence-first strategy active: product designed to capture usage, cost, revenue, and operational evidence from day one.
 
@@ -217,6 +247,7 @@ Success is measured by evidence, not feature volume.
 - Prioritize real usage, real feedback, and revenue signals over feature volume.
 - Avoid building a full LMS before the assessment-operations workflow proves value.
 - Make the demo prove the operation, not only the interface.
+- Do not use archived event-specific constraints as active scope.
 
 ## Final positioning
 

@@ -10,6 +10,21 @@
 - Verifique que no hay una implementacion reutilizable.
 - Verifique que no se rompe direccion de dependencias.
 - Verifique que no se introducen secretos.
+- Confirme si el cambio pertenece a `api/`, `agents/`, `web/`, `infra/` o solo `docs/`.
+- Si introduce o modifica un servicio, confirme la tarea de infraestructura asociada.
+
+## Checklist especifico GradeOps AI
+
+- Tipos y contratos fluyen desde API hacia Web; no crear tipos compartidos independientes en frontend.
+- `api/` conserva dominio, workflow state, persistencia, billing y ownership.
+- `agents/` recibe `{Agent}Command`, devuelve `{Agent}Result`/execution payload y no persiste entidades de dominio.
+- Prompts viven como archivos versionados bajo `agents/src/main/resources/prompts/`; no inline prompts en Java.
+- Todo output IA con impacto academico queda en estado revisable antes de aprobar/publicar.
+- Closed assessment grading es deterministico contra snapshot congelado; no usar LLM para decidir puntaje objetivo.
+- Estudiantes no tienen login en MVP; usar `LearnerRef`, `AssessmentInvitation` y links firmados cuando aplique.
+- Cada ejecucion de agente genera o propaga evidencia para `AgentExecutionLog`.
+- Eventos de uso, costo, revenue y aprobacion se modelan como evidencia de producto, no como logs secundarios.
+- Revenue relacionado debe marcar `related_party` explicitamente.
 
 ## Checklist de arquitectura
 
