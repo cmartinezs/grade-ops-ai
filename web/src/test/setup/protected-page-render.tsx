@@ -2,7 +2,7 @@ import { ReactElement } from "react";
 import { render, RenderOptions } from "@testing-library/react";
 import { ShellProvider } from "@/components/shell/ShellContext";
 
-interface ProtectedPageRenderOptions extends Omit<RenderOptions, "wrapper"> {}
+type ProtectedPageRenderOptions = Omit<RenderOptions, "wrapper">;
 
 /**
  * Render a component wrapped in the providers needed for protected routes:

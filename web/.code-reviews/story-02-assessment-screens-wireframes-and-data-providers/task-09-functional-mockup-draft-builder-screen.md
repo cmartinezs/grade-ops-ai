@@ -5,18 +5,55 @@ Scope: `src/app/(protected)/assessments/[id]/draft/page.tsx`, `src/features/asse
 
 ## Veredicto
 
-✅ **APPROVED — READY TO MERGE**
+🔴 **CHANGES REQUESTED — 2 errores de lint bloqueantes**
 
-Todos los gates pasan. La arquitectura es correcta. Los findings de la review anterior (P3 sobre `shellConfig`) fueron atendidos y el PR cierra el gap de testing de páginas protegidas que quedaba pendiente.
+Los 5 findings P3 fueron atendidos, pero las correcciones introdujeron 2 nuevos errores de lint que impiden el merge.
 
 ---
 
-## Gates verificados en vivo
+## Gates verificados en vivo (re-review post-correcciones)
 
 | Gate | Resultado |
 |------|-----------|
-| 29 tests (6 integración + 23 unitarios) | ✅ 29/29 PASS — 2.03s |
-| Lint | ✅ CLEAN — 0 errors, 0 warnings |
+| 28 tests (5 integración + 23 unitarios) | ✅ 28/28 PASS — 1.558s |
+| Lint | ❌ 1 error + 1 warning — **bloqueante**|
+
+---
+
+## Nuevos findings (introducidos por las correcciones)
+
+### 🔴 P1 - `no-empty-object-type` — interface vacía en `protected-page-render.tsx`
+
+- File: `src/test/setup/protected-page-render.tsx:5`
+- Lint error: `An interface declaring no members is equivalent to its supertype  @typescript-eslint/no-empty-object-type`
+
+Al eliminar `shellConfig`, la interfaz quedó vacía: `interface ProtectedPageRenderOptions extends Omit<RenderOptions, "wrapper"> {}`. ESLint rechaza interfaces vacías.
+
+Fix: reemplazar `interface` por `type`:
+```ts
+// Antes (error)
+interface ProtectedPageRenderOptions extends Omit<RenderOptions, "wrapper"> {}
+
+// Después
+type ProtectedPageRenderOptions = Omit<RenderOptions, "wrapper">;
+```
+
+### 🟡 P2 - `no-unused-vars` warning en `_assessmentId`
+
+- File: `src/features/assessment-creation/hooks/useAssessmentDraftBuilderPage.ts:100`
+- Lint warning: `'_assessmentId' is defined but never used  @typescript-eslint/no-unused-vars`
+
+El proyecto usa `next/typescript` que no configura el prefijo `_` como excepción a `no-unused-vars`. El renombrado resuelve el warning de TypeScript pero no el de ESLint.
+
+Fix — dos opciones:
+```ts
+// Opción A: destructuring vacío (semántico, sin parámetro nombrado)
+export function useAssessmentDraftBuilderPage(/* assessmentId: string — unused until task-12 */): RemoteData<...> {
+
+// Opción B: mantener _assessmentId y añadir excepción en eslint.config.mjs
+"@typescript-eslint/no-unused-vars": ["warn", { "argsIgnorePattern": "^_" }]
+```
+Opción A es preferible: no requiere tocar la config global y comunica la intención en el comentario. La firma cambiará cuando task-12 lo use.
 
 ---
 
