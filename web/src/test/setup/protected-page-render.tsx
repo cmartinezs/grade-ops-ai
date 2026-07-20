@@ -2,13 +2,7 @@ import { ReactElement } from "react";
 import { render, RenderOptions } from "@testing-library/react";
 import { ShellProvider } from "@/components/shell/ShellContext";
 
-interface ProtectedPageRenderOptions extends Omit<RenderOptions, "wrapper"> {
-  /**
-   * Optional shell config to set on initial render.
-   * Default: { title: "Test Page" }
-   */
-  shellConfig?: { title: string; subtitle?: string; actions?: React.ReactNode };
-}
+interface ProtectedPageRenderOptions extends Omit<RenderOptions, "wrapper"> {}
 
 /**
  * Render a component wrapped in the providers needed for protected routes:
@@ -20,7 +14,7 @@ interface ProtectedPageRenderOptions extends Omit<RenderOptions, "wrapper"> {
  * - next/navigation (useRouter, usePathname, useSearchParams)
  *
  * @param component - The component to render
- * @param options - RTL render options + shellConfig
+ * @param options - RTL render options
  *
  * @example
  * // In your test file:
@@ -31,10 +25,7 @@ interface ProtectedPageRenderOptions extends Omit<RenderOptions, "wrapper"> {
  * });
  *
  * it("renders the component inside protected layout", () => {
- *   const { getByText } = renderProtectedPage(
- *     <MyProtectedComponent />,
- *     { shellConfig: { title: "My Page" } }
- *   );
+ *   const { getByText } = renderProtectedPage(<MyProtectedComponent />);
  *   expect(getByText(/content/i)).toBeInTheDocument();
  * });
  */

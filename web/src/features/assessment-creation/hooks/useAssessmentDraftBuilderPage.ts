@@ -27,11 +27,11 @@ export interface AssessmentDraftBuilderPageViewModel {
   isSaving: boolean;
   saveFieldErrors: Partial<Record<DraftEditableField, string>> | null;
   saveServerError: string | null;
-  onSave: (values: DraftEditableFields) => void;
+  onSave: (values: DraftEditableFields) => Promise<void>;
   isRegenerating: boolean;
   regenerateFieldError: string | null;
   regenerateAgentError: string | null;
-  onRegenerate: (adjustmentNotes: string) => void;
+  onRegenerate: (adjustmentNotes: string) => Promise<void>;
 }
 
 // Fake dataset only — task-12 replaces this with loadAssessmentDraftBuilderPage (task-10).
@@ -97,7 +97,7 @@ function buildFakeVersions(): AssessmentDraftDto[] {
   ];
 }
 
-export function useAssessmentDraftBuilderPage(assessmentId: string): RemoteData<AssessmentDraftBuilderPageViewModel> {
+export function useAssessmentDraftBuilderPage(_assessmentId: string): RemoteData<AssessmentDraftBuilderPageViewModel> {
   const [versions, setVersions] = useState<AssessmentDraftDto[]>(buildFakeVersions);
   const [selectedVersion, setSelectedVersion] = useState<number>(() => Math.max(...versions.map((v) => v.versionNumber)));
   const [aiDisclosureLabel, setAiDisclosureLabel] = useState<"generado-por-ia" | "version-actual">("version-actual");
@@ -154,8 +154,6 @@ export function useAssessmentDraftBuilderPage(assessmentId: string): RemoteData<
     setAiDisclosureLabel("generado-por-ia");
     setIsRegenerating(false);
   }
-
-  void assessmentId; // unused until task-12 wires the real loader by assessmentId
 
   return {
     status: "ready",

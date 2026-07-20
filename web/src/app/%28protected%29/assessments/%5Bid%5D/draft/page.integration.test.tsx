@@ -142,24 +142,7 @@ describe("DraftBuilderPage (integration)", () => {
     });
   });
 
-  it("displays version history section with multiple versions", () => {
-    renderPage();
-
-    // Get the version history section
-    const versionHistorySection = screen.getByText(/Historial de versiones/i).closest("section");
-    expect(versionHistorySection).toBeInTheDocument();
-
-    // Should have multiple version buttons (4 versions minimum)
-    const versionButtons = versionHistorySection?.querySelectorAll("button") ?? [];
-    expect(versionButtons.length).toBeGreaterThanOrEqual(4);
-
-    // All versions should be present and interactive
-    versionButtons.forEach((btn) => {
-      expect(btn).toBeInTheDocument();
-    });
-  });
-
-  it("displays all versions in the history section (many-versions edge case)", () => {
+  it("displays version history section with multiple versions (many-versions edge case)", () => {
     renderPage();
 
     const versionHistorySection = screen.getByText(/Historial de versiones/i).closest("section");
@@ -168,6 +151,11 @@ describe("DraftBuilderPage (integration)", () => {
     // Should have at least 4 version buttons (v1, v2, v3, v4)
     const versionButtons = versionHistorySection?.querySelectorAll("button") ?? [];
     expect(versionButtons.length).toBeGreaterThanOrEqual(4);
+
+    // All versions should be present and interactive
+    versionButtons.forEach((btn) => {
+      expect(btn).toBeInTheDocument();
+    });
   });
 
   it("displays regenerate section with functional controls", async () => {
@@ -179,13 +167,13 @@ describe("DraftBuilderPage (integration)", () => {
     expect(regenerateButton).toBeInTheDocument();
     expect(regenerateButton).not.toBeDisabled();
 
-    // Find the textarea for adjustment notes (inside regenerate section with id="adjustment-notes")
-    const adjustmentNotesInput = screen.getByDisplayValue("") as HTMLTextAreaElement | null;
-    if (adjustmentNotesInput) {
-      // If we found a textarea, verify we can type in it
-      await user.click(adjustmentNotesInput);
-      await user.type(adjustmentNotesInput, "Test note");
-      expect(adjustmentNotesInput.value).toContain("Test note");
-    }
+    // Find the textarea for adjustment notes using its label
+    const adjustmentNotesInput = screen.getByLabelText(/^Notas de ajuste/) as HTMLTextAreaElement;
+    expect(adjustmentNotesInput).toBeInTheDocument();
+
+    // Verify we can type in it
+    await user.click(adjustmentNotesInput);
+    await user.type(adjustmentNotesInput, "Test note");
+    expect(adjustmentNotesInput.value).toContain("Test note");
   });
 });
