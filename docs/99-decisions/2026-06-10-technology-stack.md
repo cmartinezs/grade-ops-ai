@@ -8,7 +8,7 @@
 
 GradeOps AI is organized in five repositories: `docs`, `web`, `api`, `agents`, `infra`. Each requires a technology stack decision. The constraints are:
 
-- **Hackathon speed**: the MVP must be demonstrable quickly; unfamiliar stacks increase delivery risk.
+- **MVP speed**: the product must be demonstrable quickly; unfamiliar stacks increase delivery risk.
 - **Developer profile**: strong background in Java/Spring Boot; limited prior production experience with Node.js or Python backends.
 - **Google Cloud requirement**: the runtime must use Google Cloud services and Gemini / Vertex AI.
 - **AI-native positioning**: agents must produce structured, observable outputs — not raw LLM text.
@@ -28,7 +28,7 @@ Options considered for the agent runtime:
 | --- | --- |
 | `grade-ops-ai-web` | Next.js + TypeScript + Tailwind CSS |
 | `grade-ops-ai-api` | Spring Boot 4 + Java 21 + PostgreSQL |
-| `grade-ops-ai-agents` | Spring Boot 4 + Java 21 + Spring AI + Gemini / Vertex AI |
+| `grade-ops-ai-agents` | Spring Boot 4 + Java 21 + Spring AI + provider/model adapters |
 | `grade-ops-ai-infra` | Terraform (or OpenTofu) + GitHub Actions + Google Cloud |
 | `grade-ops-ai-docs` | Markdown |
 
@@ -73,7 +73,7 @@ Vertex AI Gemini starter:
 </dependency>
 ```
 
-Configured via `spring.ai.vertex.ai.gemini.project-id`, `location`, credentials, and model name. Use API key (Gemini Developer API) for local development; Vertex AI credentials for demo and production environments.
+Configured through Spring AI provider adapters. Gemini / Vertex AI remains the Google Cloud-oriented path. The current implementation also includes a Groq OpenAI-compatible adapter and provider selector; see [`2026-07-20-agent-provider-model-policy.md`](2026-07-20-agent-provider-model-policy.md).
 
 **`grade-ops-ai-infra` — Terraform + GitHub Actions**
 

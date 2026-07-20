@@ -7,7 +7,7 @@
 
 GradeOps AI se organiza en 15 capacidades de negocio agrupadas en 6 dominios: acceso (docente y estudiante), creación de evaluación (ambos modos), ejecución del ciclo abierto, ejecución del ciclo cerrado, evidencia/operación AI-nativa, y negocio (facturación/límites). Trece agentes de IA atraviesan horizontalmente 9 de las 15 capacidades como mecanismo de automatización, nunca como capacidad en sí mismos — son el "cómo", no el "qué".
 
-Con **D-02 resuelta (modo Closed = P0 del hackathon)**, el mapa de capacidades ya no distingue "Open primero, Closed después": ambos modos comparten el mismo nivel de criticidad MVP, aunque su madurez de implementación real es muy distinta (ver `documentation-diagnosis.md` — solo Epic 01 y parte de Epic 02 tienen código real).
+Con **D-02 resuelta (modo Closed = P0 del validacion MVP)**, el mapa de capacidades ya no distingue "Open primero, Closed después": ambos modos comparten el mismo nivel de criticidad MVP, aunque su madurez de implementación real es muy distinta (ver `documentation-diagnosis.md` — solo Epic 01 y parte de Epic 02 tienen código real).
 
 ## Mapa de capacidades
 
@@ -66,7 +66,7 @@ Con **D-02 resuelta (modo Closed = P0 del hackathon)**, el mapa de capacidades y
 - **C11 Reporte Docente**: reporte consolidado del ciclo, exportación (P1).
 - **C12 Analítica de Ítems (Closed)**: tasa de acierto, índice de dificultad, sugerencias de refuerzo por learning outcome.
 - **C13 Evidencia de Ejecución de Agentes**: log de ejecución, estimación de costo por corrida, estimación de tiempo ahorrado (P1).
-- **C14 Panel de Evidencia de Negocio**: dashboard interno con datos reales de BD (sin mocks) para evidencia de hackathon.
+- **C14 Panel de Evidencia de Negocio**: dashboard interno con datos reales de BD (sin mocks) para evidencia de validacion MVP.
 - **C15 Facturación y Límites de Plan**: tracking de uso vs. límite (sin bloqueo automático — regla de scope MVP), vínculo de evidencia de pago (P1).
 
 ## Actores
@@ -135,7 +135,7 @@ Dado que D-02 confirma que ambos modos son P0, el flujo crítico tiene **una ent
 - **Evidencia**: `AgentExecutionLog` por cada generación/curación, snapshot inmutable como evidencia de integridad, `AssessmentInvitation`/`AssessmentAttempt` como evidencia de acceso.
 - **Métrica**: cobertura de learning outcomes, tasa de acierto por ítem, adopción de modo Closed en pilotos.
 
-Ambas ramas convergen en **C13/C14** como capa de evidencia compartida — es el único punto del sistema donde "valor generado" se vuelve medible y exportable para el hackathon.
+Ambas ramas convergen en **C13/C14** como capa de evidencia compartida — es el único punto del sistema donde "valor generado" se vuelve medible y exportable para el validacion MVP.
 
 ## Dependencias funcionales
 
@@ -154,9 +154,9 @@ Ambas ramas convergen en **C13/C14** como capa de evidencia compartida — es el
 
 Todas las 15 capacidades están dentro del alcance "Must Build" según `02-product/mvp-scope.md`, con la salvedad de subcapacidades P1 explícitas dentro de cada una (regeneración avanzada, exportación de reporte, tono de feedback, notas de recuperación por estudiante, generación de currículo con IA, cobertura curricular, anulación/recálculo, vínculo de evidencia de pago).
 
-## Capacidades hackathon
+## Capacidades validacion MVP
 
-Con D-02 resuelta, el corte de demo del hackathon debe cubrir, como mínimo, el camino P0 de **ambas** ramas del flujo crítico:
+Con D-02 resuelta, el corte de demo de validacion debe cubrir, como mínimo, el camino P0 de **ambas** ramas del flujo crítico:
 
 - C1 (completa) — ya implementada y verificada.
 - C3 (completa, P0) — ya implementada y verificada (Groq/beta).
@@ -174,7 +174,7 @@ Con D-02 resuelta, el corte de demo del hackathon debe cubrir, como mínimo, el 
 - C14 (completa, P0) — no implementada aún.
 - C15 (P0: US-090) — no implementada aún.
 
-Esto confirma cuantitativamente lo que ya señalaba la Fase 01: de 15 capacidades requeridas para el demo del hackathon, solo **2 (C1, C3)** tienen implementación real verificada a la fecha de este diagnóstico (2026-07-17), a ~4 semanas del deadline.
+Esto confirma cuantitativamente lo que ya señalaba la Fase 01: de 15 capacidades requeridas para el demo de validacion, solo **2 (C1, C3)** tienen implementación real verificada a la fecha de este diagnóstico (2026-07-17).
 
 ## Capacidades roadmap
 

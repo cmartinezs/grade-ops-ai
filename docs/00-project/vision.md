@@ -112,12 +112,12 @@ GradeOps AI should build advantage through domain workflow, not only model acces
 - Pricing is bounded by assessments and graded submissions.
 - Unlimited AI grading is not part of the model.
 - The MVP stays focused on programming assessments.
-- The hackathon product is positioned as a business operation, not only a software demo.
+- The MVP is positioned as a business operation, not only a software demo.
 - Public claims must be supported by source evidence or customer evidence.
 
 ## Explicit Boundaries
 
-GradeOps AI should not become, during the hackathon:
+GradeOps AI should not become during MVP validation:
 
 - a complete LMS;
 - a broad school-management platform;
@@ -136,4 +136,4 @@ GradeOps AI should not become, during the hackathon:
 
 ---
 
-← [Hackathon Strategy](hackathon-strategy.md) | [↑ inicio](#vision) | [README](README.md)
+← [Roadmap](roadmap.md) | [↑ inicio](#vision) | [README](README.md)

@@ -8,7 +8,7 @@ It answers:
 
 ## Essence
 
-`05-evidence` exists because the hackathon is not won by a polished demo alone.
+`05-evidence` exists because product validation is not proven by a polished demo alone.
 
 GradeOps AI must prove:
 

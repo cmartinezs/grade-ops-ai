@@ -31,7 +31,7 @@ Programming educators need an AI-native operating layer for practical assessment
 | Student | “Help me understand what I did wrong and what to practice next.” |
 | Bootcamp instructor | “Help me process many similar submissions and identify cohort-wide gaps.” |
 | Small academy owner | “Help me standardize assessment quality without hiring more academic staff.” |
-| Hackathon judge | “Show me a real AI-operated business with customers, revenue, costs, logs, and impact.” |
+| Product evaluator | “Show me a real AI-operated business with customers, revenue, costs, logs, and impact.” |
 
 ## Why Programming Assessment Is Different
 

@@ -4,7 +4,7 @@ All GradeOps AI product user stories, organized by epic.
 
 | Priority | Meaning |
 |----------|---------|
-| P0 | Required for MVP and hackathon demo |
+| P0 | Required for MVP and validation demo |
 | P1 | Important for pilot quality |
 | P2 | Useful later; not required for first MVP |
 | Out | Explicitly outside MVP |
@@ -30,7 +30,7 @@ All GradeOps AI product user stories, organized by epic.
 
 ## MVP Story Cut
 
-Minimum viable story set required for the hackathon demo (all P0):
+Minimum viable story set required for the MVP demo (all P0):
 
 US-001, US-002, US-006, US-007, US-008, US-009, US-010, US-011, US-020, US-021, US-022, US-030, US-031, US-033, US-034, US-040, US-041, US-042, US-050, US-051, US-060, US-061, US-070, US-080, US-081, US-082, US-090
 

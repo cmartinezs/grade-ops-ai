@@ -32,7 +32,7 @@ Incluye:
 
 ## Convenciones
 
-- `P0` indica alcance MVP/hackathon.
+- `P0` indica alcance validacion MVP.
 - `P1` indica mejora posterior o no bloqueante para primer valor.
 - `US-PROPUESTA-*` indica historia faltante recomendada, aun no creada como archivo en `docs/02-product/user-stories/`.
 - `Asistida`, `Supervisada` y `Automatizada` siguen los niveles definidos en la especificacion maestra.
@@ -60,7 +60,7 @@ Incluye:
 | R03 | Open Cohort Report and Impact | Documentada | M | [release-03-open-cohort-report-impact.md](releases/release-03-open-cohort-report-impact.md) |
 | R04 | Closed Question Bank to Snapshot | Documentada | L | [release-04-closed-question-bank-snapshot.md](releases/release-04-closed-question-bank-snapshot.md) |
 | R05 | Closed Student Response and Item Analytics | Documentada | L | [release-05-closed-response-item-analytics.md](releases/release-05-closed-response-item-analytics.md) |
-| R06 | Business Evidence and Hackathon Compliance | Documentada | M | [release-06-business-evidence-hackathon-compliance.md](releases/release-06-business-evidence-hackathon-compliance.md) |
+| R06 | Business Evidence and Operational Readiness | Documentada | M | [release-06-business-evidence-operational-readiness.md](releases/release-06-business-evidence-operational-readiness.md) |
 | R07 | Open Workflow Refinements | Roadmap | M | `releases/release-07-open-workflow-refinements.md` |
 | R08 | Closed and Curriculum Refinements | Roadmap | M | `releases/release-08-closed-curriculum-refinements.md` |
 
@@ -80,7 +80,7 @@ Incluye:
 | Completa | Artefacto generado y revisado para la fase actual. |
 | Documentada | Release con archivo detallado generado. |
 | Planificada | Release definida a nivel estrategico; falta archivo operativo detallado. |
-| Roadmap | Release posterior al corte MVP/hackathon. |
+| Roadmap | Release posterior al corte validacion MVP. |
 | Pendiente | Trabajo aun no ejecutado. |
 | Bloqueada | Requiere decision externa antes de avanzar. |
 

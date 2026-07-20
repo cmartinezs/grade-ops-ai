@@ -1,8 +1,8 @@
 # Metrics
 
-GradeOps AI metrics must prove product value, business viability, AI-native operations, and hackathon evidence.
+GradeOps AI metrics must prove product value, business viability, AI-native operations, and validation evidence.
 
-Metrics are not only analytics. They are part of the product and submission strategy.
+Metrics are not only analytics. They are part of the product and validation strategy.
 
 ## North Star Metric
 
@@ -28,11 +28,11 @@ Why:
 | AI-native operations | Prove agents execute meaningful work |
 | Unit economics | Prove cost and pricing discipline |
 | Business validation | Prove real demand and revenue |
-| Hackathon evidence | Prove submission readiness |
+| Validation evidence | Prove product and business readiness |
 
 ## Product Usage Metrics
 
-| Metric | Definition | Target For Hackathon |
+| Metric | Definition | Target For MVP Validation |
 | --- | --- | ---: |
 | Teachers registered | Accounts created by educators | 30+ stretch / 10+ minimum |
 | Active teachers | Teachers who create or process an assessment | 5+ |
@@ -128,7 +128,7 @@ For MVP, student accounts are not required. Student value can be measured from t
 | Cash cost paid | Actual cash spend |
 | Allocated tooling cost | Development tooling if reported separately |
 
-## Hackathon Evidence Metrics
+## Validation Evidence Metrics
 
 | Evidence Metric | Required Artifact |
 | --- | --- |
@@ -139,8 +139,8 @@ For MVP, student accounts are not required. Student value can be measured from t
 | Costs | Cost ledger/billing evidence |
 | Marketing spend | Marketing ledger or US$0 declaration |
 | Agent logs | Product dashboard/export |
-| API usage | Google/Gemini dashboard screenshots/export |
-| Product demo | 3-minute video |
+| API usage | Provider dashboard screenshots/export |
+| Product demo | Short walkthrough video |
 | Customer proof | Testimonials/interview notes |
 | Impact | Time saved, feedback speed, gaps detected |
 
@@ -247,7 +247,7 @@ Minimum events:
 - report ready;
 - common gaps.
 
-### Operator/Hackathon Dashboard
+### Operator Validation Dashboard
 
 - users;
 - customers/pilots;

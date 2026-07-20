@@ -1,6 +1,6 @@
 # API Reference
 
-This document covers the GradeOps AI REST API. Section 1 documents endpoints that are currently implemented (Epic 01). Section 2 summarizes planned endpoints for Epics 02–13.
+This document covers the GradeOps AI REST API. Section 1 documents endpoints that are currently implemented. Section 2 summarizes planned endpoints that are not yet implemented.
 
 ---
 
@@ -101,7 +101,7 @@ All errors return JSON. The exact shape depends on the error type:
 
 ---
 
-## Section 1 — Implemented endpoints (Epic 01)
+## Section 1 — Implemented endpoints
 
 ### Authentication
 
@@ -412,7 +412,7 @@ Updates pilot program flags on a teacher record. All body fields are optional �
 {
   "planType": "pilot",
   "relatedParty": true,
-  "offerDetails": "Pilot program participant — XPRIZE demo cohort",
+  "offerDetails": "Pilot program participant — early validation cohort",
   "evidenceLink": "https://drive.google.com/...",
   "setBy": "carlos.martinez"
 }
@@ -459,20 +459,36 @@ curl -X PATCH http://localhost:8080/internal/teachers/pZ1mVr3qUBXyKn7oW8sNaC/fla
 
 ---
 
-## Section 2 — Planned endpoints (Epics 02–13)
+### Assessment draft endpoints
+
+The current assessment creation slice is implemented under `/api/v1`.
+
+| Method | Path | Purpose |
+|---|---|---|
+| `GET` | `/api/v1/assessments` | List current teacher's assessments. |
+| `POST` | `/api/v1/assessments` | Create assessment brief. |
+| `POST` | `/api/v1/assessments/{id}/draft` | Run Assessment Agent for the first draft. |
+| `POST` | `/api/v1/assessments/{id}/draft/regenerate` | Regenerate draft from adjustment notes and prior draft. |
+| `PATCH` | `/api/v1/assessments/{id}/draft` | Save teacher edits to draft. |
+| `GET` | `/api/v1/assessments/{id}/draft` | Get current draft. |
+| `GET` | `/api/v1/assessments/{id}/draft/versions` | List draft versions. |
+
+The API calls `agents/` through `agentclient`; the frontend never calls the agents service directly. `api/` persists the assessment, draft version and `AgentExecutionLog` derived from the execution payload returned by `agents/`.
+
+Current Assessment Agent provider/model selection is internal to the agent command/runtime policy. The API must not expose provider secrets or import Spring AI directly.
+
+---
+
+## Section 2 — Planned endpoints
 
 The following endpoints are designed in [`docs/04-architecture/api-design.md`](../04-architecture/api-design.md) and will be implemented in subsequent epics. They are listed here for navigation.
-
-The designed API uses a base path of `/api/v1`. The current implementation does not include this versioned prefix yet — it will be added when Epic 02 development begins.
 
 ### Summary table
 
 | Method | Path | Epic | Description |
 |--------|------|------|-------------|
-| `POST` | `/assessments` | 02 | Create assessment brief |
 | `GET` | `/assessments/{id}` | 02 | Get assessment detail and state |
-| `PATCH` | `/assessments/{id}` | 02 | Update teacher-editable fields |
-| `POST` | `/assessments/{id}/generate-draft` | 02/03 | Run Assessment Agent |
+| `PATCH` | `/assessments/{id}` | 02 | Update teacher-editable assessment fields beyond draft content |
 | `POST` | `/assessments/{id}/approve` | 02 | Approve assessment draft |
 | `POST` | `/assessments/{id}/rubrics/generate` | 03 | Run Rubric Agent |
 | `PATCH` | `/rubrics/{id}` | 03 | Edit rubric criteria |

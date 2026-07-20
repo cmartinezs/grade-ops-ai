@@ -466,14 +466,14 @@ No application code. The canonical source of truth for product strategy, archite
 
 ```
 docs/
-├── 00-project/     — Vision, pitch, roadmap, hackathon strategy
+├── 00-project/     — Vision, pitch, roadmap, cost model
 ├── 01-business/    — Business model, pricing, go-to-market
 ├── 02-product/     — Personas, MVP scope, user stories
 ├── 03-ai-agents/   — Agent roles, contracts, execution logs
 ├── 04-architecture/ — System design, data model, API design, security
 ├── 05-evidence/    — Usage, revenue, testimonials, agent log evidence
 ├── 06-ux/          — Screen inventory, interaction model
-├── 07-hackathon/   — Demo script, evidence checklist, submission narrative
+├── archive/        — Historical material no longer active
 ├── 08-user-guide/  — End-user documentation
 ├── 09-developer-guide/ — This guide
 ├── 99-decisions/   — Architecture decision records (ADR format)

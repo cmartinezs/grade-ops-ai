@@ -7,9 +7,9 @@
 
 GradeOps AI tiene una documentación de negocio y producto extensa (~180 archivos Markdown en `docs/`, excluyendo `.raw/` y `.all-by-category/`) y un nivel de implementación real muy superior a lo que el propio repositorio declara de sí mismo. El hallazgo central de esta fase es que **existen tres pares de "verdad declarada vs. verdad operativa" sin reconciliar**:
 
-1. **Modo de producto**: `00-project/` (capa canónica según su propio README) describe un producto de un solo modo (Open, 8 agentes); `02-product/`, `03-ai-agents/`, `CLAUDE.md` y el propio ADR `2026-06-10-closed-assessment-mode.md` describen dos modos (Open + Closed, 13 agentes). El ADR existe y debería primar, pero `00-project/` nunca se actualizó tras esa decisión — y el propio corte de historias P0 del hackathon (`02-product/user-stories.md`) excluye las 3 épicas del modo Closed pese a que `workflows.md`/`mvp-scope.md` las marcan P0.
+1. **Modo de producto**: `00-project/` (capa canónica según su propio README) describe un producto de un solo modo (Open, 8 agentes); `02-product/`, `03-ai-agents/`, `CLAUDE.md` y el propio ADR `2026-06-10-closed-assessment-mode.md` describen dos modos (Open + Closed, 13 agentes). El ADR existe y debería primar, pero `00-project/` nunca se actualizó tras esa decisión — y el propio corte de historias P0 del validacion MVP (`02-product/user-stories.md`) excluye las 3 épicas del modo Closed pese a que `workflows.md`/`mvp-scope.md` las marcan P0.
 2. **Proveedor de IA**: toda la documentación de decisión (`99-decisions/2026-06-10-technology-stack.md`, `agent-runtime-separation.md`) y `CLAUDE.md` raíz fijan Vertex AI Gemini como único proveedor. El código real (`agents/`) tiene Groq como proveedor **por defecto**, ya implementado, testeado y con dos plannings cerradas (`agents/.planning/finished/002-groq-genai-provider`, root `.planning/finished/009-groq-infra-provisioning`). No existe ADR para esta decisión ya tomada y ejecutada.
-3. **Entorno de despliegue**: `CLAUDE.md` raíz, `04-architecture/system-architecture.md` y `07-hackathon/*` describen exclusivamente el entorno `demo` (GCP Cloud Run + Cloud SQL). La retrospectiva de `009-groq-infra-provisioning` confirma que **ese entorno nunca ha sido desplegado** (`terraform apply` nunca ejecutado contra GCP real). El único entorno con evidencia real de funcionamiento end-to-end (flujo brief→generate con Groq, verificado 2026-07-16/17) es `beta` (Render + Vercel + Neon), documentado solo en `04-architecture/beta-environment-design.md` y completamente ausente de `CLAUDE.md` raíz. Dado que las reglas del hackathon (`00-project/hackathon-strategy.md`) exigen explícitamente Google Cloud + Gemini API, esta es la discrepancia de mayor riesgo detectada.
+3. **Entorno de despliegue**: `CLAUDE.md` raíz, `04-architecture/system-architecture.md` y `materiales archivados del evento` describen exclusivamente el entorno `demo` (GCP Cloud Run + Cloud SQL). La retrospectiva de `009-groq-infra-provisioning` confirma que **ese entorno nunca ha sido desplegado** (`terraform apply` nunca ejecutado contra GCP real). El único entorno con evidencia real de funcionamiento end-to-end (flujo brief→generate con Groq, verificado 2026-07-16/17) es `beta` (Render + Vercel + Neon), documentado solo en `04-architecture/beta-environment-design.md` y completamente ausente de `CLAUDE.md` raíz. Dado que las reglas del validacion MVP (`materiales archivados del evento`) exigen explícitamente Google Cloud + Gemini API, esta es la discrepancia de mayor riesgo detectada.
 
 Fuera de estos tres ejes, la documentación de negocio (00-project, 01-business) es madura y internamente consistente (salvo por el punto 1), el modelo de agentes (03-ai-agents) es completo y uniforme (13/13 documentados), y la guía de desarrollador (09-developer-guide) está sistemáticamente desfasada respecto al código real — repite tres veces la afirmación falsa de que `agents/` es "scaffolding sin lógica implementada".
 
@@ -18,7 +18,7 @@ El estado general es: **documentación de intención sólida, documentación de 
 ## Fuentes revisadas
 
 **Documentación (`docs/`, excluyendo `.raw/` y `.all-by-category/`):**
-`00-project/*` (9), `01-business/*` (6), `02-product/*` nivel superior (10) + `02-product/user-stories/` (62 historias en 13 épicas + out-of-scope + README + template), `03-ai-agents/*` (15), `04-architecture/*` (8), `05-evidence/*` (6), `06-ux/*` (4), `07-hackathon/*` (4), `08-user-guide/*` (8), `09-developer-guide/*` (11), `10-best-practices/*` (9), `99-decisions/*` (16, incluye 13 ADRs fechados), `CLAUDE.md` (raíz y `docs/`), `README.md` (raíz y `docs/`), `.github/copilot-instructions.md`, `master-plan-specification.md`.
+`00-project/*` (9), `01-business/*` (6), `02-product/*` nivel superior (10) + `02-product/user-stories/` (62 historias en 13 épicas + out-of-scope + README + template), `03-ai-agents/*` (15), `04-architecture/*` (8), `05-evidence/*` (6), `06-ux/*` (4), `materiales archivados del evento` (4), `08-user-guide/*` (8), `09-developer-guide/*` (11), `10-best-practices/*` (9), `99-decisions/*` (16, incluye 13 ADRs fechados), `CLAUDE.md` (raíz y `docs/`), `README.md` (raíz y `docs/`), `.github/copilot-instructions.md`, `master-plan-specification.md`.
 
 **Código y estado de ejecución real (contraste):**
 - `api/`: árbol de paquetes (`cl.gradeops.ai.api`), 12 migraciones Flyway (V1–V12), 4 `@RestController`, 6 `@Entity`, 55 archivos de test.
@@ -47,7 +47,7 @@ El estado general es: **documentación de intención sólida, documentación de 
 - Cubre de punta a punta el ciclo Open (brief → draft → rúbrica → submissions → grading → feedback → gaps → recovery → report) y el ciclo Closed (generación de preguntas → curación de calidad/ambigüedad → ensamblaje → publicación con snapshot → intake de estudiante → grading determinístico → analítica de ítems).
 - El flujo crítico de negocio (onboarding docente → crear evaluación → calificar → evidenciar) está bien cubierto por `02-product/workflows.md` y por la implementación real (Epic 01 y 02 son las únicas con ejecución).
 - Vacío funcional real: no hay ningún documento que defina el flujo **mixto** (open+closed en un mismo assessment) más allá de mencionarlo como diferido — correctamente fuera de alcance, no es un vacío a resolver ahora.
-- Vacío funcional real: el modo Closed, pese a estar diseñado con detalle funcional completo, no tiene ninguna historia de usuario en el corte P0 del hackathon declarado en `02-product/user-stories.md`.
+- Vacío funcional real: el modo Closed, pese a estar diseñado con detalle funcional completo, no tiene ninguna historia de usuario en el corte P0 del validacion MVP declarado en `02-product/user-stories.md`.
 
 ## Cobertura técnica
 
@@ -61,9 +61,9 @@ El estado general es: **documentación de intención sólida, documentación de 
 
 - Modelo de negocio, pricing, GTM y customer discovery están completos y coherentes entre sí (00-project/cost-model.md ↔ 01-business/pricing.md coinciden cifra a cifra).
 - Vacío de negocio real: **ningún documento de 01-business/ contempla el modo Closed** — no hay ángulo de venta, persona compradora ni mensaje diferenciado para evaluación objetiva pese a que 02-product lo trata como paridad de producto.
-- Contradicción de negocio real: las cifras de pricing en `07-hackathon/submission-narrative.md` (borrador de narrativa pública) no coinciden con las cifras canónicas de `cost-model.md`/`pricing.md`.
+- Contradicción de negocio real: las cifras de pricing en `materiales archivados del evento` (borrador de narrativa pública) no coinciden con las cifras canónicas de `cost-model.md`/`pricing.md`.
 - El presupuesto de tokens/costo (`cost-model.md`) solo cubre los pasos del modo Open — no incluye los 5 agentes del modo Closed.
-- Todos los artefactos de evidencia real (`05-evidence/*`, `07-hackathon/evidence-checklist.md`, `submission-narrative.md`) están vacíos o con placeholders — consistente con estar en fase de descubrimiento, pero es un riesgo de tiempo dado que quedan ~4 semanas para el deadline del hackathon (2026-08-17).
+- Todos los artefactos de evidencia real (`05-evidence/*`, `materiales archivados del evento`, `submission-narrative.md`) están vacíos o con placeholders — consistente con estar en fase de descubrimiento, pero es un riesgo de tiempo dado que quedan ~4 semanas para el plazo externo archivado.
 
 ## Cobertura de automatización
 
@@ -82,13 +82,13 @@ El estado general es: **documentación de intención sólida, documentación de 
 
 | # | Contradicción | Documentos involucrados | Severidad aparente |
 |---|---|---|---|
-| C1 | Alcance de producto: 8 agentes/solo Open (00-project) vs. 13 agentes/Open+Closed (02-product, 03-ai-agents, CLAUDE.md, ADR closed-assessment-mode) | `00-project/solution.md`, `hackathon-strategy.md`, `roadmap.md`, `cost-model.md`, `pitch.md` vs. `02-product/*`, `03-ai-agents/*`, `99-decisions/2026-06-10-closed-assessment-mode.md` | Alta — 00-project es la capa canónica declarada y no refleja una decisión ya tomada |
+| C1 | Alcance de producto: 8 agentes/solo Open (00-project) vs. 13 agentes/Open+Closed (02-product, 03-ai-agents, CLAUDE.md, ADR closed-assessment-mode) | `00-project/solution.md`, `materiales archivados del evento.md`, `roadmap.md`, `cost-model.md`, `pitch.md` vs. `02-product/*`, `03-ai-agents/*`, `99-decisions/2026-06-10-closed-assessment-mode.md` | Alta — 00-project es la capa canónica declarada y no refleja una decisión ya tomada |
 | C2 | Proveedor de IA: Vertex AI Gemini exclusivo (ADR, CLAUDE.md) vs. Groq como proveedor real por defecto (código, 2 plannings cerradas) | `99-decisions/2026-06-10-technology-stack.md`, `agent-runtime-separation.md`, `CLAUDE.md` raíz vs. `agents/src/.../groq/`, `agents/.planning/finished/002-groq-genai-provider`, `.planning/finished/009-groq-infra-provisioning` | Alta — decisión ya ejecutada sin registro formal |
-| C3 | Entorno objetivo: `demo` GCP (única descripción en CLAUDE.md/04-architecture/07-hackathon) nunca desplegado vs. `beta` Render (único con evidencia real de funcionamiento) documentado solo en un archivo aislado | `CLAUDE.md` raíz, `04-architecture/system-architecture.md`, `07-hackathon/*` vs. `04-architecture/beta-environment-design.md`, `.planning/finished/009-groq-infra-provisioning/README.md`, `.planning/active/008-assessment-creation/02-deepening/story-04-*` | **Crítica** — el hackathon exige explícitamente Google Cloud + Gemini API |
+| C3 | Entorno objetivo: `demo` GCP (única descripción en CLAUDE.md/04-architecture/materiales archivados del evento) nunca desplegado vs. `beta` Render (único con evidencia real de funcionamiento) documentado solo en un archivo aislado | `CLAUDE.md` raíz, `04-architecture/system-architecture.md`, `materiales archivados del evento` vs. `04-architecture/beta-environment-design.md`, `.planning/finished/009-groq-infra-provisioning/README.md`, `.planning/active/008-assessment-creation/02-deepening/story-04-*` | **Crítica** — el validacion MVP exige explícitamente Google Cloud + Gemini API |
 | C4 | Corte P0 de historias (`user-stories.md`) excluye épicas 11-13 (Closed) pese a que `workflows.md` y `mvp-scope.md` marcan esos flujos como P0 | `02-product/user-stories.md` vs. `02-product/workflows.md`, `mvp-scope.md` | Alta |
-| C5 | Guion de demo no muestra el flujo Closed pese a que su propio checklist de pre-grabación exige datos semilla de modo Closed | `07-hackathon/demo-script.md` (checklist vs. escenas 1-9) | Media |
-| C6 | Cifras de pricing distintas entre la narrativa pública de submission y los documentos canónicos de pricing | `07-hackathon/submission-narrative.md` vs. `00-project/cost-model.md`, `01-business/pricing.md` | Media |
-| C7 | Stack técnico presentado como "opciones abiertas" en el documento canónico vs. ya decidido y en producción en la narrativa de submission | `00-project/solution.md` vs. `07-hackathon/submission-narrative.md`, `99-decisions/2026-06-10-technology-stack.md` | Media |
+| C5 | Guion de demo no muestra el flujo Closed pese a que su propio checklist de pre-grabación exige datos semilla de modo Closed | `materiales archivados del evento` (checklist vs. escenas 1-9) | Media |
+| C6 | Cifras de pricing distintas entre la narrativa pública de submission y los documentos canónicos de pricing | `materiales archivados del evento` vs. `00-project/cost-model.md`, `01-business/pricing.md` | Media |
+| C7 | Stack técnico presentado como "opciones abiertas" en el documento canónico vs. ya decidido y en producción en la narrativa de submission | `00-project/solution.md` vs. `materiales archivados del evento`, `99-decisions/2026-06-10-technology-stack.md` | Media |
 | C8 | Colisión de IDs de historia: US-010/011/012 existen simultáneamente en Epic 01 y Epic 02 con contenidos distintos | `02-product/user-stories/epic-01-teacher-onboarding/{10,11,12}-*.md` vs. `epic-02-assessment-creation/{01,02,03}-*.md` | Alta para trazabilidad de Fase 02 |
 | C9 | "Firebase Authentication" es una decisión formal (ADR) e implementada en código, pero ausente del diagrama/arquitectura de `CLAUDE.md` raíz | `99-decisions/2026-06-12-firebase-authentication.md`, código real vs. `CLAUDE.md` raíz | Media |
 | C10 | Tres archivos de `09-developer-guide/` afirman independientemente que `agents/` es "scaffolding sin lógica implementada" | `02-repository-map.md`, `06-agent-development.md`, `09-deployment-guide.md`, `01-local-setup.md`, `05-database-guide.md` vs. código real (adaptador Groq con tests) | Alta para riesgo de retrabajo en Fase 02 |
@@ -96,11 +96,11 @@ El estado general es: **documentación de intención sólida, documentación de 
 
 ## Duplicidades
 
-- `00-project/hackathon-strategy.md` ↔ `01-business/hackathon-strategy.md`: duplicidad **intencional y declarada** (estrategia vs. ejecución de evidencia de negocio). No requiere acción.
+- `materiales archivados del evento` ↔ `materiales archivados del evento`: duplicidad **intencional y declarada** (estrategia vs. ejecución de evidencia de negocio). No requiere acción.
 - `00-project/cost-model.md` ↔ `01-business/pricing.md`: contenido de pricing duplicado casi palabra por palabra, sin contradicción de cifras hoy, pero es el mecanismo que ya produjo la contradicción C6 en un tercer documento derivado. Riesgo de divergencia futura si no se convierte en una única fuente con referencia cruzada.
-- `09-developer-guide/00-00-manual-steps.md` ↔ `00-gcp-project-setup.md`: duplicado casi idéntico (texto plano vs. Markdown formateado) — parece artefacto de generación no depurado.
+- Un duplicado textual de `00-gcp-project-setup.md` fue archivado como material histórico.
 - Modelo de "log de agente" duplicado con distinta completitud en `05-evidence/agent-logs.md`, `06-ux/teacher-workspace-ux.md` y `08-user-guide/06-dashboard-and-workspace.md`.
-- `00-project/hackathon-strategy.md` (outline de demo) ↔ `07-hackathon/demo-script.md` (guion ejecutable): duplicidad intencional de nivel estratégico vs. ejecución, con timecodes ligeramente distintos entre ambos.
+- `materiales archivados del evento` (outline de demo) ↔ `materiales archivados del evento` (guion ejecutable): duplicidad intencional de nivel estratégico vs. ejecución, con timecodes ligeramente distintos entre ambos.
 
 ## Vacíos
 
@@ -128,20 +128,20 @@ Ver tabla de contradicciones C2, C3, C9, C10, C11 arriba — son, en esencia, to
 
 ## Riesgos iniciales
 
-1. **Riesgo crítico de elegibilidad del hackathon**: si la evaluación de jurado requiere evidencia de despliegue en Google Cloud (`demo`), y el único sistema con evidencia real funciona en Render (`beta`) con Groq, existe riesgo de incumplimiento de bases. Debe investigarse y resolverse con la mayor urgencia posible dentro de esta planificación.
+1. **Riesgo crítico de elegibilidad del validacion MVP**: si la evaluación de jurado requiere evidencia de despliegue en Google Cloud (`demo`), y el único sistema con evidencia real funciona en Render (`beta`) con Groq, existe riesgo de incumplimiento de bases. Debe investigarse y resolverse con la mayor urgencia posible dentro de esta planificación.
 2. **Riesgo de scope creep no reconocido**: el modo Closed se trata como P0 en documentos de flujo pero está excluido del corte P0 real y del guion de demo — si se decide incluirlo tarde, compite por el mismo tiempo limitado (~4 semanas) que otras prioridades del roadmap.
 3. **Riesgo temporal de negocio**: `roadmap.md` fija un criterio de kill/pivot para "mediados de julio" (ya estamos en esa ventana, 2026-07-17) sin ningún registro de si las condiciones se cumplieron. Esto no es resoluble solo con documentación — requiere una decisión humana explícita antes de que el Master Plan defina releases.
 4. **Riesgo de retrabajo por documentación desactualizada**: si Fase 02 (capacidades y user stories) o cualquier futuro colaborador se guía por `09-developer-guide/` para estimar qué falta construir, subestimará sistemáticamente el trabajo ya hecho en `agents/` e `infra/`.
-5. **Riesgo de evidencia insuficiente a tiempo**: todos los artefactos de evidencia de negocio están vacíos a ~4 semanas del deadline; el volumen de trabajo de captura de evidencia (entrevistas, pilotos, revenue) no tiene todavía ningún dato real.
+5. **Riesgo de evidencia insuficiente a tiempo**: todos los artefactos de evidencia de negocio están vacíos para validar el MVP; el volumen de trabajo de captura de evidencia (entrevistas, pilotos, revenue) no tiene todavía ningún dato real.
 6. **Riesgo de trazabilidad rota**: la colisión de IDs US-010/011/012 entre Epic 01 y Epic 02 puede propagarse a la Fase 02 (que no puede modificar historias originales) si no se resuelve antes.
 
 ## Recomendaciones
 
-1. Resolver primero, y con más urgencia que cualquier otra cosa en este diagnóstico, la pregunta del entorno de despliegue objetivo para el hackathon (`demo`/GCP vs. `beta`/Render) — ver decisión bloqueante D-01 en `decisions-and-assumptions.md`.
+1. Resolver primero, y con más urgencia que cualquier otra cosa en este diagnóstico, la pregunta del entorno de despliegue objetivo para el validacion MVP (`demo`/GCP vs. `beta`/Render) — ver decisión bloqueante D-01 en `decisions-and-assumptions.md`.
 2. Antes de iniciar la Fase 02 formalmente, renumerar la colisión de IDs entre Epic 01 y Epic 02 (fuera del alcance de escritura de las fases del Master Plan — requiere edición directa de las historias originales).
 3. Redactar los dos ADRs faltantes (proveedor Groq por defecto; adopción del entorno beta) para que `99-decisions/` refleje decisiones ya tomadas y ejecutadas.
 4. Actualizar `CLAUDE.md` raíz para reflejar el estado real de madurez de cada repo (ya no "Scaffolding"), incluir Firebase en el diagrama de arquitectura, y mencionar la existencia del entorno beta.
-5. Decidir explícitamente si el modo Closed entra al corte P0 del hackathon; propagar esa decisión de forma consistente a `user-stories.md`, `demo-script.md` y `01-business/`.
+5. Decidir explícitamente si el modo Closed entra al corte P0 del validacion MVP; propagar esa decisión de forma consistente a `user-stories.md`, `demo-script.md` y `01-business/`.
 6. Unificar el modelo de campos de "log de agente" en una sola fuente de verdad (recomendado: la versión rica de `06-ux`/`08-user-guide`, alineada a los 14 campos de `master-plan-specification.md`) y usarla para corregir `05-evidence/agent-logs.md`.
 7. Corregir las tres/cinco menciones de "scaffolding" en `09-developer-guide/` y el índice de `99-decisions/README.md`.
 8. Reconciliar las cifras de pricing de `submission-narrative.md` contra `cost-model.md`/`pricing.md` antes de cualquier publicación externa.

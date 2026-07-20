@@ -39,7 +39,7 @@ It helps educators move from a learning goal to reviewed feedback and teacher re
 | Learning gaps | Cohort summary | Common mistake clustering | Longitudinal analytics | Predictive student profiling |
 | Recovery | Suggested activity | Exportable recommendation | Recovery plan library | Adaptive course engine |
 | Reporting | Teacher report | Dashboard screenshots | Multi-cohort analytics | Executive BI suite |
-| Evidence | Agent logs, API usage, cost estimate | Hackathon dashboard | Audit export | Complex compliance workflows |
+| Evidence | Agent logs, API usage, cost estimate | Product validation dashboard | Audit export | Complex compliance workflows |
 | Payments | Manual or Stripe evidence | Pilot Pack checkout | Full billing portal | Marketplace |
 
 ## Agent Responsibilities
@@ -75,7 +75,7 @@ flowchart TD
   A --> B --> C --> D --> E --> F --> G --> H --> I --> J --> K --> L
 ```
 
-The product should show this choreography visually in the demo. The judges should understand that AI is operating the workflow, not only answering prompts.
+The product should show this choreography visually in demos. Evaluators should understand that AI is operating the workflow, not only answering prompts.
 
 ## Human Control Model
 
@@ -125,7 +125,7 @@ Each agent execution should record:
 - final action taken;
 - whether the output was edited, approved, rejected, or published.
 
-This evidence is not only observability. It is part of the business narrative for the hackathon.
+This evidence is not only observability. It is part of the business narrative for pilots, sales, and product validation.
 
 ## Minimal Data Model
 
@@ -168,8 +168,8 @@ The MVP should use a simple, defensible architecture:
 
 - frontend for teacher workflow and dashboard;
 - backend API for orchestration and persistence;
-- Gemini API for at least one deployed LLM call;
-- at least one Google Cloud product in production;
+- provider-backed LLM calls through the agent runtime;
+- a production-like deployment path with auditable cloud/API usage;
 - structured storage for assessments, submissions, rubrics, feedback, and logs;
 - operational dashboard for usage, agent runs, cost, and evidence.
 
@@ -180,7 +180,7 @@ Valid implementation candidates:
 | Frontend | Next.js or Angular | Choose speed and confidence over novelty. |
 | Backend | Spring Boot or Node/NestJS | Spring Boot fits existing strength; Node may speed agent orchestration. |
 | Runtime | Cloud Run | Clean fit for containerized backend/agent workers. |
-| AI | Gemini API / Vertex AI Gemini | Required for deployed LLM usage. |
+| AI | Provider adapters for Gemini and OpenAI-compatible APIs | Select provider by environment and evidence needs. |
 | Data | Firestore or Cloud SQL PostgreSQL | Firestore for speed, PostgreSQL for relational consistency. |
 | Storage | Cloud Storage | Student files, exports, report artifacts. |
 | Logs | Cloud Logging plus DB business logs | Technical logs and business evidence should not be mixed only in stdout. |
@@ -202,7 +202,7 @@ Use model routing to control cost:
 | Teacher reports | Flash-class model. |
 | Premium review | Stronger fallback model only when needed. |
 
-Model names and pricing change. The cost model must be verified against official pricing before deployment and before final submission.
+Model names and pricing change. The cost model must be verified against official pricing before deployment and before customer-facing commitments.
 
 ## Security, Privacy, And Trust
 
@@ -260,7 +260,7 @@ GradeOps AI is not a generic quiz generator.
 
 It is an AI-native assessment operations platform where agents run meaningful workflow steps and teachers retain final pedagogical authority.
 
-## Hackathon Relevance
+## Product Validation Relevance
 
 GradeOps AI is designed to produce the evidence needed for a credible AI venture:
 

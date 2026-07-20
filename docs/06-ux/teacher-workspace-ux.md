@@ -144,7 +144,7 @@ The agent log viewer must be presentable in the 3-minute demo. It is the most im
 
 **Intent:** Show that the product is running a real business operation, not only generating text.
 
-For the hackathon demo, this screen must show:
+For the validation demo, this screen must show:
 
 - Total assessments run.
 - Total graded submissions.

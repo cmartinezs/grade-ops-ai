@@ -26,7 +26,7 @@ user-stories/
 
 ## MVP Story Cut
 
-P0 stories required for the hackathon demo:
+P0 stories required for the MVP demo:
 
 US-001, US-002, US-010, US-011, US-020, US-021, US-022, US-030, US-031, US-033, US-034, US-040, US-041, US-042, US-050, US-051, US-060, US-061, US-070, US-080, US-081, US-082, US-090
 

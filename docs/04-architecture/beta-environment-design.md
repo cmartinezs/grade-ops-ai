@@ -86,11 +86,10 @@ Spring AI's `ChatClient` is the port. No custom interface is needed — Spring A
 
 | Provider | Profile | Spring AI starter |
 |---|---|---|
-| Vertex AI Gemini | `demo` | `spring-ai-vertex-ai-gemini-spring-boot-starter` |
-| Google AI Studio | `beta` (primary, per this design) | `spring-ai-google-ai-gemini-spring-boot-starter` |
-| OpenAI-compatible (Groq, Together AI, OpenRouter) | `beta` (fallback) | `spring-ai-openai-spring-boot-starter` with custom `base-url` |
+| Vertex AI / Google GenAI Gemini | `demo`, supported in `beta` when configured | Spring AI Google GenAI / Vertex-compatible model support |
+| OpenAI-compatible Groq | `beta`, current default provider | Spring AI OpenAI-compatible model support with custom `base-url` |
 
-> **Known drift (2026-07-17, `008-assessment-creation` story-04):** `agents/src/main/resources/application.yml`'s `app.agents.llm.default-provider` is unconditionally `groq`, not profile-specific — so `beta` actually defaults to Groq today, not Google AI Studio as this table's "primary" framing implies. Not yet reconciled; flagged here rather than silently resolved one way or the other. See `008-assessment-creation` story-04's Residuals for the open question of which should be primary.
+> **Decision update (2026-07-20):** `docs/99-decisions/2026-07-20-agent-provider-model-policy.md` formalizes the current policy: Groq is the current default provider for the implemented Assessment Agent slice, while Gemini remains supported for Google Cloud-oriented deployments.
 
 The model name is never hardcoded. Both providers are wired via `agents/src/main/resources/application-beta.yml`, keyed off environment variables so the model can change without a code change:
 
@@ -112,7 +111,7 @@ spring:
           model: ${GRADEOPS_GROQ_MODEL}
 ```
 
-Both providers are always configured — `app.agents.llm.default-provider` (see the drift note above) selects which one handles a request that doesn't explicitly name a provider; there is no Maven-starter swap required to change providers.
+Both providers can be configured in the same profile. `app.agents.llm.default-provider` selects which one handles a request that does not explicitly name a provider; there is no Maven-starter swap required to change providers.
 
 ---
 

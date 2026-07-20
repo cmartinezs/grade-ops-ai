@@ -35,7 +35,7 @@ Examples:
 - Product scope decisions.
 - Naming decisions.
 - Pricing model decisions.
-- Compliance or hackathon interpretation decisions.
+- Product, environment, or external-claim interpretation decisions.
 - Documentation conventions that affect the whole repo.
 
 ## What Does Not Belong Here
@@ -73,6 +73,10 @@ A decision record should explain:
 | [`2026-06-10-technology-stack.md`](2026-06-10-technology-stack.md) | Next.js for web, Spring Boot + Java 21 for API and agents, Spring AI for the agent runtime | Accepted |
 | [`2026-06-10-agent-runtime-separation.md`](2026-06-10-agent-runtime-separation.md) | `grade-ops-ai-agents` is a separate service; agents do not live inside the API | Accepted |
 | [`2026-06-12-firebase-authentication.md`](2026-06-12-firebase-authentication.md) | Firebase Authentication as identity provider; ID token validation in `api/`; operator internal endpoint; pre-verified email for provisioned accounts; refresh-token revocation on sign-out | Accepted |
+| [`2026-06-21-form-validation-react-hook-form-zod.md`](2026-06-21-form-validation-react-hook-form-zod.md) | Web forms use React Hook Form with Zod validation | Accepted |
+| [`2026-06-21-web-design-system.md`](2026-06-21-web-design-system.md) | Web UI follows the documented design system and token set | Accepted |
+| [`2026-07-20-agent-provider-model-policy.md`](2026-07-20-agent-provider-model-policy.md) | Agent runtime records provider/model and supports current Gemini + Groq adapters; Groq is current default, Gemini remains supported for Google Cloud-oriented environments | Accepted |
+| [`2026-07-20-environment-roles.md`](2026-07-20-environment-roles.md) | `beta` is product-evidence environment; `demo` is the Google Cloud target with Gemini-capable provider path | Accepted |
 
 ## Current Template
 

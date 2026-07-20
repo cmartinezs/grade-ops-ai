@@ -9,7 +9,7 @@
 | Archivo | `docs/master-plan/releases/release-01-assessment-creation-evidence-backbone.md` |
 | Estado | Documentada |
 | Complejidad | M |
-| Corte | MVP / hackathon foundation |
+| Corte | MVP / validacion MVP foundation |
 | Fuente estrategica | `docs/master-plan/analysis/release-strategy.md` |
 
 ## 2. Prevalidacion
@@ -35,7 +35,7 @@ El repositorio ya tiene piezas importantes implementadas, pero la evidencia no e
 
 ## 5. Hipotesis
 
-Si el primer flujo de generacion de assessment produce logs completos, costo estimado, estado de aprobacion y recuperacion de fallos, entonces el resto de agentes puede incorporarse con menor retrabajo y el producto empieza a generar evidencia de hackathon desde el primer valor visible.
+Si el primer flujo de generacion de assessment produce logs completos, costo estimado, estado de aprobacion y recuperacion de fallos, entonces el resto de agentes puede incorporarse con menor retrabajo y el producto empieza a generar evidencia de validacion MVP desde el primer valor visible.
 
 ## 6. Actor beneficiado
 

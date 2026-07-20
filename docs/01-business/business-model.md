@@ -4,7 +4,7 @@ GradeOps AI is an AI-native assessment operations business for programming educa
 
 It helps teachers, tutors, bootcamps, and small academies run practical programming assessments with AI agents while preserving teacher authority over grading, feedback, and student-facing decisions.
 
-This document defines the business model for the hackathon and early market validation. The canonical strategic foundation remains `../00-project/`.
+This document defines the business model for early market validation. The canonical strategic foundation remains `../00-project/`.
 
 ## Canonical Alignment
 
@@ -113,7 +113,7 @@ I want to deliver better assessment operations without hiring more staff or manu
 
 ## Productized Offer
 
-### Initial Hackathon Offer
+### Initial Validation Offer
 
 > **Pilot Pack — US$99 one-time**  
 > We operate 3 real programming assessments with AI agents, up to 150 graded submissions, onboarding, feedback drafts, teacher report, and evidence dashboard.
@@ -136,7 +136,7 @@ The business should never sell unlimited AI grading. The commercial unit is asse
 
 | Revenue Stream | Timing | Notes |
 | --- | --- | --- |
-| Pilot Pack | One-time | Best for immediate hackathon validation |
+| Pilot Pack | One-time | Best for immediate MVP validation |
 | Monthly subscription | Recurring | Bounded by assessments and submissions |
 | Overuse fees | Usage-based | Additional graded submissions, reports, or premium review |
 | Guided onboarding | One-time or bundled | Useful for small academies and bootcamps |
@@ -192,7 +192,7 @@ The first customers should come from:
 - LinkedIn outreach;
 - referral conversations from educators.
 
-Do not start with large schools, universities, or procurement-heavy institutions. Their sales cycles are too slow for the hackathon window.
+Do not start with large schools, universities, or procurement-heavy institutions. Their sales cycles are too slow for early validation.
 
 ## Retention Strategy
 
@@ -228,9 +228,9 @@ GradeOps AI should not compete as a generic AI quiz generator.
 | Product becomes too broad | Slow delivery and weak pitch | Stay focused on programming assessments |
 | Pricing is too low | Weak business viability | Sell value and bounded usage, not token cost |
 | Usage is unbounded | Margin risk | Cap assessments and submissions |
-| Revenue comes only from friends | Weak hackathon evidence | Separate related-party revenue and prioritize arms-length pilots |
+| Revenue comes only from friends | Weak traction evidence | Separate related-party revenue and prioritize arms-length pilots |
 | Procurement cycles are long | No revenue in time | Sell to small buyers with direct decision power |
-| Customer evidence is weak | Poor submission | Capture interviews, testimonials, payment evidence, and dashboard screenshots from day one |
+| Customer evidence is weak | Poor business signal | Capture interviews, testimonials, payment evidence, and dashboard screenshots from day one |
 
 ## Validation Gates
 

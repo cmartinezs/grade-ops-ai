@@ -62,7 +62,7 @@ La API puede invocar un agente de forma sincrona o asincrona, pero no delega aut
 | R03 | Handoffs tipados y herramientas read-only/agregadas para reportes, gaps y recovery, con separacion de hechos e hipotesis | Learning Gap, Recovery y Teacher Report |
 | R04 | Tool loop controlado para generacion/revision/composicion Closed con herramientas de banco, cobertura y validacion deterministica | Question Generation, Distractor Quality, Ambiguity y Assembly |
 | R05 | Persistencia asincrona/reanudable para analytics y eventos de estudiante cuando el volumen o latencia lo justifique; scoring Closed sigue deterministico en API | Item Analytics y student access |
-| R06 | Observabilidad operacional: agent health, costos, provider/model comparison, warnings, budget alerts y Ops Agent read-only | Evidence dashboard y hackathon readiness |
+| R06 | Observabilidad operacional: agent health, costos, provider/model comparison, warnings, budget alerts y Ops Agent read-only | Evidence dashboard y operational readiness |
 
 R07/R08 pueden ampliar optimizacion, comparacion de modelos, refinamientos P1 y memoria/recuperacion avanzada solo si existe consumidor funcional concreto.
 

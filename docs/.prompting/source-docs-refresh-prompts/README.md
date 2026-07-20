@@ -57,7 +57,7 @@ Los prompts pueden actualizar documentos fuente bajo:
 - `@docs/04-architecture/`
 - `@docs/05-evidence/`
 - `@docs/06-ux/`
-- `@docs/07-hackathon/`
+- `@docs/archive/2026-event/07-hackathon/`
 - `@docs/08-user-guide/`
 - `@docs/09-developer-guide/`
 - `@docs/10-best-practices/`

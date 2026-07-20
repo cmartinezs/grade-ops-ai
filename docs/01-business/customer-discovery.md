@@ -40,7 +40,7 @@ Prioritize buyers or direct workflow owners, not generic education observers.
 | P1 | Small academy founders | Can buy pilots and care about reporting/consistency |
 | P1 | Program managers | Understand quality and cohort-level reporting needs |
 | P2 | University/college instructors | Strong problem, but procurement may be slow |
-| P2 | School administrators | Useful later, not ideal for first hackathon revenue |
+| P2 | School administrators | Useful later, not ideal for first validation revenue |
 
 ## Interview Screening
 
@@ -197,7 +197,7 @@ Better question:
 | 4 | Willing to pay or sign pilot commitment |
 | 5 | Paid, committed, or introduced another buyer |
 
-## Discovery Targets For Hackathon
+## Discovery Targets For MVP Validation
 
 Minimum evidence target:
 
@@ -273,7 +273,7 @@ Rules:
 
 - Ask permission before using names or testimonials publicly.
 - Keep student data out of discovery notes unless strictly necessary.
-- For hackathon evidence, store customer contact information securely.
+- Store customer contact information securely when it is needed to validate pilots, commitments, or testimonials.
 - Separate public testimonial text from private contact evidence.
 - Do not publish student submissions or grades without explicit permission.
 - Mark related-party relationships honestly.

@@ -1,14 +1,14 @@
 # Deployment
 
-GradeOps AI deployment should be simple, Google Cloud compliant, observable, and reliable enough for real pilots.
+GradeOps AI deployment should be simple, observable, and reliable enough for real pilots.
 
-The deployment goal is not enterprise scale. The goal is a credible production-like MVP that can run real assessment workflows and produce hackathon evidence.
+The deployment goal is not enterprise scale. The goal is a credible production-like MVP that can run real assessment workflows and produce validation evidence.
 
 ## Deployment Objectives
 
 1. Deploy a working product, not only a local demo.
-2. Use at least one Google Cloud product.
-3. Run Gemini calls from deployed backend/agent runtime.
+2. Support the selected cloud target with traceable runtime evidence.
+3. Run provider-backed model calls from deployed backend/agent runtime.
 4. Persist data, artifacts, logs, and evidence.
 5. Support demo and pilot environments.
 6. Capture API/model usage and cost evidence.
@@ -33,9 +33,9 @@ flowchart LR
 | Environment | Purpose | Required |
 | --- | --- | --- |
 | `local` | Development | Yes. |
-| `demo` | Stable hackathon/demo environment | Yes. |
+| `demo` | Stable Google Cloud demo environment | Yes. |
 | `pilot` | Real pilot/customer use | Recommended. |
-| `prod` | Post-hackathon production | Later. |
+| `prod` | Production | Later. |
 
 For speed, `demo` and `pilot` can share infrastructure early, but data should be clearly labeled.
 
@@ -50,7 +50,7 @@ For speed, `demo` and `pilot` can share infrastructure early, but data should be
 | Secrets | Secret Manager / Cloud Run secrets | API keys, DB credentials. |
 | Build/deploy | Cloud Build or GitHub Actions | Keep deployment repeatable. |
 | Auth | Firebase Auth or backend auth | Fast MVP authentication. |
-| AI | Gemini API / Vertex AI Gemini | Traceable AI runtime. |
+| AI | Gemini API / Vertex AI Gemini and provider adapters | Traceable AI runtime. |
 
 ## Service Topology Options
 
@@ -200,7 +200,7 @@ Technical logs alone are not enough. Business evidence must be stored in structu
 | Error logs visible | Yes |
 | Backup/export strategy exists | Recommended |
 
-## Release Strategy For Hackathon
+## Release Strategy For Validation
 
 ### Demo Release
 
@@ -237,7 +237,7 @@ Set or track:
 
 | Risk | Impact | Mitigation |
 | --- | --- | --- |
-| Demo only works locally | Weak submission | Deploy early. |
+| Demo only works locally | Weak validation evidence | Deploy early. |
 | Gemini credentials fail in cloud | Broken AI requirement | Test deployed API call early. |
 | Agent jobs time out | Bad pilot experience | Add async processing or smaller batches. |
 | DB schema changes break demo | Lost time | Use migrations and backups. |

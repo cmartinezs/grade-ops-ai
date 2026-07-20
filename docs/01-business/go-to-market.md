@@ -2,7 +2,7 @@
 
 GradeOps AI should enter the market through founder-led sales, paid pilots, and proof-heavy educator outreach.
 
-The first go-to-market objective is not broad brand awareness. It is to generate real conversations, real pilots, real usage, real revenue, and evidence for the hackathon submission.
+The first go-to-market objective is not broad brand awareness. It is to generate real conversations, real pilots, real usage, real revenue, and product validation evidence.
 
 ## GTM Thesis
 
@@ -65,7 +65,7 @@ The Pilot Pack should be sold before the product is fully self-serve if necessar
 | LinkedIn | Good for teachers, tutors, founders, bootcamp people | Founder posts + direct outreach |
 | Programming education communities | Domain-specific and pain-aligned | Share problem/offer, not generic promo |
 | Referrals | Warm trust path | Ask each interviewee for 2 names |
-| Hackathon visibility | Credibility and urgency | Convert attention into demos/pilots |
+| Founder/community visibility | Credibility and urgency | Convert attention into demos/pilots |
 
 ### Secondary Channels
 
@@ -258,12 +258,12 @@ Book a 15-minute discovery call
 - Create short demo clip.
 - Run second outreach wave.
 
-### Final Hackathon Weeks
+### Final Validation Weeks
 
 - Prioritize evidence over new channels.
 - Package customer stories.
 - Show revenue/cost proof.
-- Prepare English submission narrative.
+- Prepare English product narrative.
 - Record demo with business proof.
 
 ## Objection Handling
@@ -314,7 +314,7 @@ Referral tracking fields:
 | Free users consume time | Cap free usage and prioritize paid pilots |
 | No proof of willingness to pay | Ask for payment or signed pilot commitment early |
 | Demo becomes too technical | Show business outcome, agent logs, and evidence |
-| Spanish-only assets limit submission value | Prepare English landing/demo/submission copy early |
+| Spanish-only assets limit buyer reach | Prepare English landing/demo/product copy early |
 
 ## GTM Conclusion
 

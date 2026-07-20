@@ -55,7 +55,7 @@ Considera, cuando corresponda:
 - Facturación y créditos.
 - Auditoría.
 - Métricas.
-- Evidencia de hackathon.
+- Evidencia de validacion MVP.
 
 ### Flujo crítico
 
@@ -137,7 +137,7 @@ Marcar cada una como `US PROPUESTA` y explicar su necesidad.
 - Flujo crítico.
 - Dependencias funcionales.
 - Capacidades MVP.
-- Capacidades hackathon.
+- Capacidades validacion MVP.
 - Capacidades roadmap.
 
 ## Contenido de `user-story-inventory.md`

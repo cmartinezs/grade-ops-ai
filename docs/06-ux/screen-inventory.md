@@ -90,7 +90,7 @@ Students receive links via email. All student screens are token-gated — no log
 | Landing | `/` | P1 | Product intro, value proposition, CTA to register/demo |
 | Pricing | `/pricing` | P1 | Plan comparison; CTA to contact or register |
 
-For the hackathon MVP, the product works without a polished landing. The teacher logs in directly. The landing can be minimal but must exist for demo purposes.
+For the MVP, the product works without a polished landing. The teacher logs in directly. The landing can be minimal but must exist for demos.
 
 ---
 

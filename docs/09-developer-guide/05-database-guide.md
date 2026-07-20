@@ -58,7 +58,7 @@ Column reference:
 | Column | Type | Constraints | Notes |
 |--------|------|-------------|-------|
 | `plan_type` | `VARCHAR(10)` | nullable, CHECK constraint | Allowed values: `pilot`, `free`, `paid`. Null means the teacher has not been assigned a plan yet. |
-| `related_party` | `BOOLEAN` | NOT NULL, DEFAULT FALSE | Marks whether the teacher is a related party (e.g., a friend, family member, or team collaborator). Required for hackathon revenue evidence reporting. |
+| `related_party` | `BOOLEAN` | NOT NULL, DEFAULT FALSE | Marks whether the teacher is a related party (e.g., a friend, family member, or team collaborator) for transparent traction reporting. |
 | `offer_details` | `TEXT` | nullable | Free-text description of the offer made to the pilot teacher. |
 | `evidence_link` | `TEXT` | nullable | URL to external evidence (e.g., a screenshot, invoice, or letter of intent). |
 | `flag_set_by` | `VARCHAR(255)` | nullable | Identifier of the operator who set the pilot flags. |

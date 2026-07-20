@@ -15,7 +15,7 @@ Both modes share the same teacher workspace, evidence layer, and approval infras
 
 ## Strategic position
 
-GradeOps AI is being built as a focused hackathon MVP and a real business experiment.
+GradeOps AI is being built as a focused MVP and a real business experiment.
 
 The goal is not to build a large academic platform. The goal is to prove that a small education provider can run assessment operations faster, with more consistency, and with auditable AI support.
 
@@ -100,7 +100,7 @@ Included:
 - Learning gap summaries and recovery activity suggestions.
 - Teacher-facing report for both modes.
 - Agent execution logs and cost tracking.
-- Evidence capture for users, revenue, customer learning, and hackathon submission.
+- Evidence capture for users, revenue, customer learning, and product validation.
 - Basic Google Cloud deployment and Gemini API integration.
 
 Not prioritized for the MVP:
@@ -170,18 +170,18 @@ Target evidence:
 - testimonials;
 - demo-ready dashboards.
 
-For the hackathon, success is measured by evidence, not feature volume.
+Success is measured by evidence, not feature volume.
 
 ## Repository map
 
-- [`/00-project/`](00-project/README.md) — vision, pitch, problem, solution, roadmap, and hackathon strategy.
+- [`/00-project/`](00-project/README.md) — vision, pitch, problem, solution, roadmap, and cost model.
 - [`/01-business/`](01-business/README.md) — business model, pricing, go-to-market, discovery, and revenue evidence.
 - [`/02-product/`](02-product/README.md) — personas, MVP scope, stories, workflows, and product metrics.
 - [`/03-ai-agents/`](03-ai-agents/README.md) — agent roles, responsibilities, boundaries, prompts, and logs.
 - [`/04-architecture/`](04-architecture/README.md) — system design, data model, API, security, deployment, and Google Cloud assumptions.
 - [`/05-evidence/`](05-evidence/README.md) — templates for proof of demand, usage, revenue, outcomes, and demo evidence.
 - [`/06-ux/`](06-ux/README.md) — screen inventory, interaction model, and UX design intent for teacher workspace and student access.
-- [`/07-hackathon/`](07-hackathon/README.md) — demo script, evidence checklist, and submission narrative for the XPRIZE AI hackathon.
+- [`/archive/2026-event/`](archive/2026-event/README.md) — historical event materials, no longer active product constraints.
 - [`/99-decisions/`](99-decisions/README.md) — architecture, product, business, and scope decision records.
 - [`/.github/copilot-instructions.md`](.github/copilot-instructions.md) — repository guidance for contributors and AI coding agents.
 
@@ -194,7 +194,7 @@ For the hackathon, success is measured by evidence, not feature volume.
 
 ## Current status
 
-- Documentation repository created for the XPRIZE AI hackathon.
+- Documentation repository created for GradeOps AI product planning.
 - Product positioning defined: AI-native assessment operations for programming educators.
 - Two assessment modes fully documented: open (practical/code) and closed (objective/alternatives).
 - 13 AI agents specified with input/output contracts and human control checkpoints.
@@ -215,7 +215,7 @@ For the hackathon, success is measured by evidence, not feature volume.
 - Use AI agents for repetitive assessment operations.
 - Capture evidence from day one.
 - Prioritize real usage, real feedback, and revenue signals over feature volume.
-- Avoid building a full LMS during the hackathon.
+- Avoid building a full LMS before the assessment-operations workflow proves value.
 - Make the demo prove the operation, not only the interface.
 
 ## Final positioning

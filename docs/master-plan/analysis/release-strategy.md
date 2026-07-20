@@ -5,31 +5,31 @@
 
 ## Criterios de priorizacion
 
-La secuencia se define con estos criterios, ordenados por peso practico para el hackathon y el MVP:
+La secuencia se define con estos criterios, ordenados por peso practico para el validacion MVP y el MVP:
 
 | Criterio | Pregunta de decision | Peso |
 |---|---|---:|
 | Valor para el usuario | Permite a un docente completar o validar una parte real del workflow? | Alto |
 | Evidencia | Produce logs, costos, aprobaciones o prueba de uso? | Alto |
-| Impacto hackathon | Mejora demo, elegibilidad o narrativa de negocio? | Alto |
+| Impacto validacion MVP | Mejora demo, elegibilidad o narrativa de negocio? | Alto |
 | Reduccion de riesgo | Despeja una incertidumbre critica de producto, IA, datos o despliegue? | Alto |
 | Dependencias | Desbloquea varias capacidades posteriores? | Alto |
 | Valor comercial | Ayuda a piloto, cobro, compromiso o prueba de demanda? | Medio |
 | Esfuerzo | Cabe como release M/L sin convertirse en XL? | Medio |
 | Automatizacion | Mueve un proceso a Asistida/Supervisada con trazabilidad? | Medio |
 | Costo operacional | Mejora control de tokens, reintentos y costo por unidad? | Medio |
-| Reversibilidad | Evita decisiones caras de deshacer durante el hackathon? | Medio |
+| Reversibilidad | Evita decisiones caras de deshacer durante el validacion MVP? | Medio |
 
 ## Scoring resumido
 
-| Release | Valor usuario | Evidencia | Hackathon | Riesgo | Esfuerzo | Resultado |
+| Release | Valor usuario | Evidencia | Validacion MVP | Riesgo | Esfuerzo | Resultado |
 |---|---:|---:|---:|---:|---:|---|
 | R01 Assessment creation + evidence backbone | Alto | Alto | Alto | Alto | M | Primero |
 | R02 Open graded feedback thin slice | Alto | Alto | Alto | Alto | L | Segundo |
 | R03 Open cohort report and impact | Alto | Alto | Alto | Medio | M | Tercero |
 | R04 Closed question bank to snapshot | Alto | Alto | Alto | Alto | L | Cuarto |
 | R05 Closed student response and item analytics | Alto | Alto | Alto | Alto | L | Quinto |
-| R06 Business evidence and hackathon compliance | Medio | Alto | Alto | Alto | M | Paralelo desde R01; cierre antes de submission |
+| R06 Business evidence and operational readiness | Medio | Alto | Alto | Alto | M | Paralelo desde R01; cierre antes de submission |
 | R07 Open workflow refinements | Medio | Medio | Medio | Bajo | M | Roadmap post-MVP |
 | R08 Closed/curriculum refinements | Medio | Medio | Medio | Medio | M | Roadmap post-MVP |
 
@@ -44,7 +44,7 @@ El runtime de agentes no se planifica como una release tecnica independiente. Ca
 | R03 | Handoffs tipados y herramientas read-only/agregadas | Gaps, recovery y reportes deben separar hechos, hipotesis y estimaciones |
 | R04 | Tool loop controlado, `AgentAction`, herramientas y policy engine basico | Closed authoring necesita iterar con banco, validaciones y coverage |
 | R05 | Persistencia/asincronia de runs cuando analytics o volumen lo requieran | Student attempts y item analytics pueden exceder flujos HTTP cortos |
-| R06 | Observabilidad, health, costos, warnings, budget alerts y Ops Agent read-only | El cierre hackathon requiere evidencia operacional y de costos confiable |
+| R06 | Observabilidad, health, costos, warnings, budget alerts y Ops Agent read-only | El cierre validacion MVP requiere evidencia operacional y de costos confiable |
 
 La regla de extraccion es conservadora: una capacidad comun se generaliza cuando existe un segundo consumidor real o una necesidad inmediata de la siguiente release.
 
@@ -165,14 +165,14 @@ La regla de extraccion es conservadora: una capacidad comun se generaliza cuando
 | Complejidad | L. |
 | Estado | Planificada. |
 
-### R06 — Business Evidence and Hackathon Compliance
+### R06 — Business Evidence and Operational Readiness
 
 | Campo | Definicion |
 |---|---|
-| Objetivo | Preparar evidencia real de negocio, costos, revenue, usuarios y cumplimiento de entorno para el hackathon. |
+| Objetivo | Preparar evidencia real de negocio, costos, revenue, usuarios y cumplimiento de entorno para el validacion MVP. |
 | Problema | El producto puede funcionar y aun asi perder fuerza si no demuestra usuarios, costos, revenue y despliegue compatible. |
-| Hipotesis | Un dashboard interno con ledger y evidencia privada/publica acelera pilotos, cobro y submission final. |
-| Actor beneficiado | Operator, founder, judges/testers. |
+| Hipotesis | Un dashboard interno con ledger y evidencia privada/publica acelera pilotos, cobro y paquete final de validacion. |
+| Actor beneficiado | Operator, founder, evaluators/testers. |
 | Valor | Evidencia comercial y operativa lista para demo y submission. |
 | Flujo vertical | Operator revisa pilotos, usage, cost, revenue, related-party, evidence links y exporta paquete validado. |
 | Capacidades | C14, C15, C13, C1 parcial. |
@@ -183,7 +183,7 @@ La regla de extraccion es conservadora: una capacidad comun se generaliza cuando
 | Nivel de automatizacion | Supervisada por Operator; determinista para ledgers y alertas. |
 | Evidencias | RevenueEvent, CostEvent, usage limits, related-party split, dashboard/export, GCP/Gemini proof si aplica. |
 | Metricas | paid pilots, revenue by month, cost coverage, evidence completeness, agent run success rate. |
-| Dependencias | D-01 debe resolverse antes de release candidate hackathon; D-07 antes de narrativa final. |
+| Dependencias | D-01 debe resolverse antes de release candidate validacion MVP; D-07 antes de narrativa final. |
 | Riesgos | D-01 sigue pendiente; dashboard puede crecer a L si se agregan demasiadas vistas. |
 | Complejidad | M. |
 | Estado | Planificada; debe correr en paralelo operativo desde R01. |
@@ -299,7 +299,7 @@ No hay releases XL en esta estrategia. Los cortes L son verticales pero limitado
 | Primer piloto | R06 | CustomerEvidence |
 | Primer cliente pagado o compromiso | R06 | RevenueEvent/payment evidence |
 | Primera evidencia completa | R06 | dashboard/export con users, runs, costs, revenue |
-| Release candidata hackathon | R06 | demo package + deployment evidence |
+| Release candidata validacion MVP | R06 | demo package + deployment evidence |
 | Version productiva inicial | R02 o R03, segun piloto | flujo Open operable con evidencia |
 
 ## Riesgos de secuencia
@@ -313,12 +313,12 @@ No hay releases XL en esta estrategia. Los cortes L son verticales pero limitado
 | Operator sin acceso | R06 | Priorizar US-PROPUESTA-01 o definir operator como rol temporal administrado. |
 | Pricing divergente | R06 | Resolver D-07 antes de narrativa final. |
 
-## MVP, hackathon y roadmap
+## MVP, validacion MVP y roadmap
 
 | Corte | Incluye | No incluye |
 |---|---|---|
 | MVP operativo | R01-R03 como base Open; R04-R05 como Closed P0 thin slice si el tiempo lo permite; R06 para evidencia minima | R07/R08 refinamientos P1 |
-| Hackathon | R01-R06, con D-01 resuelta y evidencia real de usuarios/costos/revenue | Feature breadth, LMS, SSO enterprise, autonomous grading |
+| Validacion MVP | R01-R06, con D-01 resuelta y evidencia real de usuarios/costos/revenue | Feature breadth, LMS, SSO enterprise, autonomous grading |
 | Roadmap posterior | R07-R08 y futuras capacidades comerciales | Cambiar el principio de teacher authority |
 
 ## Historial de cambios

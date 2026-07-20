@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 This is a **documentation-only** repository for GradeOps AI — an AI-native assessment operations platform for programming educators. There is no application code here. Do not add application code unless explicitly requested.
 
-GradeOps AI is being built as a focused hackathon MVP (XPRIZE AI hackathon) and a real business experiment. The product is an AI-operated workflow that lets educators run assessment cycles — from learning goal through grading, feedback, gap detection, and teacher reports — using a pipeline of AI agents.
+GradeOps AI is being built as a focused MVP and a real business experiment. The product is an AI-operated workflow that lets educators run assessment cycles — from learning goal through grading, feedback, gap detection, and teacher reports — using a pipeline of AI agents.
 
 The product supports two assessment modes: **Open** (practical code/text submissions, rubric-based, AI grading suggestion) and **Closed** (objective questions with alternatives, AI-native question bank, deterministic grading). Both modes share the same operational infrastructure, teacher approval model, and evidence layer.
 
@@ -14,14 +14,14 @@ The product supports two assessment modes: **Open** (practical code/text submiss
 
 | Folder | Purpose |
 | --- | --- |
-| `00-project/` | Vision, pitch, problem statement, solution, roadmap, hackathon strategy |
+| `00-project/` | Vision, pitch, problem statement, solution, roadmap, and cost model |
 | `01-business/` | Business model, pricing, go-to-market, customer discovery, revenue evidence |
 | `02-product/` | Personas, MVP scope, user stories, workflows, and product metrics |
 | `03-ai-agents/` | Agent roles, responsibilities, boundaries, prompt contracts, execution logs |
 | `04-architecture/` | System design, data model, API design, security, deployment, Google Cloud assumptions |
 | `05-evidence/` | Templates for proof of demand, usage, revenue, outcomes, and demo evidence |
 | `06-ux/` | Screen inventory, interaction model, and UX design intent for teacher workspace and student access |
-| `07-hackathon/` | Operational hackathon deliverables: demo script, evidence checklist, submission narrative |
+| `archive/2026-event/` | Historical event materials, no longer active product constraints |
 | `99-decisions/` | Durable architecture, product, business, and scope decision records |
 | `.raw/` | Historical conversation notes and reasoning history — not canonical, not edited directly |
 | `.all-by-category/` | Consolidated Markdown files per category for NotebookLM upload — generated from canonical sources, not edited directly |
@@ -31,7 +31,7 @@ The product supports two assessment modes: **Open** (practical code/text submiss
 - **Language**: Concise, professional English. Avoid generic AI assistant language.
 - **Diagrams**: Mermaid by default. Use PlantUML only when Mermaid is insufficient. ASCII diagrams are a last fallback only.
 - **Positioning**: Always frame GradeOps AI as an AI-native assessment operations business, not a quiz generator, chatbot, or LMS add-on.
-- **Focus**: Prioritize business viability, customer evidence, agent operations, and hackathon deliverables.
+- **Focus**: Prioritize business viability, customer evidence, agent operations, and product validation.
 
 ## Key content rules
 
@@ -72,4 +72,4 @@ The teacher is the final pedagogical authority — agents assist, they do not re
 
 - MVP is scoped to programming assessments only; do not expand scope to full LMS functionality.
 - Gemini API + Google Cloud is the target runtime.
-- Evidence-first: the project is designed to collect proof (interviews, pilot commitments, real assessment runs, testimonials) from day one. For the hackathon, success is measured by evidence, not feature volume.
+- Evidence-first: the project is designed to collect proof (interviews, pilot commitments, real assessment runs, testimonials) from day one. Success is measured by evidence, not feature volume.

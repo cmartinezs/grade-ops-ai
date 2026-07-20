@@ -44,7 +44,7 @@ Utiliza criterios explícitos:
 
 - Valor para el usuario.
 - Valor comercial.
-- Impacto hackathon.
+- Impacto validacion MVP.
 - Aprendizaje.
 - Reducción de riesgo.
 - Dependencias.
@@ -109,7 +109,7 @@ Adaptar según las fuentes:
 - Primera automatización supervisada.
 - Primer reporte de impacto.
 - Primera evidencia completa.
-- Release candidata hackathon.
+- Release candidata validacion MVP.
 - Versión productiva inicial.
 
 ## Contenido de `release-strategy.md`
@@ -122,7 +122,7 @@ Adaptar según las fuentes:
 - Complejidad.
 - Hitos.
 - Riesgos de secuencia.
-- Diferencia entre MVP, hackathon y roadmap.
+- Diferencia entre MVP, validacion MVP y roadmap.
 - Historial de cambios.
 
 ## Contenido de `master-plan-executive.md`

@@ -8,7 +8,7 @@ The pricing model is based on assessment operations and graded student submissio
 
 - Price by value and usage volume, not only API cost.
 - Never sell unlimited AI grading.
-- Keep plans simple enough for a hackathon demo.
+- Keep plans simple enough for early pilots and demos.
 - Make the first paid offer easy to buy.
 - Use a paid pilot to validate willingness to pay.
 - Track cost per assessment, graded student submission, active teacher, and customer.
@@ -61,11 +61,11 @@ Primary cost drivers:
 | Teacher Lite | US$12/month | 3 assessments / 90 graded submissions | Tutor or low-volume educator |
 | Teacher Pro | US$29/month | 10 assessments / 300 graded submissions | Main individual teacher plan |
 | Cohort Pro | US$79/month | 30 assessments / 1,000 graded submissions | Bootcamps, tutors, small academies |
-| Pilot Pack | US$99 one-time | 3 real assessments / up to 150 graded student submissions / onboarding | Best hackathon revenue offer |
+| Pilot Pack | US$99 one-time | 3 real assessments / up to 150 graded student submissions / onboarding | Best early revenue and validation offer |
 
 ## LatAm / Chile Testing Prices
 
-These prices can be tested locally while reporting hackathon revenue in USD equivalent.
+These prices can be tested locally while retaining USD equivalents for comparable reporting.
 
 | Plan | Suggested CLP Price |
 | --- | ---: |
@@ -74,7 +74,7 @@ These prices can be tested locally while reporting hackathon revenue in USD equi
 | Cohort Pro | $59.990-$79.990 CLP/month |
 | Pilot Pack | $39.990-$79.990 CLP one-time |
 
-For hackathon validation, the Pilot Pack matters more than perfect subscription optimization.
+For MVP validation, the Pilot Pack matters more than perfect subscription optimization.
 
 ## Offer Details
 
@@ -147,7 +147,7 @@ Purpose:
 
 - fastest path to real revenue and testimonials;
 - guided onboarding;
-- hackathon business evidence.
+- business evidence and testimonials.
 
 Includes:
 
@@ -245,7 +245,7 @@ Allowed:
 - local market price testing;
 - founder-led pilot discount;
 - education/community discount;
-- limited-time hackathon pilot price.
+- limited-time pilot price.
 
 Avoid:
 
@@ -291,12 +291,12 @@ For each payment or commitment, record:
 | Too-low price | Weakens business viability signal | Price against value saved |
 | Too-high first offer | Blocks early validation | Use Pilot Pack |
 | Pricing based only on API cost | Underprices support, trust, and operations | Include support, onboarding, evidence, and value |
-| Related-party payments inflate traction | Weak judge confidence | Separate and disclose |
+| Related-party payments inflate traction | Weakens traction credibility | Separate and disclose |
 | Local CLP pricing conflicts with USD reporting | Confusing evidence | Store original currency and USD equivalent |
 
 ## Current Pricing Decision
 
-For the hackathon period:
+For the MVP validation period:
 
 1. Lead with **Pilot Pack**.
 2. Keep subscription plans visible but secondary.
@@ -309,4 +309,4 @@ For the hackathon period:
 
 ---
 
-← [Go-To-Market](go-to-market.md) | [↑ inicio](#pricing) | [README](README.md) | [Business Hackathon Strategy →](hackathon-strategy.md)
+← [Go-To-Market](go-to-market.md) | [↑ inicio](#pricing) | [README](README.md)

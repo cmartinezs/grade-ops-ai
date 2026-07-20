@@ -31,7 +31,7 @@ R04 no procesa respuestas de estudiantes. Su funcion es probar que GradeOps AI p
 
 ## 4. Problema
 
-Closed assessment es parte P0 del MVP/hackathon, pero no tiene implementacion real. Si se mezcla con Open o con respuesta de estudiantes desde el primer corte, el alcance crece demasiado. R04 separa el problema autoral: banco curado y snapshot confiable antes de ejecutar el ciclo estudiantil.
+Closed assessment es parte P0 del validacion MVP, pero no tiene implementacion real. Si se mezcla con Open o con respuesta de estudiantes desde el primer corte, el alcance crece demasiado. R04 separa el problema autoral: banco curado y snapshot confiable antes de ejecutar el ciclo estudiantil.
 
 ## 5. Hipotesis
 

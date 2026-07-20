@@ -34,7 +34,7 @@ Use these files to drive product planning and implementation:
 6. [`student-access.md`](student-access.md) — student (LearnerRef) model, secure link types, invitation flow, what students can see, and security rules.
 7. [`response-intake.md`](response-intake.md) — digital (P0) and physical paper (P1) intake channels, OCR vs OMR, conflict resolution, and normalization to AssessmentAttempt.
 8. [`curriculum-structure.md`](curriculum-structure.md) — subject/topic/learning-outcome taxonomy; P0 string tagging; P1 structured model with CurriculumNode and LearningObjective; AI-generated curriculum; Chile pack reference.
-9. [`metrics.md`](metrics.md) — product, business, AI-native operations, trust, and hackathon evidence metrics.
+9. [`metrics.md`](metrics.md) — product, business, AI-native operations, trust, and validation evidence metrics.
 
 ## What Belongs Here
 
