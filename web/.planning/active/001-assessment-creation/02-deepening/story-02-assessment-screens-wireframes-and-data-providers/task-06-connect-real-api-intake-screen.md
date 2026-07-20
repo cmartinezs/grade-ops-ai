@@ -26,6 +26,19 @@ The Intake screen calls the real `api/` via `submitAssessmentBrief`, redirects t
 
 ---
 
+## API / Agent / Web Contract Gate
+
+| Gate | Required check | Task answer |
+|---|---|---|
+| API as orchestrator | Screen submits to `submitAssessmentBrief`; it never calls `agents/` or handles provider/model/prompt choices | Keep route-level code focused on form state, submit state and navigation |
+| Richardson REST maturity | The route honors current API status/error semantics and does not assume unsupported `202 Location`/operation polling | If API still returns sync result, redirect only after confirmed `assessmentId`; if API later returns operation, update by explicit contract |
+| AI operation model | Generation may become operation-backed in R01; current web route must not fake operation state | Support loading and partial-failure warning; defer polling UI until API exposes it |
+| Idempotency | Avoid automatic invisible retries of generation when API has no `Idempotency-Key` support | Retry must be explicit and teacher-visible |
+| Contract testing | Tests cover navigation with real `assessmentId` plus 422/500 mapping | Extend hook/component tests |
+| Web route functionality | `/assessments/new` exposes submit loading, success redirect, safe validation/server errors and brief-created/generation-failed warning | No raw backend strings or fake submit path remain |
+
+---
+
 ## Implementation Steps
 
 1. Replace `useIntakeAssessmentPage`'s fake submit with a call to `submitAssessmentBrief(brief)`.
@@ -80,6 +93,7 @@ N/A — no database or ORM involved in `web/`.
 ## Done Criteria
 
 - [ ] Submitting the real form creates a brief, generates a draft, and navigates to the real draft screen with the real `assessmentId`.
+- [ ] API / Agent / Web Contract Gate is completed; no implicit retry or fake operation state is introduced.
 - [ ] 422 and 500 responses show translated, teacher-facing messages, not raw codes/English strings.
 - [ ] No fake/mocked submit code remains.
 - [ ] All tests pass; `npm run lint` passes.

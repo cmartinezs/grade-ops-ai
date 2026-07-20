@@ -44,6 +44,19 @@
 
 ---
 
+## API / Agent / Web Contract Gate
+
+| Gate | Required check | Task answer |
+|---|---|---|
+| API as orchestrator | Mutations call `api/` only; regenerate does not call or configure `agents/` from `web` | Keep provider/model/prompt absent from web DTOs and function signatures |
+| Richardson REST maturity | `PATCH /draft` is partial update; `POST /draft/regenerate` is command-style generation under the assessment resource | Preserve exact current contract from `task-01`; record that operation-backed `202 Location` is an R01 API follow-up, not a web invention |
+| AI operation model | Regeneration is GenAI-backed but sync legacy today | Do not fabricate `operationId`; support future operation response only through an explicit API contract change |
+| Idempotency | Regeneration should use `Idempotency-Key` when API supports it; PATCH should avoid duplicate unintended writes via changed-key-only payloads | Check `task-01`; if absent, document API gap and keep UI retry manual/visible |
+| Contract testing | Tests assert exact PATCH body, regenerate body, paths and conflict behavior | Extend `assessments.test.ts` |
+| Web route functionality | Save/regenerate support submitting, success, conflict, validation and server-error states | `task-12` consumes these errors as distinct UI states |
+
+---
+
 ## Implementation Steps
 
 1. Add `UpdateAssessmentDraftRequestDto` to `src/types/assessment.ts` — all fields optional, matching `task-01`'s confirmed `UpdateAssessmentDraftRequest` partial-update semantics exactly (only include keys actually being changed).
@@ -96,6 +109,7 @@ N/A — no database or ORM involved in `web/`.
 
 - [ ] `updateAssessmentDraft` only sends caller-provided keys, matching the partial-update contract.
 - [ ] `regenerateAssessmentDraft` sends adjustment notes and returns the new draft.
+- [ ] API / Agent / Web Contract Gate is completed; regenerate does not leak agent/provider/prompt concerns into `web`.
 - [ ] Both distinguish 409 conflicts from other errors.
 - [ ] All new/extended tests pass; `npm run lint` passes.
 - [ ] Software smoke test check above passes (build/startup confirmed); for git-enabled tasks, implementation is committed, pushed, and published in a task PR before human developer PR review, with corrections pushed to the same PR.

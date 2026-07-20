@@ -43,6 +43,19 @@
 
 ---
 
+## API / Agent / Web Contract Gate
+
+| Gate | Required check | Task answer |
+|---|---|---|
+| API as orchestrator | The loader reads current/versioned draft state from `api/` only; `web` does not infer agent state or query `agents/` | Keep calls scoped to `GET /draft` and `GET /draft/versions` |
+| Richardson REST maturity | Both GET endpoints are resource reads and should map 401/403/404/server errors to safe route states | Preserve exact current API behavior from `task-01`; no restore/edit operation is implied by version reads |
+| AI operation model | Read endpoints consume persisted artifacts, not live agent operations | N/A for operation creation; loader should be ready to display operation state only if a later API contract adds it |
+| Idempotency | Read-only GETs do not need `Idempotency-Key` | N/A, read-only |
+| Contract testing | DTO and loader tests must assert exact paths, DTO fields and partial-load failure behavior | Extend API client and loader tests accordingly |
+| Web route functionality | Draft route must support loading, success, no-current-draft/404, safe error and read-only historical version preview | Return one composed view model; do not allow components to bypass the facade |
+
+---
+
 ## Implementation Steps
 
 1. Add `AssessmentDraftDto` to `src/types/assessment.ts`, matching `task-01`'s confirmed `GenerateAssessmentDraftResponse` shape exactly.
@@ -96,6 +109,7 @@ N/A — no database or ORM involved in `web/`.
 
 - [ ] `AssessmentDraftDto` matches `task-01`'s confirmed shape exactly.
 - [ ] `loadAssessmentDraftBuilderPage` fetches both sources in parallel and returns one composed view model.
+- [ ] API / Agent / Web Contract Gate is completed; no component bypasses API facade or invents unsupported restore/operation behavior.
 - [ ] No component or page calls `getAssessmentDraft`/`getAssessmentDraftVersions` directly, bypassing the facade.
 - [ ] All new/extended tests pass; `npm run lint` passes.
 - [ ] Logging mechanism decision recorded in `.planning/LOGGING.md` (shared with `task-05` if not already resolved).

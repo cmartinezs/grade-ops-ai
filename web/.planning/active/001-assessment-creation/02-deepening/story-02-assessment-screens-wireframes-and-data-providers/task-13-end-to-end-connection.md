@@ -23,6 +23,19 @@ The full Intake → Draft Builder flow works end-to-end against a real local `ap
 
 ---
 
+## API / Agent / Web Contract Gate
+
+| Gate | Required check | Task answer |
+|---|---|---|
+| API as orchestrator | Full walkthrough proves `web` uses only `api` routes and `api` remains the intermediary to `agents` | Inspect network calls; no browser call may target `agents/`, provider URLs or prompt/model endpoints |
+| Richardson REST maturity | Validate route behavior against resource/status/error expectations from `task-01`, including unsupported restore action absence | Manual walkthrough plus code sweep |
+| AI operation model | Confirm current UI behavior matches current sync API and records any R01 operation/polling residual explicitly | No fake `operationId`; no hidden polling unless API exposes it |
+| Idempotency | Confirm no invisible retry/double submit behavior can trigger duplicate generation | Manual double-click/retry observation or documented limitation |
+| Contract testing | End-to-end evidence ties route states back to verified API contract and task tests | Capture manual evidence and command output |
+| Web route functionality | `/assessments/new` -> `/assessments/{id}/draft` flow covers loading, success, edit, regenerate, version history, refresh and safe errors | Required final acceptance surface |
+
+---
+
 ## Implementation Steps
 
 1. `grep -r` for leftover fake-data markers (`setTimeout`, hardcoded fixture objects, a stray `mocks/` directory) under `src/features/assessment-creation/`; remove or justify each hit.
@@ -79,6 +92,7 @@ N/A — this task touches no database or ORM artifacts directly; it exercises `a
 
 - [ ] No fake-data residue remains under `src/features/assessment-creation/`.
 - [ ] The full flow works end-to-end against real `api/` with real ids.
+- [ ] API / Agent / Web Contract Gate is completed with evidence from browser/network/manual walkthrough.
 - [ ] Draft and version history survive a page refresh.
 - [ ] Story-01's in-scope Done Criteria are confirmed against the real flow, not just the mockups.
 - [ ] Full test suite and lint pass across everything this story touched.

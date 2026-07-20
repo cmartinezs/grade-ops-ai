@@ -35,6 +35,7 @@ This story delivers the wireframes, the navigable fake-data mockups, the DTOs/vi
 - TSX is mandatory for every React file, including the fake-data mockups (`docs/gradeops-ai-frontend-guidelines/01-arquitectura-next-react.md` §2) — no `.jsx` prototypes checked into `src/`.
 - Fake data for the mockups must cover real edge cases, not symmetric happy-path mocks (`02-ux-wireframes-y-maquetas.md` §6): long AI-generated instructions/objectives text, accented names, zero prior versions, many versions, a partial error.
 - Gemini/Groq API keys are never touched by `web/` — only `agents/` calls the LLM providers; `web/` only calls `api/` endpoints.
+- **API-Agent Orchestration gate:** tasks that verify contracts, define `lib/api` functions, connect real screens, or validate the end-to-end route must apply `docs/master-plan/analysis/api-agent-orchestration-strategy.md`. `web/` consumes functional `api/` routes only; it must not know `agents/` URLs, providers or prompts. Endpoint-facing tasks must also record a Richardson REST maturity check for resource URI, HTTP method, status/error handling, idempotency expectations and route states.
 
 ---
 
@@ -45,6 +46,7 @@ This story delivers the wireframes, the navigable fake-data mockups, the DTOs/vi
 | Fake-data mockup ships without covering the edge cases in `02-ux-wireframes-y-maquetas.md` §6 (long text, zero/many versions), and those gaps surface only after connecting the real API | M | M | Explicit fake-data checklist per screen before "conectar API real" tasks start |
 | Version-history UI implies a "restore version" action that the API doesn't support | M | L | Context above states explicitly: version history is read-only browsing in this MVP |
 | Draft Builder screen's loader duplicates calls already made in a shared hook, defeating the Screen Data Facade's purpose | L | L | Single `loadAssessmentDraftBuilderPage` per Screen Data Facade rule; no ad hoc `getX()` calls from the Page/TSX |
+| New API orchestration rules are only present in templates and are missed by already-atomized tasks | M | M | Endpoint-facing tasks in this story must include the API / Agent / Web Contract Gate before implementation/review |
 
 ---
 
@@ -79,6 +81,7 @@ This story delivers the wireframes, the navigable fake-data mockups, the DTOs/vi
 - [ ] Intake screen orquesta sus 2 llamadas secuenciales (crear brief → generar draft) fuera del Page/TSX, con estados de mutación explícitos.
 - [ ] API real conectada en ambas pantallas; mocks o datos fake removidos o aislados explícitamente.
 - [ ] Errores 401/403/404/409/422/500 traducidos a mensajes de usuario, no mostrados crudos.
+- [ ] Endpoint-facing tasks complete the API / Agent / Web Contract Gate, including Richardson REST maturity, idempotency expectations and functional route states.
 - [ ] `npm run test` y `npm run lint` pasan.
 - [ ] TRACEABILITY.md actualizado.
 
