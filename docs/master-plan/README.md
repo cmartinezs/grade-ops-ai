@@ -56,7 +56,7 @@ No incluye todavia los archivos detallados de cada release. Esos documentos se g
 | R03 | Open Cohort Report and Impact | Documentada | M | [release-03-open-cohort-report-impact.md](releases/release-03-open-cohort-report-impact.md) |
 | R04 | Closed Question Bank to Snapshot | Documentada | L | [release-04-closed-question-bank-snapshot.md](releases/release-04-closed-question-bank-snapshot.md) |
 | R05 | Closed Student Response and Item Analytics | Documentada | L | [release-05-closed-response-item-analytics.md](releases/release-05-closed-response-item-analytics.md) |
-| R06 | Business Evidence and Hackathon Compliance | Planificada | M | `releases/release-06-business-evidence-hackathon-compliance.md` |
+| R06 | Business Evidence and Hackathon Compliance | Documentada | M | [release-06-business-evidence-hackathon-compliance.md](releases/release-06-business-evidence-hackathon-compliance.md) |
 | R07 | Open Workflow Refinements | Roadmap | M | `releases/release-07-open-workflow-refinements.md` |
 | R08 | Closed and Curriculum Refinements | Roadmap | M | `releases/release-08-closed-curriculum-refinements.md` |
 
