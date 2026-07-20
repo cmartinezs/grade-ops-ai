@@ -316,6 +316,15 @@ Campos minimos nuevos o extendidos:
 - Cancelacion/reanudacion solo si se justifica por volumen o costo; no anticiparla para runs cortos.
 - Handoff desde scoring deterministico hacia analytics con snapshot fijo.
 
+### Incremento API-Agent Orchestration requerido
+
+- Aplicar [`api-agent-orchestration-strategy.md`](../analysis/api-agent-orchestration-strategy.md) a student attempts, deterministic scoring e item analytics.
+- Introducir asincronia durable solo cuando attempts/analytics excedan el presupuesto HTTP seguro o requieran progreso parcial.
+- Modelar batches como `AiOperation` con un `AgentRun` por item/subconjunto cuando aplique, sin repetir lotes completos ante fallos parciales.
+- Mantener signed links, attempts, scoring deterministic y publication en `api/`; `agents/` solo interpreta analytics revisables.
+- Exponer polling de operacion para `web`/student access cuando la ejecucion sea larga; SSE queda como mejora compatible.
+- Someter endpoints/rutas nuevas al gate Richardson REST, incluyendo recursos de invitation/attempt/result/analytics, status codes, links y errores seguros para estudiantes.
+
 ### Herramientas requeridas
 
 - `calculate_item_difficulty`.
@@ -730,4 +739,5 @@ Criterios:
 | Fecha | Cambio | Motivo | Elementos afectados | Decision asociada |
 |---|---|---|---|---|
 | 2026-07-20 | Incorporacion de capacidades de Agent Runtime | Declarar persistencia/asincronia solo donde analytics o volumen lo justifiquen | Runtime, Item Analytics, student flow | D-04, D-06 |
+| 2026-07-20 | Incorporacion de API-Agent Orchestration | Ubicar asincronia durable, polling y retry selectivo dentro del flujo Closed funcional | API, agents, web/student routes, DoD operativo | D-API-01..D-API-10 |
 | 2026-07-20 | Creacion inicial | Ejecucion de Fase 05 para R05 | Todo el documento | D-02 |

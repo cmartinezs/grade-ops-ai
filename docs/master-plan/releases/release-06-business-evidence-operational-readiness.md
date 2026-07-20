@@ -331,6 +331,15 @@ Cada evento incluye actor, timestamp, correlation/request ID, source entity, pre
 - Export de manifest con source IDs, environment, commit y freshness.
 - Policy que mantenga Ops Agent en `EXECUTE_READ_ONLY`.
 
+### Incremento API-Agent Orchestration requerido
+
+- Aplicar [`api-agent-orchestration-strategy.md`](../analysis/api-agent-orchestration-strategy.md) a evidence dashboard, health, costs, revenue, readiness y exports.
+- Mantener todos los calculos de ledgers, usage, cost, revenue y readiness en `api/`/DB; Ops Agent solo resume o explica hechos persistidos.
+- Exponer endpoints REST de recursos operacionales (`ai-operations`, health, evidence, usage, costs, revenue, exports) con affordances de drill-down y export.
+- Requerir Operator/founder access antes de retries privilegiados, dead-letter handling, exports o corrections.
+- Usar operaciones consultables para exports o recomputations largos; no usar LLM para cerrar D-01/D-07.
+- Someter endpoints/rutas nuevas al gate Richardson REST, con links `self`, `runs`, `attempts`, `export`, `retry`, `cancel` cuando existan, y errores seguros sin PII/secrets.
+
 ### Herramientas requeridas
 
 - `load_agent_metrics`.
@@ -792,4 +801,5 @@ Entregables:
 | Fecha | Cambio | Motivo | Elementos afectados | Decision asociada |
 |---|---|---|---|---|
 | 2026-07-20 | Incorporacion de capacidades de Agent Runtime | Declarar Ops Agent read-only y observabilidad/costo/readiness del runtime | Runtime, Ops Agent, evidence dashboard | D-01, D-04, D-06, D-07 |
+| 2026-07-20 | Incorporacion de API-Agent Orchestration | Asegurar que evidencia, health, costs y exports sean hechos de API/DB y no salidas autoritativas de LLM | API, agents, web/operator routes, DoD operativo | D-API-01..D-API-10 |
 | 2026-07-20 | Creacion inicial | Ejecucion de Fase 05 para R06 | Todo el documento | D-01, D-04, D-06, D-07 |

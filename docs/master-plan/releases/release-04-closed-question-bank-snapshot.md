@@ -311,6 +311,15 @@ Campos minimos nuevos o extendidos:
 - Budget manager con max steps, model calls, tool calls, tokens, costo y timeout.
 - Estados `BLOCKED`/`NEEDS_INPUT` cuando el banco no alcanza o faltan tags/outcomes.
 
+### Incremento API-Agent Orchestration requerido
+
+- Aplicar [`api-agent-orchestration-strategy.md`](../analysis/api-agent-orchestration-strategy.md) a question bank generation/review/assembly.
+- Exponer endpoints publicos de recursos Closed (`question-banks`, `questions`, `snapshots`, `generation-runs`) y no endpoints genericos de agente.
+- Mantener snapshot, answer key, scoring policy y publish transitions como responsabilidad deterministica de `api/`.
+- Usar operaciones consultables para question batches, tool loop y assembly cuando exista latencia variable o progreso parcial.
+- Validar policy de tools en `agents/`, pero construir contexto, ownership, estados y efectos finales en `api/`.
+- Someter endpoints/rutas nuevas al gate Richardson REST, con `Location` para snapshots/operations, links de curation/approval/result y errores normalizados.
+
 ### Herramientas requeridas
 
 - `load_learning_outcomes`.
@@ -723,4 +732,5 @@ Criterios:
 | Fecha | Cambio | Motivo | Elementos afectados | Decision asociada |
 |---|---|---|---|---|
 | 2026-07-20 | Incorporacion de capacidades de Agent Runtime | R04 es el primer consumidor claro de tool loop controlado y policy engine | Runtime, closed agents, tools, validators | D-04, D-06 |
+| 2026-07-20 | Incorporacion de API-Agent Orchestration | Asegurar que Closed authoring use endpoints REST de recursos y que snapshot/scoring sigan en `api/` | API, agents, web routes, DoD operativo | D-API-01..D-API-10 |
 | 2026-07-20 | Creacion inicial | Ejecucion de Fase 05 para R04 | Todo el documento | D-02 |

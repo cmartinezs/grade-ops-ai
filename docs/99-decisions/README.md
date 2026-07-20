@@ -78,6 +78,7 @@ A decision record should explain:
 | [`2026-07-20-agent-provider-model-policy.md`](2026-07-20-agent-provider-model-policy.md) | Agent runtime records provider/model and supports current Gemini + Groq adapters; Groq is current default, Gemini remains supported for Google Cloud-oriented environments | Accepted |
 | [`2026-07-20-environment-roles.md`](2026-07-20-environment-roles.md) | `beta` is product-evidence environment; `demo` is the Google Cloud target with Gemini-capable provider path | Accepted |
 | [`2026-07-20-archive-event-specific-constraints.md`](2026-07-20-archive-event-specific-constraints.md) | Event-specific constraints are historical only and must not govern active product/docs scope | Accepted |
+| [`2026-07-20-api-agent-orchestration.md`](2026-07-20-api-agent-orchestration.md) | `api/` is the public intermediary between `web/` and `agents/`; endpoint tasks require API-Agent orchestration and Richardson REST maturity checks | Accepted |
 
 ## Current Template
 

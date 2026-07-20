@@ -2,6 +2,7 @@
 
 > Incorporacion del paquete `docs/.prompting/master-plan-runtime/` al Master Plan.
 > Este documento no crea una release tecnica independiente: define como cada release funcional debe consumir y ampliar el runtime.
+> Para el borde `web/` -> `api/` -> `agents/`, complementar con [`api-agent-orchestration-strategy.md`](api-agent-orchestration-strategy.md).
 
 ## Principio rector
 
@@ -10,12 +11,14 @@ La Plataforma de Agentes de GradeOps AI se gestiona como una capacidad arquitect
 Cada release funcional que incorpore asistencia de IA debe identificar:
 
 - agente especializado involucrado;
+- reglas API-Agent Orchestration aplicables;
 - capacidades incrementales del runtime generico;
 - herramientas de dominio necesarias;
 - validadores deterministicos;
 - limites de autonomia;
 - puntos de aprobacion humana;
 - presupuesto, metricas y evidencia.
+- endpoints, contratos y rutas sometidos al gate Richardson REST cuando correspondan.
 
 ## Estado actual asumido
 
@@ -46,7 +49,7 @@ Esto todavia no equivale a un runtime agentic headless comparable operacionalmen
 
 | Componente | Autoridad |
 |---|---|
-| `api/` | Dominio, auth, ownership, estados, persistencia, notas finales, publicacion, aprobaciones, creditos y billing |
+| `api/` | Interfaz publica de `web/`, dominio, auth, ownership, estados, persistencia, notas finales, publicacion, aprobaciones, creditos y billing |
 | `agents/` runtime | Ejecucion de agentes, proveedor/modelo, tool loop, politicas, presupuesto, validacion tecnica, metricas y trazabilidad |
 | Agente especializado | Instrucciones, contratos de entrada/salida, herramientas permitidas, validadores, autonomia y causas de bloqueo |
 | Modelo GenAI | Propone acciones, interpreta evidencia, redacta y explica; no autoriza ni persiste efectos de dominio |
@@ -108,3 +111,4 @@ Una release con IA no esta completa si solo "el endpoint responde". Debe demostr
 | Fecha | Cambio | Motivo | Elementos afectados | Decision asociada |
 |---|---|---|---|---|
 | 2026-07-20 | Creacion inicial | Incorporar `master-plan-runtime` como estrategia transversal del Master Plan | `analysis/agent-runtime-strategy.md`, R01-R06 | D-04, D-06 |
+| 2026-07-20 | Alineacion API-Agent Orchestration | Asegurar que runtime y API robusta avancen dentro de releases funcionales y con gate REST por tarea | `analysis/agent-runtime-strategy.md`, `analysis/api-agent-orchestration-strategy.md` | D-API-01..D-API-10 |

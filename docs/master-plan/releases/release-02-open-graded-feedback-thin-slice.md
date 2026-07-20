@@ -304,6 +304,15 @@ Campos minimos nuevos o extendidos:
 - Politica de autonomia por agente: Rubric `DRAFT_ONLY`, Grading/Feedback `HUMAN_APPROVAL_REQUIRED`.
 - Handoff tipado minimo Grading -> Feedback mediante resultado/evidencia aprobable, sin multiagente general.
 
+### Incremento API-Agent Orchestration requerido
+
+- Aplicar [`api-agent-orchestration-strategy.md`](../analysis/api-agent-orchestration-strategy.md) a rubric/grading/feedback como consumidores funcionales reales.
+- Mantener endpoints publicos orientados a intencion, por ejemplo rubric generations, grading runs y feedback generations; no exponer ejecucion generica de agentes a `web/`.
+- Usar `api/` para validar assessment state, ownership, rubrica aprobada, submission scope, cost policy e idempotencia antes de invocar `agents/`.
+- Reutilizar o extender `AiOperation`/`AgentRun`/`AgentAttempt` de R01 para cada agente; grading de una submission puede seguir sincrono si cumple el presupuesto temporal.
+- Separar estado tecnico de run de estado academico de rubric/grade/feedback review.
+- Someter todo endpoint/ruta nueva al gate Richardson REST: recurso claro, status codes, `Location` para operaciones, links `operation`/`result`/`retry` cuando aplique y contract tests API-Agents/API-Web.
+
 ### Herramientas requeridas
 
 - `load_assessment_draft`.
@@ -705,4 +714,5 @@ Criterios:
 | Fecha | Cambio | Motivo | Elementos afectados | Decision asociada |
 |---|---|---|---|---|
 | 2026-07-20 | Incorporacion de capacidades de Agent Runtime | Declarar el segundo consumidor real del runtime y sus limites de autonomia | Runtime, agentes Rubric/Grading/Feedback | D-04, D-06 |
+| 2026-07-20 | Incorporacion de API-Agent Orchestration | Asegurar que rubric/grading/feedback usen `api/` como orquestador funcional y no como proxy de agentes | API, agents, web routes, DoD operativo | D-API-01..D-API-10 |
 | 2026-07-20 | Creacion inicial | Ejecucion de Fase 05 para R02 | Todo el documento | D-04, D-06 |
