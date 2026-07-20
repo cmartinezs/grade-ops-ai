@@ -5,55 +5,42 @@ Scope: `src/app/(protected)/assessments/[id]/draft/page.tsx`, `src/features/asse
 
 ## Veredicto
 
-🔴 **CHANGES REQUESTED — 2 errores de lint bloqueantes**
+✅ **APPROVED — READY TO MERGE**
 
-Los 5 findings P3 fueron atendidos, pero las correcciones introdujeron 2 nuevos errores de lint que impiden el merge.
+Los 5 findings P3 + 2 lint errors fueron atendidos completamente.
 
 ---
 
-## Gates verificados en vivo (re-review post-correcciones)
+## Gates verificados en vivo (final)
 
 | Gate | Resultado |
 |------|-----------|
-| 28 tests (5 integración + 23 unitarios) | ✅ 28/28 PASS — 1.558s |
-| Lint | ❌ 1 error + 1 warning — **bloqueante**|
+| 28 tests (5 integración + 23 unitarios) | ✅ 28/28 PASS — 0.919s |
+| Lint | ✅ CLEAN — 0 errors, 0 warnings |
+| Build | ✅ Compiled successfully in 2.2s |
 
 ---
 
-## Nuevos findings (introducidos por las correcciones)
+## Issues Cerrados (5 P3 + 2 Lint)
 
-### 🔴 P1 - `no-empty-object-type` — interface vacía en `protected-page-render.tsx`
+### Original P3 Findings — ✅ ALL CLOSED
 
-- File: `src/test/setup/protected-page-render.tsx:5`
-- Lint error: `An interface declaring no members is equivalent to its supertype  @typescript-eslint/no-empty-object-type`
+| # | Issue | Fix |
+|---|-------|-----|
+| 1 | `shellConfig` dead code | Removed from interface |
+| 2 | Duplicate tests 4 & 5 | Merged into single test |
+| 3 | `getByDisplayValue("")` fragile | Changed to `getByLabelText` |
+| 4 | `void assessmentId` parameter | Renamed to `_assessmentId` |
+| 5 | Incorrect async typing | `void` → `Promise<void>` |
 
-Al eliminar `shellConfig`, la interfaz quedó vacía: `interface ProtectedPageRenderOptions extends Omit<RenderOptions, "wrapper"> {}`. ESLint rechaza interfaces vacías.
+### Lint Errors (introducidos por correcciones) — ✅ ALL CLOSED
 
-Fix: reemplazar `interface` por `type`:
-```ts
-// Antes (error)
-interface ProtectedPageRenderOptions extends Omit<RenderOptions, "wrapper"> {}
+| # | Error | Fix |
+|---|-------|-----|
+| 6 | `no-empty-object-type` in `protected-page-render.tsx` | Converted `interface` to `type` |
+| 7 | `no-unused-vars` warning for `_assessmentId` | Added `argsIgnorePattern: "^_"` to eslint.config.mjs |
 
-// Después
-type ProtectedPageRenderOptions = Omit<RenderOptions, "wrapper">;
-```
-
-### 🟡 P2 - `no-unused-vars` warning en `_assessmentId`
-
-- File: `src/features/assessment-creation/hooks/useAssessmentDraftBuilderPage.ts:100`
-- Lint warning: `'_assessmentId' is defined but never used  @typescript-eslint/no-unused-vars`
-
-El proyecto usa `next/typescript` que no configura el prefijo `_` como excepción a `no-unused-vars`. El renombrado resuelve el warning de TypeScript pero no el de ESLint.
-
-Fix — dos opciones:
-```ts
-// Opción A: destructuring vacío (semántico, sin parámetro nombrado)
-export function useAssessmentDraftBuilderPage(/* assessmentId: string — unused until task-12 */): RemoteData<...> {
-
-// Opción B: mantener _assessmentId y añadir excepción en eslint.config.mjs
-"@typescript-eslint/no-unused-vars": ["warn", { "argsIgnorePattern": "^_" }]
-```
-Opción A es preferible: no requiere tocar la config global y comunica la intención en el comentario. La firma cambiará cuando task-12 lo use.
+**Status:** All 7 items closed. Tests re-verified. Build and lint clean.
 
 ---
 
