@@ -51,7 +51,7 @@ No incluye todavia los archivos detallados de cada release. Esos documentos se g
 
 | Release | Nombre | Estado | Complejidad | Archivo esperado en Fase 05 |
 |---|---|---|---|---|
-| R01 | Assessment Creation + Evidence Backbone | Planificada | M | `releases/release-01-assessment-creation-evidence-backbone.md` |
+| R01 | Assessment Creation + Evidence Backbone | Documentada | M | [release-01-assessment-creation-evidence-backbone.md](releases/release-01-assessment-creation-evidence-backbone.md) |
 | R02 | Open Graded Feedback Thin Slice | Planificada | L | `releases/release-02-open-graded-feedback-thin-slice.md` |
 | R03 | Open Cohort Report and Impact | Planificada | M | `releases/release-03-open-cohort-report-impact.md` |
 | R04 | Closed Question Bank to Snapshot | Planificada | L | `releases/release-04-closed-question-bank-snapshot.md` |
