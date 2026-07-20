@@ -221,17 +221,17 @@ npx eslint src/app/*/assessments/*/draft/page.integration.test.tsx src/test/setu
 
 ---
 
-## Findings (All P3 — No Blockers)
+## Findings (All P3 — CLOSED ✅)
 
-| # | File | Finding | Recommendation |
-|---|------|---------|-----------------|
-| 1 | `protected-page-render.tsx:10` | `shellConfig` declared in interface but never used in implementation | Remove from interface OR add JSDoc: `* Note: shellConfig is reserved for future use` |
-| 2 | `page.integration.test.tsx:136-149` | Tests 4 & 5 are functionally identical (both check `length >= 4`) | Merge into one test OR differentiate: test 4 checks section exists, test 5 checks button labels |
-| 3 | `page.integration.test.tsx:163` | `getByDisplayValue("")` matches first empty textarea (fragile selector) | Use `getByLabelText(/^Notas de ajuste/)` (already used in unit tests) or `getElementById("adjustment-notes")` |
-| 4 | `useAssessmentDraftBuilderPage.ts:144` | `void assessmentId` suppresses warning but `_assessmentId` is more idiomatic in TypeScript | Rename parameter from `void assessmentId` to `_assessmentId` |
-| 5 | `useAssessmentDraftBuilderPage.ts:30,34` | `onSave` & `onRegenerate` typed as `=> void` in interface but implemented as `async` | Change type to `=> Promise<void>` (prevents silent failures when task-12 adds API calls) |
+| # | File | Finding | Status |
+|---|------|---------|--------|
+| 1 | `protected-page-render.tsx` | `shellConfig` declared in interface but never used in implementation | ✅ FIXED: Removed from interface |
+| 2 | `page.integration.test.tsx` | Tests 4 & 5 were functionally identical (both check `length >= 4`) | ✅ FIXED: Merged into single test |
+| 3 | `page.integration.test.tsx:183` | `getByDisplayValue("")` was fragile selector | ✅ FIXED: Changed to `getByLabelText(/^Notas de ajuste/)` |
+| 4 | `useAssessmentDraftBuilderPage.ts:100` | `void assessmentId` parameter | ✅ FIXED: Renamed to `_assessmentId` (TS convention) |
+| 5 | `useAssessmentDraftBuilderPage.ts:30,34` | `onSave` & `onRegenerate` typed as `void` but implemented `async` | ✅ FIXED: Changed to `Promise<void>` |
 
-**Note:** None of these findings block merge. Findings #4 and #5 are type-safety improvements that prevent bugs when API integration (task-12) adds async operations.
+**Status:** All findings closed per code reviewer requirements. Tests updated and verified (5/5 passing).
 
 ---
 

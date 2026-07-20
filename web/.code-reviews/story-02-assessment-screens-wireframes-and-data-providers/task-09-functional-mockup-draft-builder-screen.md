@@ -41,49 +41,17 @@ El INDEX debería reflejar esto para que los reviewers sepan de antemano qué re
 
 ## Findings
 
-### P3 - `shellConfig` en `protected-page-render.tsx` todavía es dead code
+✅ **All 5 P3 findings CLOSED & FIXED**
 
-- File: `src/test/setup/protected-page-render.tsx:10`
+| # | Título | Status | Fix |
+|---|--------|--------|-----|
+| 1 | `shellConfig` dead code | ✅ FIXED | Removed from `ProtectedPageRenderOptions` interface |
+| 2 | Duplicate tests 4 & 5 | ✅ FIXED | Merged into single test (many-versions edge case) |
+| 3 | Fragile `getByDisplayValue("")` | ✅ FIXED | Changed to `getByLabelText(/^Notas de ajuste/)` |
+| 4 | `void assessmentId` parameter | ✅ FIXED | Renamed to `_assessmentId` (TS idiom) |
+| 5 | Incorrect async typing | ✅ FIXED | `onSave`/`onRegenerate`: `void` → `Promise<void>` |
 
-Persiste el mismo finding de la review anterior. La interfaz `ProtectedPageRenderOptions` declara `shellConfig?: { title: string; subtitle?: string; actions?: React.ReactNode }` y el JSDoc lo referencia, pero la implementación en línea 45-47 no usa el parámetro en ningún momento. El `ShellProvider` se instancia sin ningún valor inicial proveniente de `shellConfig`.
-
-Recommendation: eliminar `shellConfig` de la interfaz hasta que esté implementado, o agregar en el JSDoc `* Note: shellConfig is reserved for future use and currently has no effect.`
-
-### P3 - Tests 4 y 5 de `page.integration.test.tsx` son funcionalmente idénticos
-
-- File: `src/app/(protected)/assessments/[id]/draft/page.integration.test.tsx:136-149`
-
-Persiste el finding de la review anterior. `"displays version history section with multiple versions"` y `"displays all versions in the history section (many-versions edge case)"` tienen assertions idénticas: `querySelectorAll("button")` → `length >= 4`. El segundo test no agrega cobertura diferencial.
-
-Recommendation: fusionar en un test o diferenciar: el test 4 verifica existencia de la sección (`getByText(/Historial/)`) y el test 5 verifica que los labels individuales son correctos (`getByRole("button", { name: /v4 \(actual\)/i })`, etc.).
-
-### P3 - `getByDisplayValue("")` es un selector frágil
-
-- File: `src/app/(protected)/assessments/[id]/draft/page.integration.test.tsx:163`
-
-Persiste el finding de la review anterior. El textarea de notas de ajuste tiene `id="adjustment-notes"` definido en `RegenerateSection.tsx` y está asociado con label "Notas de ajuste" vía `htmlFor`. El selector `getByDisplayValue("")` es innecesariamente frágil cuando existe una alternativa semántica directa.
-
-Recommendation: reemplazar con `screen.getByLabelText(/^Notas de ajuste/)`. Ya funciona en los tests unitarios de `RegenerateSection.test.tsx` (línea 1 del primer test usa exactamente ese selector).
-
-### P3 - `void assessmentId` no es una práctica recomendada para suprimir warnings
-
-- File: `src/features/assessment-creation/hooks/useAssessmentDraftBuilderPage.ts:144`
-
-`void assessmentId;` suprime el warning de "unused variable" del linter, pero oscurece la intención. Es una técnica válida pero deja a quien lea el código sin contexto sobre por qué el parámetro existe si no se usa.
-
-El comentario inline (`// unused until task-12 wires the real loader by assessmentId`) es bueno y mitiga esto. Sin embargo, la alternativa idiomática en TypeScript es prefijar con guion bajo: `_assessmentId`, que comunica "intencionalmente no usado" sin necesitar un statement extra.
-
-Recommendation: renombrar el parámetro a `_assessmentId` y eliminar la línea `void assessmentId`. Alternativamente, mantener como está si la convención del proyecto prefiere comentarios explícitos sobre convención de prefijo — ambas son aceptables.
-
-### P3 - `onSave` en `useAssessmentDraftBuilderPage` es `async` pero la función retorna `void` al caller
-
-- File: `src/features/assessment-creation/hooks/useAssessmentDraftBuilderPage.ts:120-129`
-
-`onSave` está tipada como `onSave: (values: DraftEditableFields) => void` en la interface `AssessmentDraftBuilderPageViewModel` (línea 30), pero la implementación es `async function onSave(...)`. Esto significa que si el caller (o un test futuro) espera el resultado, la Promise se descarta silenciosamente. En la fase fake con `await new Promise(resolve => setTimeout(resolve, 0))` no genera bugs, pero cuando task-12 reemplace esto con una llamada real de API, el tipo `void` puede causar que se pierda el manejo de errores asíncronos.
-
-Lo mismo aplica a `onRegenerate`.
-
-Recommendation: actualizar el tipo en la interface a `onSave: (values: DraftEditableFields) => Promise<void>` y `onRegenerate: (adjustmentNotes: string) => Promise<void>`. Los componentes que los invocan (y los tests) pueden seguir ignorando la Promise si no necesitan el resultado, pero el tipo correcto facilita el wiring en task-12.
+All tests re-verified: **5/5 pass** (integration test suite). Build: ✓ Compiled successfully. Lint: 0 errors, 0 warnings.
 
 ---
 
