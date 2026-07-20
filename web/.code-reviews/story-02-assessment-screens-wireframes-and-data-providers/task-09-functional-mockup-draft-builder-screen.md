@@ -1,25 +1,13 @@
 # Code Review: task-09-functional-mockup-draft-builder-screen
 
-Date: 2026-07-20  
-Scope: `src/test/setup/protected-page-render.tsx` (nuevo), `src/app/(protected)/assessments/[id]/draft/page.integration.test.tsx` (nuevo).
+Date: 2026-07-20
+Scope: `src/app/(protected)/assessments/[id]/draft/page.tsx`, `src/features/assessment-creation/` (components, hooks, mapper), `src/test/setup/protected-page-render.tsx`, `page.integration.test.tsx`.
 
 ## Veredicto
 
 ✅ **APPROVED — READY TO MERGE**
 
-Todos los gates pasan. No hay breaking changes. El patrón es correcto y escalable.
-
----
-
-## Evidencia de Verificación
-
-Para revisar completo, ver: **`docs/code-review-evidence/001-assessment-creation/story-02/task-09/`**
-
-- 📋 **INDEX.md** — Entrada para reviewers (5 min overview)
-- 📄 **PROMPT.md** — Resumen conciso
-- 📖 **EVIDENCE.md** — Verificación detallada
-- 🔧 **HOW_TO_VERIFY.md** — Guía step-by-step
-- 📊 **logs/** — Raw test/build output
+Todos los gates pasan. La arquitectura es correcta. Los findings de la review anterior (P3 sobre `shellConfig`) fueron atendidos y el PR cierra el gap de testing de páginas protegidas que quedaba pendiente.
 
 ---
 
@@ -27,136 +15,85 @@ Para revisar completo, ver: **`docs/code-review-evidence/001-assessment-creation
 
 | Gate | Resultado |
 |------|-----------|
-| 6 integration tests nuevos | ✅ 6/6 PASS — 1.103s |
-| 23 unit tests existentes | ✅ 23/23 PASS — sin regresiones |
+| 29 tests (6 integración + 23 unitarios) | ✅ 29/29 PASS — 2.03s |
 | Lint | ✅ CLEAN — 0 errors, 0 warnings |
+
+---
+
+## Scope real del PR
+
+El INDEX describe el PR como "2 archivos nuevos" pero el scope real es significativamente mayor:
+
+| Categoría | Archivos |
+|-----------|----------|
+| Page | `page.tsx` |
+| Components | `DraftEditorSection.tsx`, `RegenerateSection.tsx`, `VersionHistorySection.tsx` |
+| Hooks (page) | `useAssessmentDraftBuilderPage.ts` |
+| Hooks (section) | `useDraftEditorSection.ts`, `useRegenerateSection.ts`, `useVersionHistorySection.ts` |
+| Mapper | `toAssessmentDraftBuilderPageViewModel.ts` |
+| Tests unitarios | `DraftEditorSection.test.tsx`, `RegenerateSection.test.tsx`, `VersionHistorySection.test.tsx` |
+| Tests integración | `page.integration.test.tsx` |
+| Helper | `protected-page-render.tsx` |
+
+El INDEX debería reflejar esto para que los reviewers sepan de antemano qué revisar.
 
 ---
 
 ## Findings
 
-### P3 - `shellConfig` declarado en la interfaz pero nunca usado en la implementación
+### P3 - `shellConfig` en `protected-page-render.tsx` todavía es dead code
 
 - File: `src/test/setup/protected-page-render.tsx:10`
 
-La interfaz `ProtectedPageRenderOptions` declara `shellConfig?: { title: string; subtitle?: string; actions?: React.ReactNode }` y el JSDoc lo documenta como `"Default: { title: "Test Page" }"`, pero la implementación en línea 45-47 ignora el parámetro completamente: solo envuelve en `<ShellProvider>` sin pasar ningún config inicial.
+Persiste el mismo finding de la review anterior. La interfaz `ProtectedPageRenderOptions` declara `shellConfig?: { title: string; subtitle?: string; actions?: React.ReactNode }` y el JSDoc lo referencia, pero la implementación en línea 45-47 no usa el parámetro en ningún momento. El `ShellProvider` se instancia sin ningún valor inicial proveniente de `shellConfig`.
 
-El resultado es que un consumidor puede escribir `renderProtectedPage(<MyPage />, { shellConfig: { title: "Custom" } })` esperando que ese título se aplique al shell, y no sucede nada. El parámetro es dead code a nivel runtime.
+Recommendation: eliminar `shellConfig` de la interfaz hasta que esté implementado, o agregar en el JSDoc `* Note: shellConfig is reserved for future use and currently has no effect.`
 
-Recommendation: eliminar `shellConfig` de la interfaz y del JSDoc hasta que esté implementado, o añadir en el JSDoc una nota explícita `* Note: shellConfig is reserved for future use and has no effect currently.`
-
-### P3 - Tests 4 y 5 son funcionalmente idénticos
+### P3 - Tests 4 y 5 de `page.integration.test.tsx` son funcionalmente idénticos
 
 - File: `src/app/(protected)/assessments/[id]/draft/page.integration.test.tsx:136-149`
 
-`"displays version history section with multiple versions"` y `"displays all versions in the history section (many-versions edge case)"` hacen exactamente los mismos assertions: buscan el heading, obtienen `querySelectorAll("button")`, y verifican `length >= 4`. El segundo test no agrega cobertura adicional.
+Persiste el finding de la review anterior. `"displays version history section with multiple versions"` y `"displays all versions in the history section (many-versions edge case)"` tienen assertions idénticas: `querySelectorAll("button")` → `length >= 4`. El segundo test no agrega cobertura diferencial.
 
-Recommendation: fusionar en un solo test, o diferenciar: el test 4 puede verificar la existencia de la sección y el test 5 puede verificar los labels de cada botón (ej. que contienen "v1", "v2", "v3", "v4").
+Recommendation: fusionar en un test o diferenciar: el test 4 verifica existencia de la sección (`getByText(/Historial/)`) y el test 5 verifica que los labels individuales son correctos (`getByRole("button", { name: /v4 \(actual\)/i })`, etc.).
 
 ### P3 - `getByDisplayValue("")` es un selector frágil
 
 - File: `src/app/(protected)/assessments/[id]/draft/page.integration.test.tsx:163`
 
-En el test `"displays regenerate section with functional controls"`, el textarea de notas se obtiene con `screen.getByDisplayValue("")`. Este selector matchea el _primer_ input o textarea con valor vacío que encuentre en el DOM — incluyendo el campo de título si en algún momento queda vacío por otro test, o si se agrega otro campo vacío a `DraftEditorSection`.
+Persiste el finding de la review anterior. El textarea de notas de ajuste tiene `id="adjustment-notes"` definido en `RegenerateSection.tsx` y está asociado con label "Notas de ajuste" vía `htmlFor`. El selector `getByDisplayValue("")` es innecesariamente frágil cuando existe una alternativa semántica directa.
 
-Recommendation: usar un selector más específico: `screen.getByRole("textbox", { name: /notas de ajuste/i })` si el label existe, o `screen.getByPlaceholderText(...)` si el campo tiene placeholder, o `document.getElementById("adjustment-notes")` si ese ID está presente en el markup de `RegenerateSection`.
+Recommendation: reemplazar con `screen.getByLabelText(/^Notas de ajuste/)`. Ya funciona en los tests unitarios de `RegenerateSection.test.tsx` (línea 1 del primer test usa exactamente ese selector).
 
----
+### P3 - `void assessmentId` no es una práctica recomendada para suprimir warnings
 
-## Observaciones sin finding (positivas)
+- File: `src/features/assessment-creation/hooks/useAssessmentDraftBuilderPage.ts:144`
 
-- `DraftBuilderPageTestWrapper` replica fielmente el cuerpo de `page.tsx` producción. La decisión de no importar directamente la page (evitando problemas con `use(params)` y `"use client"` en JSDOM) es correcta.
-- Mocks al tope del archivo, antes de cualquier `describe` — correcto.
-- `userEvent.setup()` (API v14) — correcto, evita el deprecated `userEvent.type()` directo.
-- `waitFor` usado solo en el test de edición donde hay una actualización de estado asíncrona — sin over-use.
-- No hay `console.log`, `debugger`, `.skip()` ni `.only()`.
-- El helper `renderProtectedPage` tiene JSDoc completo con `@param` y `@example`. Fácil de adoptar.
+`void assessmentId;` suprime el warning de "unused variable" del linter, pero oscurece la intención. Es una técnica válida pero deja a quien lea el código sin contexto sobre por qué el parámetro existe si no se usa.
 
----
+El comentario inline (`// unused until task-12 wires the real loader by assessmentId`) es bueno y mitiga esto. Sin embargo, la alternativa idiomática en TypeScript es prefijar con guion bajo: `_assessmentId`, que comunica "intencionalmente no usado" sin necesitar un statement extra.
 
-## Cómo Abordar los Findings
+Recommendation: renombrar el parámetro a `_assessmentId` y eliminar la línea `void assessmentId`. Alternativamente, mantener como está si la convención del proyecto prefiere comentarios explícitos sobre convención de prefijo — ambas son aceptables.
 
-### Addressing P3 #1: `shellConfig` unused
+### P3 - `onSave` en `useAssessmentDraftBuilderPage` es `async` pero la función retorna `void` al caller
 
-**Option A (recommended):** Remover de la interfaz ahora, agregar en futuro cuando se necesite.
+- File: `src/features/assessment-creation/hooks/useAssessmentDraftBuilderPage.ts:120-129`
 
-```typescript
-// Cambiar:
-interface ProtectedPageRenderOptions extends Omit<RenderOptions, "wrapper"> {}
+`onSave` está tipada como `onSave: (values: DraftEditableFields) => void` en la interface `AssessmentDraftBuilderPageViewModel` (línea 30), pero la implementación es `async function onSave(...)`. Esto significa que si el caller (o un test futuro) espera el resultado, la Promise se descarta silenciosamente. En la fase fake con `await new Promise(resolve => setTimeout(resolve, 0))` no genera bugs, pero cuando task-12 reemplace esto con una llamada real de API, el tipo `void` puede causar que se pierda el manejo de errores asíncronos.
 
-// De:
-shellConfig?: { title: string; subtitle?: string; actions?: React.ReactNode };
-```
+Lo mismo aplica a `onRegenerate`.
 
-Task-12 puede re-introducirlo cuando se wirea API real y sea necesario test-driven config.
-
-**Option B:** Mantener con nota explícita en JSDoc:
-```typescript
-/**
- * Note: shellConfig is reserved for future use. Currently has no effect.
- * Task-12 will implement when API integration requires configurable shell state.
- */
-shellConfig?: { title: string; ... };
-```
-
-### Addressing P3 #2: Duplicate tests 4 & 5
-
-**Recommendation:** Fusionar en un solo test o diferenciar.
-
-Versión fusionada (1 test):
-```typescript
-it("displays version history with multiple versions", () => {
-  renderPage();
-  const versionHistorySection = screen.getByText(/Historial de versiones/i).closest("section");
-  const versionButtons = versionHistorySection?.querySelectorAll("button") ?? [];
-  
-  // Both assertions in one test:
-  expect(versionHistorySection).toBeInTheDocument();           // Section exists
-  expect(versionButtons.length).toBeGreaterThanOrEqual(4);     // Many versions
-});
-```
-
-O diferenciados:
-- Test 4: Section + headings present
-- Test 5: Each version button has correct label ("v1", "v2", etc)
-
-### Addressing P3 #3: `getByDisplayValue("")` is fragile
-
-**Recommendation:** Usar selector específico:
-
-```typescript
-// Cambiar:
-const adjustmentNotesInput = screen.getByDisplayValue("") as HTMLTextAreaElement;
-
-// A:
-const adjustmentNotesInput = document.getElementById("adjustment-notes") as HTMLTextAreaElement;
-
-// O si el label existe:
-const adjustmentNotesInput = screen.getByRole("textbox", { name: /notas de ajuste/i });
-
-// O si existe placeholder:
-const adjustmentNotesInput = screen.getByPlaceholderText(/notas de ajuste/i);
-```
-
-Check `RegenerateSection.tsx` para ver cuál es más robusto (id, label, placeholder).
+Recommendation: actualizar el tipo en la interface a `onSave: (values: DraftEditableFields) => Promise<void>` y `onRegenerate: (adjustmentNotes: string) => Promise<void>`. Los componentes que los invocan (y los tests) pueden seguir ignorando la Promise si no necesitan el resultado, pero el tipo correcto facilita el wiring en task-12.
 
 ---
 
-## Resumen de Hallazgos
+## Observaciones positivas
 
-| Finding | Severity | Status | Recommendation |
-|---------|----------|--------|-----------------|
-| `shellConfig` unused | P3 | Ready | Remove or add explicit JSDoc note |
-| Tests 4 & 5 duplicate | P3 | Ready | Merge into single test or differentiate assertions |
-| Fragile selector | P3 | Ready | Use `getElementById` or `getByRole` instead |
-
-Ninguno de estos hallazgos bloquea merge. Son mejoras para próximas iteraciones.
-
----
-
-## Dónde Encontrar Evidencia
-
-- **Estructura de testing:** `docs/code-review-evidence/001-assessment-creation/story-02/task-09/INDEX.md`
-- **Tests crudos:** `docs/code-review-evidence/001-assessment-creation/story-02/task-09/logs/test-results.log`
-- **Build crudos:** `docs/code-review-evidence/001-assessment-creation/story-02/task-09/logs/build-results.log`
-- **Implementación:** `src/test/setup/protected-page-render.tsx` + `src/app/(protected)/assessments/[id]/draft/page.integration.test.tsx`
+- **Separación de responsabilidades**: la arquitectura `page hook → section hooks → components` está bien respetada. `useAssessmentDraftBuilderPage` es el único owner de state (versions, selectedVersion, flags de loading), los section hooks solo manejan form state local. Esto cierra el P1 de la review de task-08.
+- **`isViewingHistoricalVersion`** derivado correctamente como `selectedVersion !== currentVersionNumber`, y propagado a `DraftEditorSection` como `isReadOnly`. El flujo de solo lectura para versiones históricas está implementado y testeado (test unitario "is read-only and hides the save button while previewing a historical version"). Esto cierra el P2 de la review de task-08.
+- **Mapper limpio**: `toAssessmentDraftBuilderPageViewModel` y `toDraftViewModel` son funciones puras sin side effects. La separación entre "qué va al VersionHistory" (solo campos de preview) y "qué va al DraftEditor" (DTO completo) está bien modelada.
+- **`useDraftEditorSection`**: el patrón de `registerField` que envuelve el `onChange` de RHF para limpiar errores server-side al primer keystroke es una buena UX. La conversión bidireccional `linesToList`/`listToLines` para campos de lista es pragmática dado que no existe un list-editor en el DS todavía.
+- **`useRegenerateSection`**: la prioridad de errores (`fieldError ?? localError`) garantiza que un error server-side hace silencio al local. Correcto.
+- **Tests unitarios de secciones**: todos usan `fireEvent` (sin `userEvent.setup()`), apropiado dado que son pruebas síncronas/simples. Consistencia interna correcta — `userEvent.setup()` reservado para los tests de integración que necesitan las simulaciones de browser más realistas.
+- No hay `console.log`, `debugger`, `.skip()`, `.only()`.
+- No hay breaking changes en archivos existentes.

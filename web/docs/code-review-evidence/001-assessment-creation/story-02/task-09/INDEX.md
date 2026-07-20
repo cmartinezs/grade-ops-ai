@@ -9,9 +9,31 @@
 
 ## Cambios
 
-**2 archivos nuevos:**
-- `src/test/setup/protected-page-render.tsx` — Helper reutilizable para tests de páginas protegidas
-- `src/app/(protected)/assessments/[id]/draft/page.integration.test.tsx` — Suite de 6 tests de integración
+**15+ archivos nuevos:**
+
+**Page & Components (5):**
+- `src/app/(protected)/assessments/[id]/draft/page.tsx` — Page component principal
+- `src/app/(protected)/assessments/[id]/draft/components/BriefForm.tsx` — Form editor
+- `src/app/(protected)/assessments/[id]/draft/components/DraftEditorSection.tsx` — Section 1/3
+- `src/app/(protected)/assessments/[id]/draft/components/VersionHistorySection.tsx` — Section 2/3
+- `src/app/(protected)/assessments/[id]/draft/components/RegenerateSection.tsx` — Section 3/3
+
+**Hooks (4):**
+- `src/app/(protected)/assessments/[id]/draft/hooks/useAssessmentDraftBuilderPage.ts` — Page state hook
+- `src/app/(protected)/assessments/[id]/draft/hooks/useDraftEditorSection.ts` — Editor section state
+- `src/app/(protected)/assessments/[id]/draft/hooks/useVersionHistorySection.ts` — History state
+- `src/app/(protected)/assessments/[id]/draft/hooks/useRegenerateSection.ts` — Regenerate state
+
+**Helpers & Mappers (1):**
+- `src/lib/assessment/mappers/assessmentDataMapper.ts` — Pure mapper (preview → DTO)
+
+**Tests (5):**
+- `src/test/setup/protected-page-render.tsx` — Reusable test helper
+- `src/app/(protected)/assessments/[id]/draft/page.integration.test.tsx` — 6 integration tests
+- `src/app/(protected)/assessments/[id]/draft/components/BriefForm.test.tsx` — 7 unit tests
+- `src/app/(protected)/assessments/[id]/draft/components/DraftEditorSection.test.tsx` — 6 unit tests
+- `src/app/(protected)/assessments/[id]/draft/components/VersionHistorySection.test.tsx` — 5 unit tests
+- `src/app/(protected)/assessments/[id]/draft/components/RegenerateSection.test.tsx` — 5 unit tests
 
 **0 archivos modificados** (no hay breaking changes)
 
