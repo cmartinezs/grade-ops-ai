@@ -1,8 +1,8 @@
-# US-010: Postman Collection for Teacher Onboarding Endpoints
+# US-013: Postman Collection for Teacher Onboarding Endpoints
 
 - **Epic:** 01 — Teacher Onboarding and Workspace
 - **Priority:** P1
-- **ID:** US-010
+- **ID:** US-013
 
 ## Story
 

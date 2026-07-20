@@ -13,7 +13,7 @@ All GradeOps AI product user stories, organized by epic.
 
 | Epic | Title | Stories |
 |------|-------|---------|
-| [01](epic-01-teacher-onboarding/) | Teacher Onboarding and Workspace | 9 |
+| [01](epic-01-teacher-onboarding/) | Teacher Onboarding and Workspace | 12 |
 | [02](epic-02-assessment-creation/) | Assessment Creation | 3 |
 | [03](epic-03-rubric-generation-approval/) | Rubric Generation and Approval | 4 |
 | [04](epic-04-submission-intake/) | Student Submission Intake | 5 |

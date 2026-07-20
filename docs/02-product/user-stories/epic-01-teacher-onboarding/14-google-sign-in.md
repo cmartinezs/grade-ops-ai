@@ -1,8 +1,8 @@
-# US-011: Google Sign-In for Teachers
+# US-014: Google Sign-In for Teachers
 
 - **Epic:** 01 — Teacher Onboarding and Workspace
 - **Priority:** P0
-- **ID:** US-011
+- **ID:** US-014
 
 ## Story
 

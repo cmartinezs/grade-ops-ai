@@ -8,7 +8,7 @@ User stories have been extracted to individual files organized by epic.
 
 ```text
 user-stories/
-├── epic-01-teacher-onboarding/         # US-001 – US-003
+├── epic-01-teacher-onboarding/         # US-001 – US-009, US-013 – US-015
 ├── epic-02-assessment-creation/        # US-010 – US-012
 ├── epic-03-rubric-generation-approval/ # US-020 – US-023
 ├── epic-04-submission-intake/          # US-030 – US-034
