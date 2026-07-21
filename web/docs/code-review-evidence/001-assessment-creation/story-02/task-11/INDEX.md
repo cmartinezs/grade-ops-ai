@@ -2,8 +2,21 @@
 
 **PR:** #85
 **Planning:** `001-assessment-creation/story-02/task-11`
-**Status:** ✅ Ready for Review
+**Status:** ✅ APPROVED — 1 actionable P3 finding fixed
 **Date:** 2026-07-21
+
+---
+
+## Code Review Findings
+
+Code review approved with 2 P3 findings:
+
+| # | Finding | Status | Fix |
+|---|---------|--------|-----|
+| 1 | `isRecoverableDraftMutationStatus` not exported/testable in isolation | ✅ Fixed | Exported + dedicated isolation test block (2 tests) |
+| 2 | Mutations don't accept an external `Logger` (consistency observation) | No action | Reviewer explicitly noted this as a well-reasoned design decision, not a recommendation to change |
+
+Re-verified: 29/29 tests pass (2 new), build compiles, scoped lint clean.
 
 ---
 
