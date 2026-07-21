@@ -2,8 +2,22 @@
 
 **PR:** #84
 **Planning:** `001-assessment-creation/story-02/task-10`
-**Status:** ✅ Ready for Review
+**Status:** ✅ APPROVED — 3 P3 findings addressed
 **Date:** 2026-07-20
+
+---
+
+## Code Review Findings — All Closed
+
+Code review (`.code-reviews/story-02-.../task-10-data-provider-draft-builder-screen.md`) approved with 3 P3 findings, none blocking. All 3 fixed:
+
+| # | Finding | Fix |
+|---|---------|-----|
+| 1 | `createCorrelationId` duplicated between `assessments.ts` and the loader | Extracted to `src/lib/logging/correlationId.ts`, both import it |
+| 2 | Error path discarded the parsed error body | Added `GetAssessmentDraftError`/`GetAssessmentDraftVersionsError` carrying `status`/`body`/`assessmentId`, mirroring existing error classes |
+| 3 | Timing-based parallel test fragile on loaded CI | Threshold raised from 50ms to 500ms — still catches sequential regression |
+
+Re-verified: 29/29 tests pass, build compiles, scoped lint clean.
 
 ---
 

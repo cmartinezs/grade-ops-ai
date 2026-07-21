@@ -1,5 +1,28 @@
 # Evidence: Data Provider Draft Builder Screen (PR 84)
 
+## Code Review Findings — All Closed
+
+Code review approved with 3 P3 findings, none blocking merge. All 3 addressed:
+
+### ✅ P3 #1 — `createCorrelationId` duplicated
+
+**Before:** identical `function createCorrelationId()` bodies in both `src/lib/api/assessments.ts` and `src/features/assessment-creation/loaders/loadAssessmentDraftBuilderPage.ts`.
+**Fix:** extracted to `src/lib/logging/correlationId.ts`, both files import it. Verified via `grep -rn "function createCorrelationId" src/` → exactly one match.
+
+### ✅ P3 #2 — Error path discarded the parsed error body
+
+**Before:** `getAssessmentDraft`/`getAssessmentDraftVersions` parsed the error response body, then threw a bare `Error` with only the HTTP status — the body (which carries `error`/`message`) was silently dropped.
+**Fix:** added `GetAssessmentDraftError` and `GetAssessmentDraftVersionsError` classes, mirroring the existing `CreateAssessmentBriefError`/`GenerateAssessmentDraftError` pattern already in the file — both carry `status`, `body: ApiErrorResponse`, `assessmentId`. Tests updated to assert `rejects.toMatchObject({ status, body, assessmentId })` and `rejects.toBeInstanceOf(...)`.
+
+### ✅ P3 #3 — Timing-based parallel test fragile on loaded CI
+
+**Before:** `expect(elapsedMs).toBeLessThan(50)` — tight enough to risk flaking on slow/loaded CI runners.
+**Fix:** raised to `toBeLessThan(500)` — 25x headroom over the 10ms mock delay, still fails if the implementation regresses to sequential `await` (~20ms).
+
+**Re-verification:** 29/29 tests pass, build compiles, scoped lint clean (0 errors/warnings) — see updated `logs/`.
+
+---
+
 ## Files Created/Modified
 
 ### New Files
@@ -14,6 +37,9 @@
    - Timing-based test proving `Promise.all` (not sequential `await`)
    - 3 error-path tests: draft fails, versions fail, both fail
    - View model composition: preview labels, `isCurrent` flag, sort order
+
+3. **`src/lib/logging/correlationId.ts`** (added during code review corrections)
+   - Single shared `createCorrelationId()`, extracted from the duplicate copies previously in `assessments.ts` and the loader (P3 #1 fix)
 
 ### Modified Files
 3. **`src/types/assessment.ts`** — added `AssessmentDraftDto`, field-for-field identical to task-01's confirmed `GenerateAssessmentDraftResponse`

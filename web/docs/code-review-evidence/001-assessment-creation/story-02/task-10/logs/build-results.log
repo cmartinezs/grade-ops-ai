@@ -25,7 +25,7 @@ Route (app)                                 Size  First Load JS
 ├ ƒ /assessments/[id]/draft              4.14 kB         176 kB
 ├ ○ /assessments/new                     1.57 kB         178 kB
 ├ ○ /bank                                1.05 kB         156 kB
-├ ○ /dashboard                           1.71 kB         161 kB
+├ ○ /dashboard                            1.7 kB         161 kB
 ├ ○ /forgot-password                     2.83 kB         175 kB
 ├ ○ /icon.svg                                0 B            0 B
 ├ ○ /login                               6.73 kB         179 kB
