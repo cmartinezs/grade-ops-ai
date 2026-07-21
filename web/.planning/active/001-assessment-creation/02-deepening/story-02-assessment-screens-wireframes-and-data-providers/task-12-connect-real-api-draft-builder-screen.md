@@ -208,6 +208,34 @@ Reuses the `task-05`/`task-10`/`task-11` Pino decision — no re-decision. `load
 
 ---
 
+## Code Review Corrections
+
+Code review approved with 1 P3 finding — coverage gap, not a bug:
+
+### P3 — `translateRegenerateError`'s 502/503 branch untested for a non-`AGENT_CALL_FAILED` body
+
+- File: `useAssessmentDraftBuilderPage.ts:119`
+
+The branch requires both `status ∈ {502, 503}` **and** `body.error === "AGENT_CALL_FAILED"`. A 502 with a different body (e.g. a generic infra-level `BAD_GATEWAY`) correctly falls through to `GENERIC_RETRY_MESSAGE`, but no test exercised that fallback specifically for a 502/503 status — matching the 84.61% branch coverage figure reported in §7.
+
+**Fix:** added `"falls back to the generic retry message for a 502 that isn't AGENT_CALL_FAILED (e.g. an infra-level bad gateway)"` to `useAssessmentDraftBuilderPage.test.ts`, asserting `new RegenerateAssessmentDraftError(502, { error: "BAD_GATEWAY", message: null }, "a1")` → `{ fieldError: null, agentError: GENERIC_RETRY_MESSAGE }`.
+
+**Re-verification:**
+```
+$ npm run test -- --testPathPattern="useAssessmentDraftBuilderPage\.test" --no-coverage
+Tests: 16 passed, 16 total (1 new)
+
+$ npx eslint src/features/assessment-creation/hooks/__tests__/useAssessmentDraftBuilderPage.test.ts
+exit code: 0
+
+$ npm run test -- --no-coverage
+Test Suites: 2 failed, 21 passed, 23 total
+Tests:       5 failed, 148 passed, 153 total
+```
+The 2 failed suites/5 failed tests are the same pre-existing `SignOutButton.test.tsx`/`RegisterPage.test.tsx` failures, unrelated to this task.
+
+---
+
 ## Done Criteria
 
 - [x] Draft Builder screen loads, edits/saves, and regenerates against the real API — see §§3-4; fake dataset fully removed, hook calls only `loadAssessmentDraftBuilderPage`/`updateAssessmentDraft`/`regenerateAssessmentDraft`.

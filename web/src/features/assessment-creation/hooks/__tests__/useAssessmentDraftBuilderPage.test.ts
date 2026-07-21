@@ -110,6 +110,14 @@ describe("translateRegenerateError", () => {
     });
   });
 
+  it("falls back to the generic retry message for a 502 that isn't AGENT_CALL_FAILED (e.g. an infra-level bad gateway)", () => {
+    const error = new RegenerateAssessmentDraftError(502, { error: "BAD_GATEWAY", message: null }, "a1");
+    expect(translateRegenerateError(error)).toEqual({
+      fieldError: null,
+      agentError: "Ocurrió un error inesperado. Intenta de nuevo.",
+    });
+  });
+
   it("maps a generic 500 to the generic retry message", () => {
     const error = new RegenerateAssessmentDraftError(500, { error: "INTERNAL_ERROR", message: null }, "a1");
     expect(translateRegenerateError(error)).toEqual({
