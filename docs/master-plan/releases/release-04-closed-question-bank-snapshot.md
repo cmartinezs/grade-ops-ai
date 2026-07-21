@@ -247,9 +247,12 @@ Campos minimos nuevos o extendidos:
 
 ## 21. Seguridad y privacidad
 
+- Aplicar [`security-strategy.md`](../analysis/security-strategy.md) a question bank, question generation/review, composition y snapshot.
 - Mantener auth y ownership server-side.
+- Question bank, composition y snapshot requieren permissions semanticas y ownership explicito.
 - R04 no requiere datos estudiantiles.
 - No exponer prompts internos ni API keys.
+- `agents` debe ejecutar question generation/review con provider/model/capability allowlisted y output schema cerrado.
 - Logs deben guardar summaries, provider/model/costo y flags, no prompts completos.
 - Rejected questions pueden conservarse para auditoria, pero no deben aparecer por defecto.
 - Snapshot publicado debe ser inmutable por permisos y modelo de datos.
@@ -257,6 +260,10 @@ Campos minimos nuevos o extendidos:
 
 ## 22. Observabilidad y auditoria
 
+- Aplicar [`observability-strategy.md`](../analysis/observability-strategy.md) a question generation, quality review, ambiguity review, curation, composition y snapshot.
+- Crear spans por batch, validacion deterministica, provider call, output validation, curation action y snapshot creation.
+- Medir output validation failures, rejected questions, edit rate, cost per batch/question y latencia por provider/model family.
+- Registrar snapshot hash/version como evidencia durable, no como label de metrica.
 - `question_batch_generation_started`.
 - `question_batch_generated`.
 - `question_batch_generation_failed`.
@@ -506,21 +513,26 @@ Snapshot publish no deberia tener costo LLM si es deterministico; debe registrar
 ## 34. Criterios de seguridad
 
 - Ownership denial mantiene patron consistente de la API.
+- Question bank y snapshot no pueden consultarse ni modificarse por otro teacher sin permiso explicito.
 - No hay datos estudiantiles en R04.
 - API keys y prompts quedan server-side.
 - Logs sin secretos ni prompts completos.
 - Snapshot inmutable protegido por reglas de persistencia y API.
 - Bank de un docente no se expone a otros salvo permiso explicito.
+- Pruebas negativas cubren acceso cruzado a bank, edicion post-snapshot, provider/model no permitido y output de agente fuera de schema.
 
 ## 35. Criterios de observabilidad
 
 - 100% de question generation runs tienen log.
 - 100% de distractor/ambiguity review runs tienen log cuando se ejecutan.
+- Question generation/review/assembly puede reconstruirse por trace/correlation ID.
 - Failed runs tambien se loguean.
 - Curation actions quedan auditadas.
 - Snapshot creation queda auditado.
 - Cost estimate existe o queda marcado como missing con razon.
 - Correlation ID permite seguir request entre `web`, `api` y `agents`.
+- Validadores reportan metrica/evento sin guardar prompts completos ni preguntas rechazadas como telemetria tecnica.
+- Snapshot publish incluye evento canonico con schema version, hash y actor auditado.
 
 ## 36. Criterios de despliegue
 
@@ -731,6 +743,8 @@ Criterios:
 
 | Fecha | Cambio | Motivo | Elementos afectados | Decision asociada |
 |---|---|---|---|---|
+| 2026-07-21 | Incorporacion de Observability & Telemetry | Alinear R04 con trazas de Closed authoring, validadores medidos, snapshot auditado y costo por batch/pregunta | Observabilidad, DoD operativo | D-OBS-01..D-OBS-08 |
+| 2026-07-21 | Incorporacion de Security & Authorization | Alinear R04 con ownership de bank/snapshot, snapshot inmutable, policy de agentes y output cerrado | Seguridad, DoD operativo | D-SEC-01..D-SEC-08 |
 | 2026-07-20 | Incorporacion de capacidades de Agent Runtime | R04 es el primer consumidor claro de tool loop controlado y policy engine | Runtime, closed agents, tools, validators | D-04, D-06 |
 | 2026-07-20 | Incorporacion de API-Agent Orchestration | Asegurar que Closed authoring use endpoints REST de recursos y que snapshot/scoring sigan en `api/` | API, agents, web routes, DoD operativo | D-API-01..D-API-10 |
 | 2026-07-20 | Creacion inicial | Ejecucion de Fase 05 para R04 | Todo el documento | D-02 |

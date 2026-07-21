@@ -268,7 +268,9 @@ Migraciones Flyway deben incluir constraints, indexes por periodo/customer y uni
 
 ## 21. Seguridad y privacidad
 
+- Aplicar [`security-strategy.md`](../analysis/security-strategy.md) a Operator, dashboards, corrections, health, exports, ledgers y evidence links.
 - Operator requiere autenticacion y autorizacion server-side.
+- Endpoints `/api/v1/operator/**` requieren role/permission explicito y auditoria de cada accion sensible.
 - Queries y exports respetan tenant/customer scope.
 - Evidence links privados no se exponen a teachers, students ni public exports.
 - No guardar credenciales cloud, payment tokens o signed URLs permanentes en el ledger.
@@ -279,9 +281,18 @@ Migraciones Flyway deben incluir constraints, indexes por periodo/customer y uni
 - Logs de dashboard/export no contienen el contenido privado del evidence link.
 - Health endpoint no revela variables, stack traces, providers keys ni topologia sensible.
 - Retencion e invalidacion de evidencia deben quedar auditadas.
+- `web` debe separar rutas Operator de Teacher y no derivar permisos desde pathname/correo/variables publicas.
+- Readiness debe reportar ambiente (`demo`, `beta` o ambos), commit, revision, provider path y controles de aislamiento sin exponer secretos.
+- `beta` debe contar con manifiesto versionado o infraestructura declarativa equivalente para Vercel, Render, Neon, R2, Firebase y secretos.
+- Previews de Vercel no pueden apuntar a datos reales de `beta` salvo autorizacion explicita, temporal y auditada.
 
 ## 22. Observabilidad y auditoria
 
+- Aplicar [`observability-strategy.md`](../analysis/observability-strategy.md) a Operator dashboard, health, costs, revenue, readiness, exports, alerts y runbooks.
+- Dashboard Operator debe consumir APIs/agregados autorizados; no leer Cloud Logging, Vercel logs, Render logs ni queries libres como modelo de producto.
+- Definir baseline SLI/SLO a partir de datos reales de `beta`/`demo`; no convertirlos en compromiso contractual sin historia suficiente.
+- Consolidar alertas por burn rate, 5xx sostenidos, LLM degradado, queue/stuck runs, costos anomalos, cero trafico inesperado y fallo de exportador.
+- Cada alerta debe tener owner, severidad, runbook, senales de confirmacion, mitigacion y criterio de cierre.
 - `usage_event_recorded`.
 - `usage_limit_compared`.
 - `usage_overage_detected`.
@@ -533,6 +544,7 @@ Metricas derivadas incluyen costo por run, assessment, graded submission, teache
 ## 34. Criterios de seguridad
 
 - Solo Operator autorizado accede a C14/C15.
+- Teacher/student no pueden acceder rutas, endpoints, exports ni corrections de Operator.
 - Pruebas cubren acceso denegado para teacher/student y cross-tenant.
 - Public export usa allowlist y no contiene PII, secrets ni private links.
 - Controlled-private export requiere canal controlado.
@@ -540,6 +552,8 @@ Metricas derivadas incluyen costo por run, assessment, graded submission, teache
 - Health no filtra configuracion sensible.
 - Audit events no pueden editarse desde UI.
 - Evidencia revocada deja de estar disponible sin borrar el historial.
+- Pruebas negativas cubren export cross-tenant, evidence link revocado, correction sin permiso, health probing y UI manipulada.
+- Pruebas multiambiente cubren token Firebase cruzado, JWT interno con `env`/audience/capability incorrecto, CORS/preflight del dominio canonico y bloqueo de preview no autorizado.
 
 ## 35. Criterios de observabilidad
 
@@ -551,15 +565,20 @@ Metricas derivadas incluyen costo por run, assessment, graded submission, teache
 - Infra deploy y smoke registran environment, revision, commit y timestamp.
 - Alert delivery/acknowledgement queda auditado.
 - Health history permite distinguir outage de dato desconocido.
+- Dashboard puede filtrar/comparar `demo` y `beta` con misma semantica de eventos, metricas, estados y errores.
+- Export/bundle incluye manifest, checksum, source IDs, environment, revision, freshness y clasificacion de datos.
+- Fallo del exportador OTel/log drain genera alerta pero no detiene el flujo funcional.
 
 ## 36. Criterios de despliegue
 
 - Debe correr integrado en local y en el entorno decidido por D-01.
 - `infra/terraform/environments/demo/` debe verificarse para cambios de `api/`, `agents/` y `web/`.
+- Para `beta`, debe existir manifiesto versionado o configuracion declarativa verificable de Vercel, Render, Neon, R2, Firebase, secrets, dominios, CORS y previews.
 - Scope infra obligatorio debe cubrir Cloud Run o hosting equivalente, Cloud SQL, Artifact Registry, IAM y Secret Manager segun cada servicio afectado.
 - Terraform `fmt`, `validate` y `plan` deben quedar documentados cuando el entorno/credenciales lo permitan.
 - API/Agents health checks y web dashboard deben pasar smoke.
 - Deployment proof incluye URL, commit, revision, timestamp y evidencia de provider/API aplicable.
+- Deployment proof incluye prueba de que el build no mezcla Firebase project, API URL, DB/storage ni secrets de otro ambiente.
 - La tarea infra debe estar DONE antes de marcar R06 completa.
 - D-01 determina si `beta`, `demo` o ambos forman el paquete final.
 
@@ -800,6 +819,9 @@ Entregables:
 
 | Fecha | Cambio | Motivo | Elementos afectados | Decision asociada |
 |---|---|---|---|---|
+| 2026-07-21 | Incorporacion de Observability & Telemetry | Alinear R06 con dashboard Operator, SLI/SLO baseline, alertas, runbooks, exports y comparacion multiambiente | Observabilidad, DoD operativo | D-OBS-01..D-OBS-08 |
+| 2026-07-21 | Incorporacion de topologia de seguridad multiambiente | Hacer que R06 cierre readiness con aislamiento comprobado de `demo`/`beta` y manifiesto de beta | Seguridad, despliegue, readiness, DoD operativo | D-SEC-01..D-SEC-08 |
+| 2026-07-21 | Incorporacion de Security & Authorization | Alinear R06 con Operator auth, exports allowlisted, evidence links revocables, health seguro y auditoria no editable | Seguridad, DoD operativo | D-SEC-01..D-SEC-08 |
 | 2026-07-20 | Incorporacion de capacidades de Agent Runtime | Declarar Ops Agent read-only y observabilidad/costo/readiness del runtime | Runtime, Ops Agent, evidence dashboard | D-01, D-04, D-06, D-07 |
 | 2026-07-20 | Incorporacion de API-Agent Orchestration | Asegurar que evidencia, health, costs y exports sean hechos de API/DB y no salidas autoritativas de LLM | API, agents, web/operator routes, DoD operativo | D-API-01..D-API-10 |
 | 2026-07-20 | Creacion inicial | Ejecucion de Fase 05 para R06 | Todo el documento | D-01, D-04, D-06, D-07 |

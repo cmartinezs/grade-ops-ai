@@ -15,6 +15,8 @@ Incluye:
 - inventario de automatizacion;
 - estrategia transversal de Agent Runtime;
 - estrategia API-Agent Orchestration;
+- estrategia transversal de seguridad;
+- estrategia transversal de observabilidad y telemetria;
 - estrategia ejecutiva de releases;
 - resumen ejecutivo;
 - documentos detallados de releases R01-R06;
@@ -39,6 +41,8 @@ Incluye:
 - `Asistida`, `Supervisada` y `Automatizada` siguen los niveles definidos en la especificacion maestra.
 - `Agent Runtime` es una capacidad transversal: se implementa mediante vertical slices funcionales, no como una mega-release tecnica.
 - `API-Agent Orchestration` es una capacidad transversal: se incorpora en las releases funcionales como reglas de API, dominio, agents y web, no como una release tecnica separada.
+- `Security & Authorization` es una capacidad transversal: se implementa por release funcional con controles de `api/`, `agents/`, `web/`, `infra/` y topologia multiambiente, no como una release tecnica separada.
+- `Observability & Telemetry` es una capacidad transversal: se implementa por release funcional con trazas, logs, metricas, eventos canonicos, evidencia durable y adaptadores multiambiente, no como una release tecnica separada.
 - Los documentos de analisis son fuente de contexto; los archivos de release R01-R06 son la fuente operativa por release.
 
 ## Orden de lectura
@@ -50,9 +54,11 @@ Incluye:
 5. [Inventario de automatizacion](analysis/automation-inventory.md)
 6. [Estrategia transversal de Agent Runtime](analysis/agent-runtime-strategy.md)
 7. [Estrategia API-Agent Orchestration](analysis/api-agent-orchestration-strategy.md)
-8. [Estrategia de releases](analysis/release-strategy.md)
-9. [Master Plan Ejecutivo](master-plan-executive.md)
-10. [Reporte de validacion](validation-report.md)
+8. [Estrategia transversal de seguridad](analysis/security-strategy.md)
+9. [Estrategia transversal de observabilidad y telemetria](analysis/observability-strategy.md)
+10. [Estrategia de releases](analysis/release-strategy.md)
+11. [Master Plan Ejecutivo](master-plan-executive.md)
+12. [Reporte de validacion](validation-report.md)
 
 ## Tabla de releases
 
@@ -72,6 +78,8 @@ Incluye:
 - [Estrategia de releases](analysis/release-strategy.md)
 - [Estrategia transversal de Agent Runtime](analysis/agent-runtime-strategy.md)
 - [Estrategia API-Agent Orchestration](analysis/api-agent-orchestration-strategy.md)
+- [Estrategia transversal de seguridad](analysis/security-strategy.md)
+- [Estrategia transversal de observabilidad y telemetria](analysis/observability-strategy.md)
 - [Resumen ejecutivo](master-plan-executive.md)
 - [Reporte de validacion](validation-report.md)
 - [Especificacion maestra](../.prompting/master-plan-prompts/master-plan-specification.md)
@@ -90,7 +98,7 @@ Incluye:
 
 ## Ultima actualizacion
 
-2026-07-20.
+2026-07-21.
 
 ## Reglas de mantenimiento
 
@@ -102,10 +110,16 @@ Incluye:
 - No mover P1 al MVP sin retirar o dividir otra carga equivalente.
 - Toda release con IA debe declarar capacidades de Agent Runtime, herramientas, validadores, autonomia, HITL, limites, costo y evidencia.
 - Toda release que toque `api/`, `agents/` o rutas funcionales de `web/` debe aplicar la estrategia API-Agent Orchestration y el gate Richardson REST en las tareas que definan endpoints, contratos o rutas.
+- Toda release que toque endpoints, rutas, agentes, prompts, providers, secrets, uploads, signed links, exports o datos sensibles debe aplicar la estrategia transversal de seguridad y registrar pruebas negativas.
+- Toda release que afecte despliegue, auth, service-to-service, CORS, secrets, DB, storage o frontend config debe declarar si aplica a `demo`, `beta` o ambos, y probar que no mezcla identidades, datos ni secretos entre ambientes.
+- Toda release que toque journeys criticos, endpoints, agentes, asincronia, providers, dashboards, exports o evidencia debe aplicar la estrategia transversal de observabilidad y registrar trazas, metricas, eventos canonicos y pruebas de redaccion/cardinalidad.
 
 ## Historial de cambios
 
 | Fecha | Cambio | Motivo | Elementos afectados | Decision asociada |
 |---|---|---|---|---|
+| 2026-07-21 | Incorporacion de Observability & Telemetry | Hacer obligatorios los controles de observabilidad por release funcional, sin crear release tecnica transversal | README, analysis/observability-strategy.md, releases | D-OBS-01..D-OBS-08 |
+| 2026-07-21 | Incorporacion de topologia de seguridad multiambiente | Separar el contrato comun de seguridad de los mecanismos concretos de `demo` y `beta` | README, analysis/security-strategy.md, releases | D-SEC-01..D-SEC-08 |
+| 2026-07-21 | Incorporacion de Security & Authorization | Hacer obligatorios los controles de seguridad por release funcional, sin crear release tecnica transversal | README, analysis/security-strategy.md, releases | D-SEC-01..D-SEC-08 |
 | 2026-07-20 | Incorporacion de API-Agent Orchestration | Hacer obligatorias las reglas de intermediacion API entre `web/` y `agents/`, con madurez REST por tarea | README, analysis/api-agent-orchestration-strategy.md, releases, templates | D-API-01..D-API-10 |
 | 2026-07-20 | Incorporacion de Agent Runtime transversal y actualizacion de estado Fase 05/06 | Alinear el README con releases documentadas, validacion final y estrategia runtime | README, orden de lectura, reglas de mantenimiento | D-04, D-06 |

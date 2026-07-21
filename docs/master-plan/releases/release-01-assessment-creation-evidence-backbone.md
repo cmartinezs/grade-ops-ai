@@ -217,15 +217,27 @@ Campos minimos para `AgentExecutionLog` en R01:
 
 ## 21. Seguridad y privacidad
 
+- Aplicar [`security-strategy.md`](../analysis/security-strategy.md) a identidad docente, assessment endpoints, operaciones IA, logs y rutas web.
 - Auth server-side con Firebase ID token.
+- Crear o dejar planificada dentro de R01 la fundacion de cuenta/roles (`TEACHER`, `AuthenticatedAccount`, permissions base) sin bloquear por Operator completo.
 - Ownership server-side en todos los endpoints de assessment.
+- Actor auditado derivado del principal autenticado, nunca de un campo enviado por `web`.
 - Internal auth entre `api` y `agents` segun la decision vigente; si sigue shared-secret, documentarlo como decision MVP y residual post-MVP.
+- Declarar ambiente objetivo de R01 (`demo`, `beta` o ambos) y aplicar el contrato multiambiente de [`security-strategy.md`](../analysis/security-strategy.md).
+- En `demo`, `api` -> `agents` debe migrar hacia Cloud Run privado + OIDC/IAM; en `beta`, hacia JWT interno firmado/rotatorio con audience, `env`, capability, `jti` y `kid`.
+- El secreto interno legacy solo puede quedar como compatibilidad transitoria; `demo` y `beta` deben fallar startup si conservan `change-me-in-production`.
+- `agents` debe fallar cerrado ante provider/model no permitido, payload fuera de limites o comando sin policy minima.
+- `web` no persiste ID tokens en `localStorage`, logs, analytics ni estado durable.
 - No exponer API keys ni prompts internos al frontend.
 - No incluir PII innecesaria en summaries de logs.
 - Logs de error deben evitar payloads completos sensibles.
 
 ## 22. Observabilidad y auditoria
 
+- Aplicar [`observability-strategy.md`](../analysis/observability-strategy.md) a la cadena `web -> api -> agents -> LLM` de generation/regeneration.
+- Definir ADR/backlog inicial de OpenTelemetry, destino OTel de `beta`, taxonomia de IDs/eventos/errores, redaccion, retencion y cardinalidad.
+- Emitir JSON estructurado a stdout en `api` y `agents`; no depender de archivos rotativos como evidencia operacional en Cloud Run/Render.
+- Propagar `traceparent`, `X-Request-Id` y `X-Correlation-Id` sin crear una correlacion aislada entre `api` y `agents`.
 - `agent_run_started`, `agent_run_completed`, `agent_run_failed`.
 - `assessment_created`.
 - `assessment_draft_generated`.
@@ -432,17 +444,29 @@ D-04 debe resolverse para que Groq/Gemini no queden codificados de forma contrad
 - Firebase auth protegida.
 - Email verification o bypass Google consistente.
 - Internal endpoint protegido.
+- Roles/permisos base Teacher quedan persistidos o registrados como residual explicito antes de cerrar R01.
+- `@PreAuthorize`/permission base o equivalente queda definido para endpoints de assessment.
+- Actor de auditoria no puede ser falsificado desde body/query/header cliente.
+- Provider/model no permitido falla cerrado en `agents`.
+- El ambiente declarado no mezcla Firebase project, API URL, DB, storage, secrets ni service identity con otro ambiente.
+- Token Firebase de otro ambiente y token interno con audience/env/capability incorrecto son rechazados.
 - API keys solo server-side.
 - Logs sin secretos.
 - Ownership denial mantiene el patron 404 cuando corresponde.
+- Pruebas negativas cubren usuario no autenticado, email no verificado/bypass invalido, ownership cruzado, idempotency conflict y aislamiento cruzado de ambiente.
 
 ## 35. Criterios de observabilidad
 
 - 100% de generation/regeneration agent runs tienen log.
+- El journey generation/regeneration puede reconstruirse por `trace_id`/`correlation_id`.
+- `AiOperation`, `AgentRun` y `AgentAttempt` comparten operation/run/attempt IDs con logs, spans y eventos canonicos.
+- Las senales incluyen `service.name`, `service.version`, `deployment.environment` y plataforma.
 - Failed runs tambien se loguean.
 - `retry_count` y `error_code` estan presentes.
 - Cost estimate existe o queda marcado como missing con razon.
 - Correlation ID permite seguir request entre web/api/agents.
+- No se usan IDs de usuario, assessment, operation, run o submission como labels de metricas.
+- Pruebas verifican redaccion de prompts, tokens, secrets, signed links y PII.
 
 ## 36. Criterios de despliegue
 
@@ -616,6 +640,9 @@ Criterios:
 
 | Fecha | Cambio | Motivo | Elementos afectados | Decision asociada |
 |---|---|---|---|---|
+| 2026-07-21 | Incorporacion de Observability & Telemetry | Exigir que R01 deje el primer journey IA trazable, con JSON stdout, OTel/W3C propagation y evidencia durable | Observabilidad, DoD operativo | D-OBS-01..D-OBS-08 |
+| 2026-07-21 | Incorporacion de topologia de seguridad multiambiente | Exigir que la fundacion de R01 declare ambiente, aisle identidad/datos/secrets y reemplace el shared-secret segun `demo`/`beta` | Seguridad, service-to-service, DoD operativo | D-SEC-01..D-SEC-08 |
+| 2026-07-21 | Incorporacion de Security & Authorization | Alinear R01 con fundaciones de identidad, permisos, ownership, audit actor y fail-secure sin crear release tecnica | Seguridad, DoD operativo | D-SEC-01..D-SEC-08 |
 | 2026-07-20 | Incorporacion de capacidades de Agent Runtime | Alinear R01 con la estrategia headless/iterativa sin anticipar tool loop completo | Runtime, automatizacion, DoD operativo | D-04, D-06 |
 | 2026-07-20 | Incorporacion de API-Agent Orchestration | Hacer que R01 consolide assessment generation como flujo API robusto con operaciones, runs, attempts, idempotencia y gate REST | API, agents, web routes, DoD operativo | D-API-01..D-API-10 |
 | 2026-07-19 | Creacion inicial | Ejecucion de Fase 05 para R01 | Todo el documento | D-04, D-06 |

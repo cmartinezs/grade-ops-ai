@@ -79,6 +79,8 @@ A decision record should explain:
 | [`2026-07-20-environment-roles.md`](2026-07-20-environment-roles.md) | `beta` is product-evidence environment; `demo` is the Google Cloud target with Gemini-capable provider path | Accepted |
 | [`2026-07-20-archive-event-specific-constraints.md`](2026-07-20-archive-event-specific-constraints.md) | Event-specific constraints are historical only and must not govern active product/docs scope | Accepted |
 | [`2026-07-20-api-agent-orchestration.md`](2026-07-20-api-agent-orchestration.md) | `api/` is the public intermediary between `web/` and `agents/`; endpoint tasks require API-Agent orchestration and Richardson REST maturity checks | Accepted |
+| [`2026-07-21-security-authorization-by-release.md`](2026-07-21-security-authorization-by-release.md) | Security and authorization are implemented inside each functional release, not as a separate technical release | Accepted |
+| [`2026-07-21-observability-telemetry-by-release.md`](2026-07-21-observability-telemetry-by-release.md) | Observability and telemetry are implemented inside each functional release, not as a separate technical release | Accepted |
 
 ## Current Template
 

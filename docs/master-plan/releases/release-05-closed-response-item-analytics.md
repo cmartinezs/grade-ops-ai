@@ -253,11 +253,14 @@ Campos minimos nuevos o extendidos:
 
 ## 21. Seguridad y privacidad
 
+- Aplicar [`security-strategy.md`](../analysis/security-strategy.md) a signed links, invitation context, attempts, result access e item analytics.
 - Learner email y result link son datos sensibles.
 - Tokens deben guardarse hasheados o con proteccion equivalente.
 - Token validation debe ser server-side.
+- Tokens deben expirar, revocarse y rechazar replay/tampering con errores seguros.
 - Result access debe aislar estrictamente por learner.
 - Error messages no deben revelar si un email pertenece a otro assessment.
+- Rutas publicas de student access requieren rate limiting o residual explicito antes de pilotos reales.
 - Access logs deben evitar payloads completos de respuestas cuando no sea necesario.
 - Deletion/anonymization de LearnerRef debe tener historia o residual explicito.
 - Result links deben expirar o poder revocarse.
@@ -265,6 +268,10 @@ Campos minimos nuevos o extendidos:
 
 ## 22. Observabilidad y auditoria
 
+- Aplicar [`observability-strategy.md`](../analysis/observability-strategy.md) a invitations, signed links, attempts, deterministic scoring, publication e item analytics.
+- Propagar contexto por outbox/adaptador asincrono cuando analytics o delivery no sean sincronos.
+- Medir queue delay, heartbeat, lease, retries, stuck runs, delivery failure rate, access denial rate y analytics duration.
+- Registrar eventos canonicos de invitation created/sent/revoked, access opened/denied, attempt submitted, grading completed/failed y result accessed.
 - `learner_added`.
 - `learner_list_imported`.
 - `assessment_invitation_created`.
@@ -510,11 +517,13 @@ Email y DB pueden registrarse como costo operacional si R06 define ledger, pero 
 
 - Student no puede enumerar learners o results.
 - Token tampered/expired/revoked se rechaza.
+- Replay protection y nonce/attempt state evitan reutilizar links o submissions fuera de policy.
 - Result links no exponen otros learners.
 - Correct answers respetan visibility config.
 - Logs no contienen tokens en claro.
 - Learner PII minimizada.
 - Deletion/anonymization queda implementada o registrada como residual aceptado antes de pilotos reales.
+- Pruebas negativas cubren token alterado, token expirado, token revocado, intento cross-assessment, enumeracion por email/result y rate limit basico.
 
 ## 35. Criterios de observabilidad
 
@@ -526,6 +535,9 @@ Email y DB pueden registrarse como costo operacional si R06 define ledger, pero 
 - Item Analytics Agent run tiene AgentExecutionLog.
 - Failed email/analytics runs tambien se loguean.
 - Correlation/request ID permite seguir invitation -> attempt -> grade -> result.
+- Operaciones asincronas conservan trace context enlazable y crean attempt/span nuevo por retry.
+- Alertas/runbooks cubren runs estancados, delivery failure sostenido y fallo de exportacion de telemetria.
+- Tokens/link completos no aparecen en logs, spans, metric labels ni eventos de producto.
 
 ## 36. Criterios de despliegue
 
@@ -738,6 +750,8 @@ Criterios:
 
 | Fecha | Cambio | Motivo | Elementos afectados | Decision asociada |
 |---|---|---|---|---|
+| 2026-07-21 | Incorporacion de Observability & Telemetry | Alinear R05 con trazabilidad de student access, asincronia, attempts, scoring e item analytics | Observabilidad, DoD operativo | D-OBS-01..D-OBS-08 |
+| 2026-07-21 | Incorporacion de Security & Authorization | Alinear R05 con signed links seguros, anti-enumeracion, result access scoped, replay/tamper tests y rate limiting | Seguridad, DoD operativo | D-SEC-01..D-SEC-08 |
 | 2026-07-20 | Incorporacion de capacidades de Agent Runtime | Declarar persistencia/asincronia solo donde analytics o volumen lo justifiquen | Runtime, Item Analytics, student flow | D-04, D-06 |
 | 2026-07-20 | Incorporacion de API-Agent Orchestration | Ubicar asincronia durable, polling y retry selectivo dentro del flujo Closed funcional | API, agents, web/student routes, DoD operativo | D-API-01..D-API-10 |
 | 2026-07-20 | Creacion inicial | Ejecucion de Fase 05 para R05 | Todo el documento | D-02 |
