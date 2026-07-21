@@ -1,6 +1,6 @@
 # 🔍 DEEPENING: Story 02 — assessment-screens-wireframes-and-data-providers
 
-> **Status:** IN PROGRESS
+> **Status:** DONE
 > [← 01-expansion.md](../01-expansion.md) | [← planning/README.md](../../README.md)
 
 ---
