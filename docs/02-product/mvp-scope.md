@@ -22,7 +22,7 @@ The MVP supports two assessment modes:
 | Teacher authority | Every high-impact output requires teacher review/approval in both modes |
 | AI-native operations | Agent executions must be visible, logged, and structured; closed mode adds question generation and curation agents |
 | Pricing by assessments/submissions | Product must track assessment count and graded-submission count across both modes |
-| Hackathon evidence | Usage, cost, revenue, customer, and agent evidence must be captured from day one |
+| Validation evidence | Usage, cost, revenue, customer, and agent evidence must be captured from day one |
 | Closed assessment mode | Add question bank, deterministic grading engine, and student access via secure link |
 
 ## Teacher-Led, Student-Centered MVP
@@ -385,7 +385,7 @@ Do not build in the MVP:
 | Privacy | Store minimal student data and avoid unnecessary sensitive information |
 | Demo readiness | Core flow must be demonstrable in under 3 minutes |
 | Exportability | Reports/evidence should be exportable or screenshot-ready |
-| English readiness | Public/demo content should be available in English for submission |
+| English readiness | Public/demo content should be available in English when needed for buyers or partners |
 
 ## MVP Acceptance Criteria
 

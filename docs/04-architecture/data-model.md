@@ -1,6 +1,6 @@
 # Data Model
 
-The GradeOps AI data model must support assessment workflows, teacher approval, agent traceability, cost tracking, and hackathon evidence.
+The GradeOps AI data model must support assessment workflows, teacher approval, agent traceability, cost tracking, and validation evidence.
 
 The model should be designed around auditability.
 
@@ -59,7 +59,7 @@ Represents a teacher, tutor, small academy, or bootcamp account.
 | `segment` | enum | See `OrganizationSegment`. |
 | `plan` | enum | See `PlanCode`. |
 | `pilot_status` | enum | See `PilotStatus`. |
-| `related_party` | boolean | Important for hackathon revenue reporting. |
+| `related_party` | boolean | Important for transparent traction reporting. |
 | `created_at` | timestamp | Audit. |
 | `updated_at` | timestamp | Audit. |
 
@@ -522,7 +522,8 @@ This is mandatory.
 | `student_submission_id` | UUID | Optional. |
 | `agent_name` | enum | See `AgentName`. |
 | `operation` | enum | See `AgentOperation`. |
-| `model` | string | Gemini model used. |
+| `provider` | string/enum | Model provider used, e.g. `gemini` or `groq`. Required when available. |
+| `model` | string | Provider-specific model name used. |
 | `status` | enum | See `AgentRunStatus`. |
 | `input_summary` | text | Redacted/minimized. |
 | `output_summary` | text | Redacted/minimized. |
@@ -573,7 +574,7 @@ Can be internal or linked to an external ledger.
 | `id` | UUID | Primary key. |
 | `organization_id` | UUID | Customer. |
 | `date` | date | Required. |
-| `month` | enum/string | Use `YYYY-MM`; hackathon reporting months include `2026-05`, `2026-06`, `2026-07`, `2026-08`. |
+| `month` | enum/string | Use `YYYY-MM` for comparable revenue and cost reporting. |
 | `amount_usd` | numeric | USD equivalent. |
 | `amount_original` | numeric | Original. |
 | `currency` | enum | ISO 4217; MVP allowed values in `CurrencyCode`. |
@@ -674,7 +675,7 @@ Use `snake_case` for persisted enum values. UI labels can be translated or prett
 | Enum | Allowed Values | Notes |
 | --- | --- | --- |
 | `UsageEventType` | `assessment_created`, `assessment_approved`, `rubric_generated`, `rubric_approved`, `submission_received`, `submission_analyzed`, `grade_suggestion_generated`, `grade_suggestion_approved`, `feedback_generated`, `feedback_approved`, `learning_gap_generated`, `recovery_generated`, `report_generated`, `report_exported`, `agent_run_created`, `pilot_created`, `payment_recorded`, `testimonial_recorded` | Add new values only when they are useful for metrics or evidence. |
-| `CostCategory` | `gemini_api`, `vertex_ai`, `cloud_run`, `cloud_sql`, `firestore`, `cloud_storage`, `cloud_logging`, `artifact_registry`, `cloud_build`, `email`, `payment_processing`, `domain`, `ai_development_tooling`, `marketing`, `contractor`, `other` | Marketing can be reported separately but still represented in ledger if useful. |
+| `CostCategory` | `gemini_api`, `vertex_ai`, `openai_compatible_api`, `groq_api`, `cloud_run`, `cloud_sql`, `firestore`, `cloud_storage`, `cloud_logging`, `artifact_registry`, `cloud_build`, `email`, `payment_processing`, `domain`, `ai_development_tooling`, `marketing`, `contractor`, `other` | Marketing can be reported separately but still represented in ledger if useful. Provider-specific categories are allowed only when they improve unit economics or validation evidence. |
 
 ## Field Validation Rules
 
@@ -687,6 +688,7 @@ Use `snake_case` for persisted enum values. UI labels can be translated or prett
 | `weight`, `total_weight` | Rubric criteria weights should sum to `100` unless using a declared alternate scale. |
 | `duration_minutes` | Positive integer; recommended MVP range `10-240`. |
 | `student_count_estimate` | Non-negative integer; used for cost planning, not authoritative billing. |
+| `provider`, `model` | Required for agent runs when the runtime returns them; never infer a Gemini model if the provider was Groq or another adapter. |
 | `input_tokens`, `output_tokens`, `latency_ms` | Non-negative integers; nullable only when unavailable. |
 | `estimated_cost_usd` | Non-negative decimal; store `null` if unknown, `0` only when there is genuinely no measurable runtime cost. Credits affect cash cost, not estimated runtime cost. |
 | `storage_uri` | Must point to private bucket/object path, not public URL. |

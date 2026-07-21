@@ -6,7 +6,7 @@
 
 ## Story
 
-As an operator, I want a dashboard of usage, cost, revenue evidence, and agent activity so the hackathon submission is credible.
+As an operator, I want a dashboard of usage, cost, revenue evidence, and agent activity so product validation is credible.
 
 ## Acceptance Criteria
 

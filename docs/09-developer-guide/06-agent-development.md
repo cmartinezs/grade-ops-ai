@@ -2,7 +2,7 @@
 
 This guide covers how to implement AI agents in the `agents/` repository. It assumes familiarity with Spring Boot and the agent execution pattern described in [`docs/04-architecture/system-architecture.md`](../04-architecture/system-architecture.md).
 
-> **Status:** The `agents/` repository is scaffolded (the directory exists with a README). No agent code has been implemented yet. This guide documents the target implementation pattern for Epic 02 and beyond.
+> **Status:** `agents/` has a real Assessment Agent vertical slice. It exposes `POST /internal/agents/assessment`, uses versioned prompt resources, supports Gemini and Groq provider adapters, validates structured output, and returns an execution payload to `api/` for persistence. The generic runtime (`AgentDefinition`, registry, tool loop, `AgentRun`/`AgentStep`, async/cancel/resume) is still planned and must be introduced only when a functional release creates a real consumer.
 
 ---
 
@@ -14,19 +14,23 @@ In production (Cloud Run), the `api/` service calls `agents/` using service-to-s
 
 The base Java package for all agent code is `cl.gradeops.ai.agents`.
 
+The API remains the authority for domain state, persistence, billing, publication and approvals. The agents service receives commands, calls allowed providers/tools, validates output, and returns `{Agent}Result` plus execution metadata.
+
 ---
 
-## The seven-step agent pattern
+## Current runtime pattern
 
-Every agent in GradeOps AI follows the same execution sequence without exception. The steps are enforced by code structure, not by convention alone:
+Every implemented agent in GradeOps AI follows the same execution sequence. The steps should be enforced by code structure, not by convention alone:
 
 1. **Validate command** — check that all required inputs are present and internally consistent. Throw a descriptive exception early if the command is invalid.
-2. **Load data** — fetch any domain data needed from the API or passed in the command (assessment brief, approved rubric, submission content, question bank context).
+2. **Load or receive data** — use domain data passed by the API. If a future agent needs lookup tools, expose those as explicit allowed tools rather than direct persistence access.
 3. **Build envelope** — assemble the full prompt context as a structured object. Avoid PII in the envelope; reference IDs rather than names or emails where possible.
-4. **Call Gemini** — use Spring AI's `ChatClient` to invoke the model. Pass the formatted prompt from the StringTemplate.
-5. **Validate structured output** — parse the JSON response using `BeanOutputConverter`. Validate that required fields are non-null, numeric values are within bounds, and the schema matches expectations.
-6. **Log execution** — write an `AgentExecutionLog` record. This step is mandatory for every run, including failures.
-7. **Return result** — return the `{Agent}Result` DTO to the calling `api/` service.
+4. **Resolve provider/model** — use the provider/model policy (`gemini` and `groq` today) instead of hardcoding a single model.
+5. **Call provider** — use Spring AI `ChatClient` through an adapter/port.
+6. **Validate structured output** — parse and validate required fields, numeric bounds, schema shape and domain-safe constraints.
+7. **Return result and execution payload** — return `{Agent}Result` plus provider/model/tokens/cost/status/error metadata. `api/` persists the final `AgentExecutionLog`.
+
+For R04 and later Closed-assessment authoring, this wrapper can grow into a controlled tool loop: model proposes `AgentAction`, runtime checks policy/budget, tool executor returns observation, model continues, and the runtime eventually returns `Finish` or `Block`.
 
 ---
 
@@ -38,7 +42,7 @@ Every agent in GradeOps AI follows the same execution sequence without exception
 | Result DTO | `{AgentName}Result` | `RubricResult` |
 | Service class | `{AgentName}AgentService` | `RubricAgentService` |
 | Internal REST controller | `{AgentName}AgentController` | `RubricAgentController` |
-| Prompt template file | `{agent-name}.st` | `rubric.st` |
+| Prompt template file | `{agent-name}.st` or `{agent-name}-{operation}.st` | `assessment-generation.st` |
 | Java package | `cl.gradeops.ai.agents.{agentname}` | `cl.gradeops.ai.agents.rubric` |
 
 ---
@@ -62,10 +66,11 @@ Generate a structured assessment draft for the following context:
 
 Learning goal: $learningGoal$
 Topic: $topic$
-Target level: $targetLevel$
-Programming language: $programmingLanguage$
-Estimated duration: $durationMinutes$ minutes
-Teacher constraints: $teacherConstraints$
+Target level: $level$
+Programming language: $language$
+Estimated duration: $duration$
+Adjustment notes: $adjustmentNotes$
+Previous draft: $previousDraft$
 
 $formatInstructions$
 ```
@@ -74,7 +79,7 @@ Template variables to use by agent:
 
 | Agent | Key template variables |
 |-------|----------------------|
-| Assessment | `$learningGoal$`, `$topic$`, `$targetLevel$`, `$programmingLanguage$`, `$durationMinutes$`, `$teacherConstraints$` |
+| Assessment | `$learningGoal$`, `$topic$`, `$level$`, `$language$`, `$duration$`, `$adjustmentNotes$`, `$previousDraft$` |
 | Rubric | `$assessmentTitle$`, `$learningObjectives$`, `$expectedEvidence$`, `$programmingLanguage$`, `$targetLevel$`, `$preferredScoringScale$` |
 | Grading | `$submissionContent$`, `$rubricCriteria$`, `$assessmentInstructions$`, `$programmingLanguage$` |
 | Feedback | `$criteriaResults$`, `$evidenceSummaries$`, `$studentIdentifier$` |
@@ -82,310 +87,203 @@ Template variables to use by agent:
 Load templates via Spring's `ResourceLoader`:
 
 ```java
-@Value("classpath:prompts/assessment.st")
+@Value("classpath:prompts/assessment-generation.st")
 private Resource assessmentPromptTemplate;
 ```
 
 ---
 
-## Example agent structure (AssessmentAgent)
+## Current Assessment Agent baseline
 
-The following skeleton shows all required classes for one agent. The AssessmentAgent is the first agent in the open assessment pipeline.
+The current Assessment Agent implementation is the baseline for new agents:
 
-### Command record
+| Concern | Current artifact |
+|---|---|
+| Internal endpoint | `agents/src/main/java/.../assessment/infrastructure/adapter/in/web/AssessmentController.java` |
+| Command | `assessment/application/command/AssessmentCommand.java` |
+| Orchestrator | `assessment/application/orchestrator/AssessmentAgentOrchestrator.java` |
+| Provider port | `assessment/application/port/out/AssessmentGenerationPort.java` |
+| Provider selector | `assessment/application/port/out/AssessmentGenerationPortSelector.java` |
+| Gemini adapter | `assessment/infrastructure/adapter/out/gemini/GeminiAssessmentGenerationAdapter.java` |
+| Groq adapter | `assessment/infrastructure/adapter/out/groq/GroqAssessmentGenerationAdapter.java` |
+| Prompt | `agents/src/main/resources/prompts/assessment-generation.st` |
+| Execution payload | `assessment/application/result/AgentExecutionLogPayload.java` |
 
-```java
-package cl.gradeops.ai.agents.assessment;
+New agents should copy the same boundary style: command/result records in application, provider/tool ports at the boundary, infrastructure adapters behind those ports, and explicit configuration wiring. Do not introduce persistence repositories inside `agents/`.
 
-import java.util.List;
+## Adding the next agent
 
-public record AssessmentCommand(
-    String requestId,
-    String teacherId,
-    String assessmentId,
-    String learningGoal,
-    String topic,
-    String targetLevel,
-    String programmingLanguage,
-    String assessmentType,
-    int durationMinutes,
-    List<String> teacherConstraints,
-    String courseContext,          // nullable
-    List<String> excludedTopics,  // nullable
-    String teacherNotes           // nullable
-) {}
-```
+When adding a new agent, start from the current Assessment Agent shape rather than from a standalone service skeleton:
 
-### Result record
+1. Create `{Agent}Command`, `{Agent}Result` and any nested result records in the agent application package.
+2. Add an application orchestrator that validates the command, builds the envelope, calls a provider/tool port, validates output, and builds an execution payload.
+3. Add provider/tool ports under `application/port/out`.
+4. Add infrastructure adapters behind those ports.
+5. Add an internal controller only if the API needs a synchronous endpoint for that agent.
+6. Return result + execution payload to `api`; do not persist domain entities in `agents`.
+7. Add tests for command validation, provider selection, output validation, failure payloads, and prompt rendering.
 
-```java
-package cl.gradeops.ai.agents.assessment;
+Extract shared abstractions only when the second or third agent creates real duplication.
 
-import java.util.List;
+## Spring AI provider configuration
 
-public record AssessmentResult(
-    String title,
-    String summary,
-    String context,
-    List<String> learningObjectives,
-    List<String> studentInstructions,
-    List<String> deliverables,
-    List<String> constraints,
-    List<String> allowedResources,
-    int estimatedDurationMinutes,
-    String difficulty,
-    List<String> expectedEvidence,
-    RubricSeed rubricSeed,
-    List<String> warnings,
-    List<UncertaintyFlag> uncertaintyFlags
-) {
-    public record RubricSeed(
-        List<String> suggestedCriteria,
-        List<String> notesForRubricAgent
-    ) {}
-
-    public record UncertaintyFlag(
-        String code,
-        String message
-    ) {}
-}
-```
-
-### Service class
-
-```java
-package cl.gradeops.ai.agents.assessment;
-
-import org.springframework.ai.chat.client.ChatClient;
-import org.springframework.ai.converter.BeanOutputConverter;
-import org.springframework.stereotype.Service;
-
-@Service
-public class AssessmentAgentService {
-
-    private final ChatClient chatClient;
-    private final AgentExecutionLogRepository logRepository;
-
-    public AssessmentAgentService(ChatClient chatClient,
-                                   AgentExecutionLogRepository logRepository) {
-        this.chatClient = chatClient;
-        this.logRepository = logRepository;
-    }
-
-    public AssessmentResult execute(AssessmentCommand command) {
-        // Step 1: Validate
-        validateCommand(command);
-
-        // Step 2: Build converter and format instructions
-        BeanOutputConverter<AssessmentResult> converter =
-            new BeanOutputConverter<>(AssessmentResult.class);
-        String formatInstructions = converter.getFormat();
-
-        // Step 3: Build prompt from template (load from resource)
-        String prompt = buildPrompt(command, formatInstructions);
-
-        // Step 4: Call Gemini
-        long startMs = System.currentTimeMillis();
-        String rawResponse = chatClient.prompt()
-            .user(prompt)
-            .call()
-            .content();
-        long latencyMs = System.currentTimeMillis() - startMs;
-
-        // Step 5: Validate structured output
-        AssessmentResult result = parseAndValidate(converter, rawResponse);
-
-        // Step 6: Log execution
-        logExecution(command, result, latencyMs);
-
-        // Step 7: Return result
-        return result;
-    }
-
-    private void validateCommand(AssessmentCommand command) {
-        if (command.learningGoal() == null || command.learningGoal().isBlank()) {
-            throw new IllegalArgumentException("learningGoal is required");
-        }
-        if (command.durationMinutes() < 10 || command.durationMinutes() > 480) {
-            throw new IllegalArgumentException("durationMinutes must be between 10 and 480");
-        }
-        // Add further validations per the assessment-agent.md spec
-    }
-
-    private AssessmentResult parseAndValidate(BeanOutputConverter<AssessmentResult> converter,
-                                               String rawResponse) {
-        try {
-            AssessmentResult result = converter.convert(rawResponse);
-            if (result == null || result.title() == null) {
-                throw new AgentOutputValidationException("OUTPUT_VALIDATION_FAILED",
-                    "Required field 'title' is missing from Gemini response");
-            }
-            return result;
-        } catch (Exception e) {
-            throw new AgentOutputValidationException("OUTPUT_VALIDATION_FAILED", e.getMessage());
-        }
-    }
-}
-```
-
-### Controller (internal REST endpoint)
-
-```java
-package cl.gradeops.ai.agents.assessment;
-
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-
-@RestController
-@RequestMapping("/internal/agents/assessment")
-public class AssessmentAgentController {
-
-    private final AssessmentAgentService service;
-
-    public AssessmentAgentController(AssessmentAgentService service) {
-        this.service = service;
-    }
-
-    @PostMapping("/generate")
-    public ResponseEntity<AssessmentResult> generate(@RequestBody AssessmentCommand command) {
-        return ResponseEntity.ok(service.execute(command));
-    }
-}
-```
-
----
-
-## Spring AI configuration
-
-Configure Spring AI for Vertex AI Gemini in `application.yml`:
-
-```yaml
-spring:
-  ai:
-    vertex:
-      ai:
-        gemini:
-          project-id: ${GCP_PROJECT_ID}
-          location: ${GCP_REGION:us-central1}
-          chat:
-            options:
-              model: gemini-2.0-flash
-```
-
-The `ChatClient` bean is created automatically by the Spring AI auto-configuration. Inject it into your service:
-
-```java
-@Service
-public class AssessmentAgentService {
-    private final ChatClient chatClient;
-
-    public AssessmentAgentService(ChatClient.Builder builder) {
-        this.chatClient = builder.build();
-    }
-}
-```
-
----
-
-## Structured output with BeanOutputConverter
-
-Spring AI's `BeanOutputConverter` generates a JSON schema from a Java record and instructs Gemini to return output that matches it. The schema instructions are injected into the prompt as part of `$formatInstructions$`.
-
-```java
-BeanOutputConverter<AssessmentResult> converter =
-    new BeanOutputConverter<>(AssessmentResult.class);
-
-// Get the format instructions to include in the prompt
-String formatInstructions = converter.getFormat();
-
-// After calling Gemini, parse the response
-AssessmentResult result = converter.convert(rawResponse);
-```
-
-The Java record must use types that map cleanly to JSON: `String`, `Integer`, `Boolean`, `List<T>`, and nested records. Avoid using `Optional` — use nullable fields instead.
-
----
-
-## Output validation rules
-
-After parsing the structured output, apply these checks before proceeding to the log step:
-
-| Check | Action on failure |
-|-------|------------------|
-| Required fields are non-null | Throw `AgentOutputValidationException` with code `OUTPUT_VALIDATION_FAILED` |
-| Numeric bounds (scores 0–100, duration > 0) | Throw `AgentOutputValidationException` |
-| List fields have at least the minimum expected items | Throw `AgentOutputValidationException` |
-| JSON schema match (handled by `BeanOutputConverter`) | `converter.convert()` throws on mismatch |
-
-When validation fails:
-- Set `AgentRunStatus = FAILED` in the execution log
-- Include the error message in the log's `error_message` field (keep it brief — no raw prompt content)
-- Throw the exception so the `api/` caller receives an error response and can retry or surface it to the teacher
-
----
-
-## AgentExecutionLog — what to log
-
-Write a log record on every agent run, including runs that fail. The log is the primary evidence layer.
-
-| Field | Value to provide |
-|-------|----------------|
-| `id` | Generated UUID |
-| `organization_id` | From the command's teacher context |
-| `assessment_id` | From the command, if available |
-| `student_submission_id` | From the command for grading runs; null otherwise |
-| `agent_name` | Enum constant, e.g., `AgentName.ASSESSMENT` |
-| `operation` | Enum constant, e.g., `AgentOperation.GENERATE_ASSESSMENT` |
-| `model` | The Gemini model string, e.g., `gemini-2.0-flash` |
-| `status` | `SUCCEEDED` or `FAILED` |
-| `input_summary` | Brief human-readable description of the inputs — no raw submission content |
-| `output_summary` | Brief description of the output — e.g., "Assessment draft with 3 objectives and 2 tasks" |
-| `input_tokens` | Token count from the model response metadata if available |
-| `output_tokens` | Token count from the model response metadata if available |
-| `estimated_cost_usd` | Calculated from token counts using known Gemini pricing |
-| `latency_ms` | Wall-clock time for the Gemini call |
-| `uncertainty_flags_json` | JSON array of any `UncertaintyFlag` values in the result |
-| `error_message` | Redacted error message if status is `FAILED`; null otherwise |
-| `approval_state` | `PENDING` for all high-impact outputs (grading, feedback, rubric, report) |
-| `created_at` | Current UTC timestamp |
-
----
-
-## Security rules for agents
-
-- **Never log raw submission content.** Log the `submissionId` reference. If a brief content summary is needed for debugging, keep it to 50–100 characters and redact student identifiers.
-- **Never log teacher PII** beyond what is in the assessment brief (e.g., no email addresses, no names in the log text fields).
-- **Always log token cost and latency.** These fields are required for billing evidence and unit economics tracking.
-- **No secrets in prompts.** Never include API keys, database credentials, or internal system URLs in prompt templates.
-- In Cloud Run production, the service account attached to the agents service provides Vertex AI access via ADC (Application Default Credentials). There is no need to set `GOOGLE_APPLICATION_CREDENTIALS` explicitly on Cloud Run.
-
----
-
-## Local development with the Gemini API key
-
-For local development, Vertex AI requires GCP authentication which can be complex to configure. Use the Gemini API key (simpler HTTP-based auth) instead.
-
-Add this to `agents/src/main/resources/application-local.yml`:
+Current `beta` and `demo` profiles configure both Google GenAI / Gemini and OpenAI-compatible Groq. The generic `ChatClient` auto-configuration is excluded because two `ChatModel` beans are present; `AssessmentConfig` builds provider-specific `ChatClient` instances from the named model beans.
 
 ```yaml
 spring:
   ai:
     google:
-      api-key: ${GEMINI_API_KEY}
-      gemini:
+      genai:
+        project-id: ${GOOGLE_CLOUD_PROJECT}
+        location: ${VERTEX_AI_LOCATION:us-central1}
         chat:
           options:
-            model: gemini-2.0-flash
+            model: ${GRADEOPS_GEMINI_MODEL}
+    openai:
+      api-key: ${GRADEOPS_GROQ_API_KEY}
+      base-url: ${GRADEOPS_GROQ_BASE_URL:https://api.groq.com/openai/v1}
+      chat:
+        options:
+          model: ${GRADEOPS_GROQ_MODEL}
+    autoconfigure:
+      exclude:
+        - org.springframework.ai.model.chat.client.autoconfigure.ChatClientAutoConfiguration
 ```
 
-Store the key in `application-local.yml`. This file is gitignored and must never be committed.
+The current default provider is configured separately:
 
-To start the agents service locally with this profile:
+```yaml
+app:
+  agents:
+    llm:
+      default-provider: groq
+```
+
+Provider defaults are a policy decision, not a code constant. See `docs/99-decisions/2026-07-20-agent-provider-model-policy.md`.
+
+Provider-specific clients are wired explicitly:
+
+```java
+@Bean(name = "gemini")
+GeminiAssessmentGenerationAdapter geminiAssessmentGenerationAdapter(
+        @Qualifier("googleGenAiChatModel") ChatModel chatModel) {
+    return new GeminiAssessmentGenerationAdapter(ChatClient.builder(chatModel).build());
+}
+
+@Bean(name = "groq")
+GroqAssessmentGenerationAdapter groqAssessmentGenerationAdapter(
+        @Qualifier("openAiChatModel") ChatModel chatModel) {
+    return new GroqAssessmentGenerationAdapter(ChatClient.builder(chatModel).build());
+}
+```
+
+---
+
+## Structured output validation
+
+Spring AI structured output can be used inside provider adapters, but the agent contract must not depend on raw LLM text. Parse the provider response into the `{Agent}Result` record and validate it before returning to `api/`.
+
+For the current Assessment Agent, validation happens in `AssessmentAgentOrchestrator.validateOutput(...)` after the selected provider returns `AssessmentGenerationResponse`.
+
+The Java record must use types that map cleanly to JSON: `String`, `Integer`, `Boolean`, `List<T>`, and nested records. Avoid using `Optional` in DTO contracts; use nullable fields only where the contract permits absence.
+
+---
+
+## Future generic runtime capabilities
+
+Add these only when a release needs them:
+
+| Capability | First expected need | Rule |
+|---|---|---|
+| `AgentDefinition` and registry | R02 | Introduce when Rubric/Grading/Feedback become real second consumers. |
+| Shared model gateway | R02 | Extract from Assessment Agent only after duplication appears. |
+| Tool registry/executor | R04 | Required for Closed authoring tools and coverage/bank lookups. |
+| Policy engine and budget manager | R04 | Enforce allowed tools, max steps, tokens, cost, time and retries. |
+| `AgentRun`/`AgentStep` persistence | R05 | Add only when async/volume/latency makes synchronous payloads insufficient. |
+| Sandbox | R02 or later | Only if grading actually executes untrusted student code. |
+
+Do not add RAG, vector memory, multi-agent orchestration or new providers without a concrete release consumer and decision record.
+
+---
+
+## Output validation rules
+
+After parsing structured output, apply these checks before returning the execution payload:
+
+| Check | Action on failure |
+|-------|------------------|
+| Required fields are non-null | Throw agent-specific exception with `OUTPUT_VALIDATION_FAILED` or equivalent reason |
+| Numeric bounds (scores 0-100, duration > 0) | Throw agent-specific validation exception |
+| List fields have at least the minimum expected items | Throw validation exception |
+| JSON/schema match | Provider adapter or converter throws; orchestrator translates to normalized error |
+
+When validation fails:
+
+- Build a failed execution payload with redacted error metadata.
+- Do not include raw prompt or raw student submission content.
+- Throw the exception so the `api/` caller receives an error response and can retry or surface it to the teacher.
+- Let `api/` persist the failed `AgentExecutionLog`.
+
+---
+
+## AgentExecutionLog payload — what to return
+
+Return execution evidence on every agent run, including failures. `api/` persists the final row and attaches tenant/assessment/resource context.
+
+| Field | Value to provide |
+|-------|----------------|
+| `agentExecutionId` | Generated UUID for correlation |
+| `agentName` | Agent name, e.g., `assessment` |
+| `provider` | Provider name, e.g., `gemini` or `groq`; target field even if the current payload still needs to add it |
+| `model` | Provider-specific model string |
+| `promptVersion` | Prompt template version/header |
+| `inputHash` | Hash of rendered prompt or compact input envelope; never raw prompt |
+| `outputHash` | Hash of raw provider response when available |
+| `estimatedInputTokens` | Token count if available |
+| `estimatedOutputTokens` | Token count if available |
+| `costEstimate` | Provider-aware best-effort estimate; `null` when unknown |
+| `status` | `COMPLETED`, `FAILED`, `BLOCKED` or future normalized state |
+| `errorCode` | Normalized reason for failure/block |
+| `startedAt` | Start timestamp |
+| `finishedAt` | Finish timestamp |
+
+The current `AgentExecutionLogPayload` does not yet include `provider`; that is a required alignment item from the 2026-07-20 provider/model policy.
+
+---
+
+## Security rules for agents
+
+- **Never log raw submission content.** Log the `submissionId` reference or a hash. If a brief content summary is needed for debugging, keep it short and redact student identifiers.
+- **Never log teacher PII** beyond what is necessary for correlation; prefer IDs supplied by `api/`.
+- **Always return token cost and latency when available.** These fields are required for billing evidence and unit economics tracking.
+- **No secrets in prompts.** Never include API keys, database credentials, or internal system URLs in prompt templates.
+- **Provider secrets are server-side only.** Gemini and Groq keys belong in server-side config/Secret Manager, never in frontend code.
+- **Agents service is internal.** In `demo`, API-to-agents should use Cloud Run service-to-service auth; in local/beta, use the documented internal/shared-secret mechanism until OIDC is available.
+- **Tool use must be policy-gated.** When tool loops arrive, every tool must declare input schema, allowed agent(s), max use, timeout, side-effect level and audit fields.
+
+---
+
+## Local development with providers
+
+Use the profile appropriate to the environment. Current provider env vars:
+
+```bash
+GRADEOPS_GEMINI_MODEL=...
+GRADEOPS_GROQ_API_KEY=...
+GRADEOPS_GROQ_BASE_URL=https://api.groq.com/openai/v1
+GRADEOPS_GROQ_MODEL=llama-3.3-70b-versatile
+```
+
+The provider default comes from `app.agents.llm.default-provider`. A command may override provider/model when the contract supports it.
+
+To start the agents service locally:
 
 ```bash
 cd agents/
-./mvnw spring-boot:run -Dspring.profiles.active=local
+./mvnw spring-boot:run -Dspring.profiles.active=beta
 ```
+
+Do not commit `.env`, local secrets or provider API keys.
 
 ---
 

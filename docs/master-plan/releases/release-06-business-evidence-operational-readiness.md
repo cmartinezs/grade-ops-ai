@@ -1,17 +1,17 @@
-# Release 06 - Business Evidence and Hackathon Compliance
+# Release 06 - Business Evidence and Operational Readiness
 
-> Bloqueo de cierre: R06 puede documentarse y ejecutarse en paralelo, pero no puede marcarse como release candidate del hackathon hasta resolver D-01. La narrativa final tampoco puede cerrarse hasta resolver D-07.
+> Bloqueo de cierre: R06 puede documentarse y ejecutarse en paralelo, pero no puede marcarse como release candidate de validacion MVP hasta resolver D-01. La narrativa final tampoco puede cerrarse hasta resolver D-07.
 
 ## 1. Identificacion
 
 | Campo | Valor |
 |---|---|
 | Release | R06 |
-| Nombre | Business Evidence and Hackathon Compliance |
-| Archivo | `docs/master-plan/releases/release-06-business-evidence-hackathon-compliance.md` |
+| Nombre | Business Evidence and Operational Readiness |
+| Archivo | `docs/master-plan/releases/release-06-business-evidence-operational-readiness.md` |
 | Estado | Documentada; ejecucion condicionada por D-01 y D-07 |
 | Complejidad | M |
-| Corte | MVP / cierre operativo y de evidencia del hackathon |
+| Corte | MVP / cierre operativo y de evidencia de validacion |
 | Fuente estrategica | `docs/master-plan/analysis/release-strategy.md` |
 
 ## 2. Prevalidacion
@@ -31,7 +31,7 @@ R06 no esta bloqueada para instrumentar ledgers, dashboard, alertas, accesos y r
 
 Consolidar evidencia real de operacion, usuarios, pilotos, uso, costos, revenue, related-party y cumplimiento tecnico en un dashboard interno y un paquete exportable, privado por defecto y validado por un Operator.
 
-R06 convierte los eventos producidos desde R01-R05 en prueba auditable de producto, operacion AI-native y viabilidad comercial. Tambien verifica que la submission use una narrativa de pricing coherente y evidencia de despliegue compatible con la decision D-01.
+R06 convierte los eventos producidos desde R01-R05 en prueba auditable de producto, operacion AI-native y viabilidad comercial. Tambien verifica que el paquete de validacion use una narrativa de pricing coherente y evidencia de despliegue compatible con la decision D-01.
 
 ## 4. Problema
 
@@ -39,14 +39,14 @@ Un producto funcional puede perder credibilidad o elegibilidad si sus afirmacion
 
 ## 5. Hipotesis
 
-Si un Operator puede revisar datos reales, detectar faltantes, separar informacion privada y publica, corregir mediante eventos auditados y generar un paquete versionado, entonces GradeOps AI puede preparar una submission consistente sin fabricar traction, exponer PII ni reconstruir evidencia manualmente al final.
+Si un Operator puede revisar datos reales, detectar faltantes, separar informacion privada y publica, corregir mediante eventos auditados y generar un paquete versionado, entonces GradeOps AI puede preparar evidencia de validacion consistente sin fabricar traction, exponer PII ni reconstruir evidencia manualmente al final.
 
 ## 6. Actor beneficiado
 
 - **Operator**: administra pilotos, ledgers, alertas, evidencia y readiness.
 - **Founder/business owner**: entiende revenue, costos, uso y unit economics.
 - **Teacher/pilot customer**: aporta evidencia y consentimiento con visibilidad controlada.
-- **Judges/testers**: reciben un paquete verificable, coherente y minimizado.
+- **Evaluators/testers**: reciben un paquete verificable, coherente y minimizado.
 - **Developer/Release Manager**: valida despliegue, logs, export y trazabilidad al commit.
 
 ## 7. Valor entregado
@@ -59,8 +59,8 @@ Si un Operator puede revisar datos reales, detectar faltantes, separar informaci
 - Alertas de presupuesto, uso y datos faltantes.
 - Visibilidad de salud del runtime de agentes.
 - Checklist operativo por piloto.
-- Export versionado con clasificacion private, judge-verifiable y public-safe.
-- Matriz de cumplimiento y evidencia de despliegue para la submission.
+- Export versionado con clasificacion private, controlled-private y public-safe.
+- Matriz de readiness y evidencia de despliegue para el paquete de validacion.
 
 ## 8. Nivel de automatizacion
 
@@ -74,7 +74,7 @@ Si un Operator puede revisar datos reales, detectar faltantes, separar informaci
 | Pilot onboarding | Manual | Supervisada con checklist |
 | Agent health visibility | Tecnica | Automatizada para lectura y alertas |
 | Evidence export | Manual | Supervisada, versionada y revocable |
-| Submission readiness | Manual | Determinista para checklist; decision humana final |
+| Validation readiness | Manual | Determinista para checklist; decision humana final |
 
 ## 9. Alcance incluido
 
@@ -91,9 +91,9 @@ Si un Operator puede revisar datos reales, detectar faltantes, separar informaci
 - Checklist de kickoff y seguimiento de piloto.
 - Health status del servicio de agentes y ultima comprobacion.
 - Missing evidence warnings.
-- Clasificacion de evidencia como internal-private, judge-verifiable o public-safe.
+- Clasificacion de evidencia como internal-private, controlled-private o public-safe.
 - Export versionado con resumen, manifest y referencias a fuentes.
-- Matriz de readiness de submission.
+- Matriz de readiness de validacion.
 - Evidencia de entorno y uso de GCP/Gemini segun D-01.
 - Reconciliacion de pricing y limites segun D-07.
 - Tarea de infraestructura para verificar o ajustar `infra/terraform/environments/demo/`.
@@ -107,7 +107,7 @@ Si un Operator puede revisar datos reales, detectar faltantes, separar informaci
 - Public BI suite o analytics en tiempo real.
 - CRM completo.
 - Marketing automation.
-- Publicacion automatica en Devpost o redes.
+- Publicacion automatica en plataformas externas o canales publicos.
 - Fabricacion o estimacion de usuarios/revenue como si fueran hechos.
 - Almacenamiento de secretos, recibos o PII dentro del export publico.
 - Reescritura de los flujos Open/Closed de R01-R05.
@@ -126,7 +126,7 @@ Si un Operator puede revisar datos reales, detectar faltantes, separar informaci
 
 ```text
 Operator signs in with authorized role
-  -> selects the hackathon reporting period
+  -> selects the validation reporting period
   -> dashboard loads product, agent, approval, usage, cost and customer aggregates
   -> system flags missing cost, revenue proof, related-party, consent and deployment evidence
   -> operator reviews pilot checklist and attaches controlled evidence references
@@ -135,8 +135,8 @@ Operator signs in with authorized role
   -> operator reviews agent runtime health and run coverage
   -> operator chooses an evidence classification and export scope
   -> system generates a versioned manifest and private/public-safe artifacts
-  -> operator validates pricing, environment proof and submission readiness
-  -> operator approves the package for manual submission
+  -> operator validates pricing, environment proof and validation readiness
+  -> operator approves the package for controlled sharing
 ```
 
 ## 13. User stories incluidas
@@ -147,7 +147,7 @@ Operator signs in with authorized role
 | US-090 | Usage Limits | P0, NOT READY; enriquecer contadores, limites y overuse |
 | US-091 | Payment Evidence Link | P1 promovida al corte R06 por requisito de evidencia; NOT READY |
 
-US-091 conserva su prioridad documental P1, pero su subconjunto de evidence link, revenue status y `related_party` es obligatorio para el cierre hackathon de R06. Esto no cambia silenciosamente la historia original; el enriquecimiento debe registrar el corte adoptado.
+US-091 conserva su prioridad documental P1, pero su subconjunto de evidence link, revenue status y `related_party` es obligatorio para el cierre de validacion de R06. Esto no cambia silenciosamente la historia original; el enriquecimiento debe registrar el corte adoptado.
 
 ## 14. Historias propuestas o modificadas
 
@@ -188,7 +188,7 @@ Estas historias no existen como archivos en `docs/02-product/user-stories/`. Deb
 - Ningun resumen IA puede crear o alterar montos, counts o estados fuente.
 - Operator aprueba todo export y toda evidencia publica.
 - Pricing final debe usar la fuente canonica decidida en D-07.
-- Readiness de hackathon requiere D-01 resuelta y evidencia acorde.
+- Readiness de validacion requiere D-01 resuelta y evidencia acorde.
 
 ## 17. Dependencias
 
@@ -246,7 +246,7 @@ Entidades/datos esperados:
 - `ServiceHealthObservation`.
 - `EvidenceExport`.
 - `EvidenceExportItem`.
-- `SubmissionReadinessCheck`.
+- `ValidationReadinessCheck`.
 - `AgentExecutionLog` y `ApprovalEvent` heredados.
 
 Campos minimos de `RevenueEvent`:
@@ -275,7 +275,7 @@ Migraciones Flyway deben incluir constraints, indexes por periodo/customer y uni
 - Student data se limita a agregados sin nombres, emails, respuestas ni result links.
 - Customer/testimonial evidence respeta consentimiento y nivel de permiso.
 - Public-safe export usa allowlist de campos, no una blacklist.
-- Judge-verifiable evidence se comparte solo por canal controlado y revocable.
+- Controlled-private evidence se comparte solo por canal controlado y revocable.
 - Logs de dashboard/export no contienen el contenido privado del evidence link.
 - Health endpoint no revela variables, stack traces, providers keys ni topologia sensible.
 - Retencion e invalidacion de evidencia deben quedar auditadas.
@@ -295,7 +295,7 @@ Migraciones Flyway deben incluir constraints, indexes por periodo/customer y uni
 - `agent_health_checked`, `agent_health_degraded`.
 - `evidence_dashboard_viewed`.
 - `evidence_export_requested`, `evidence_export_generated`, `evidence_export_failed`, `evidence_export_revoked`.
-- `submission_readiness_evaluated`, `submission_package_approved`.
+- `validation_readiness_evaluated`, `validation_package_approved`.
 
 Cada evento incluye actor, timestamp, correlation/request ID, source entity, previous/new state cuando aplique y environment.
 
@@ -331,6 +331,15 @@ Cada evento incluye actor, timestamp, correlation/request ID, source entity, pre
 - Export de manifest con source IDs, environment, commit y freshness.
 - Policy que mantenga Ops Agent en `EXECUTE_READ_ONLY`.
 
+### Incremento API-Agent Orchestration requerido
+
+- Aplicar [`api-agent-orchestration-strategy.md`](../analysis/api-agent-orchestration-strategy.md) a evidence dashboard, health, costs, revenue, readiness y exports.
+- Mantener todos los calculos de ledgers, usage, cost, revenue y readiness en `api/`/DB; Ops Agent solo resume o explica hechos persistidos.
+- Exponer endpoints REST de recursos operacionales (`ai-operations`, health, evidence, usage, costs, revenue, exports) con affordances de drill-down y export.
+- Requerir Operator/founder access antes de retries privilegiados, dead-letter handling, exports o corrections.
+- Usar operaciones consultables para exports o recomputations largos; no usar LLM para cerrar D-01/D-07.
+- Someter endpoints/rutas nuevas al gate Richardson REST, con links `self`, `runs`, `attempts`, `export`, `retry`, `cancel` cuando existan, y errores seguros sin PII/secrets.
+
 ### Herramientas requeridas
 
 - `load_agent_metrics`.
@@ -356,7 +365,7 @@ Cada evento incluye actor, timestamp, correlation/request ID, source entity, pre
 
 ### Límites operacionales
 
-- No publicar ni enviar submission automaticamente.
+- No publicar ni enviar paquetes de validacion automaticamente.
 - No fabricar traction, costos, usuarios, revenue ni testimonios.
 - No exponer PII, secrets ni signed URLs en export publico.
 - No usar fallback de modelo para cambiar cifras.
@@ -400,9 +409,9 @@ Cada evento incluye actor, timestamp, correlation/request ID, source entity, pre
 - Operator valida montos, moneda, conversion y evidence link.
 - Operator corrige metadata mediante evento auditado.
 - Operator configura y reconoce alertas.
-- Operator decide que evidencia es private, judge-verifiable o public-safe.
+- Operator decide que evidencia es private, controlled-private o public-safe.
 - Operator valida testimonios y consentimientos.
-- Operator aprueba cada export y la submission final.
+- Operator aprueba cada export y el paquete final de validacion.
 - Founder/Release Manager resuelve D-01 y D-07.
 - El sistema nunca publica, cobra ni declara traction autonomamente.
 
@@ -526,7 +535,7 @@ Metricas derivadas incluyen costo por run, assessment, graded submission, teache
 - Solo Operator autorizado accede a C14/C15.
 - Pruebas cubren acceso denegado para teacher/student y cross-tenant.
 - Public export usa allowlist y no contiene PII, secrets ni private links.
-- Judge-private export requiere canal controlado.
+- Controlled-private export requiere canal controlado.
 - Consentimiento se valida antes de incluir testimonial/customer identity.
 - Health no filtra configuracion sensible.
 - Audit events no pueden editarse desde UI.
@@ -578,7 +587,7 @@ Metricas derivadas incluyen costo por run, assessment, graded submission, teache
 - [ ] Missing evidence, budget alert y agent health estan disponibles.
 - [ ] Pilot checklist y consent/evidence references funcionan.
 - [ ] Export private/public-safe es versionado, revisable y revocable.
-- [ ] Submission readiness bloquea faltantes reales.
+- [ ] Validation readiness bloquea faltantes reales.
 - [ ] Infra scope para servicios afectados esta DONE.
 - [ ] Terraform/smoke/deployment proof estan documentados segun D-01.
 - [ ] Tests funcionales, seguridad, ledger y export pasan.
@@ -597,7 +606,7 @@ Metricas derivadas incluyen costo por run, assessment, graded submission, teache
 - Smoke del flujo completo con al menos un piloto, eventos de uso, costo y revenue/commitment.
 - Terraform fmt/validate/plan o bloqueo documentado por credenciales.
 - Smoke de URL/health y captura de commit/revision/environment.
-- Revision manual del paquete contra `docs/07-hackathon/evidence-checklist.md`.
+- Revision manual del paquete contra los criterios de evidencia activos en `docs/05-evidence/`.
 
 ## 40. Escenario Given/When/Then
 
@@ -605,10 +614,10 @@ Metricas derivadas incluyen costo por run, assessment, graded submission, teache
 Given an authorized operator and real product events from R01 through R05
 And a pilot with usage, cost, revenue or commitment evidence
 And D-01 and D-07 have recorded resolutions
-When the operator opens the evidence dashboard for the hackathon period
+When the operator opens the evidence dashboard for the validation period
 And reviews missing evidence, budget alerts and agent service health
-And classifies evidence for judge-private and public-safe use
-And requests a versioned submission export
+And classifies evidence for controlled-private and public-safe use
+And requests a versioned validation export
 Then all dashboard totals trace to persisted source events
 And paid revenue is separated from commitments
 And related-party revenue is separated from arms-length revenue
@@ -635,7 +644,7 @@ And the approved package records its source snapshot, commit and environment
 - Gross margin by offer when data is sufficient.
 - Budget alerts triggered/acknowledged.
 - Evidence exports generated/revoked.
-- Submission readiness pass rate.
+- Validation readiness pass rate.
 
 ## 42. Evidencias
 
@@ -650,7 +659,7 @@ And the approved package records its source snapshot, commit and environment
 - Missing-evidence and budget-alert records.
 - Agent health observation.
 - Evidence export manifest.
-- Submission readiness matrix.
+- Validation readiness matrix.
 - Demo/product URLs, commit, revision and timestamps.
 - GCP/Cloud Run/Cloud SQL/Gemini proof required by D-01.
 - Terraform plan/apply or deployment evidence, without secrets.
@@ -691,9 +700,9 @@ Prompt operativo con placeholders explicitos porque el Master Plan no fija versi
 
 ```text
 Contexto:
-Estamos ejecutando R06 del Master Plan: Business Evidence and Hackathon Compliance.
+Estamos ejecutando R06 del Master Plan: Business Evidence and Operational Readiness.
 Fuentes obligatorias:
-- docs/master-plan/releases/release-06-business-evidence-hackathon-compliance.md
+- docs/master-plan/releases/release-06-business-evidence-operational-readiness.md
 - docs/master-plan/master-plan-executive.md
 - docs/master-plan/analysis/release-strategy.md
 - docs/master-plan/analysis/automation-inventory.md
@@ -702,7 +711,7 @@ Fuentes obligatorias:
 - docs/02-product/user-stories/epic-09-evidence-metrics/
 - docs/02-product/user-stories/epic-10-billing-plan-limits/
 - docs/03-ai-agents/ops-agent.md
-- docs/07-hackathon/evidence-checklist.md
+- docs/05-evidence/README.md
 - docs/00-project/cost-model.md
 - docs/01-business/pricing.md
 - infra/terraform/environments/demo/
@@ -715,13 +724,13 @@ Precondiciones:
 - Crear o aceptar explicitamente US-PROPUESTA-01/05/06/08 antes de atomizar.
 
 Objetivo:
-Crear y gestionar R06: operator access -> usage/cost/revenue/pilot evidence -> dashboard -> missing evidence/alerts/health -> versioned export -> submission readiness.
+Crear y gestionar R06: operator access -> usage/cost/revenue/pilot evidence -> dashboard -> missing evidence/alerts/health -> versioned export -> validation readiness.
 
 Comandos:
 1. Si .releases/ no existe:
    /release-init
 2. Crear la release:
-   /release-new <VERSION> -- Business Evidence and Hackathon Compliance --target <YYYY-QN-MN-WN> --date <YYYY-MM-DD>
+   /release-new <VERSION> -- Business Evidence and Operational Readiness --target <YYYY-QN-MN-WN> --date <YYYY-MM-DD>
 3. Verificar y agregar plannings separadas para producto e infraestructura:
    /release-add <VERSION> <PLANNING_ID_R06_PRODUCT> <PLANNING_ID_R06_INFRA>
 4. Revisar estado:
@@ -751,7 +760,7 @@ Arquitectura:
 
 Seguridad:
 - Operator auth y authorization server-side.
-- Private/judge/public-safe separados.
+- Private/controlled/public-safe separados.
 - No student PII, secrets ni signed URLs en public export.
 - Consentimiento antes de identidad/testimonial.
 
@@ -792,4 +801,5 @@ Entregables:
 | Fecha | Cambio | Motivo | Elementos afectados | Decision asociada |
 |---|---|---|---|---|
 | 2026-07-20 | Incorporacion de capacidades de Agent Runtime | Declarar Ops Agent read-only y observabilidad/costo/readiness del runtime | Runtime, Ops Agent, evidence dashboard | D-01, D-04, D-06, D-07 |
+| 2026-07-20 | Incorporacion de API-Agent Orchestration | Asegurar que evidencia, health, costs y exports sean hechos de API/DB y no salidas autoritativas de LLM | API, agents, web/operator routes, DoD operativo | D-API-01..D-API-10 |
 | 2026-07-20 | Creacion inicial | Ejecucion de Fase 05 para R06 | Todo el documento | D-01, D-04, D-06, D-07 |

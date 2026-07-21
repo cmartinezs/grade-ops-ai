@@ -2,6 +2,7 @@
 
 > Incorporacion del paquete `docs/.prompting/master-plan-runtime/` al Master Plan.
 > Este documento no crea una release tecnica independiente: define como cada release funcional debe consumir y ampliar el runtime.
+> Para el borde `web/` -> `api/` -> `agents/`, complementar con [`api-agent-orchestration-strategy.md`](api-agent-orchestration-strategy.md).
 
 ## Principio rector
 
@@ -10,12 +11,14 @@ La Plataforma de Agentes de GradeOps AI se gestiona como una capacidad arquitect
 Cada release funcional que incorpore asistencia de IA debe identificar:
 
 - agente especializado involucrado;
+- reglas API-Agent Orchestration aplicables;
 - capacidades incrementales del runtime generico;
 - herramientas de dominio necesarias;
 - validadores deterministicos;
 - limites de autonomia;
 - puntos de aprobacion humana;
 - presupuesto, metricas y evidencia.
+- endpoints, contratos y rutas sometidos al gate Richardson REST cuando correspondan.
 
 ## Estado actual asumido
 
@@ -46,7 +49,7 @@ Esto todavia no equivale a un runtime agentic headless comparable operacionalmen
 
 | Componente | Autoridad |
 |---|---|
-| `api/` | Dominio, auth, ownership, estados, persistencia, notas finales, publicacion, aprobaciones, creditos y billing |
+| `api/` | Interfaz publica de `web/`, dominio, auth, ownership, estados, persistencia, notas finales, publicacion, aprobaciones, creditos y billing |
 | `agents/` runtime | Ejecucion de agentes, proveedor/modelo, tool loop, politicas, presupuesto, validacion tecnica, metricas y trazabilidad |
 | Agente especializado | Instrucciones, contratos de entrada/salida, herramientas permitidas, validadores, autonomia y causas de bloqueo |
 | Modelo GenAI | Propone acciones, interpreta evidencia, redacta y explica; no autoriza ni persiste efectos de dominio |
@@ -62,7 +65,7 @@ La API puede invocar un agente de forma sincrona o asincrona, pero no delega aut
 | R03 | Handoffs tipados y herramientas read-only/agregadas para reportes, gaps y recovery, con separacion de hechos e hipotesis | Learning Gap, Recovery y Teacher Report |
 | R04 | Tool loop controlado para generacion/revision/composicion Closed con herramientas de banco, cobertura y validacion deterministica | Question Generation, Distractor Quality, Ambiguity y Assembly |
 | R05 | Persistencia asincrona/reanudable para analytics y eventos de estudiante cuando el volumen o latencia lo justifique; scoring Closed sigue deterministico en API | Item Analytics y student access |
-| R06 | Observabilidad operacional: agent health, costos, provider/model comparison, warnings, budget alerts y Ops Agent read-only | Evidence dashboard y hackathon readiness |
+| R06 | Observabilidad operacional: agent health, costos, provider/model comparison, warnings, budget alerts y Ops Agent read-only | Evidence dashboard y operational readiness |
 
 R07/R08 pueden ampliar optimizacion, comparacion de modelos, refinamientos P1 y memoria/recuperacion avanzada solo si existe consumidor funcional concreto.
 
@@ -108,3 +111,4 @@ Una release con IA no esta completa si solo "el endpoint responde". Debe demostr
 | Fecha | Cambio | Motivo | Elementos afectados | Decision asociada |
 |---|---|---|---|---|
 | 2026-07-20 | Creacion inicial | Incorporar `master-plan-runtime` como estrategia transversal del Master Plan | `analysis/agent-runtime-strategy.md`, R01-R06 | D-04, D-06 |
+| 2026-07-20 | Alineacion API-Agent Orchestration | Asegurar que runtime y API robusta avancen dentro de releases funcionales y con gate REST por tarea | `analysis/agent-runtime-strategy.md`, `analysis/api-agent-orchestration-strategy.md` | D-API-01..D-API-10 |

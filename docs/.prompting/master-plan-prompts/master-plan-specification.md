@@ -184,7 +184,7 @@ Las divisiones deben hacerse por valor vertical, no por capas técnicas.
 - Toda US priorizada debe ser trazable.
 - No dejar observabilidad, seguridad, costos o auditoría para el final.
 - No inventar fechas ni comandos.
-- Diferenciar MVP, alcance hackathon y roadmap posterior.
+- Diferenciar MVP, alcance validacion MVP y roadmap posterior.
 
 ## Control de cambios
 

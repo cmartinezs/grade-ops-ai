@@ -27,7 +27,7 @@ Alternatives considered for the identity provider:
 | --- | --- |
 | Firebase Authentication (Google Identity Platform) | GCP-native; no credential storage in the API; Admin SDK covers token validation, user provisioning, and revocation; integrates with the chosen runtime without additional infrastructure |
 | Auth0 | Strong product; requires an external account and vendor relationship outside the Google Cloud ecosystem; adds monthly cost and a third-party dependency for an early-stage MVP |
-| Self-managed JWT | Maximum control; requires building password hashing, token issuance, rotation, revocation storage, and breach response from scratch; not feasible in a hackathon timeline |
+| Self-managed JWT | Maximum control; requires building password hashing, token issuance, rotation, revocation storage, and breach response from scratch; not feasible for the first MVP timeline |
 
 ## Decision
 

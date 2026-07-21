@@ -9,7 +9,7 @@
 | Archivo | `docs/master-plan/releases/release-01-assessment-creation-evidence-backbone.md` |
 | Estado | Documentada |
 | Complejidad | M |
-| Corte | MVP / hackathon foundation |
+| Corte | MVP / validacion MVP foundation |
 | Fuente estrategica | `docs/master-plan/analysis/release-strategy.md` |
 
 ## 2. Prevalidacion
@@ -35,7 +35,7 @@ El repositorio ya tiene piezas importantes implementadas, pero la evidencia no e
 
 ## 5. Hipotesis
 
-Si el primer flujo de generacion de assessment produce logs completos, costo estimado, estado de aprobacion y recuperacion de fallos, entonces el resto de agentes puede incorporarse con menor retrabajo y el producto empieza a generar evidencia de hackathon desde el primer valor visible.
+Si el primer flujo de generacion de assessment produce logs completos, costo estimado, estado de aprobacion y recuperacion de fallos, entonces el resto de agentes puede incorporarse con menor retrabajo y el producto empieza a generar evidencia de validacion MVP desde el primer valor visible.
 
 ## 6. Actor beneficiado
 
@@ -267,6 +267,15 @@ Campos minimos para `AgentExecutionLog` en R01:
 - `AgentExecutionLog` enriquecido o decision tecnica D-06 que adopte explicitamente el esquema rico minimo.
 - Idempotency key por generacion/regeneracion.
 - Limites efectivos de timeout, tokens/costo estimado y reintentos para este flujo.
+
+### Incremento API-Agent Orchestration requerido
+
+- Aplicar [`api-agent-orchestration-strategy.md`](../analysis/api-agent-orchestration-strategy.md) al corte Assessment Creation, sin crear una release tecnica separada.
+- Introducir `AiOperation`, `AgentRun` y `AgentAttempt` minimos para generation/regeneration, aun si la ejecucion sigue siendo sincrona.
+- Generar IDs de operacion/run en `api/` antes de llamar a `agents/`; `agents/` devuelve evidencia tecnica, no decide efectos de dominio.
+- Exigir o admitir `Idempotency-Key` en comandos GenAI mutantes y devolver la operacion existente cuando el mismo request se reintenta.
+- Exponer una ruta consultable de operacion para `web/` cuando la generacion no pueda tratarse como resultado inmediato.
+- Someter todo endpoint/ruta nueva al gate Richardson REST: recurso claro, metodo correcto, status code, `Location` si aplica, errores normalizados, links de estado/transicion y contract tests.
 
 ### Herramientas requeridas
 
@@ -608,4 +617,5 @@ Criterios:
 | Fecha | Cambio | Motivo | Elementos afectados | Decision asociada |
 |---|---|---|---|---|
 | 2026-07-20 | Incorporacion de capacidades de Agent Runtime | Alinear R01 con la estrategia headless/iterativa sin anticipar tool loop completo | Runtime, automatizacion, DoD operativo | D-04, D-06 |
+| 2026-07-20 | Incorporacion de API-Agent Orchestration | Hacer que R01 consolide assessment generation como flujo API robusto con operaciones, runs, attempts, idempotencia y gate REST | API, agents, web routes, DoD operativo | D-API-01..D-API-10 |
 | 2026-07-19 | Creacion inicial | Ejecucion de Fase 05 para R01 | Todo el documento | D-04, D-06 |

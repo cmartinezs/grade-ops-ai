@@ -42,6 +42,19 @@ DTOs for the brief-intake/draft-generation endpoints and a `submitAssessmentBrie
 
 ---
 
+## API / Agent / Web Contract Gate
+
+| Gate | Required check | Task answer |
+|---|---|---|
+| API as orchestrator | `submitAssessmentBrief` calls `api/` only; it does not know `agents/`, provider/model, prompts or internal generation URLs beyond public API routes | Keep orchestration in `src/lib/api/assessments.ts`; no agent/provider fields in DTOs |
+| Richardson REST maturity | `POST /api/v1/assessments` creates a resource; `POST /api/v1/assessments/{id}/draft` starts generation; status/error semantics are mapped explicitly | Preserve exact current API behavior from `task-01`; do not invent `201`/`202`/`Location` if the API does not return them yet, but record the R01 orchestration gap |
+| AI operation model | Draft generation is sync legacy until R01 adds operation-backed contract | Return current `assessmentId` for routing; do not fake an `operationId` in web |
+| Idempotency | Mutating GenAI generation should use `Idempotency-Key` when API supports it | Check `task-01`; if absent, record as API gap and do not implement client-only retry that can double-generate |
+| Contract testing | DTO tests must assert exact request shape, paths and error branch after brief-created/generation-failed | Extend `assessments.test.ts` with both steps and the partial-failure case |
+| Web route functionality | Intake submit must support submitting, success redirect, brief-created/generation-failed warning, auth/validation/server errors | Expose distinguishable error state for `task-06`; no raw backend error shown to teacher |
+
+---
+
 ## Implementation Steps
 
 1. Add `CreateAssessmentBriefRequestDto`/`CreateAssessmentBriefResponseDto` to `src/types/assessment.ts`, matching `task-01`'s confirmed shapes exactly.
@@ -95,6 +108,7 @@ N/A — no database or ORM involved in `web/`.
 
 - [ ] `CreateAssessmentBriefRequestDto`/`ResponseDto` match `task-01`'s confirmed shapes exactly.
 - [ ] `submitAssessmentBrief` orchestrates both calls sequentially and distinguishes which step failed.
+- [ ] API / Agent / Web Contract Gate is completed; no agent/provider/prompt fields leak into `web` DTOs.
 - [ ] All new/extended tests in `assessments.test.ts` pass.
 - [ ] `npm run lint` passes.
 - [ ] Logging mechanism decision is recorded in `.planning/LOGGING.md` before this task is marked done, or explicitly deferred to `task-06` with the human's sign-off recorded here.

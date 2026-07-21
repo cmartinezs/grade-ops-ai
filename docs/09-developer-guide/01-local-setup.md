@@ -1,6 +1,6 @@
 # Local Development Setup
 
-This guide walks through setting up a complete local development environment for GradeOps AI. By the end you will have the API running on port 8080 and the web app on port 3000, connected to a local PostgreSQL database and a Firebase project.
+This guide walks through setting up a complete local development environment for GradeOps AI. By the end you will have the API running on port 8080, the agents service running on port 8081, and the web app running on port 3000.
 
 ---
 
@@ -67,24 +67,12 @@ You need a Firebase project with both sign-in providers enabled. If you do not h
 
 ---
 
-## Step 1 — Clone the repositories
+## Step 1 — Prepare the workspace
 
-GradeOps AI is a multi-repo workspace. Each subdirectory under `grade-ops-ai/` is an independent git repository. Clone them into a common parent directory:
+Current development happens in a single workspace checkout with top-level folders:
 
-```bash
-mkdir grade-ops-ai && cd grade-ops-ai
-
-git clone <grade-ops-ai-api-repo-url>   api
-git clone <grade-ops-ai-web-repo-url>   web
-git clone <grade-ops-ai-agents-repo-url> agents   # scaffolding only
-git clone <grade-ops-ai-infra-repo-url>  infra     # scaffolding only
-git clone <grade-ops-ai-docs-repo-url>   docs
-```
-
-After cloning, your working directory should look like:
-
-```
-grade-ops-ai/
+```text
+gradeops-plan/
 ├── api/
 ├── web/
 ├── agents/
@@ -92,7 +80,7 @@ grade-ops-ai/
 └── docs/
 ```
 
-Each subdirectory has its own `.git` history. Commits must be made from inside the relevant subdirectory.
+Do not assume each child folder has its own `.git` directory. Check the actual workspace before committing. The product documentation may still describe the intended multi-repo shape, but this checkout currently carries code and docs together.
 
 ---
 
@@ -120,22 +108,10 @@ The API uses the Firebase Admin SDK to verify ID tokens. For local development y
 
 ### 2c. Create `api/src/main/resources/application-local.yml`
 
-This file is gitignored. Create it with the following content, substituting the path to your service account JSON:
+This file is gitignored. Start from the checked-in example and substitute the path to your service account JSON:
 
-```yaml
-firebase:
-  credentials-path: /path/to/your/firebase-admin-key.json
-
-app:
-  cors:
-    allowed-origins: http://localhost:3000
-
-spring:
-  docker:
-    compose:
-      enabled: true
-      lifecycle-management: start-and-stop
-      file: compose.yml
+```bash
+cp api/src/main/resources/application-local.example.yml api/src/main/resources/application-local.yml
 ```
 
 The `firebase.credentials-path` property is read by `FirebaseConfig`. No environment variable is needed.
@@ -173,17 +149,37 @@ Expected response:
 
 Flyway runs all pending migration scripts from `api/src/main/resources/db/migration/` on every startup. After the first successful start, the following schema is in place:
 
-```
-teacher (firebase_uid PK, name, email, created_at, updated_at,
-         plan_type, related_party, offer_details, evidence_link,
-         flag_set_by, flag_set_at)
-```
+| Area | Tables |
+| --- | --- |
+| Teacher/auth | `teacher`, `password_reset_codes` |
+| Assessment draft slice | `assessments`, `assessment_briefs`, `assessment_drafts` |
+| Agent evidence | `agent_execution_logs` |
 
 To verify:
 
 ```bash
-psql -U gradeops -d gradeops -c "\d teacher"
+psql -U gradeops -d gradeops -c "\dt"
 ```
+
+### 2g. Start the agents service when testing draft generation
+
+Assessment draft generation calls the internal agents service through `AGENTS_BASE_URL` (defaults to `http://localhost:8081`). Start it in a separate terminal:
+
+```bash
+cd agents/
+SPRING_PROFILES_ACTIVE=beta ./mvnw spring-boot:run
+```
+
+For real provider calls, configure the relevant server-side keys before starting `agents/`:
+
+| Variable | Used by |
+| --- | --- |
+| `GRADEOPS_GROQ_API_KEY` | Groq/OpenAI-compatible adapter |
+| `GRADEOPS_GROQ_MODEL` | Groq model selection |
+| `GRADEOPS_GEMINI_API_KEY` | Gemini API-key path for beta/local-like runs |
+| `GRADEOPS_GEMINI_MODEL` | Gemini model selection |
+
+The default provider in `agents/src/main/resources/application.yml` is `groq`, but `AssessmentCommand.provider` can override it when supported by the caller.
 
 ---
 
@@ -218,7 +214,7 @@ NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID=G-XXXXXXXXXX
 
 **Do NOT set `NEXT_PUBLIC_API_BASE_URL`.** All API calls from the browser use the Next.js proxy (`/api/*` → `http://localhost:8080/*`). Setting that variable would bypass the proxy and cause CORS errors.
 
-### 3d. Start the web app
+### 3c. Start the web app
 
 ```bash
 npm run dev
@@ -252,7 +248,7 @@ Provision a teacher directly via the internal API. This is useful for seeding de
 curl -X POST http://localhost:8080/internal/teachers \
   -H "X-Internal-Key: dev-secret-change-me" \
   -H "Content-Type: application/json" \
-  -d '{"name": "Test Teacher", "email": "test@example.com"}'
+  -d '{"firstName": "Test", "lastName": "Teacher", "email": "test@example.com"}'
 ```
 
 Expected response (HTTP 201):
@@ -278,11 +274,11 @@ curl -X POST \
 Extract `idToken` from the response and use it in API requests:
 
 ```bash
-curl http://localhost:8080/assessments \
+curl http://localhost:8080/api/v1/assessments \
   -H "Authorization: Bearer <idToken>"
 ```
 
-Expected response: `[]` (assessment list stub, returns empty until Epic 02).
+Expected response: a JSON array of the authenticated teacher's assessments. A new account may still return `[]`.
 
 ---
 

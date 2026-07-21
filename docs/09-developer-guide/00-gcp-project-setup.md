@@ -1,6 +1,6 @@
-# GCP Project Setup — Account Creation, Credits, Billing, and Firebase Linking
+# GCP Project Setup — Account Creation, Billing, and Firebase Linking
 
-> **Run this guide before `terraform apply`.** It covers the one-time steps that Terraform cannot automate: creating a GCP account, activating credits, creating or selecting your GCP project, linking Firebase, and obtaining the Firebase web configuration keys.
+> **Run this guide before `terraform apply`.** It covers the one-time steps that Terraform cannot automate: creating a GCP account, configuring billing, creating or selecting your GCP project, linking Firebase, and obtaining the Firebase web configuration keys.
 
 ---
 
@@ -8,7 +8,7 @@
 
 ```mermaid
 flowchart TD
-    A["Create GCP account (free trial — $300 credit)"] --> B["Claim hackathon credits (if available)"]
+    A["Create GCP account"] --> B["Configure billing and optional credits"]
     B --> C["Create GCP project"]
     C --> D["Link billing account with credits to project"]
     D --> E["Enable Firebase on the project — one-time manual step"]
@@ -22,7 +22,7 @@ flowchart TD
 
 ## Step 0 — Create a Google Cloud Account (From Scratch)
 
-> If you already have a GCP account with a billing account set up, skip to [Step 1](#step-1--claim-your-gcp-credits).
+> If you already have a GCP account with a billing account set up, skip to [Step 2](#step-2--create-the-gcp-project).
 
 You need a **Google Account** (any Gmail or Google Workspace email) before you can create a GCP account.
 
@@ -38,8 +38,8 @@ You need a **Google Account** (any Gmail or Google Workspace email) before you c
 2. Sign in with your Google Account.
 3. Select your **country** and read/accept the **Terms of Service**.
 4. Choose your account type:
-   - **Individual** — for personal projects and hackathons
-   - **Business** — if you have a company (not needed for the hackathon)
+   - **Individual** — for personal projects and early validation
+   - **Business** — if you have a company or need company billing
 5. Enter your **name**, **address**, and **payment method** (credit/debit card).
    > Google uses the card to verify your identity. A temporary authorization hold (not a charge) may appear and disappear within 1–14 business days.
 6. Click **"Start my free trial"**.
@@ -52,17 +52,6 @@ You need a **Google Account** (any Gmail or Google Workspace email) before you c
 | **20+ Free Tier products** | Always-free usage limits that never expire (e.g., Cloud Functions, Cloud Storage 5 GB, Firebase) |
 | **Default project** | A project called "My First Project" is created automatically |
 
-**What the hackathon asks for:**
-
-> The Build with Gemini XPRIZE hackathon (and similar Google Cloud hackathons) typically requires:
-> - A **public open-source repository** with your project code
-> - A **hosted/demo URL** (deployed on Cloud Run, Firebase Hosting, etc.)
-> - A **demo video** (~3 minutes) showing the working project
-> - **Cost transparency** — total operating costs, what was covered by credits vs. out-of-pocket
-> - Your project must use **Google Cloud services** (Firebase, Cloud Run, Gemini API, etc.)
->
-> Check the specific hackathon rules page for exact requirements: <https://xprize.devpost.com/rules>
-
 ### 0.4 — Important: You Will NOT Be Automatically Charged
 
 - The $300 credit is valid for **90 days** from signup.
@@ -72,22 +61,20 @@ You need a **Google Account** (any Gmail or Google Workspace email) before you c
 
 ---
 
-## Step 1 — Claim Your GCP Credits
+## Step 1 — Configure Billing And Optional Credits
 
-The Build with Gemini XPRIZE hackathon provides Google Cloud credits to participants. The redemption process is specific to the cohort; verify the exact steps at the Devpost rules and resources page:
+Create or select a billing account that can be safely used for GradeOps AI validation. Keep this billing account separate from unrelated projects when possible so cost exports remain clean.
 
-> **Check:** <https://xprize.devpost.com/rules> → look for "Google Cloud credits" or "sponsor resources" section.
+If you have Google Cloud credits from a free trial, startup program, education benefit, or other grant, apply them to the billing account before provisioning resources.
 
-**General redemption process (confirm details at the link above):**
+Recommended practice:
 
-1. Log in to Devpost with the account used for your team's submission.
-2. Navigate to the sponsor resources or "Prizes" section.
-3. Find the Google Cloud credit offer — it will be a coupon code or a redemption link (e.g., `g.co/cloud/credits/...`).
-4. Open the redemption link while signed in to the Google account you will use for the GCP project.
-5. Create a new **Billing Account** (do not attach the credits to an existing personal or company billing account — keep hackathon costs isolated).
-6. The credits will appear under **Billing → Credits** in the Google Cloud Console within a few minutes.
+1. Open **Billing → Manage billing accounts** in Google Cloud Console.
+2. Create or select the billing account dedicated to this project.
+3. Confirm any available credits under **Billing → Credits**.
+4. Create a budget alert before deploying services.
 
-> **Important for evidence:** the hackathon requires disclosing total operating costs. Keeping a dedicated billing account makes the cost export clean — all charges come from this project, all covered (or partially covered) by these credits. Cash cost = amount you pay out of pocket after credits are exhausted.
+> **Important for evidence:** Cost tracking should distinguish cash cost from costs covered by credits or free-tier allowances. Cash cost = amount charged to your payment method after credits/free tier.
 
 ---
 
@@ -105,7 +92,7 @@ If you don't have a project yet:
 **Attach the billing account:**
 
 1. In the Cloud Console, go to **Billing → Manage billing accounts**
-2. Select the billing account you created in Step 1 (the one with credits)
+2. Select the billing account you created in Step 1
 3. Go to **My Projects** tab → find your project → **Change billing** → select the credits account
 
 Verify credits are linked: **Billing → Credits** should show your credit balance.
@@ -127,7 +114,7 @@ Firebase provides backend services used by the project:
 3. In the dropdown, **select your existing GCP project** (`gradeops-ai-demo`) — do NOT create a new project
    > If you don't see your GCP project in the list, make sure you are signed in with the same Google account used to create the GCP project.
 4. Accept the Firebase terms of service
-5. You do **NOT** need to enable Google Analytics for the hackathon MVP
+5. You do **NOT** need to enable Google Analytics for the MVP
 6. Click **Continue** → Firebase finishes linking to your GCP project
 
 **Verify it worked:**
@@ -249,7 +236,7 @@ terraform -chdir=terraform/environments/demo apply
 - Cloud Storage
 - Artifact Registry
 
-These are deployed manually with `gcloud` commands for the hackathon demo — see [`09-deployment-guide.md`](09-deployment-guide.md).
+These are deployed manually with `gcloud` commands until the infra planning covers them — see [`09-deployment-guide.md`](09-deployment-guide.md).
 
 ---
 
@@ -335,9 +322,9 @@ export GOOGLE_APPLICATION_CREDENTIALS=~/secrets/firebase-admin-key.json
 
 ---
 
-## Credit Tracking for Hackathon Evidence
+## Credit And Cost Tracking
 
-The hackathon requires disclosing total operating costs, including which costs were covered by credits vs. paid in cash.
+GradeOps AI should track total operating costs, including which costs were covered by credits or free tier versus paid in cash.
 
 **Monitor your spend:**
 
@@ -345,7 +332,7 @@ The hackathon requires disclosing total operating costs, including which costs w
 2. Set up a **budget alert** at $50 to avoid unexpected charges if credits run out
 3. Note the credit balance: **Billing → Credits** — shows remaining balance
 
-**For the evidence checklist:**
+**For evidence records:**
 - `cash_cost` = amount charged to your payment method (after credits)
 - `covered_by_credit` = amount covered by the GCP credits
 - Both fields exist in the `CostEvent` entity — log them per billing export

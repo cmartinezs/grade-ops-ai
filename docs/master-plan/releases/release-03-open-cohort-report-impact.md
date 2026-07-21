@@ -27,7 +27,7 @@
 
 Completar el cierre Open despues de grading y feedback: permitir que el docente edite o rechace sugerencias de IA, consolidar patrones de aprendizaje del cohorte, proponer una actividad de recuperacion y generar un reporte docente con evidencia de costo, uso y tiempo ahorrado.
 
-R03 convierte los outputs aislados de R02 en una narrativa de impacto vendible para piloto, demo y hackathon.
+R03 convierte los outputs aislados de R02 en una narrativa de impacto vendible para piloto, demo y validacion MVP.
 
 ## 4. Problema
 
@@ -52,7 +52,7 @@ Si el docente puede revisar decisiones de grading, confirmar gaps agregados, apr
 - Primera sugerencia de recuperacion vinculada a gaps.
 - Primer reporte docente de assessment.
 - Estimacion de tiempo ahorrado claramente marcada como estimada.
-- Evidencia util para narrativa de impacto del hackathon y pilotos.
+- Evidencia util para narrativa de impacto del validacion MVP y pilotos.
 
 ## 8. Nivel de automatizacion
 
@@ -291,6 +291,15 @@ Campos minimos nuevos o extendidos:
 - Validadores que distingan hechos estadisticos, hipotesis pedagogicas y estimaciones.
 - Registro de fuentes/snapshot para que reportes y gaps sean reproducibles.
 
+### Incremento API-Agent Orchestration requerido
+
+- Aplicar [`api-agent-orchestration-strategy.md`](../analysis/api-agent-orchestration-strategy.md) a gaps, recovery y reports como flujos de consulta/agregacion orquestados por `api/`.
+- Exponer endpoints publicos de intencion para analysis/report generation; `web/` no elige agentes ni herramientas.
+- Usar `api/` para construir snapshots de datos aprobados, ownership, provenance, policy de costo y precondiciones antes de llamar `agents/`.
+- Representar operaciones agregadas como `AiOperation` consultable si exceden el presupuesto sincrono o requieren progreso parcial.
+- Mantener handoffs como referencias tipadas a artefactos aprobados, no como payloads opacos entre agentes.
+- Someter endpoints/rutas nuevas al gate Richardson REST, incluyendo links a `operation`, `result`, warnings y retry cuando aplique.
+
 ### Herramientas requeridas
 
 - `load_performance_history`.
@@ -495,7 +504,7 @@ Time saved debe quedar etiquetado como estimacion. Si el docente entrega baselin
 - Primer time-saved estimate para narrativa comercial.
 - Primer conteo de teacher overrides.
 - Primer conjunto de recovery activities approved.
-- Evidencia suficiente para demo/hackathon sin dashboard completo.
+- Evidencia suficiente para demo/validacion MVP sin dashboard completo.
 - No prometer pricing final hasta resolver decisiones comerciales.
 
 ## 38. Definition of Done
@@ -588,7 +597,7 @@ And every agent run and teacher decision is auditable
 
 ## 44. Resultado esperado
 
-Al cerrar R03, GradeOps AI tiene el primer cierre Open completo: el docente controla las decisiones de grading, confirma brechas, aprueba recuperacion y obtiene un reporte de assessment con evidencia de costo, uso y tiempo ahorrado estimado. Esta release entrega la narrativa de impacto necesaria para pilotos y desbloquea R06, donde esa evidencia se convierte en dashboard/hackathon compliance.
+Al cerrar R03, GradeOps AI tiene el primer cierre Open completo: el docente controla las decisiones de grading, confirma brechas, aprueba recuperacion y obtiene un reporte de assessment con evidencia de costo, uso y tiempo ahorrado estimado. Esta release entrega la narrativa de impacto necesaria para pilotos y desbloquea R06, donde esa evidencia se convierte en dashboard/operational readiness.
 
 ## 45. Prompt ejecutable `/release-*`
 
@@ -694,4 +703,5 @@ Criterios:
 | Fecha | Cambio | Motivo | Elementos afectados | Decision asociada |
 |---|---|---|---|---|
 | 2026-07-20 | Incorporacion de capacidades de Agent Runtime | Declarar handoffs tipados y herramientas read-only/agregadas para impacto Open | Runtime, gaps, recovery, reports | D-04, D-06 |
+| 2026-07-20 | Incorporacion de API-Agent Orchestration | Mantener reportes/gaps/recovery como intenciones de `api/` con provenance y operaciones consultables | API, agents, web routes, DoD operativo | D-API-01..D-API-10 |
 | 2026-07-20 | Creacion inicial | Ejecucion de Fase 05 para R03 | Todo el documento | D-04, D-06 |

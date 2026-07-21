@@ -11,7 +11,7 @@
 - **41 historias P0**, **17 P1**, **1 con prioridad condicional** (US-OUT-004, "P1 closed / P2 open"), **5 Out** de alcance permanente/semi-permanente.
 - **Implementación real verificada** (código + planning cerrada o activa): 15/62 historias — las 12 de Epic 01 (9 completamente, más US-014 y US-015 con matices) y 2-3 de Epic 02 (US-010, US-011 implementadas; US-012 en progreso). El resto (47 historias, 76%) es backlog sin ejecución iniciada.
 - **0 colisiones de ID** tras la resolución de D-03 (renumeración de Epic 01: US-010/011/012 → US-013/014/015).
-- **2 archivos con corte de historias P0 del hackathon divergente entre sí** — ver "Recomendaciones de normalización".
+- **2 archivos con corte de historias P0 del validacion MVP divergente entre sí** — ver "Recomendaciones de normalización".
 
 ## Tabla de historias existentes
 
@@ -126,7 +126,7 @@ Estas 8 propuestas quedan marcadas `US PROPUESTA` — no se han creado como arch
 
 ## Recomendaciones de normalización
 
-1. **Reconciliar los dos "cortes P0 de hackathon" divergentes**: `docs/02-product/user-stories.md` y `docs/02-product/user-stories/README.md` son archivos distintos, ambos con una sección "MVP Story Cut" — el primero lista 23 IDs, el segundo 27 IDs (agrega US-006, US-007, US-008, US-009 al principio). Ninguno de los dos refleja todavía la decisión D-02 (Closed = P0): ninguno incluye historias de Epics 11-13. Recomendación: unificar en un solo archivo fuente (sugerido: `user-stories/README.md`, que ya es más completo) y actualizar el corte P0 para incluir el camino crítico Closed confirmado en D-02, referenciando `capability-map.md` § "Capacidades hackathon" para la lista completa.
+1. **Reconciliar los dos "cortes P0 de validacion MVP" divergentes**: `docs/02-product/user-stories.md` y `docs/02-product/user-stories/README.md` son archivos distintos, ambos con una sección "MVP Story Cut" — el primero lista 23 IDs, el segundo 27 IDs (agrega US-006, US-007, US-008, US-009 al principio). Ninguno de los dos refleja todavía la decisión D-02 (Closed = P0): ninguno incluye historias de Epics 11-13. Recomendación: unificar en un solo archivo fuente (sugerido: `user-stories/README.md`, que ya es más completo) y actualizar el corte P0 para incluir el camino crítico Closed confirmado en D-02, referenciando `capability-map.md` § "Capacidades validacion MVP" para la lista completa.
 2. **Formato de Acceptance Criteria inconsistente**: Epic 01-02 usan checkboxes `- [ ]`; Epic 03-13 usan bullets simples. Homologar al formato de `_template-user-story.md` al enriquecer cada historia.
 3. **Trasladar reglas de negocio del README del epic al cuerpo de la historia individual** cuando esa regla aplica a una sola historia (casos detectados: US-091 con `related_party`; US-111 con nombres de agente; US-122 con el vínculo a grading determinístico).
 4. **US-013 (Postman Collection)**: verificar si `docs/postman/` ya existe antes de incluirla en cualquier release — es la única historia de las 62 sin ninguna señal de estado real conocida en esta fase.

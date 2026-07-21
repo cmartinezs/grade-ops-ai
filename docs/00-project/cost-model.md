@@ -2,7 +2,7 @@
 
 GradeOps AI must be priced and operated as a measurable business, not as a free AI demo.
 
-The hackathon rewards real revenue, real users, AI-native operations, and business viability. That means the product must track unit economics from the first MVP: token usage, model routing, cloud runtime, payment fees, revenue, marketing spend, and related-party revenue.
+The business depends on real revenue, real users, AI-native operations, and measurable viability. That means the product must track unit economics from the first MVP: token usage, model routing, cloud runtime, payment fees, revenue, marketing spend, and related-party revenue.
 
 ## Canonical Cost Principles
 
@@ -15,23 +15,21 @@ The hackathon rewards real revenue, real users, AI-native operations, and busine
 - Report marketing and customer acquisition spend separately, even if it is zero.
 - Keep cash cost, allocated tooling cost, credits, and related-party revenue separated.
 
-## Required Hackathon Reporting
+## Required Business Reporting
 
-Devpost requires evidence around both revenue and costs. GradeOps AI should be ready to report:
+GradeOps AI should be ready to report:
 
 | Reporting Item | GradeOps AI Interpretation |
 | --- | --- |
-| Total Revenue | Arms-length third-party revenue earned during the hackathon period, in USD. |
+| Total Revenue | Arms-length third-party revenue earned during the validation period, in USD. |
 | Revenue by Month | Revenue broken out for May, June, July, and August 2026. |
-| Total Costs | Product and development costs incurred during the hackathon period, excluding marketing and customer acquisition spend. |
+| Total Costs | Product and development costs incurred during the validation period, excluding marketing and customer acquisition spend. |
 | Marketing and Customer Acquisition Spend | Paid acquisition, ads, outreach tools, campaign spend, or `US$0` if no paid spend was used. |
 | Related-Party Revenue | Revenue from team members, family, related entities, or pre-existing customer relationships, reported separately. |
 | Product Evidence | Agent execution logs, API usage records, dashboards, screenshots, and production evidence. |
 
 Sources to recheck:
 
-- Devpost rules: <https://xprize.devpost.com/rules>
-- Devpost challenge page: <https://xprize.devpost.com/>
 - Gemini API pricing: <https://ai.google.dev/gemini-api/docs/pricing>
 - Cloud Run pricing: <https://cloud.google.com/run/pricing>
 - Firestore pricing: <https://cloud.google.com/firestore/pricing>
@@ -69,7 +67,7 @@ Runtime rule:
 
 > Personal AI subscriptions accelerate construction; the deployed product must use traceable API/cloud billing.
 
-Do not run production grading through personal ChatGPT, Claude, Gemini web, or AI Studio sessions. The production path must use Gemini API or Vertex AI from the deployed backend and log each agent execution.
+Do not run production grading through personal ChatGPT, Claude, Gemini web, or AI Studio sessions. The production path must use provider-backed APIs from the deployed backend and log each agent execution.
 
 ## Unit Of Business
 
@@ -89,7 +87,7 @@ Estimated token budget per 30-student assessment:
 
 ## Current Model Cost Assumptions
 
-Model names and prices change. Verify against official pricing before deployment and final submission.
+Model names and prices change. Verify against official pricing before deployment and customer-facing commitments.
 
 Working assumptions as of this revision:
 
@@ -137,7 +135,7 @@ Pricing should reflect teacher value and usage volume, not only API cost.
 | Teacher Lite | US$12/month | 3 assessments / 90 submissions | Entry-level paid plan. |
 | Teacher Pro | US$29/month | 10 assessments / 300 submissions | Main individual teacher plan. |
 | Cohort Pro | US$79/month | 30 assessments / 1,000 submissions | Bootcamps, tutors, and small academies. |
-| Pilot Pack | US$99 one-time | 3 real assessments / up to 150 submissions / onboarding | Best hackathon revenue offer. |
+| Pilot Pack | US$99 one-time | 3 real assessments / up to 150 submissions / onboarding | Best early revenue and validation offer. |
 
 For Chile/LatAm testing:
 
@@ -166,7 +164,7 @@ Minimum planning targets:
 | Cohort Pro | 70%+ |
 | Pilot Pack | 60%+ after onboarding/support time |
 
-The Pilot Pack can have lower margin because it generates customer evidence, testimonials, and revenue proof during the hackathon.
+The Pilot Pack can have lower margin because it generates customer evidence, testimonials, and revenue proof during MVP validation.
 
 ## Overuse Policy
 
@@ -238,7 +236,7 @@ Minimum fields for business evidence:
 
 ## Initial Operating Budget
 
-For the hackathon period, budget conservatively:
+For the MVP validation period, budget conservatively:
 
 | Scenario | Expected Monthly Runtime Cost |
 | --- | ---: |
@@ -246,7 +244,7 @@ For the hackathon period, budget conservatively:
 | Recommended planning buffer | US$150-US$250 |
 | Serious pilot | US$165-US$695 |
 
-Recommended cash reserve for the hackathon:
+Recommended cash reserve for validation:
 
 > US$500-US$1,000, excluding the value of founder time.
 

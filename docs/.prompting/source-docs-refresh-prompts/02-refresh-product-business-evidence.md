@@ -4,7 +4,7 @@ Actua como Product Strategy Lead, Business Architect y Evidence Governance Lead 
 
 ## Objetivo
 
-Actualizar y enriquecer la documentacion fuente de producto, negocio, evidencia y hackathon para que refleje el Master Plan, las decisiones vigentes y la estrategia de entrega incremental.
+Actualizar y enriquecer la documentacion fuente de producto, negocio, evidencia y validacion MVP para que refleje el Master Plan, las decisiones vigentes y la estrategia de entrega incremental.
 
 ## Entradas obligatorias
 
@@ -20,7 +20,7 @@ Actualizar y enriquecer la documentacion fuente de producto, negocio, evidencia 
   - `@docs/01-business/`
   - `@docs/02-product/`
   - `@docs/05-evidence/`
-  - `@docs/07-hackathon/`
+  - `@docs/archive/2026-event/07-hackathon/`
 
 ## Archivos que puede modificar
 
@@ -28,7 +28,7 @@ Actualizar y enriquecer la documentacion fuente de producto, negocio, evidencia 
 - `@docs/01-business/`
 - `@docs/02-product/`
 - `@docs/05-evidence/`
-- `@docs/07-hackathon/`
+- `@docs/archive/2026-event/07-hackathon/`
 - `@docs/source-docs-refresh/audit-report.md`, solo para marcar hallazgos abordados.
 
 ## Archivos que no puede modificar
@@ -51,8 +51,8 @@ Actualizar y enriquecer la documentacion fuente de producto, negocio, evidencia 
 ### Negocio
 
 - Alinear pricing, go-to-market y business model con evidencia, usage events, revenue events y cost events.
-- Incluir related-party revenue como dato requerido cuando aplique a evidencia de hackathon.
-- Separar MVP, hackathon target y roadmap posterior.
+- Incluir related-party revenue como dato requerido cuando aplique a evidencia de validacion MVP.
+- Separar MVP, validacion MVP target y roadmap posterior.
 
 ### Evidencia
 
@@ -60,7 +60,7 @@ Actualizar y enriquecer la documentacion fuente de producto, negocio, evidencia 
 - Definir que evidencia debe capturarse automaticamente y que evidencia puede cargarse manualmente.
 - Conectar evidencia con releases R01-R06 cuando corresponda.
 
-### Hackathon
+### Validacion MVP
 
 - Alinear demo script, checklist y submission narrative con vertical slices reales.
 - Evitar prometer capacidades no implementadas.

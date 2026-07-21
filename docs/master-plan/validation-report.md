@@ -6,7 +6,7 @@ Resultado general: **PASS WITH CONDITIONS**.
 
 El Master Plan es usable para comenzar R01. La secuencia R01-R06 esta documentada, las releases tienen valor vertical demostrable, los prompts `/release-*` usan comandos existentes del plugin local, y no hay enlaces relativos rotos dentro de `docs/master-plan/`.
 
-Las condiciones principales son de gobierno y readiness: D-01 bloquea el cierre de R06 como release candidate del hackathon, D-07 bloquea la narrativa final de pricing, varias historias asignadas a releases posteriores siguen en estado `NOT READY`, y el README/documento ejecutivo quedaron desactualizados despues de generar las releases de Fase 05. Nada de eso impide iniciar R01, pero si impide marcar el Master Plan como completamente cerrado.
+Las condiciones principales son de gobierno y readiness: D-01 bloquea el cierre de R06 como release candidate del validacion MVP, D-07 bloquea la narrativa final de pricing, varias historias asignadas a releases posteriores siguen en estado `NOT READY`, y el README/documento ejecutivo quedaron desactualizados despues de generar las releases de Fase 05. Nada de eso impide iniciar R01, pero si impide marcar el Master Plan como completamente cerrado.
 
 ## Resultado general
 
@@ -23,18 +23,18 @@ Las condiciones principales son de gobierno y readiness: D-01 bloquea el cierre 
 
 ## Hallazgos por severidad
 
-### BLOCKER-01 — D-01 bloquea el cierre hackathon/R06, no el inicio de R01
+### BLOCKER-01 — D-01 bloquea el cierre validacion MVP/R06, no el inicio de R01
 
-- **Evidencia**: `docs/master-plan/master-plan-executive.md:9` identifica D-01 como decision critica pendiente; `docs/master-plan/master-plan-executive.md:22` dice que condiciona despliegue y evidencia de R06; `docs/master-plan/releases/release-06-business-evidence-hackathon-compliance.md:3` y `:23-28` prohiben cerrar R06 como release candidate si D-01 sigue pendiente.
-- **Archivos afectados**: `analysis/decisions-and-assumptions.md`, `master-plan-executive.md`, `releases/release-06-business-evidence-hackathon-compliance.md`, `infra/terraform/environments/demo/`.
+- **Evidencia**: `docs/master-plan/master-plan-executive.md:9` identifica D-01 como decision critica pendiente; `docs/master-plan/master-plan-executive.md:22` dice que condiciona despliegue y evidencia de R06; `docs/master-plan/releases/release-06-business-evidence-operational-readiness.md:3` y `:23-28` prohiben cerrar R06 como release candidate si D-01 sigue pendiente.
+- **Archivos afectados**: `analysis/decisions-and-assumptions.md`, `master-plan-executive.md`, `releases/release-06-business-evidence-operational-readiness.md`, `infra/terraform/environments/demo/`.
 - **Correccion recomendada**: resolver y registrar si el paquete final usa `demo` GCP/Gemini, `beta` Render/Groq, o ambos; adjuntar deployment/API proof antes de marcar R06 released.
 - **Responsable sugerido**: Founder / Release Manager.
 
 ### BLOCKER-02 — D-07 bloquea la narrativa final de pricing
 
-- **Evidencia**: `docs/master-plan/master-plan-executive.md:28` mantiene D-07 pendiente; `docs/master-plan/releases/release-06-business-evidence-hackathon-compliance.md:23` y `:190-203` la tratan como requisito para narrativa/export final.
-- **Archivos afectados**: `docs/00-project/cost-model.md`, `docs/01-business/pricing.md`, `docs/07-hackathon/submission-narrative.md`, `docs/master-plan/analysis/decisions-and-assumptions.md`.
-- **Correccion recomendada**: reconciliar la fuente canonica de pricing y registrar la decision antes de aprobar export o submission final.
+- **Evidencia**: `docs/master-plan/master-plan-executive.md:28` mantiene D-07 pendiente; `docs/master-plan/releases/release-06-business-evidence-operational-readiness.md:23` y `:190-203` la tratan como requisito para narrativa/export final.
+- **Archivos afectados**: `docs/00-project/cost-model.md`, `docs/01-business/pricing.md`, `materiales archivados del evento`, `docs/master-plan/analysis/decisions-and-assumptions.md`.
+- **Correccion recomendada**: reconciliar la fuente canonica de pricing y registrar la decision antes de aprobar export o paquete final de validacion.
 - **Responsable sugerido**: Founder / business owner.
 
 ### HIGH-01 — R07/R08 figuran como releases, pero no tienen archivo detallado
@@ -86,7 +86,7 @@ Las condiciones principales son de gobierno y readiness: D-01 bloquea el cierre 
 
 ## Validaciones pendientes
 
-1. Resolver D-01 para el paquete final de hackathon.
+1. Resolver D-01 para el paquete final de validacion MVP.
 2. Resolver D-07 antes de narrativa/export final.
 3. Resolver D-04/D-06 durante R01.
 4. Enriquecer US-080/US-081 antes de cerrar R01 si se atomizan como historias ejecutables.

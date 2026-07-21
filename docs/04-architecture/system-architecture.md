@@ -2,7 +2,10 @@
 
 GradeOps AI MVP should be built as a focused, evidence-first assessment operations system.
 
-The architecture must support teacher-reviewed assessment workflows, specialized AI agents, structured persistence, file/artifact storage, cost and usage tracking, business evidence, and small pilot deployment on Google Cloud.
+The architecture must support teacher-reviewed assessment workflows, specialized AI agents, structured persistence, file/artifact storage, cost and usage tracking, business evidence, and two explicitly different environment roles:
+
+- `beta`: product-evidence environment for fast iteration and working pilot proof.
+- `demo`: Google Cloud target with Gemini-capable provider path.
 
 ## Architectural Stance
 
@@ -40,9 +43,11 @@ flowchart LR
     API --> Storage[(Object Storage)]
     API --> AgentRuntime[Agent Runtime]
 
-    AgentRuntime --> Gemini[Gemini API / Vertex AI Gemini]
-    AgentRuntime --> DB
-    AgentRuntime --> Evidence[Agent Evidence Store]
+    AgentRuntime --> Provider[Provider / Model Gateway]
+    Provider --> Gemini[Gemini / Vertex AI]
+    Provider --> Groq[Groq / OpenAI-compatible]
+    AgentRuntime --> EvidencePayload[Execution Payload]
+    EvidencePayload --> API
 
     API --> Reports[Report Generator]
     Reports --> Storage
@@ -50,7 +55,6 @@ flowchart LR
 
     API --> Dashboard[Evidence Dashboard]
     Dashboard --> DB
-    Dashboard --> Evidence
 ```
 
 ## Runtime Components
@@ -60,8 +64,8 @@ flowchart LR
 | Web App | Teacher workspace, review UI, student access, dashboards | Next.js + TypeScript + Tailwind CSS (`grade-ops-ai-web`). |
 | Backend API | Auth, workflow state, business rules, REST API, billing, audit | Spring Boot 4 + Java 21 + PostgreSQL (`grade-ops-ai-api`). |
 | Workflow Orchestrator | Coordinates assessment lifecycle and agent handoffs | Module inside `grade-ops-ai-api`. |
-| Agent Runtime | Executes agent calls, validates structured outputs, logs execution | Spring Boot 4 + Java 21 + Spring AI (`grade-ops-ai-agents`). |
-| Gemini Integration | Calls Gemini via Vertex AI; API key for local dev | Spring AI Vertex AI Gemini starter; server-side only. |
+| Agent Runtime | Executes agent calls, validates structured outputs, returns execution payloads | Spring Boot 4 + Java 21 + Spring AI (`grade-ops-ai-agents`). |
+| Provider / Model Gateway | Selects provider/model, calls Gemini or Groq through Spring AI adapters, records provider/model metadata | Current Assessment Agent slice supports `gemini` and `groq`; future providers require a decision record. |
 | Primary DB | Stores users, assessments, rubrics, submissions, feedback, reports, logs | Cloud SQL PostgreSQL. |
 | Object Storage | Stores uploaded files, exports, report artifacts | Cloud Storage. |
 | Infrastructure | Cloud Run services, secrets, networking, CI/CD | Terraform + GitHub Actions (`grade-ops-ai-infra`). |
@@ -120,18 +124,41 @@ Every agent call should follow the same execution wrapper:
 1. Validate command.
 2. Load required domain data.
 3. Build agent input envelope.
-4. Call Gemini/model.
+4. Call provider/model through the runtime gateway.
 5. Validate structured output.
-6. Store agent execution log.
-7. Store domain output.
-8. Update workflow state.
+6. Build execution payload with provider, model, tokens, cost, latency, status and error metadata.
+7. Return structured result and execution payload to the API.
+8. API stores domain output, `AgentExecutionLog`, and workflow state.
 9. Return reviewable result to teacher.
 
 ## Agent Runtime Boundary
 
-The agent runtime can generate assessment drafts, rubrics, grading suggestions, feedback drafts, gap summaries, recovery activities, teacher reports, and evidence records.
+The agent runtime can generate assessment drafts, rubrics, grading suggestions, feedback drafts, gap summaries, recovery activities, teacher reports, question batches, quality reviews, assembly proposals, item analytics and evidence summaries.
 
 It must not finalize scores, send feedback to students, silently change approved rubrics, hide failed or uncertain outputs, store secrets in prompts, or bypass workflow state rules.
+
+The API remains the authority for domain state, approval, billing, persistence and publication. The agent runtime receives commands, uses only allowed tools/providers, validates structured output and returns results plus execution metadata.
+
+## Agent Runtime Evolution
+
+The current implemented vertical slice is the Assessment Agent endpoint:
+
+```text
+POST /internal/agents/assessment
+```
+
+It is a real GenAI execution path, but it is not yet a generic headless runtime. The runtime evolves by functional release:
+
+| Stage | First consumer | Runtime increment |
+|---|---|---|
+| R01 | Assessment Agent | Provider/model policy, normalized errors, costs, logs, idempotency and compatibility with the existing endpoint. |
+| R02 | Rubric, Grading, Feedback | `AgentDefinition`, lightweight registry, common gateway and reusable contracts/validators. |
+| R03 | Learning Gap, Recovery, Teacher Report | Typed handoffs and read-only aggregate tools. |
+| R04 | Closed authoring agents | Controlled tool loop with `AgentAction`, tool registry/executor, policy engine and budget manager. |
+| R05 | Item Analytics / student attempts | Persistent or async `AgentRun`/`AgentStep` only if volume or latency requires it. |
+| R06 | Ops Agent / dashboard | Agent health, provider/model comparison, cost warnings, budget alerts and readiness signals. |
+
+Do not add multi-agent orchestration, memory, RAG, queues, sandboxing or new providers without a release consumer and a decision record.
 
 ## Data Flow
 
@@ -141,7 +168,7 @@ sequenceDiagram
     participant W as Web App
     participant A as Backend API
     participant R as Agent Runtime
-    participant G as Gemini API
+    participant G as Provider / Model
     participant D as Database
     participant S as Storage
 
@@ -151,7 +178,8 @@ sequenceDiagram
     A->>R: Run Assessment Agent
     R->>G: Generate structured assessment draft
     G-->>R: Structured output
-    R->>D: Save agent log + draft
+    R-->>A: Structured result + execution payload
+    A->>D: Save draft + AgentExecutionLog
     A-->>W: Return draft for review
 
     T->>W: Approve rubric
@@ -168,7 +196,8 @@ sequenceDiagram
     A->>R: Run Grading Agent
     R->>G: Analyze submissions
     G-->>R: Grading suggestions
-    R->>D: Save suggestions + logs
+    R-->>A: Suggestions + execution payload
+    A->>D: Save suggestions + AgentExecutionLog
     A-->>W: Review queue
 ```
 
@@ -176,12 +205,12 @@ sequenceDiagram
 
 ```mermaid
 flowchart LR
-    Browser[Browser] --> CDN[Web Hosting / Cloud Run]
-    CDN --> API[Cloud Run: Backend API]
-    API --> Agent[Cloud Run: Agent Worker]
-    API --> SQL[(Cloud SQL / Firestore)]
-    API --> GCS[(Cloud Storage)]
-    Agent --> Gemini[Gemini API / Vertex AI]
+    Browser[Browser] --> Web[Firebase App Hosting / Vercel]
+    Web --> API[Cloud Run / Render: Backend API]
+    API --> Agent[Cloud Run / Render: Agent Service]
+    API --> SQL[(Cloud SQL / Neon PostgreSQL)]
+    API --> GCS[(Cloud Storage / R2)]
+    Agent --> Provider[Gemini or Groq]
     API --> Logs[Cloud Logging]
     Agent --> Logs
 ```
@@ -193,10 +222,10 @@ flowchart LR
 | `grade-ops-ai-docs` | Markdown | Documentation, decisions, pitch, roadmap, evidence. |
 | `grade-ops-ai-web` | Next.js + TypeScript + Tailwind | Landing, teacher workspace, student access, dashboards. |
 | `grade-ops-ai-api` | Spring Boot 4 + Java 21 + PostgreSQL | Auth, workflow, rubrics, submissions, billing, audit, persistence. |
-| `grade-ops-ai-agents` | Spring Boot 4 + Java 21 + Spring AI | All 13 agents, prompts, Gemini integration, structured outputs, agent logs. |
+| `grade-ops-ai-agents` | Spring Boot 4 + Java 21 + Spring AI | Agent execution, prompts, provider/model adapters, structured outputs, validation and execution payloads. |
 | `grade-ops-ai-infra` | Terraform + GitHub Actions | Cloud Run, Cloud SQL, Cloud Storage, Secret Manager, CI/CD. |
 
-The agents service is a separate Cloud Run deployment. It communicates with the API via internal HTTP (Cloud Run service-to-service auth). Merging `api` and `agents` into a single repo is acceptable during MVP sprints under delivery pressure, provided module boundaries remain explicit and the split is restored before the demo.
+The agents service is a separate internal deployment. In `demo`, it is a Cloud Run service invoked by the API through service-to-service auth. In `beta`, it can run on Render behind internal/shared-secret access. Merging `api` and `agents` into a single process is acceptable only as a temporary delivery shortcut if module boundaries and API-owned persistence remain explicit.
 
 For the internal folder and module structure of each repository, see [`repository-structure.md`](repository-structure.md).
 
@@ -205,7 +234,7 @@ For the internal folder and module structure of each repository, see [`repositor
 | Repository | Reason deferred |
 | --- | --- |
 | `grade-ops-ai-mobile` | Requires validated web MVP first. |
-| `grade-ops-ai-ocr` | Physical paper intake is P1; not required for the hackathon. |
+| `grade-ops-ai-ocr` | Physical paper intake is P1; not required for the first MVP. |
 | `grade-ops-ai-lms` | Out of scope; GradeOps AI is not an LMS. |
 | `grade-ops-ai-code-runner` | Needed only when executing real student code in a sandbox. |
 | `grade-ops-ai-sdk` | Public SDK is a post-product concern, not pre-product. |
@@ -217,7 +246,16 @@ Use synchronous processing for assessment draft, rubric draft, small demo runs, 
 
 Use asynchronous processing for batch grading, bulk feedback generation, report generation after many submissions, retries, and expensive fallback models.
 
-MVP can start with synchronous calls for speed, but batch grading should be designed so it can move to a background job/queue.
+MVP can start with synchronous calls for speed. Persistent `AgentRun`/`AgentStep`, cancellation, resume and queue-backed execution should be introduced only when a functional release creates a real volume or latency need.
+
+## Environment Roles
+
+| Environment | Role | Architecture notes |
+|---|---|---|
+| `beta` | Product-evidence environment | Vercel + Render + Neon + R2 + Firebase Authentication; supports fast iteration and currently uses the implemented provider adapters. |
+| `demo` | Google Cloud target | Firebase App Hosting + Cloud Run + Cloud SQL + Cloud Storage + Firebase Authentication + Gemini-capable provider path. Terraform currently provisions core GCP resources, with Firebase App Hosting backend creation requiring manual CLI/OAuth steps. |
+
+Do not state that the product is fully deployed on Google Cloud until deployment URL, GCP project evidence and provider/API usage evidence exist.
 
 ## Evidence Architecture
 
@@ -243,12 +281,12 @@ Evidence is not a side-effect. It is part of the core architecture.
 | Teacher approval states | Trust, safety, and product positioning. |
 | Cloud Run deployment | Simple Google Cloud production footprint. |
 | Cloud Storage for artifacts | Clean separation of DB records and uploaded/exported files. |
-| Evidence dashboard | Supports product management, business validation, and hackathon demo. |
+| Evidence dashboard | Supports product management, business validation, and demos. |
 | No student login in MVP | Reduces scope and security complexity. |
 
 ## MVP Architecture Acceptance Criteria
 
-The architecture is sufficient when the system can create and persist an assessment, call Gemini from the deployed backend/agent runtime, store structured agent output, store submissions, generate grading suggestions linked to rubric criteria, persist teacher approvals, generate reports, expose agent logs with model/status/cost/approval state, support evidence dashboard, and use at least one Google Cloud product.
+The architecture is sufficient when the system can create and persist an assessment, call a configured provider/model from the deployed agent runtime, store structured agent output, store submissions, generate grading suggestions linked to rubric criteria, persist teacher approvals, generate reports, expose agent logs with provider/model/status/cost/approval state, support the evidence dashboard, and produce deployment/provider evidence for any customer-facing environment claims.
 
 <!-- nav -->
 

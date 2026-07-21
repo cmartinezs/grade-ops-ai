@@ -29,6 +29,19 @@ A confirmed, written record of the exact request/response shape for every `api/`
 
 ---
 
+## API / Agent / Web Contract Gate
+
+| Gate | Required check | Task answer |
+|---|---|---|
+| API as orchestrator | Confirm `web/` calls only `api/` functional endpoints and no `agents/` URL/provider/prompt contract leaks into the screen plan | Re-read the controller/client contract and record any leak as a blocker before downstream tasks start |
+| Richardson REST maturity | Record resource URI, method, expected status behavior, validation errors and unsupported transitions for all six endpoints | Add the maturity notes to the Verification result; call out that the current implemented draft-generation endpoints return `200` sync responses and do not yet expose `AiOperation`/`Location` |
+| AI operation model | Identify whether each endpoint is sync-only today or operation-backed | Current task must mark generation/regeneration as sync legacy in the verified contract and note the R01 API-orchestration follow-up |
+| Idempotency | Confirm whether mutating GenAI endpoints require/admit `Idempotency-Key` | Current task must record the absence/presence explicitly; if absent, downstream web code must not fake idempotency silently |
+| Contract testing | Verify DTOs directly from `api/` source and identify the contract-test gap | Architecture-review evidence only in this task; downstream implementation tasks must add tests against these shapes |
+| Web route functionality | Ensure endpoint contract supports `/assessments/new` and `/assessments/{id}/draft` states without invented actions | Explicitly preserve no-restore behavior and safe error states |
+
+---
+
 ## Implementation Steps
 
 1. Read `AssessmentController.java` in full; list every `@GetMapping`/`@PostMapping`/`@PatchMapping` method, its path, and its request/response types.
@@ -77,6 +90,7 @@ N/A — this task produces no executable code.
 
 - [ ] All 7 verification rows above are re-confirmed directly against current `api/` source (not assumed from this story's Context section alone).
 - [ ] Any mismatch found between the Context section and the actual `api/` source is corrected in both this task file and the story's Context section before `task-05`/`task-10`/`task-11` start.
+- [ ] API / Agent / Web Contract Gate is completed, including Richardson REST notes and current idempotency/operation-model gaps.
 - [ ] Software smoke/build/startup/connectivity checks: N/A, no runtime surface (see Software Smoke Test Check); for git-enabled tasks, this task is committed, pushed, and published in a task PR before human developer PR review, with corrections pushed to the same PR.
 - [ ] Logging/observability: N/A — no executable code, no correlation/trace/INFO/DEBUG/WARN/ERROR log levels apply.
 - [ ] Task test suite: N/A — the generated test-suite quality gates in this task's Generated Test Suite section are architecture-review only.

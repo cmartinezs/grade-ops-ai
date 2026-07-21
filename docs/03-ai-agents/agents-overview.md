@@ -9,8 +9,21 @@ GradeOps AI uses specialized agents to operate the assessment workflow for progr
 | Initial wedge: programming assessments | Agents specialize in practical programming assessment operations. |
 | Teacher authority | Agents suggest; teachers approve high-impact outputs. |
 | AI-native operation | Agent runs must be visible, logged, and demo-ready. |
-| Business evidence | Logs support usage, cost, revenue, customer proof, and hackathon submission. |
+| Business evidence | Logs support usage, cost, revenue, customer proof, and product validation. |
 | Pricing by assessments/submissions | Agents must track assessment and submission-level cost/usage. |
+
+## Current Implementation Status
+
+The documentation describes the intended 13-agent catalog. The current verified implementation is narrower:
+
+| Area | Status | Notes |
+| --- | --- | --- |
+| Assessment Agent | Implemented vertical slice | `agents/` exposes `POST /internal/agents/assessment`; API calls it through `agentclient`; output includes structured result and execution payload. |
+| Provider adapters | Implemented for Assessment Agent | `gemini` and `groq` adapters exist; Groq is the current default provider, Gemini remains supported for Google Cloud-oriented environments. |
+| Generic runtime | Planned incrementally | `AgentDefinition`, registry, shared gateway, tool loop, `AgentRun`/`AgentStep`, async/cancel/resume are not baseline capabilities yet. |
+| Other 12 agents | Contracted / planned | Their files define required behavior; implementation should follow the release sequence in the Master Plan. |
+
+Agents do not own domain entities or persistence. They receive `{Agent}Command`, return `{Agent}Result` plus execution metadata, and leave persistence, approvals, publication, billing and workflow state to `api/`.
 
 ## Agent Set
 
@@ -36,6 +49,26 @@ GradeOps AI uses specialized agents to operate the assessment workflow for progr
 | Ambiguity Review Agent | Detect interpretation problems, double-valid answers, and structural issues in questions. | Ambiguity flags per question. |
 | Assessment Assembly Agent | Compose a balanced assessment from approved bank questions. | Proposed question composition. |
 | Item Analytics Agent | Analyze post-assessment item performance, difficulty, and learning outcome coverage. | Item analytics report and reinforcement suggestions. |
+
+## Agent Contracts And Runtime Responsibilities
+
+| Agent | Mode | Command | Result | First planned runtime need |
+| --- | --- | --- | --- | --- |
+| Assessment Agent | Open/shared | `AssessmentCommand` | `AssessmentResult` + execution payload | Existing endpoint; stabilize provider/model policy, errors, cost and logs. |
+| Rubric Agent | Open | `RubricCommand` | `RubricResult` | Shared `AgentDefinition`, registry/gateway and validators. |
+| Grading Agent | Open | `GradingCommand` | `GradingResult` | Shared gateway, output validation, optional sandbox only if code execution is introduced. |
+| Feedback Agent | Open | `FeedbackCommand` | `FeedbackResult` | Typed handoff from grading output and teacher edits. |
+| Learning Gap Agent | Open | `LearningGapCommand` | `LearningGapResult` | Read-only aggregate tools and fact/inference separation. |
+| Recovery Agent | Open | `RecoveryCommand` | `RecoveryResult` | Handoff from approved gap evidence, teacher approval before assignment. |
+| Teacher Report Agent | Open/shared | `TeacherReportCommand` | `TeacherReportResult` | Report aggregation tools and source-grounded summaries. |
+| Ops Agent | Shared | `OpsEvidenceCommand` | `OpsEvidenceResult` | Read-only evidence tools, cost/readiness checks, no mutation authority. |
+| Question Generation Agent | Closed | `QuestionGenerationCommand` | `QuestionGenerationResult` | Controlled tool loop for bank/context lookups. |
+| Distractor Quality Agent | Closed | `DistractorQualityCommand` | `DistractorQualityResult` | Batch validation and quality flags. |
+| Ambiguity Review Agent | Closed | `AmbiguityReviewCommand` | `AmbiguityReviewResult` | Ambiguity/double-valid-answer validators. |
+| Assessment Assembly Agent | Closed | `AssessmentAssemblyCommand` | `AssessmentAssemblyResult` | Tool loop with bank/coverage tools and deterministic publish validators. |
+| Item Analytics Agent | Closed | `ItemAnalyticsCommand` | `ItemAnalyticsResult` | Analytics summarization; scoring remains deterministic in API. |
+
+Every result must separate facts, model interpretations, recommendations and requested actions. `Block` / `NEEDS_INPUT` is preferable to fabricating missing context.
 
 ## End-To-End Agent Flows
 
@@ -197,11 +230,11 @@ flowchart TD
 | `unsafe_student_facing_language` | Feedback needs tone/safety review. |
 | `requires_domain_review` | Output requires teacher/domain judgment. |
 
-## Model Routing Policy
+## Provider / Model Routing Policy
 
 | Agent | Default policy | Notes |
 | --- | --- | --- |
-| Assessment Agent | Flash-class | Quality and structure matter. |
+| Assessment Agent | Provider/model policy; current default `groq`, Gemini supported | Quality and structure matter; command-level provider override may be used when available. |
 | Rubric Agent | Flash-class | Needs consistency and calibration. |
 | Grading Agent | Flash-Lite-class for bulk; Flash fallback | Highest-volume step. |
 | Feedback Agent | Flash-Lite-class by default; Flash fallback | Student-facing quality matters. |
@@ -214,6 +247,8 @@ flowchart TD
 | Ambiguity Review Agent | Flash-class | Interpretation quality matters. |
 | Assessment Assembly Agent | Flash-Lite-class | Selection and optimization; deterministic rules preferred. |
 | Item Analytics Agent | Flash-class | Interpretation and narrative require quality. |
+
+Logs must record the actual `provider` and `model`. Do not infer Gemini-only usage from "Flash-class" labels; those labels are cost/quality tiers, not provider names.
 
 ## Quality Rules
 

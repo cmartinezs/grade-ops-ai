@@ -1,15 +1,15 @@
 # Roadmap
 
-GradeOps AI is being built as a focused hackathon MVP and a real business experiment. The roadmap prioritizes evidence over feature volume.
+GradeOps AI is being built as a focused MVP and a real business experiment. The roadmap prioritizes evidence over feature volume.
 
-Current planning date: **June 8, 2026**. Hackathon deadline: **August 17, 2026 at 1:00 PM PDT**.
+Current planning date: **June 8, 2026**.
 
 ## Roadmap Principles
 
 - Build the smallest workflow that can process a real programming assessment.
 - Collect business evidence from the first usable version.
 - Keep the MVP narrow: programming assessments, teacher approval, agent logs, and reports.
-- Avoid becoming a full LMS during the hackathon.
+- Avoid becoming a full LMS before the assessment-operations wedge proves value.
 - Prioritize demo clarity over feature breadth.
 - Treat evidence as product output, not as final paperwork.
 
@@ -68,7 +68,7 @@ Goal: define the smallest sellable assessment operation for programming educator
 - One pricing table with usage limits and no unlimited AI grading.
 - One demo scenario based on a realistic programming class.
 
-## Phase 2: Hackathon MVP
+## Phase 2: Product MVP
 
 Goal: build a demonstrable workflow that can process real programming assessments.
 
@@ -147,28 +147,28 @@ Goal: operate GradeOps AI with real educators and collect business evidence.
 - Costs, payment fees, and runtime usage are tracked separately.
 - There is a credible time-saved estimate.
 
-## Phase 4: Hackathon Packaging
+## Phase 4: Product Validation Packaging
 
-Goal: prepare a submission that sells the business, not just the app.
+Goal: prepare a validation package that sells the business, not just the app.
 
 ### Deliverables
 
-- 3-minute demo video.
-- 500-1000 word narrative.
-- Public repository documentation or private repository shared with required judges/testers.
+- short demo video.
+- concise product narrative.
+- repository documentation or a controlled technical walkthrough.
 - Testing instructions.
 - Revenue evidence.
 - Expense evidence.
 - Cost model and unit economics summary.
 - Agent logs.
 - Customer evidence.
-- Google Cloud / Gemini usage evidence.
+- provider and cloud usage evidence.
 - Business viability summary.
-- English version of all required materials.
+- English version of key buyer-facing materials.
 
 ### Success Evidence
 
-- Judges understand the business in under 60 seconds.
+- Evaluators understand the business in under 60 seconds.
 - Demo proves AI-native operation.
 - Evidence proves real demand.
 - Product looks focused, useful, sellable, and operational.
@@ -196,7 +196,7 @@ Goal: prepare a submission that sells the business, not just the app.
 | 6 | Jul 13-19 | First pilot operations | Real/semi-real educator run, testimonial draft |
 | 7 | Jul 20-26 | Payments and business dashboard | Revenue or payment-intent evidence, cost dashboard |
 | 8 | Jul 27-Aug 2 | Hardening and second pilot wave | 3+ pilot runs, 100+ submissions target path |
-| 9 | Aug 3-9 | Submission package draft | Demo script, narrative draft, testing instructions |
+| 9 | Aug 3-9 | Validation package draft | Demo script, narrative draft, testing instructions |
 | 10 | Aug 10-17 | Final evidence, video, repo cleanup | Final video, evidence folder, cost/revenue summary |
 
 ## Kill Or Pivot Criteria
@@ -241,15 +241,15 @@ Goal: expand beyond the initial programming education wedge after validating the
 - Broad multi-subject support.
 - Complex curriculum mapping.
 
-## Definition Of Done For Hackathon Submission
+## Definition Of Done For MVP Validation
 
-GradeOps AI is submission-ready when it can prove:
+GradeOps AI is validation-ready when it can prove:
 
-- a deployed product uses Google Cloud and Gemini API;
+- a deployed product uses a traceable cloud/runtime path and provider-backed agent calls;
 - AI agents operate meaningful workflow steps;
 - teachers remain in control through approval states;
 - logs exist for agent executions and API usage;
-- revenue, costs, marketing spend, and related-party revenue are documented;
+- revenue, costs, marketing spend, and related-party revenue are documented where applicable;
 - real users or pilot customers are evidenced;
 - demo video shows the product functioning on the target platform;
 - the written narrative explains what AI does, what humans do, and why the business matters.
@@ -258,4 +258,4 @@ GradeOps AI is submission-ready when it can prove:
 
 ---
 
-← [Cost Model](cost-model.md) | [↑ inicio](#roadmap) | [README](README.md) | [Hackathon Strategy →](hackathon-strategy.md)
+← [Cost Model](cost-model.md) | [↑ inicio](#roadmap) | [README](README.md) | [Vision →](vision.md)

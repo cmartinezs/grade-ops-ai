@@ -94,7 +94,7 @@ Para cada proceso automatizable, documenta:
 - Alertas de costos.
 - Gestión de errores.
 - Métricas.
-- Evidencia de hackathon.
+- Evidencia de validacion MVP.
 - Operaciones administrativas repetitivas.
 
 ## Reglas

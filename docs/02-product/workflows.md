@@ -10,10 +10,11 @@ The workflow principle is:
 
 The product is teacher-led, but not teacher-only.
 
-Student answers are represented as `StudentSubmission` records loaded by the teacher. The MVP does not require student login, but it must process real student responses because graded submissions are the economic and technical usage unit.
+Student answers are represented as `StudentSubmission` records for Open assessments and `AssessmentAttempt` records for Closed assessments. The MVP does not require student login, but it must process real student responses because graded submissions/attempts are the economic and technical usage unit.
 
 ```text
-1 student answer analyzed = 1 graded submission
+1 Open student answer analyzed = 1 graded submission
+1 Closed attempt scored against the frozen answer key = 1 graded submission
 ```
 
 ## Workflow Map
@@ -529,7 +530,7 @@ Prove AI-native operations, cost awareness, and business evidence.
    - cost estimates;
    - approval states;
    - failures/retries.
-4. Operator uses dashboard for demo and submission evidence.
+4. Operator uses dashboard for demo and validation evidence.
 
 ### Dashboard Minimum
 
@@ -557,7 +558,7 @@ Connect product usage to business validation.
 3. Payment/commitment evidence is stored externally or linked.
 4. Product logs usage.
 5. Operator records testimonial/feedback.
-6. Evidence is summarized for hackathon.
+6. Evidence is summarized for product validation.
 
 ### Evidence Fields
 

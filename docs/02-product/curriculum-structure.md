@@ -33,11 +33,11 @@ Learning Outcome: "Design reusable class hierarchies using inheritance"
 
 These fields are free-text at P0, populated by the teacher or suggested by the Question Generation Agent. Questions store them as `subject_area`, `topic_tags_json`, and `learning_outcome`. Assessments store them as `topic` and `learning_goal`.
 
-This is sufficient for the hackathon MVP.
+This is sufficient for the MVP.
 
 ## Full Model (P1): Layered Curriculum Taxonomy
 
-For scale — institutional use, Chile national curriculum, and multi-country expansion — GradeOps AI needs a structured, versionable curriculum taxonomy. This model is P1 and does not need to be built for the hackathon demo.
+For scale — institutional use, Chile national curriculum, and multi-country expansion — GradeOps AI needs a structured, versionable curriculum taxonomy. This model is P1 and does not need to be built for the first validation demo.
 
 ### Taxonomy Hierarchy
 

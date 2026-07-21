@@ -4,11 +4,13 @@
 
 GradeOps AI debe avanzar como producto de operaciones de evaluacion para docentes de programacion: crear evaluaciones, procesar respuestas reales, mantener control docente, generar feedback/reportes y producir evidencia auditable de IA, costos, uso y negocio.
 
-El plan queda organizado en ocho releases. Las primeras seis componen el corte MVP/hackathon; las dos ultimas concentran refinamientos P1 para no convertir el MVP en un backlog XL.
+El plan queda organizado en ocho releases. Las primeras seis componen el corte validacion MVP; las dos ultimas concentran refinamientos P1 para no convertir el MVP en un backlog XL.
 
 La decision de planificacion mas importante ya tomada es que **Open y Closed son P0** para el Master Plan. La decision mas critica aun pendiente es **D-01: entorno `demo` GCP/Gemini vs `beta` Render/Groq**. La estrategia avanza con el supuesto operativo recomendado: `beta` sostiene evidencia real de producto y `demo` debe resolverse como cumplimiento minimo si las bases exigen GCP/Gemini efectivo.
 
 La Plataforma de Agentes se trata como capacidad transversal: no se implementa como una release tecnica aislada, sino como incrementos del runtime generico dentro de cada release funcional. El objetivo es evolucionar desde el Assessment Agent actual, que ejecuta una llamada LLM estructurada, hacia un runtime headless capaz de iterar con herramientas autorizadas, validar salidas, declarar bloqueos y registrar pasos sin entregar autoridad de dominio al modelo.
+
+La orquestacion API-Agent sigue la misma regla: no se crea una release tecnica separada para robustecer `api/`. Cada release funcional debe incorporar el incremento necesario para que `api/` sea el intermediario durable entre `web/` y `agents/`, con endpoints REST de intencion, estados consultables, idempotencia, evidencia y un gate de madurez Richardson para toda tarea que defina endpoints o rutas.
 
 ## Estado documental
 
@@ -16,20 +18,21 @@ La Plataforma de Agentes se trata como capacidad transversal: no se implementa c
 - Fase 02 fijo 15 capacidades, 62 historias in-scope y 5 out-of-scope, sin colisiones de ID tras renumerar Epic 01.
 - Fase 03 identifico 21 procesos automatizables y confirmo que C13/C14 no pueden dejarse para el final.
 - La estrategia transversal de Agent Runtime fija que cada release con IA declare agente, herramientas, validadores, limites, costo, HITL y evidencia.
+- La estrategia API-Agent Orchestration fija que `api/` es la unica interfaz de `web/`, que `agents/` no persiste dominio y que los endpoints/rutas nuevos se revisan contra madurez REST.
 - Fase 05 documento R01-R06 y Fase 06 valido el plan con resultado `PASS WITH CONDITIONS`.
-- Los documentos con mayor drift pendiente son `CLAUDE.md`, `09-developer-guide/`, `05-evidence/agent-logs.md`, los cortes P0 de `02-product/user-stories*.md` y la narrativa/pricing de hackathon.
+- Los documentos con mayor drift pendiente son `CLAUDE.md`, `09-developer-guide/`, `05-evidence/agent-logs.md`, los cortes P0 de `02-product/user-stories*.md` y la narrativa/pricing de validacion MVP.
 
 ## Supuestos y decisiones
 
 | ID | Estado | Impacto en el plan |
 |---|---|---|
 | D-01 | Pendiente | Condiciona criterios de despliegue y evidencia de R06. |
-| D-02 | Resuelta: Closed = P0 | R04/R05 entran al corte MVP/hackathon. |
+| D-02 | Resuelta: Closed = P0 | R04/R05 entran al corte validacion MVP. |
 | D-03 | Resuelta | Trazabilidad de US queda estable. |
 | D-04 | Pendiente | R01 debe formalizar provider/model policy para costos. |
 | D-05 | Pendiente | Afecta onboarding de colaboradores y arquitectura documentada. |
 | D-06 | Pendiente | R01/R06 deben adoptar esquema rico de AgentExecutionLog. |
-| D-07 | Pendiente | R06 debe reconciliar pricing antes de submission final. |
+| D-07 | Pendiente | R06 debe reconciliar pricing antes del paquete final de validacion. |
 
 ## Objetivos estrategicos
 
@@ -38,7 +41,7 @@ La Plataforma de Agentes se trata como capacidad transversal: no se implementa c
 3. Generar feedback/reporte util para el docente y evidencia de impacto.
 4. Mostrar operacion AI-native: logs, modelos, tokens, costos, reintentos y aprobaciones.
 5. Obtener evidencia comercial: pilotos, revenue/commitments, costos y testimonios.
-6. Cumplir las restricciones del hackathon sin sacrificar el entorno que ya produce evidencia real.
+6. Cumplir las restricciones del validacion MVP sin sacrificar el entorno que ya produce evidencia real.
 
 ## Mapa de capacidades resumido
 
@@ -87,7 +90,18 @@ El plan no recomienda autonomia pedagogica durante el MVP. El nivel objetivo par
 | R03 | Incorporar handoffs tipados y herramientas read-only/agregadas para gaps, recovery y reportes | Interpretacion de cohorte basada en hechos y aprobacion docente |
 | R04 | Introducir tool loop controlado, policy engine basico y validadores para preguntas/banco/composicion | Closed authoring con IA supervisada y snapshot deterministico |
 | R05 | Agregar persistencia asincrona/reanudable cuando analytics o volumen lo requieran | Student attempts y analytics sin bloquear flujos largos |
-| R06 | Operacionalizar metricas, health, costos, warnings, readiness y Ops Agent read-only | Evidencia hackathon y operacion sostenible |
+| R06 | Operacionalizar metricas, health, costos, warnings, readiness y Ops Agent read-only | Evidencia de validacion y operacion sostenible |
+
+## API-Agent Orchestration
+
+| Release | Incremento de API robusta | Valor funcional |
+|---|---|---|
+| R01 | `AiOperation`/`AgentRun`/`AgentAttempt` minimos, `Idempotency-Key`, provider/model efectivo, errores enriquecidos y consulta de operacion para assessment generation/regeneration | El primer flujo IA deja evidencia durable y puede ser retomado/reintentado sin doble costo |
+| R02 | Contratos REST de intencion para rubric/grading/feedback, registry liviano y contract tests API-Agents/API-Web | Primer ciclo Open usa agentes sin que `web/` orqueste prompts o providers |
+| R03 | Handoffs tipados y herramientas read-only/agregadas detras de endpoints funcionales de reportes/gaps/recovery | Reportes de impacto se basan en hechos persistidos y no en inferencias opacas |
+| R04 | Endpoints de question bank/snapshot con tool loop controlado y validators; snapshot/scoring quedan en API | Closed authoring usa IA supervisada sin entregar grading deterministico al modelo |
+| R05 | Outbox/Cloud Tasks/executor/polling cuando el volumen lo exija para attempts, analytics o batches | Estudiantes y analytics pueden avanzar con progreso parcial y retry selectivo |
+| R06 | Health, costs, ledgers, readiness y evidence exports calculados por API/DB; Ops Agent solo read-only | Evidencia operativa confiable para validacion y negocio |
 
 ## Priorizacion
 
@@ -97,7 +111,7 @@ La secuencia prioriza:
 2. Primer graded submission Open.
 3. Reporte e impacto para piloto.
 4. Closed en dos cortes para evitar XL.
-5. Evidencia comercial y cumplimiento hackathon.
+5. Evidencia comercial y cumplimiento validacion MVP.
 6. Refinamientos P1 solo despues de valor validado.
 
 ## Resumen de releases
@@ -109,7 +123,7 @@ La secuencia prioriza:
 | R03 | Open Cohort Report and Impact | M | Planificada | Reporte docente, gaps y tiempo ahorrado |
 | R04 | Closed Question Bank to Snapshot | L | Planificada | Banco curado y assessment cerrado publicado |
 | R05 | Closed Student Response and Item Analytics | L | Planificada | Estudiantes responden por link y analytics de items |
-| R06 | Business Evidence and Hackathon Compliance | M | Planificada/paralela | Dashboard, revenue/cost ledger y evidencia de submission |
+| R06 | Business Evidence and Operational Readiness | M | Planificada/paralela | Dashboard, revenue/cost ledger y evidencia de submission |
 | R07 | Open Workflow Refinements | M | Roadmap | Bulk, tone, exports y mejoras P1 Open |
 | R08 | Closed and Curriculum Refinements | M | Roadmap | Curriculum IA, coverage y recalculo auditado |
 
@@ -134,7 +148,7 @@ La secuencia prioriza:
 | Primer assessment Closed publicado | R04 |
 | Primer intento Closed calificado | R05 |
 | Primer piloto/evidencia comercial completa | R06 |
-| Release candidata hackathon | R06 |
+| Release candidata validacion MVP | R06 |
 
 ## Matriz de trazabilidad global
 
@@ -176,7 +190,7 @@ La secuencia prioriza:
 | Human control | approvals, edits, rejections, overrides |
 | Unit economics | cost per run, assessment, graded submission, customer |
 | Business | pilots, revenue, commitments, related-party split |
-| Hackathon | demo video, dashboard/export, deployment/Gemini evidence |
+| Validacion MVP | demo video, dashboard/export, deployment/Gemini evidence |
 
 ## Siguiente accion
 
@@ -187,4 +201,5 @@ Ejecutar **R01 — Assessment Creation + Evidence Backbone** usando `docs/master
 | Fecha | Cambio | Motivo | Elementos afectados | Decision asociada |
 |---|---|---|---|---|
 | 2026-07-20 | Incorporacion de Agent Runtime transversal y actualizacion post Fase 05/06 | Alinear el ejecutivo con la estrategia headless/iterativa de agentes y el estado documentado real | Resumen, estado documental, automatizacion, siguiente accion | D-04, D-06 |
+| 2026-07-20 | Incorporacion de API-Agent Orchestration | Alinear el Master Plan con `api/` como intermediario robusto entre `web/` y `agents/` sin crear release tecnica transversal | Resumen, estado documental, API-Agent Orchestration | D-API-01..D-API-10 |
 | 2026-07-19 | Creacion inicial | Ejecucion de la Fase 04 del Master Plan Ejecutivo | Todo el documento | D-01, D-02, D-04, D-06 |

@@ -14,7 +14,7 @@ Every AI-generated output must show:
 
 1. What the agent produced (the suggestion).
 2. What the teacher can do with it (approve / edit / reject / regenerate).
-3. Evidence of how it was produced (agent name, model, confidence, timestamp).
+3. Evidence of how it was produced (agent name, provider, model, prompt version, status, timestamp).
 
 This is a product-level constraint, not a styling preference.
 
@@ -37,6 +37,22 @@ The dashboard should answer, at a glance:
 - Quick link to the active approval queue.
 
 **Avoid:** Long lists without context, hidden state, or approval queues buried under navigation.
+
+## Shared Workflow States
+
+Teacher-facing screens should use the same state vocabulary wherever possible:
+
+| State | Use It When |
+| --- | --- |
+| `draft` | Teacher-created input exists but is incomplete or not yet generated. |
+| `generated` | An agent produced a draft or suggestion. |
+| `needs_review` | The teacher must approve, edit, reject, or regenerate before the workflow can continue. |
+| `approved` | The teacher accepted the output or deterministic result. |
+| `published` | The output/result is visible to students, exported, or included in the final report. |
+| `blocked` | Required input, validation, policy, or dependency is missing. |
+| `error` | An agent call, persistence action, or deterministic operation failed. |
+
+`approved` and `published` are different. Approval records teacher intent; publication makes the result available outside the review surface.
 
 ---
 
@@ -127,7 +143,8 @@ Each log entry should show:
 - Agent name and type.
 - Assessment and student (if applicable).
 - Timestamp.
-- Model used.
+- Provider and model used.
+- Prompt/template version.
 - Token estimate and cost estimate.
 - Status (succeeded / failed / requires review).
 - Teacher approval state (pending / approved / edited / rejected).
@@ -144,7 +161,7 @@ The agent log viewer must be presentable in the 3-minute demo. It is the most im
 
 **Intent:** Show that the product is running a real business operation, not only generating text.
 
-For the hackathon demo, this screen must show:
+For the validation demo, this screen must show:
 
 - Total assessments run.
 - Total graded submissions.

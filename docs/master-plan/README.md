@@ -14,6 +14,7 @@ Incluye:
 - inventario de user stories;
 - inventario de automatizacion;
 - estrategia transversal de Agent Runtime;
+- estrategia API-Agent Orchestration;
 - estrategia ejecutiva de releases;
 - resumen ejecutivo;
 - documentos detallados de releases R01-R06;
@@ -32,11 +33,12 @@ Incluye:
 
 ## Convenciones
 
-- `P0` indica alcance MVP/hackathon.
+- `P0` indica alcance validacion MVP.
 - `P1` indica mejora posterior o no bloqueante para primer valor.
 - `US-PROPUESTA-*` indica historia faltante recomendada, aun no creada como archivo en `docs/02-product/user-stories/`.
 - `Asistida`, `Supervisada` y `Automatizada` siguen los niveles definidos en la especificacion maestra.
 - `Agent Runtime` es una capacidad transversal: se implementa mediante vertical slices funcionales, no como una mega-release tecnica.
+- `API-Agent Orchestration` es una capacidad transversal: se incorpora en las releases funcionales como reglas de API, dominio, agents y web, no como una release tecnica separada.
 - Los documentos de analisis son fuente de contexto; los archivos de release R01-R06 son la fuente operativa por release.
 
 ## Orden de lectura
@@ -47,9 +49,10 @@ Incluye:
 4. [Inventario de user stories](analysis/user-story-inventory.md)
 5. [Inventario de automatizacion](analysis/automation-inventory.md)
 6. [Estrategia transversal de Agent Runtime](analysis/agent-runtime-strategy.md)
-7. [Estrategia de releases](analysis/release-strategy.md)
-8. [Master Plan Ejecutivo](master-plan-executive.md)
-9. [Reporte de validacion](validation-report.md)
+7. [Estrategia API-Agent Orchestration](analysis/api-agent-orchestration-strategy.md)
+8. [Estrategia de releases](analysis/release-strategy.md)
+9. [Master Plan Ejecutivo](master-plan-executive.md)
+10. [Reporte de validacion](validation-report.md)
 
 ## Tabla de releases
 
@@ -60,7 +63,7 @@ Incluye:
 | R03 | Open Cohort Report and Impact | Documentada | M | [release-03-open-cohort-report-impact.md](releases/release-03-open-cohort-report-impact.md) |
 | R04 | Closed Question Bank to Snapshot | Documentada | L | [release-04-closed-question-bank-snapshot.md](releases/release-04-closed-question-bank-snapshot.md) |
 | R05 | Closed Student Response and Item Analytics | Documentada | L | [release-05-closed-response-item-analytics.md](releases/release-05-closed-response-item-analytics.md) |
-| R06 | Business Evidence and Hackathon Compliance | Documentada | M | [release-06-business-evidence-hackathon-compliance.md](releases/release-06-business-evidence-hackathon-compliance.md) |
+| R06 | Business Evidence and Operational Readiness | Documentada | M | [release-06-business-evidence-operational-readiness.md](releases/release-06-business-evidence-operational-readiness.md) |
 | R07 | Open Workflow Refinements | Roadmap | M | `releases/release-07-open-workflow-refinements.md` |
 | R08 | Closed and Curriculum Refinements | Roadmap | M | `releases/release-08-closed-curriculum-refinements.md` |
 
@@ -68,6 +71,7 @@ Incluye:
 
 - [Estrategia de releases](analysis/release-strategy.md)
 - [Estrategia transversal de Agent Runtime](analysis/agent-runtime-strategy.md)
+- [Estrategia API-Agent Orchestration](analysis/api-agent-orchestration-strategy.md)
 - [Resumen ejecutivo](master-plan-executive.md)
 - [Reporte de validacion](validation-report.md)
 - [Especificacion maestra](../.prompting/master-plan-prompts/master-plan-specification.md)
@@ -80,7 +84,7 @@ Incluye:
 | Completa | Artefacto generado y revisado para la fase actual. |
 | Documentada | Release con archivo detallado generado. |
 | Planificada | Release definida a nivel estrategico; falta archivo operativo detallado. |
-| Roadmap | Release posterior al corte MVP/hackathon. |
+| Roadmap | Release posterior al corte validacion MVP. |
 | Pendiente | Trabajo aun no ejecutado. |
 | Bloqueada | Requiere decision externa antes de avanzar. |
 
@@ -97,9 +101,11 @@ Incluye:
 - Mantener D-01 visible hasta resolver entorno `demo`/`beta`.
 - No mover P1 al MVP sin retirar o dividir otra carga equivalente.
 - Toda release con IA debe declarar capacidades de Agent Runtime, herramientas, validadores, autonomia, HITL, limites, costo y evidencia.
+- Toda release que toque `api/`, `agents/` o rutas funcionales de `web/` debe aplicar la estrategia API-Agent Orchestration y el gate Richardson REST en las tareas que definan endpoints, contratos o rutas.
 
 ## Historial de cambios
 
 | Fecha | Cambio | Motivo | Elementos afectados | Decision asociada |
 |---|---|---|---|---|
+| 2026-07-20 | Incorporacion de API-Agent Orchestration | Hacer obligatorias las reglas de intermediacion API entre `web/` y `agents/`, con madurez REST por tarea | README, analysis/api-agent-orchestration-strategy.md, releases, templates | D-API-01..D-API-10 |
 | 2026-07-20 | Incorporacion de Agent Runtime transversal y actualizacion de estado Fase 05/06 | Alinear el README con releases documentadas, validacion final y estrategia runtime | README, orden de lectura, reglas de mantenimiento | D-04, D-06 |

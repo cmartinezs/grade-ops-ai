@@ -12,7 +12,7 @@ GradeOps AI uses AI agents to generate questions and compose assessments. Withou
 
 The integration analysis (`.raw/16-chat.md`) identified the need for a layered curriculum taxonomy that works at two levels:
 
-1. A simple string-based model sufficient for the hackathon MVP and independent teachers.
+1. A simple string-based model sufficient for the MVP and independent teachers.
 2. A structured, versionable model that supports institutional use, national curricula, and multi-country expansion.
 
 ## Decision
@@ -27,7 +27,7 @@ At all times, the P0 string fields are backward-compatible with the P1 model: th
 
 ## Rationale
 
-- A fully relational curriculum model at P0 adds development complexity without delivering hackathon value.
+- A fully relational curriculum model at P0 adds development complexity without delivering first-MVP value.
 - String-based tagging still allows the Question Generation Agent to scope generation accurately when the teacher provides subject and topic labels.
 - The P1 model matches the long-term direction of AI-native assessment operations: AI must know exactly which learning objectives it is targeting to produce reliable question batches and coverage reports.
 - GRADE demonstrated that simple Subject > Topic structure is enough to get started; GradeOps AI needs to extend this model rather than copy it as-is, since AI generation requires richer metadata.

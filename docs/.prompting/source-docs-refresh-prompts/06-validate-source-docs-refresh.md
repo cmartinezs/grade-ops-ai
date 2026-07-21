@@ -40,7 +40,7 @@ No reescribas todo automaticamente. Primero genera un informe de validacion fina
 ### Coherencia fuente
 
 - Producto, arquitectura, agentes, evidencia, UX y guias no se contradicen.
-- Los documentos distinguen MVP, hackathon target y roadmap.
+- Los documentos distinguen MVP, validacion MVP target y roadmap.
 - Las afirmaciones normativas tienen decision o fuente clara.
 
 ### Runtime y agentes

@@ -12,14 +12,14 @@ Documentation-only repository. The canonical source of truth for product strateg
 
 ```text
 grade-ops-ai-docs/
-├── 00-project/          # Vision, pitch, problem, solution, roadmap, hackathon strategy
+├── 00-project/          # Vision, pitch, problem, solution, roadmap, cost model
 ├── 01-business/         # Business model, pricing, go-to-market, customer discovery
 ├── 02-product/          # Personas, MVP scope, user stories, workflows, metrics
 ├── 03-ai-agents/        # Agent roles, responsibilities, contracts, logs
 ├── 04-architecture/     # System design, data model, API design, security, deployment
 ├── 05-evidence/         # Usage, revenue, agent logs, testimonials, users
 ├── 06-ux/               # Screen inventory, interaction model, UX design intent
-├── 07-hackathon/        # Demo script, evidence checklist, submission narrative
+├── archive/             # Historical material no longer active
 ├── 99-decisions/        # Durable decision records (ADR format)
 ├── .raw/                # Historical conversation notes — not canonical
 ├── .all-by-category/    # Generated consolidations for NotebookLM — do not edit directly
@@ -260,11 +260,11 @@ grade-ops-ai-infra/
 │   │   └── iam/                   # Service accounts and roles
 │   └── environments/
 │       ├── local/                 # Not provisioned; developer machine only
-│       ├── demo/                  # Hackathon demo environment (main target)
+│       ├── demo/                  # Google Cloud demo environment (main target)
 │       │   ├── main.tf
 │       │   ├── variables.tf
 │       │   └── terraform.tfvars.example
-│       └── prod/                  # Post-hackathon production
+│       └── prod/                  # Production
 │           ├── main.tf
 │           ├── variables.tf
 │           └── terraform.tfvars.example
@@ -303,7 +303,7 @@ grade-ops-ai-infra/
 1. **Types flow from API to Web.** The web frontend mirrors the API's DTO contracts. No independent type definitions for shared structures.
 2. **Agents do not own domain entities.** Agent packages receive structured commands and return structured results; they do not persist domain records directly. Persistence is the API's responsibility.
 3. **Prompts are versioned and file-based.** Prompt templates live in `grade-ops-ai-agents/src/main/resources/prompts/` as named, versioned files — not as inline strings in Java.
-4. **Infrastructure is environment-aware.** The demo environment is the primary target for hackathon delivery. Production and staging are not required for the MVP, but the structure must support them.
+4. **Infrastructure is environment-aware.** The demo environment is the primary Google Cloud target for validation. Production and staging are not required for the MVP, but the structure must support them.
 5. **Migration scripts are the source of schema truth.** The API's `db/migration/` folder is the authoritative record of the database schema. No undocumented manual changes to production schema.
 
 <!-- nav -->

@@ -5,7 +5,7 @@
 
 ## Resumen ejecutivo
 
-GradeOps AI tiene 21 procesos automatizables relevantes para el MVP y el hackathon: 13 procesos de producto asociados a agentes de IA, 3 procesos deterministas, y 5 procesos operativos internos de evidencia, costos, monitoreo y pilotos.
+GradeOps AI tiene 21 procesos automatizables relevantes para el MVP y el validacion MVP: 13 procesos de producto asociados a agentes de IA, 3 procesos deterministas, y 5 procesos operativos internos de evidencia, costos, monitoreo y pilotos.
 
 La estrategia recomendada es **automatizacion progresiva con autoridad docente explicita**:
 
@@ -15,7 +15,7 @@ La estrategia recomendada es **automatizacion progresiva con autoridad docente e
 - La evidencia (`AgentExecutionLog`, `ApprovalEvent`, costo, uso, estado de piloto) debe instrumentarse desde el primer release vertical, no al final.
 - El proveedor real de IA debe modelarse como `provider/model/policy`, no como una categoria Gemini-only, porque el estado real incluye Groq como proveedor por defecto (D-04 pendiente de ADR).
 
-El principal hallazgo de esta fase es que **C13 (Evidencia de Ejecucion de Agentes) no puede tratarse como epic downstream**. Es una capacidad transversal habilitante: sin logging/costo/aprobacion no hay evidencia de hackathon, unit economics ni control humano verificable.
+El principal hallazgo de esta fase es que **C13 (Evidencia de Ejecucion de Agentes) no puede tratarse como epic downstream**. Es una capacidad transversal habilitante: sin logging/costo/aprobacion no hay evidencia de validacion MVP, unit economics ni control humano verificable.
 
 ## Principios de automatizacion
 
@@ -611,7 +611,7 @@ El principal hallazgo de esta fase es que **C13 (Evidencia de Ejecucion de Agent
 - **Evidencia**: dashboard/export.
 - **Dependencias**: AUT-16/AUT-17.
 - **Riesgos**: US-082 puede crecer demasiado.
-- **Release candidata**: hackathon evidence release.
+- **Release candidata**: validation evidence release.
 
 ### AUT-19 — Links seguros y notificaciones a estudiantes
 
@@ -673,7 +673,7 @@ El principal hallazgo de esta fase es que **C13 (Evidencia de Ejecucion de Agent
 - **Evidencia**: revenue ledger, customer proof.
 - **Dependencias**: US-PROPUESTA-01 y US-PROPUESTA-08.
 - **Riesgos**: falta mecanismo de acceso Operator definido.
-- **Release candidata**: hackathon evidence release.
+- **Release candidata**: validation evidence release.
 
 ### AUT-21 — Reintentos, idempotencia y recuperacion de fallos
 
@@ -763,7 +763,7 @@ Campos minimos por run:
 - Mantener ownership server-side en toda lectura/escritura.
 - Usar identificadores minimos para estudiantes (`StudentSubmission.student_identifier`, `LearnerRef`).
 - Hashear tokens de acceso; no almacenar links completos como secreto reutilizable.
-- Separar vistas internas, judge-verifiable private evidence y evidencia publica.
+- Separar vistas internas, controlled-private private evidence y evidencia publica.
 - Permitir anulacion/revocacion de links e invalidacion de evidencia erronea via eventos compensatorios.
 - Agregar historia propuesta de eliminacion/anonimizacion de datos de estudiante antes de pilotos reales con datos sensibles.
 
@@ -788,7 +788,7 @@ Recomendaciones:
 
 | Riesgo | Impacto | Mitigacion |
 |---|---|---|
-| C13 se implementa tarde | Sin evidencia confiable para hackathon ni unit economics | Tratar AUT-16/AUT-17 como transversal desde el primer release de Fase 04 |
+| C13 se implementa tarde | Sin evidencia confiable para validacion MVP ni unit economics | Tratar AUT-16/AUT-17 como transversal desde el primer release de Fase 04 |
 | Proveedor Groq no formalizado | Cost model y ADRs quedan inconsistentes | Resolver D-04 antes de cerrar estrategia de releases |
 | `05-evidence/agent-logs.md` sigue pobre | Campos minimos divergentes entre producto, UX y evidencia | Actualizarlo o convertirlo en vista simplificada |
 | Modo Closed P0 sobredimensiona el plan | Muchas capacidades no implementadas compiten por 4 semanas | Fase 04 debe separar demo viable de roadmap sin ocultar deuda |
@@ -824,14 +824,14 @@ Recomendaciones:
 | Valor estudiante | feedback approved, turnaround, recovery approved, item reinforcement suggestions | AUT-07, AUT-09, AUT-15 |
 | Operacion AI-native | agent runs logged, success rate, retry rate, model usage, token usage | AUT-16, AUT-21 |
 | Unit economics | cost per run, assessment, graded submission, customer, gross margin | AUT-17 |
-| Evidencia hackathon | users, paid pilots, revenue, related-party split, costs, agent logs | AUT-18, AUT-20 |
+| Evidencia de validacion | users, paid pilots, revenue, related-party split, costs, agent logs | AUT-18, AUT-20 |
 
 ## Recomendaciones
 
 1. **Priorizar AUT-16/AUT-17 temprano**: cada release funcional debe producir logs y costo desde el primer dia.
 2. **Separar procesos IA de reglas deterministas**: especialmente AUT-14, AUT-17, AUT-19 y parte de AUT-13.
 3. **No subir el nivel de autonomia pedagogica durante el MVP**: el objetivo realista es Supervisada, no Autonoma controlada.
-4. **Usar releases candidatas por flujo vertical**: Open MVP, Closed MVP, Evidence/Hackathon, y Transversal Platform deben cruzarse en Fase 04.
+4. **Usar releases candidatas por flujo vertical**: Open MVP, Closed MVP, Evidence/Validacion MVP, y Transversal Platform deben cruzarse en Fase 04.
 5. **Formalizar proveedor/model policy antes de costo final**: D-04 debe resolverse para que cost model y dashboard no nazcan Gemini-only.
 6. **Convertir fallos en experiencia de producto**: retry/cancel/edit input debe ser visible y medible, no solo log tecnico.
 7. **Crear o enriquecer las US propuestas solo cuando Fase 04 las asigne**: no generar archivos nuevos de user stories desde esta fase.

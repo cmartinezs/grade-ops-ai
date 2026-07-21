@@ -34,7 +34,7 @@ Use these files to drive product planning and implementation:
 6. [`student-access.md`](student-access.md) — student (LearnerRef) model, secure link types, invitation flow, what students can see, and security rules.
 7. [`response-intake.md`](response-intake.md) — digital (P0) and physical paper (P1) intake channels, OCR vs OMR, conflict resolution, and normalization to AssessmentAttempt.
 8. [`curriculum-structure.md`](curriculum-structure.md) — subject/topic/learning-outcome taxonomy; P0 string tagging; P1 structured model with CurriculumNode and LearningObjective; AI-generated curriculum; Chile pack reference.
-9. [`metrics.md`](metrics.md) — product, business, AI-native operations, trust, and hackathon evidence metrics.
+9. [`metrics.md`](metrics.md) — product, business, AI-native operations, trust, and validation evidence metrics.
 
 ## What Belongs Here
 
@@ -58,3 +58,15 @@ Use these files to drive product planning and implementation:
 ## Diagram Rule
 
 Product diagrams must use Mermaid by default. Use PlantUML only when Mermaid cannot express the diagram clearly. Use ASCII only as a last fallback.
+
+## Key Decisions And Traceability
+
+| Decision | Product Documents |
+| --- | --- |
+| [`Closed Assessment Mode`](../99-decisions/2026-06-10-closed-assessment-mode.md) | [`mvp-scope.md`](mvp-scope.md), [`assessment-modes.md`](assessment-modes.md), [`workflows.md`](workflows.md), [`user-stories.md`](user-stories.md) |
+| [`Deterministic Grading For Closed`](../99-decisions/2026-06-10-deterministic-grading-for-closed.md) | [`assessment-modes.md`](assessment-modes.md), [`workflows.md`](workflows.md), [`student-access.md`](student-access.md) |
+| [`Assessment Snapshot On Publish`](../99-decisions/2026-06-10-assessment-snapshot-on-publish.md) | [`assessment-modes.md`](assessment-modes.md), [`workflows.md`](workflows.md) |
+| [`Student Access Via Secure Link`](../99-decisions/2026-06-10-student-access-via-secure-link.md) | [`student-access.md`](student-access.md), [`workflows.md`](workflows.md), [`../06-ux/student-access-ux.md`](../06-ux/student-access-ux.md) |
+| [`AI Native Question Bank`](../99-decisions/2026-06-10-ai-native-question-bank.md) | [`assessment-modes.md`](assessment-modes.md), [`curriculum-structure.md`](curriculum-structure.md), user-story epics 11-13 |
+
+The MVP story cut in [`user-stories.md`](user-stories.md) is the product-level bridge into the release plan in [`../master-plan/`](../master-plan/README.md).

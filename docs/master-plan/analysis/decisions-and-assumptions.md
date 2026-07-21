@@ -14,30 +14,28 @@
 
 ---
 
-## D-01 — Entorno de despliegue objetivo para el hackathon: `demo` (GCP) vs. `beta` (Render)
+## D-01 — Roles de entorno: `beta` para evidencia funcional y `demo` como target Google Cloud
 
-- **Tipo**: Decisión bloqueante, difícilmente reversible bajo presión de tiempo.
-- **Contexto**: `CLAUDE.md` raíz, `docs/04-architecture/system-architecture.md` y todo `docs/07-hackathon/` describen únicamente el entorno `demo` (GCP Cloud Run + Cloud SQL + Vertex AI Gemini) como arquitectura objetivo. Las reglas del hackathon (`00-project/hackathon-strategy.md`) exigen explícitamente Google Cloud + Gemini API. Sin embargo, el entorno `demo` **nunca ha sido desplegado** (Terraform nunca aplicado contra GCP real, según la retrospectiva de `.planning/finished/009-groq-infra-provisioning/README.md`), mientras que el entorno `beta` (Render + Vercel + Neon + Groq), documentado únicamente en `04-architecture/beta-environment-design.md`, es el único con evidencia real de funcionamiento end-to-end (flujo brief→generate verificado 2026-07-16/17, story-04 de `008-assessment-creation`).
-- **Evidencia**: `04-architecture/beta-environment-design.md`; `.planning/finished/009-groq-infra-provisioning/README.md`; `.planning/active/008-assessment-creation/02-deepening/story-04-e2e-integration-verification.md`; `00-project/hackathon-strategy.md` (requisito Google Cloud + Gemini API); `infra/terraform/environments/demo/*.tf` (definidos pero no aplicados).
-- **Alternativas**: (a) desplegar `demo` en GCP antes del deadline y usarlo como plataforma de evaluación oficial; (b) usar `beta` como entorno de desarrollo/demo interno y desplegar una versión mínima de `demo` solo para cumplir el requisito formal del hackathon; (c) formalizar `beta` como el entorno real y evaluar el riesgo de incumplimiento de bases si el jurado exige evidencia GCP.
-- **Recomendación**: Priorizar (b) — es la opción de menor riesgo y esfuerzo: mantener `beta` como motor de evidencia real de producto, y desplegar un `demo` mínimo (aunque sea con datos de prueba) específicamente para satisfacer el requisito de plataforma del hackathon.
-- **Consecuencia si no se resuelve**: la Fase 04 (planificación de releases) no puede definir criterios de "desplegable y demostrable" sin saber contra qué entorno se evalúan; riesgo de descalificación o pérdida de puntos de elegibilidad del hackathon.
-- **Estado**: Pendiente.
-- **Responsable sugerido**: Carlos (founder / decisión de producto y cumplimiento de bases).
-- **Fecha máxima de resolución**: 2026-07-24 (una semana desde este diagnóstico; el deadline del hackathon es 2026-08-17 y esta decisión condiciona todo el trabajo de infraestructura restante).
+- **Tipo**: Decisión de arquitectura y entrega, reversible si se registra un nuevo ADR.
+- **Contexto**: el entorno `beta` (Render + Vercel + Neon + Groq) es el camino de evidencia funcional e iteración rápida. El entorno `demo` representa el target Google Cloud con Terraform, Cloud Run, Cloud SQL, Cloud Storage, Firebase y camino Gemini-capable. La postulación externa que imponía restricciones específicas fue archivada; ya no condiciona el plan activo.
+- **Evidencia**: `04-architecture/beta-environment-design.md`; `.planning/finished/009-groq-infra-provisioning/README.md`; `.planning/active/008-assessment-creation/02-deepening/story-04-e2e-integration-verification.md`; `infra/terraform/environments/demo/*.tf`; ADR `99-decisions/2026-07-20-environment-roles.md`.
+- **Decisión**: `beta` puede usarse para evidencia real de producto y pilotos tempranos. `demo` se mantiene como target Google Cloud para validar despliegue productivo cuando exista evidencia real. Ningún documento activo debe afirmar que `demo` esta desplegado o que Gemini fue usado si no hay prueba.
+- **Consecuencia**: la Fase 04 puede planificar releases contra valor de producto sin bloqueo de elegibilidad externa. R06 debe verificar deployment/provider evidence solo para las afirmaciones que se quieran hacer frente a clientes, evaluadores o partners.
+- **Estado**: Resuelta el 2026-07-20.
+- **Responsable sugerido**: Carlos.
 - **Fases afectadas**: 03, 04, 05, 06.
 
 ---
 
-## D-02 — Alcance del modo Closed en el corte P0 del hackathon
+## D-02 — Alcance del modo Closed en el corte P0 del MVP
 
 - **Tipo**: Decisión bloqueante, reversible si se resuelve pronto.
-- **Contexto**: `02-product/workflows.md` y `02-product/mvp-scope.md` marcan los flujos de modo Closed (generación de preguntas, ensamblaje, intake y grading cerrado, analítica de ítems, invitación de estudiante) como **P0**. Sin embargo, `02-product/user-stories.md` (el corte oficial de historias P0 para el demo) **excluye por completo** las épicas 11, 12 y 13 (curriculum structure, question bank, student invitation/access), y el guion de demo (`07-hackathon/demo-script.md`) no muestra el flujo Closed en ninguna de sus 9 escenas pese a que su propio checklist de pre-grabación exige datos semilla de ese modo. `00-project/` (capa canónica de negocio) tampoco cubre el modo Closed en ningún documento.
-- **Evidencia**: `02-product/user-stories.md` (línea del corte P0); `02-product/workflows.md`; `02-product/mvp-scope.md` (matriz de scope y "MVP Cut Line"); `07-hackathon/demo-script.md` (checklist vs. escenas).
-- **Alternativas**: (a) el modo Closed entra al corte P0 real — hay que agregar sus historias al MVP cut y al guion de demo; (b) el modo Closed queda fuera del corte P0 del hackathon — hay que corregir `workflows.md`/`mvp-scope.md` para marcarlo P1/roadmap, y ajustar `01-business/` en consecuencia; (c) el modo Closed se demuestra parcialmente (solo generación de preguntas, sin ciclo completo de estudiante) como término medio.
+- **Contexto**: `02-product/workflows.md` y `02-product/mvp-scope.md` marcan los flujos de modo Closed (generación de preguntas, ensamblaje, intake y grading cerrado, analítica de ítems, invitación de estudiante) como **P0**. Sin embargo, `02-product/user-stories.md` excluye por completo las épicas 11, 12 y 13 (curriculum structure, question bank, student invitation/access). `00-project/` tampoco cubría el modo Closed de forma consistente en todos los documentos.
+- **Evidencia**: `02-product/user-stories.md` (línea del corte P0); `02-product/workflows.md`; `02-product/mvp-scope.md` (matriz de scope y "MVP Cut Line").
+- **Alternativas**: (a) el modo Closed entra al corte P0 real y se agregan sus historias al MVP cut; (b) el modo Closed queda fuera del corte P0 y se corrigen `workflows.md`/`mvp-scope.md`; (c) el modo Closed se demuestra parcialmente (solo generación de preguntas, sin ciclo completo de estudiante) como término medio.
 - **Recomendación**: Adoptar (a) como decisión de planificación: el modo Closed entra al corte P0 real y debe aparecer en el mapa de capacidades, inventario de historias y planificación de releases. La viabilidad de implementación completa se validará en Fase 04 al dimensionar releases y camino crítico.
 - **Consecuencia si no se hubiera resuelto**: la Fase 02 no habría podido clasificar con confianza el readiness de las épicas 11-13, y la Fase 04 no habría podido secuenciar releases sin saber si el modo Closed compite por el mismo tiempo que el resto del roadmap P0.
-- **Estado**: Resuelta el 2026-07-17 para efectos del Master Plan: **Closed = P0 del hackathon**. Queda pendiente propagar esta decisión a los documentos de producto/hackathon divergentes fuera del alcance de la Fase 02.
+- **Estado**: Resuelta el 2026-07-17 para efectos del Master Plan: **Closed = P0 del MVP**. Queda pendiente propagar esta decisión a los documentos de producto divergentes fuera del alcance de la Fase 02.
 - **Responsable sugerido**: Carlos.
 - **Fecha máxima de resolución**: 2026-07-20 (antes de iniciar formalmente la Fase 02).
 - **Fases afectadas**: 02, 04, 05.
@@ -104,17 +102,17 @@
 
 ---
 
-## D-07 — Reconciliar cifras de pricing entre `submission-narrative.md` y los documentos canónicos
+## D-07 — Reconciliar cifras de pricing entre documentos canónicos y materiales archivados
 
 - **Tipo**: Decisión no bloqueante, reversible.
-- **Contexto**: `07-hackathon/submission-narrative.md` presenta cifras de pricing distintas (límites de submissions por plan, ausencia del plan Free) respecto a `00-project/cost-model.md` y `01-business/pricing.md`, que coinciden entre sí.
+- **Contexto**: los materiales archivados de narrativa externa presentan cifras de pricing distintas (límites de submissions por plan, ausencia del plan Free) respecto a `00-project/cost-model.md` y `01-business/pricing.md`, que coinciden entre sí.
 - **Evidencia**: ver contradicción C6 en `documentation-diagnosis.md`.
-- **Alternativas**: (a) corregir `submission-narrative.md` para que cite las cifras canónicas; (b) si las cifras de `submission-narrative.md` reflejan un cambio de pricing más reciente, actualizar `cost-model.md`/`pricing.md` y registrar el cambio como ADR.
+- **Alternativas**: (a) conservar los materiales archivados como históricos y mantener `cost-model.md`/`pricing.md` como fuente activa; (b) si las cifras archivadas reflejan un cambio de pricing más reciente, actualizar `cost-model.md`/`pricing.md` y registrar el cambio como ADR.
 - **Recomendación**: (a), salvo que exista una razón de negocio no documentada para el cambio — en cuyo caso corresponde (b) + ADR.
-- **Consecuencia si no se resuelve**: riesgo de publicar cifras inconsistentes en la submission final del hackathon.
+- **Consecuencia si no se resuelve**: riesgo de publicar cifras inconsistentes en materiales comerciales futuros.
 - **Estado**: Pendiente.
 - **Responsable sugerido**: Carlos.
-- **Fecha máxima de resolución**: antes de publicar la narrativa de submission final (no bloquea las fases 02-04 del Master Plan).
+- **Fecha máxima de resolución**: antes de publicar nueva narrativa comercial (no bloquea las fases 02-04 del Master Plan).
 - **Fases afectadas**: 04 (evidencia de negocio), 05 (release con evidencia de pricing).
 
 ---
@@ -149,27 +147,27 @@
 
 ---
 
-## A-03 — El deadline del hackathon (2026-08-17, 13:00 PDT) sigue vigente sin cambios
+## A-03 — Materiales de evento archivados y sin vigencia
 
 - **Tipo**: Supuesto.
-- **Contexto**: las reglas citadas en `00-project/hackathon-strategy.md` están marcadas "as of June 8, 2026" con instrucción explícita de re-verificar antes de la submission final; no hay evidencia de revalidación posterior en la documentación.
-- **Evidencia**: `00-project/hackathon-strategy.md`; `07-hackathon/README.md`.
+- **Contexto**: los materiales de evento fueron archivados en `docs/archive/2026-event/` y no imponen restricciones, fechas, formato de demo, proveedor, despliegue ni evidencias sobre el plan activo.
+- **Evidencia**: `docs/archive/2026-event/README.md`.
 - **Alternativas**: n/a.
-- **Recomendación**: re-verificar contra la página oficial de Devpost antes de la Fase 04 (planificación de releases), ya que toda la secuencia de hitos depende de esta fecha.
-- **Consecuencia si resulta falsa**: toda la secuencia de releases y el camino crítico de la Fase 04 quedarían mal calibrados.
-- **Estado**: Aceptado como supuesto de trabajo, con recomendación de revalidación.
+- **Recomendación**: no usar esos documentos como fuente activa. Si un futuro evento o partner impone requisitos nuevos, registrarlos como decisión nueva.
+- **Consecuencia si resulta falsa**: el plan activo podría volver a incorporar restricciones externas sin trazabilidad.
+- **Estado**: Aceptado como supuesto de trabajo.
 - **Responsable sugerido**: Carlos.
 - **Fecha máxima de resolución**: antes de la Fase 04.
 - **Fases afectadas**: 04.
 
 ---
 
-## R-01 — Riesgo de elegibilidad del hackathon por entorno de despliegue no conforme
+## R-01 — Riesgo de claims de despliegue o proveedor sin evidencia
 
 - **Tipo**: Riesgo (ligado a D-01).
-- **Contexto**: ver D-01. Si el jurado exige evidencia de despliegue en Google Cloud y solo existe evidencia real en Render, hay riesgo de pérdida de puntos o descalificación parcial.
+- **Contexto**: ver D-01. Si la documentacion, demos o ventas afirman Google Cloud, Gemini o produccion sin evidencia real, se debilita la confianza en el producto.
 - **Evidencia**: ver D-01.
-- **Recomendación**: investigar tempranamente si las bases del hackathon exigen despliegue efectivo en GCP o solo uso de Gemini API (que podría satisfacerse incluso con el entorno beta si se reincorpora Gemini como proveedor activo).
+- **Recomendación**: mantener claims por entorno. `beta` prueba funcionalidad y pilotos; `demo` prueba target Google Cloud solo cuando exista deployment/API evidence.
 - **Estado**: Abierto.
 - **Responsable sugerido**: Carlos.
 - **Fases afectadas**: 04, 06.
@@ -188,10 +186,10 @@
 
 ---
 
-## R-03 — Evidencia de negocio insuficiente a ~4 semanas del deadline
+## R-03 — Evidencia de negocio insuficiente para validar el MVP
 
 - **Tipo**: Riesgo.
-- **Contexto**: `05-evidence/*`, `07-hackathon/evidence-checklist.md` y `submission-narrative.md` están vacíos o con placeholders. Los targets numéricos (10+ entrevistas, 5+ pilotos, 3+ pilotos pagados, 100+ submissions, etc.) no tienen avance registrado.
+- **Contexto**: `05-evidence/*` tiene plantillas o evidencia parcial. Los targets numéricos (10+ entrevistas, 5+ pilotos, 3+ pilotos pagados, 100+ submissions, etc.) no tienen avance registrado.
 - **Evidencia**: ver sección "Vacíos" de `documentation-diagnosis.md`.
 - **Recomendación**: la Fase 04 debe priorizar explícitamente actividades que generen evidencia real cuanto antes, no solo funcionalidad.
 - **Estado**: Abierto.

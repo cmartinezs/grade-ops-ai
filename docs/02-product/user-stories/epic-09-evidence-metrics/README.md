@@ -2,9 +2,9 @@
 
 ## Narrative
 
-**As an** operator running a hackathon MVP,  
+**As an** operator running an MVP validation cycle,
 **I want** every agent execution logged, token costs tracked, and a dashboard of usage and business activity,  
-**so that** we can prove AI-native operations, track unit economics from day one, and produce credible hackathon submission evidence.
+**so that** we can prove AI-native operations, track unit economics from day one, and produce credible validation evidence.
 
 ## Goal
 

@@ -26,6 +26,19 @@ The Draft Builder screen loads via `loadAssessmentDraftBuilderPage`, saves edits
 
 ---
 
+## API / Agent / Web Contract Gate
+
+| Gate | Required check | Task answer |
+|---|---|---|
+| API as orchestrator | Draft Builder calls only `api/` loader/mutations; it never calls `agents/` or exposes provider/model controls | Keep route/hook state as API artifact state plus user actions |
+| Richardson REST maturity | The route maps resource reads, partial updates and regenerate command statuses into explicit UI states | Preserve no-restore behavior; no unsupported affordance appears in version history |
+| AI operation model | Regenerate is sync legacy unless API exposes `AiOperation`; route should be ready to add polling only after contract change | Current task handles submitting/success/error/refetch, not invented `operationId` |
+| Idempotency | Regenerate retry must be teacher-visible unless API idempotency is confirmed | Do not auto-retry failed regenerate behind the teacher's back |
+| Contract testing | Tests cover load, save, regenerate, refetch, 404/409/422/500 and absence of fake dataset | Extend section/hook tests |
+| Web route functionality | `/assessments/{id}/draft` supports loading, not-found, conflict, validation, server error, save/regenerate submitting states and read-only historical preview | All states are backed by real API contracts from `task-01` |
+
+---
+
 ## Implementation Steps
 
 1. Replace `useAssessmentDraftBuilderPage`'s fake dataset with a `loadAssessmentDraftBuilderPage(assessmentId)` call on mount, using the `RemoteData` states from `task-09`.
@@ -82,6 +95,7 @@ N/A — no database or ORM involved in `web/`.
 ## Done Criteria
 
 - [ ] Draft Builder screen loads, edits/saves, and regenerates against the real API.
+- [ ] API / Agent / Web Contract Gate is completed; no unsupported restore or fake operation state is introduced.
 - [ ] Version list refetches after both save and regenerate.
 - [ ] 404/409/422/500 each show a distinct, translated message.
 - [ ] No fake/mocked dataset remains.
