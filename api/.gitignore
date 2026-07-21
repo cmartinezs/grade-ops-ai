@@ -67,6 +67,11 @@ spring.log
 # Firebase Admin SDK service account key — download via Secret Manager
 *.json
 !**/src/**/*.json
+# Throwaway fixtures for compose.smoke.yml's Firebase Auth Emulator — not real secrets,
+# see smoke/README.md. Safe to commit: fake-service-account.json's key is never used
+# against real Firebase, and firebase.json only configures the emulator's local port.
+!smoke/fake-service-account.json
+!docker/firebase-emulator/firebase.json
 
 # Environment files
 .env
