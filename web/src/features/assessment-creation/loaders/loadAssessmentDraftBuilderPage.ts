@@ -1,11 +1,8 @@
 import { getAssessmentDraft, getAssessmentDraftVersions } from "@/lib/api/assessments";
 import { logger } from "@/lib/logging/logger";
+import { createCorrelationId } from "@/lib/logging/correlationId";
 import { toAssessmentDraftBuilderPageViewModel } from "../mappers/toAssessmentDraftBuilderPageViewModel";
 import type { AssessmentDraftBuilderPageData } from "../mappers/toAssessmentDraftBuilderPageViewModel";
-
-function createCorrelationId(): string {
-  return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
-}
 
 export async function loadAssessmentDraftBuilderPage(
   assessmentId: string

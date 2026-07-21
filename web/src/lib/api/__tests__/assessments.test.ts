@@ -6,6 +6,8 @@ import {
   getAssessmentDraftVersions,
   CreateAssessmentBriefError,
   GenerateAssessmentDraftError,
+  GetAssessmentDraftError,
+  GetAssessmentDraftVersionsError,
 } from "../assessments";
 import { apiClient } from "../client";
 import type { CreateAssessmentBriefRequestDto, AssessmentDraftDto } from "@/types/assessment";
@@ -169,14 +171,19 @@ describe("getAssessmentDraft", () => {
     expect(result).toEqual(sampleDraft);
   });
 
-  it("throws an error on failed response", async () => {
+  it("throws GetAssessmentDraftError carrying the ApiErrorResponse body, status, and assessmentId on failure", async () => {
     mockApiClient.mockResolvedValue({
       ok: false,
       status: 404,
       json: () => Promise.resolve({ error: "NOT_FOUND", message: "Draft not found" }),
     });
 
-    await expect(getAssessmentDraft("assess-missing")).rejects.toThrow("Failed to fetch assessment draft: 404");
+    await expect(getAssessmentDraft("assess-missing")).rejects.toMatchObject({
+      status: 404,
+      body: { error: "NOT_FOUND", message: "Draft not found" },
+      assessmentId: "assess-missing",
+    });
+    await expect(getAssessmentDraft("assess-missing")).rejects.toBeInstanceOf(GetAssessmentDraftError);
   });
 });
 
@@ -203,14 +210,19 @@ describe("getAssessmentDraftVersions", () => {
     expect(result).toHaveLength(3);
   });
 
-  it("throws an error on failed response", async () => {
+  it("throws GetAssessmentDraftVersionsError carrying the ApiErrorResponse body, status, and assessmentId on failure", async () => {
     mockApiClient.mockResolvedValue({
       ok: false,
       status: 500,
       json: () => Promise.resolve({ error: "INTERNAL_ERROR", message: "Server error" }),
     });
 
-    await expect(getAssessmentDraftVersions("assess-1")).rejects.toThrow("Failed to fetch assessment draft versions: 500");
+    await expect(getAssessmentDraftVersions("assess-1")).rejects.toMatchObject({
+      status: 500,
+      body: { error: "INTERNAL_ERROR", message: "Server error" },
+      assessmentId: "assess-1",
+    });
+    await expect(getAssessmentDraftVersions("assess-1")).rejects.toBeInstanceOf(GetAssessmentDraftVersionsError);
   });
 
   it("returns an empty array when no versions exist", async () => {

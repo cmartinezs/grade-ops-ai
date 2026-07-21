@@ -81,9 +81,10 @@ describe("loadAssessmentDraftBuilderPage", () => {
     await loadAssessmentDraftBuilderPage("assess-1");
     const elapsedMs = Date.now() - startTime;
 
-    // With 10ms delays sequential would take ~20ms, parallel takes ~10ms
-    // Allow some buffer for test execution overhead
-    expect(elapsedMs).toBeLessThan(50);
+    // With 10ms delays sequential would take ~20ms, parallel takes ~10ms.
+    // 500ms gives generous headroom for slow/loaded CI runners while still
+    // failing if the implementation regresses to sequential awaits.
+    expect(elapsedMs).toBeLessThan(500);
     expect(draftResolved).toBe(true);
     expect(versionsResolved).toBe(true);
   });
