@@ -306,7 +306,7 @@ function ResetPasswordForm() {
               letterSpacing: "-0.01em",
             }}
           >
-            "Corrijo una prueba de 32 alumnos en lo que antes me tomaba una tarde entera."
+            &quot;Corrijo una prueba de 32 alumnos en lo que antes me tomaba una tarde entera.&quot;
           </p>
           <div style={{ fontSize: "var(--text-md)", lineHeight: 1.5 }}>
             <div style={{ fontWeight: 700 }}>Rodrigo Salinas</div>

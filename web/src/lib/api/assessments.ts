@@ -64,7 +64,7 @@ export class GetAssessmentDraftVersionsError extends Error {
 export class UpdateAssessmentDraftError extends Error {
   constructor(
     public status: number,
-    public body: ApiErrorResponse,
+    public body: FieldErrorResponse[] | ApiErrorResponse,
     public assessmentId: string
   ) {
     super(`updateAssessmentDraft failed with status ${status} for assessment ${assessmentId}`);
@@ -75,7 +75,7 @@ export class UpdateAssessmentDraftError extends Error {
 export class RegenerateAssessmentDraftError extends Error {
   constructor(
     public status: number,
-    public body: ApiErrorResponse,
+    public body: FieldErrorResponse[] | ApiErrorResponse,
     public assessmentId: string
   ) {
     super(`regenerateAssessmentDraft failed with status ${status} for assessment ${assessmentId}`);
@@ -186,7 +186,7 @@ export async function updateAssessmentDraft(
   const latencyMs = Date.now() - startedAt;
 
   if (!res.ok) {
-    const body: ApiErrorResponse = await res.json().catch(() => ({ error: "UNKNOWN", message: null }));
+    const body: FieldErrorResponse[] | ApiErrorResponse = await res.json().catch(() => ({ error: "UNKNOWN", message: null }));
     const context = { dependency: "api/assessments/draft", method: "PATCH", status: res.status, latencyMs, assessmentId };
     if (isRecoverableDraftMutationStatus(res.status)) {
       log.warn(context, "updateAssessmentDraft failed");
@@ -218,7 +218,7 @@ export async function regenerateAssessmentDraft(
   const latencyMs = Date.now() - startedAt;
 
   if (!res.ok) {
-    const body: ApiErrorResponse = await res.json().catch(() => ({ error: "UNKNOWN", message: null }));
+    const body: FieldErrorResponse[] | ApiErrorResponse = await res.json().catch(() => ({ error: "UNKNOWN", message: null }));
     const context = { dependency: "api/assessments/draft/regenerate", status: res.status, latencyMs, assessmentId };
     if (isRecoverableDraftMutationStatus(res.status)) {
       log.warn(context, "regenerateAssessmentDraft failed");

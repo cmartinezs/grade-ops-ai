@@ -28,7 +28,7 @@ describe("SignOutButton", () => {
     mockSignOut.mockResolvedValue(undefined);
 
     render(<SignOutButton />);
-    fireEvent.click(screen.getByRole("button", { name: /sign out/i }));
+    fireEvent.click(screen.getByRole("button", { name: /cerrar sesión/i }));
 
     await waitFor(() => {
       expect(global.fetch).toHaveBeenCalledWith("/api/auth/sign-out", {
@@ -45,7 +45,7 @@ describe("SignOutButton", () => {
     mockSignOut.mockResolvedValue(undefined);
 
     render(<SignOutButton />);
-    fireEvent.click(screen.getByRole("button", { name: /sign out/i }));
+    fireEvent.click(screen.getByRole("button", { name: /cerrar sesión/i }));
 
     await waitFor(() => {
       expect(mockSignOut).toHaveBeenCalled();

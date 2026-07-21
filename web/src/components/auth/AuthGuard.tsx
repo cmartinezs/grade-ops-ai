@@ -12,7 +12,6 @@ interface AuthGuardProps {
 export default function AuthGuard({ children }: AuthGuardProps) {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
-  const [authorized, setAuthorized] = useState(false);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -27,7 +26,6 @@ export default function AuthGuard({ children }: AuthGuardProps) {
         return;
       }
 
-      setAuthorized(true);
       setLoading(false);
     });
 

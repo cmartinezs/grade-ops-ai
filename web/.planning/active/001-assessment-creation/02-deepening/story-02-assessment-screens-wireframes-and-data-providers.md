@@ -66,7 +66,7 @@ This story delivers the wireframes, the navigable fake-data mockups, the DTOs/vi
 | 9 | [functional-mockup-draft-builder-screen](story-02-assessment-screens-wireframes-and-data-providers/task-09-functional-mockup-draft-builder-screen.md) | GENERATE-DOCUMENT | DONE | Maqueta funcional navegable (TSX, datos fake) — depends on task-14 |
 | 10 | [data-provider-draft-builder-screen](story-02-assessment-screens-wireframes-and-data-providers/task-10-data-provider-draft-builder-screen.md) | GENERATE-DOCUMENT | DONE | DTO + `loadAssessmentDraftBuilderPage` Screen Data Facade |
 | 11 | [mutations-draft-builder-screen](story-02-assessment-screens-wireframes-and-data-providers/task-11-mutations-draft-builder-screen.md) | GENERATE-DOCUMENT | DONE | `updateAssessmentDraft` + `regenerateAssessmentDraft` en `lib/api` |
-| 12 | [connect-real-api-draft-builder-screen](story-02-assessment-screens-wireframes-and-data-providers/task-12-connect-real-api-draft-builder-screen.md) | GENERATE-DOCUMENT | TODO | Draft Builder screen conectada a `api/` real |
+| 12 | [connect-real-api-draft-builder-screen](story-02-assessment-screens-wireframes-and-data-providers/task-12-connect-real-api-draft-builder-screen.md) | GENERATE-DOCUMENT | IN PROGRESS | Draft Builder screen conectada a `api/` real |
 | 13 | [end-to-end-connection](story-02-assessment-screens-wireframes-and-data-providers/task-13-end-to-end-connection.md) | GENERATE-DOCUMENT | TODO | Flujo completo verificado sin datos fake residuales |
 
 ---

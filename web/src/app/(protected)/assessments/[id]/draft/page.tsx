@@ -1,8 +1,9 @@
 "use client";
 
 import { use } from "react";
+import Link from "next/link";
 import { useShellConfig } from "@/components/shell/ShellContext";
-import { useAssessmentDraftBuilderPage } from "@/features/assessment-creation/hooks/useAssessmentDraftBuilderPage";
+import { useAssessmentDraftBuilderPage, NOT_FOUND_MESSAGE } from "@/features/assessment-creation/hooks/useAssessmentDraftBuilderPage";
 import DraftEditorSection from "@/features/assessment-creation/components/DraftEditorSection";
 import RegenerateSection from "@/features/assessment-creation/components/RegenerateSection";
 import VersionHistorySection from "@/features/assessment-creation/components/VersionHistorySection";
@@ -23,6 +24,34 @@ export default function DraftBuilderPage({ params }: DraftBuilderPageProps) {
 
   if (page.status === "loading") {
     return <p role="status">Cargando…</p>;
+  }
+
+  if (page.status === "not-found") {
+    return (
+      <div style={{ maxWidth: "var(--content-max)", textAlign: "center", padding: "48px 16px" }}>
+        <p role="alert" style={{ fontSize: "var(--text-lg)", color: "var(--text-strong)", margin: "0 0 16px" }}>
+          {NOT_FOUND_MESSAGE}
+        </p>
+        <Link
+          href="/assessments"
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            justifyContent: "center",
+            height: 40,
+            padding: "0 16px",
+            borderRadius: "var(--radius-md)",
+            background: "var(--brand)",
+            color: "#fff",
+            fontFamily: "var(--font-sans)",
+            fontWeight: 500,
+            textDecoration: "none",
+          }}
+        >
+          Volver al listado
+        </Link>
+      </div>
+    );
   }
 
   if (page.status === "error") {
