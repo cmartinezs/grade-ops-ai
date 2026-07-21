@@ -24,6 +24,7 @@ docs/code-review-evidence/
 |-------|--------|--------------|
 | **001/story-02/task-09** | ✅ Complete | [Evidencia](./001-assessment-creation/story-02/task-09/) |
 | **001/story-02/task-10** | ✅ Complete | [Evidencia](./001-assessment-creation/story-02/task-10/) |
+| **001/story-02/task-11** | ✅ Complete | [Evidencia](./001-assessment-creation/story-02/task-11/) |
 
 ## Cómo Usar
 

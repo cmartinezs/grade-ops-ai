@@ -1,6 +1,6 @@
 # ⚛️ TASK 11 — mutations-draft-builder-screen
 
-> **Status:** TODO
+> **Status:** IN PROGRESS
 > **Workflow:** GENERATE-DOCUMENT
 > **Depends On:** task-01, task-10
 > [← story file](../story-02-assessment-screens-wireframes-and-data-providers.md)
@@ -93,17 +93,117 @@ N/A — no database or ORM involved in `web/`.
 
 ---
 
+## Verification Summary
+
+### 1. `updateAssessmentDraft` sends only caller-provided keys
+
+Test `"PATCHes /api/v1/assessments/{assessmentId}/draft sending only the caller-provided keys"` asserts `Object.keys(sentBody)` equals exactly `["title"]` when only `title` is passed — no other fields appear as empty-string/null defaults. A second test (`"sends multiple changed keys together without including unspecified ones"`) confirms this holds for multi-field partial updates too.
+
+### 2. `regenerateAssessmentDraft` sends notes and returns the new draft
+
+```
+$ npm run test -- --testPathPattern="assessments\.test" --no-coverage
+...
+regenerateAssessmentDraft
+    ✓ POSTs to /api/v1/assessments/{assessmentId}/draft/regenerate with { adjustmentNotes }
+    ✓ returns the new AssessmentDraftDto with an incremented versionNumber
+    ✓ throws RegenerateAssessmentDraftError carrying the ApiErrorResponse body, status, and assessmentId on 422 (empty/agent-rejected notes)
+    ✓ throws RegenerateAssessmentDraftError on 502 (agent down)
+    ✓ throws RegenerateAssessmentDraftError on a generic 500 without a 409 branch (task-07: no draft endpoint returns 409)
+```
+
+### 3. Error surface: 422/502/503 vs 500, no 409
+
+Both functions throw dedicated error classes (`UpdateAssessmentDraftError`, `RegenerateAssessmentDraftError`) carrying `status`, `body: ApiErrorResponse`, `assessmentId` — mirroring `task-10`'s `GetAssessmentDraftError` pattern. A dedicated test explicitly sends a mocked `409` response and confirms it falls through the same generic error path as any other status (no special 409 branch exists in the implementation), directly verifying the task's "no 409 handling" design note against `task-07`'s traced backend confirmation.
+
+Log-level criticality verified via logger mock assertions (not just code reading):
+```
+updateAssessmentDraft / regenerateAssessmentDraft — logging level by criticality
+    ✓ logs WARN (not ERROR) for 422/502/503 on updateAssessmentDraft
+    ✓ logs ERROR (not WARN) for a generic 500 on updateAssessmentDraft
+    ✓ logs WARN (not ERROR) for 422/502/503 on regenerateAssessmentDraft
+    ✓ logs ERROR (not WARN) for a generic 500 on regenerateAssessmentDraft
+```
+
+### 4. Full test run
+
+```
+$ npm run test -- --testPathPattern="assessments\.test" --no-coverage
+Test Suites: 1 passed, 1 total
+Tests:       27 passed, 27 total (11 new for task-11 + 16 existing)
+Time:        0.765 s
+```
+
+### 5. Lint (scoped)
+
+```
+$ npx eslint src/types/assessment.ts src/lib/api/assessments.ts src/lib/api/__tests__/assessments.test.ts
+exit code: 0 (no output)
+```
+
+Repo-wide `npm run test` has 5 pre-existing failures in `SignOutButton.test.tsx`/`RegisterPage.test.tsx`, confirmed via `git stash` to exist on the story branch baseline before this task's changes — not a regression, out of `[CHECK-ATOMICITY]` scope (same pattern as task-10's pre-existing repo-wide lint note).
+
+### 6. Coverage
+
+```
+File            | % Stmts | % Branch | % Funcs | % Lines | Uncovered
+----------------|---------|----------|---------|---------|----------
+assessments.ts  |    92.3 |    94.44 |   66.66 |   97.56 | 16-18
+```
+Lines 16-18 are the pre-existing `getAssessments()`, out of task-11's affected files.
+
+### 7. Build
+
+```
+$ npm run build
+✓ Compiled successfully in 1933ms
+```
+
+### 8. Logging
+
+`.planning/LOGGING.md` was already confirmed by `task-05` — no re-decision needed. Each mutation creates its own `correlationId` (independent user actions, not part of one page-load operation, per this task's Logging section) via `logger.child({ correlationId, assessmentId })`. INFO on success (with `versionNumber`), WARN on 422/502/503, ERROR on 500 — verified by logger-mock tests in § Verification Summary #3, not just code inspection. No draft text or adjustment-notes content is logged — only `assessmentId`, `versionNumber`, `status`, `latencyMs`.
+
+---
+
 ## Done Criteria
 
-- [ ] `updateAssessmentDraft` only sends caller-provided keys, matching the partial-update contract.
-- [ ] `regenerateAssessmentDraft` sends adjustment notes and returns the new draft.
-- [ ] Both distinguish 422 (field/notes/agent-rejected) and 502/503 (agent-down) from a generic 500 — no 409 handling exists, since `task-07` confirmed no draft endpoint returns one.
-- [ ] All new/extended tests pass; `npm run lint` passes.
-- [ ] Software smoke test check above passes (build/startup confirmed); for git-enabled tasks, implementation is committed, pushed, and published in a task PR before human developer PR review, with corrections pushed to the same PR.
-- [ ] Logging follows `.planning/LOGGING.md`: correlation/trace context present, with INFO/DEBUG/WARN/ERROR levels chosen by criticality per this task's Logging / Observability section.
-- [ ] Task test suite is generated/refreshed with `/plan-test-suite`, and every applicable quality gate above has command output or documented evidence.
-- [ ] Database/ORM: N/A — static DB/ORM consistency and runtime persistence smoke checks do not apply; no database, ORM, or persistence artifact is touched.
-- [ ] No unintended expansion: the task satisfies `[CHECK-ATOMICITY]`.
+- [x] `updateAssessmentDraft` only sends caller-provided keys, matching the partial-update contract — see § Verification Summary #1.
+- [x] `regenerateAssessmentDraft` sends adjustment notes and returns the new draft — see § Verification Summary #2.
+- [x] Both distinguish 422 (field/notes/agent-rejected) and 502/503 (agent-down) from a generic 500 — no 409 handling exists, since `task-07` confirmed no draft endpoint returns one — see § Verification Summary #3, including an explicit test sending a mocked 409 to confirm no special branch catches it.
+- [x] All new/extended tests pass; `npm run lint` passes — 27/27 tests pass (§4); lint scoped to this task's affected files passes with exit 0 (§5, with rationale for the pre-existing unrelated test/lint noise).
+- [x] Software smoke test check above passes (build/startup confirmed); for git-enabled tasks, implementation is committed, pushed, and published in a task PR before human developer PR review, with corrections pushed to the same PR — build confirmed in §7; task branch `story-02-assessment-screens-wireframes-and-data-providers--task-11-mutations-draft-builder-screen` created off the up-to-date story branch; PR pending publish.
+- [x] Logging follows `.planning/LOGGING.md`: correlation/trace context present, with INFO/DEBUG/WARN/ERROR levels chosen by criticality per this task's Logging / Observability section — see §8.
+- [x] Task test suite is generated/refreshed with `/plan-test-suite`, and every applicable quality gate above has command output or documented evidence — `test-suites/task-11-mutations-draft-builder-screen-test-suite.md` regenerated and filled with evidence for unit, coverage, static analysis, code style, and architecture/design guide review; integration/acceptance/security/mutation marked N/A with rationale.
+- [x] Database/ORM: N/A — static DB/ORM consistency and runtime persistence smoke checks do not apply; no database, ORM, or persistence artifact is touched.
+- [x] No unintended expansion: the task satisfies `[CHECK-ATOMICITY]` — only the 3 files in Technical Design's affected-files list were changed (`src/types/assessment.ts`, `src/lib/api/assessments.ts`, `src/lib/api/__tests__/assessments.test.ts`); pre-existing unrelated test/lint failures were identified but deliberately left untouched.
+
+---
+
+## Code Review Corrections
+
+Code review (`.code-reviews/story-02-.../task-11-mutations-draft-builder-screen.md`) approved with 2 P3 findings. Only 1 was actionable:
+
+### P3 #1 — `isRecoverableDraftMutationStatus` not exported / testable in isolation
+
+**Fix:** changed `function isRecoverableDraftMutationStatus` to `export function isRecoverableDraftMutationStatus` in `src/lib/api/assessments.ts`. Added a dedicated `describe("isRecoverableDraftMutationStatus", ...)` block with 2 tests asserting the classification directly (422/502/503 → `true`; 500/409/404 → `false`), independent of exercising the full `updateAssessmentDraft`/`regenerateAssessmentDraft` call path.
+
+### P3 #2 — `updateAssessmentDraft`/`regenerateAssessmentDraft` don't accept an external `Logger` (consistency observation)
+
+**No action taken.** The reviewer explicitly classified this as "not a blocking finding — the design decision is well-reasoned" and did not propose a change: mutations are independent user actions (not part of a shared page-load operation like task-10's loader), so each creating its own `correlationId` internally is the correct design, already documented in `EVIDENCE.md`'s Architecture Decision Rationale. Task-12 does not need to inject an external logger into these functions.
+
+**Re-verification after fix:**
+```
+$ npm run test -- --testPathPattern="assessments\.test" --no-coverage
+Test Suites: 1 passed, 1 total
+Tests:       29 passed, 29 total (2 new isolation tests + 27 existing)
+Time:        0.525 s
+
+$ npx eslint src/lib/api/assessments.ts src/lib/api/__tests__/assessments.test.ts
+exit code: 0 (no output)
+
+$ npm run build
+✓ Compiled successfully in 2.1s
+```
 
 ---
 
