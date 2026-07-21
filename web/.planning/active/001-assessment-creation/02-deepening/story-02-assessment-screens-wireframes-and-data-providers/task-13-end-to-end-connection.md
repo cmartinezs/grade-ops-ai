@@ -1,6 +1,6 @@
 # ⚛️ TASK 13 — end-to-end-connection
 
-> **Status:** IN PROGRESS
+> **Status:** DONE
 > **Workflow:** GENERATE-DOCUMENT
 > **Depends On:** task-06, task-12
 > [← story file](../story-02-assessment-screens-wireframes-and-data-providers.md)
