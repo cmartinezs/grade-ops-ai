@@ -1,0 +1,45 @@
+
+> grade-ops-web@0.1.0 build
+> next build
+
+   ▲ Next.js 15.5.19
+   - Environments: .env.local
+
+   Creating an optimized production build ...
+ ✓ Compiled successfully in 2.1s
+   Skipping linting
+   Checking validity of types ...
+   Collecting page data ...
+   Generating static pages (0/16) ...
+   Generating static pages (4/16) 
+   Generating static pages (8/16) 
+   Generating static pages (12/16) 
+ ✓ Generating static pages (16/16)
+   Finalizing page optimization ...
+   Collecting build traces ...
+
+Route (app)                                 Size  First Load JS
+┌ ○ /                                      123 B         103 kB
+├ ○ /_not-found                            994 B         103 kB
+├ ○ /assessments                         1.06 kB         156 kB
+├ ƒ /assessments/[id]/draft              4.14 kB         176 kB
+├ ○ /assessments/new                     1.57 kB         178 kB
+├ ○ /bank                                1.05 kB         156 kB
+├ ○ /dashboard                           1.71 kB         161 kB
+├ ○ /forgot-password                     2.83 kB         175 kB
+├ ○ /icon.svg                                0 B            0 B
+├ ○ /login                               6.73 kB         179 kB
+├ ○ /register                            3.48 kB         175 kB
+├ ○ /reports                             1.07 kB         156 kB
+├ ○ /reset-password                      3.44 kB         175 kB
+├ ○ /students                            1.07 kB         156 kB
+└ ○ /verify-email                        1.39 kB         140 kB
++ First Load JS shared by all             102 kB
+  ├ chunks/255-98a0bdaa30757bda.js       46.2 kB
+  ├ chunks/4bd1b696-c023c6e3521b1417.js  54.2 kB
+  └ other shared chunks (total)          1.93 kB
+
+
+○  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand
+

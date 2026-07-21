@@ -1,0 +1,14 @@
+
+> grade-ops-web@0.1.0 test
+> jest --passWithNoTests --testPathPattern=assessments|loadAssessmentDraftBuilderPage --no-coverage
+
+PASS src/app/%28protected%29/assessments/%5Bid%5D/draft/page.integration.test.tsx
+PASS src/app/(protected)/assessments/new/__tests__/NewAssessmentPage.test.tsx
+PASS src/features/assessment-creation/loaders/__tests__/loadAssessmentDraftBuilderPage.test.ts
+PASS src/lib/api/__tests__/assessments.test.ts
+
+Test Suites: 4 passed, 4 total
+Tests:       29 passed, 29 total
+Snapshots:   0 total
+Time:        1.207 s
+Ran all test suites matching /assessments|loadAssessmentDraftBuilderPage/i.
