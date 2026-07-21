@@ -8,6 +8,7 @@ import type {
   CreateAssessmentBriefRequestDto,
   CreateAssessmentBriefResponseDto,
   FieldErrorResponse,
+  UpdateAssessmentDraftRequestDto,
 } from "@/types/assessment";
 import type { Logger } from "pino";
 
@@ -57,6 +58,28 @@ export class GetAssessmentDraftVersionsError extends Error {
   ) {
     super(`getAssessmentDraftVersions failed with status ${status} for assessment ${assessmentId}`);
     this.name = "GetAssessmentDraftVersionsError";
+  }
+}
+
+export class UpdateAssessmentDraftError extends Error {
+  constructor(
+    public status: number,
+    public body: ApiErrorResponse,
+    public assessmentId: string
+  ) {
+    super(`updateAssessmentDraft failed with status ${status} for assessment ${assessmentId}`);
+    this.name = "UpdateAssessmentDraftError";
+  }
+}
+
+export class RegenerateAssessmentDraftError extends Error {
+  constructor(
+    public status: number,
+    public body: ApiErrorResponse,
+    public assessmentId: string
+  ) {
+    super(`regenerateAssessmentDraft failed with status ${status} for assessment ${assessmentId}`);
+    this.name = "RegenerateAssessmentDraftError";
   }
 }
 
@@ -140,4 +163,75 @@ export async function getAssessmentDraftVersions(assessmentId: string, log: Logg
 
   log.debug({ dependency: "api/assessments/draft/versions", status: res.status, latencyMs, assessmentId }, "getAssessmentDraftVersions succeeded");
   return res.json();
+}
+
+// WARN for recoverable, teacher-facing errors (422 field validation, 502/503 agent down);
+// ERROR for everything else (500). No 409 handling — task-07 traced neither draft mutation
+// handler implements optimistic locking, so no draft endpoint can ever return one.
+function isRecoverableDraftMutationStatus(status: number): boolean {
+  return status === 422 || status === 502 || status === 503;
+}
+
+export async function updateAssessmentDraft(
+  assessmentId: string,
+  changes: UpdateAssessmentDraftRequestDto
+): Promise<AssessmentDraftDto> {
+  const correlationId = createCorrelationId();
+  const log = logger.child({ correlationId, assessmentId });
+  const startedAt = Date.now();
+  const res = await apiClient(`/api/v1/assessments/${assessmentId}/draft`, {
+    method: "PATCH",
+    body: JSON.stringify(changes),
+  });
+  const latencyMs = Date.now() - startedAt;
+
+  if (!res.ok) {
+    const body: ApiErrorResponse = await res.json().catch(() => ({ error: "UNKNOWN", message: null }));
+    const context = { dependency: "api/assessments/draft", method: "PATCH", status: res.status, latencyMs, assessmentId };
+    if (isRecoverableDraftMutationStatus(res.status)) {
+      log.warn(context, "updateAssessmentDraft failed");
+    } else {
+      log.error(context, "updateAssessmentDraft failed");
+    }
+    throw new UpdateAssessmentDraftError(res.status, body, assessmentId);
+  }
+
+  const data: AssessmentDraftDto = await res.json();
+  log.info(
+    { dependency: "api/assessments/draft", method: "PATCH", status: res.status, latencyMs, assessmentId, versionNumber: data.versionNumber },
+    "updateAssessmentDraft succeeded"
+  );
+  return data;
+}
+
+export async function regenerateAssessmentDraft(
+  assessmentId: string,
+  adjustmentNotes: string
+): Promise<AssessmentDraftDto> {
+  const correlationId = createCorrelationId();
+  const log = logger.child({ correlationId, assessmentId });
+  const startedAt = Date.now();
+  const res = await apiClient(`/api/v1/assessments/${assessmentId}/draft/regenerate`, {
+    method: "POST",
+    body: JSON.stringify({ adjustmentNotes }),
+  });
+  const latencyMs = Date.now() - startedAt;
+
+  if (!res.ok) {
+    const body: ApiErrorResponse = await res.json().catch(() => ({ error: "UNKNOWN", message: null }));
+    const context = { dependency: "api/assessments/draft/regenerate", status: res.status, latencyMs, assessmentId };
+    if (isRecoverableDraftMutationStatus(res.status)) {
+      log.warn(context, "regenerateAssessmentDraft failed");
+    } else {
+      log.error(context, "regenerateAssessmentDraft failed");
+    }
+    throw new RegenerateAssessmentDraftError(res.status, body, assessmentId);
+  }
+
+  const data: AssessmentDraftDto = await res.json();
+  log.info(
+    { dependency: "api/assessments/draft/regenerate", status: res.status, latencyMs, assessmentId, versionNumber: data.versionNumber },
+    "regenerateAssessmentDraft succeeded"
+  );
+  return data;
 }
