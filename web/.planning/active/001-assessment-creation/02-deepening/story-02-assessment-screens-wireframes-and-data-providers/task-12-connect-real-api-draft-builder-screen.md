@@ -1,6 +1,6 @@
 # ⚛️ TASK 12 — connect-real-api-draft-builder-screen
 
-> **Status:** IN PROGRESS
+> **Status:** DONE
 > **Workflow:** GENERATE-DOCUMENT
 > **Depends On:** task-09, task-10, task-11
 > [← story file](../story-02-assessment-screens-wireframes-and-data-providers.md)
