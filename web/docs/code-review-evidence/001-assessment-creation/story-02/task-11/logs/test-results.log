@@ -1,0 +1,46 @@
+
+> grade-ops-web@0.1.0 test
+> jest --passWithNoTests --testPathPattern=assessments\.test --no-coverage
+
+PASS src/lib/api/__tests__/assessments.test.ts
+  createAssessmentBrief
+    ✓ sends the exact CreateAssessmentBriefRequestDto shape to POST /api/v1/assessments and parses {assessmentId} (2 ms)
+    ✓ throws CreateAssessmentBriefError carrying the List<FieldErrorResponse> body on 422 (1 ms)
+  generateAssessmentDraft
+    ✓ posts to /api/v1/assessments/{assessmentId}/draft with the given assessmentId (1 ms)
+    ✓ throws GenerateAssessmentDraftError carrying the ApiErrorResponse body and assessmentId on failure
+  submitAssessmentBrief
+    ✓ calls createAssessmentBrief then generateAssessmentDraft with the returned assessmentId, and returns it (1 ms)
+    ✓ surfaces a distinguishable GenerateAssessmentDraftError (carrying assessmentId) when draft generation fails after brief creation succeeds
+    ✓ surfaces a CreateAssessmentBriefError (not GenerateAssessmentDraftError) when brief creation itself fails (1 ms)
+  getAssessmentDraft
+    ✓ fetches from GET /api/v1/assessments/{assessmentId}/draft and returns AssessmentDraftDto
+    ✓ throws GetAssessmentDraftError carrying the ApiErrorResponse body, status, and assessmentId on failure (1 ms)
+  getAssessmentDraftVersions
+    ✓ fetches from GET /api/v1/assessments/{assessmentId}/draft/versions and returns AssessmentDraftDto[] (1 ms)
+    ✓ throws GetAssessmentDraftVersionsError carrying the ApiErrorResponse body, status, and assessmentId on failure
+    ✓ returns an empty array when no versions exist
+  updateAssessmentDraft
+    ✓ PATCHes /api/v1/assessments/{assessmentId}/draft sending only the caller-provided keys (1 ms)
+    ✓ sends multiple changed keys together without including unspecified ones
+    ✓ returns the updated AssessmentDraftDto on success (1 ms)
+    ✓ throws UpdateAssessmentDraftError carrying the ApiErrorResponse body, status, and assessmentId on 422
+    ✓ throws UpdateAssessmentDraftError on 502/503 (agent down) distinctly logged from 500
+    ✓ does not throw a 409 error — no draft endpoint returns one (task-07) (1 ms)
+  regenerateAssessmentDraft
+    ✓ POSTs to /api/v1/assessments/{assessmentId}/draft/regenerate with { adjustmentNotes }
+    ✓ returns the new AssessmentDraftDto with an incremented versionNumber
+    ✓ throws RegenerateAssessmentDraftError carrying the ApiErrorResponse body, status, and assessmentId on 422 (empty/agent-rejected notes) (1 ms)
+    ✓ throws RegenerateAssessmentDraftError on 502 (agent down)
+    ✓ throws RegenerateAssessmentDraftError on a generic 500 without a 409 branch (task-07: no draft endpoint returns 409)
+  updateAssessmentDraft / regenerateAssessmentDraft — logging level by criticality
+    ✓ logs WARN (not ERROR) for 422/502/503 on updateAssessmentDraft (1 ms)
+    ✓ logs ERROR (not WARN) for a generic 500 on updateAssessmentDraft
+    ✓ logs WARN (not ERROR) for 422/502/503 on regenerateAssessmentDraft
+    ✓ logs ERROR (not WARN) for a generic 500 on regenerateAssessmentDraft (1 ms)
+
+Test Suites: 1 passed, 1 total
+Tests:       27 passed, 27 total
+Snapshots:   0 total
+Time:        0.469 s, estimated 1 s
+Ran all test suites matching /assessments\.test/i.
