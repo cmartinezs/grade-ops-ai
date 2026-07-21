@@ -1,6 +1,6 @@
 # ⚛️ TASK 11 — mutations-draft-builder-screen
 
-> **Status:** IN PROGRESS
+> **Status:** DONE
 > **Workflow:** GENERATE-DOCUMENT
 > **Depends On:** task-01, task-10
 > [← story file](../story-02-assessment-screens-wireframes-and-data-providers.md)
