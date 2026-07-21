@@ -170,7 +170,33 @@ $ npm run dev &
 ✓ Compiled / in 1255ms
 GET / 307 in 1577ms   ← expected auth redirect, not an error
 ```
-Real-`api/` connectivity smoke (Implementation Step's "with `api/` running locally") was **not attempted**: no local Postgres/Docker available in this environment, and — per `task-09`'s own already-documented finding — a full authenticated manual browser walkthrough isn't feasible here either. The 12 integration tests exercise the identical call path (hook → loader → mutations → error translation → refetch) with only the `apiClient`/`fetch` boundary mocked, matching the rigor `task-09` established as this environment's compensating strategy. Documented as a known gap, not silently skipped.
+**Real-`api/` connectivity smoke — re-attempted with Docker (unsandboxed) and completed as far as this environment allows:**
+
+Started `api/`'s real local stack: `docker compose up -d` (Postgres 16, `api/compose.yml`) + `./mvnw spring-boot:run -Dspring-boot.run.profiles=local` against it, using a syntactically-valid-but-fake service-account JSON for `firebase.credentials-path` (a real Firebase project isn't available in this environment, but `FirebaseConfig`'s `GoogleCredentials.fromStream(...)` only needs to *parse* a well-formed key at boot — it doesn't make a network call until a token is actually verified).
+
+```
+Started GradeOpsApiApplication in 3.709 seconds
+Database: jdbc:postgresql://localhost:5432/gradeops (PostgreSQL 16.14)
+Successfully validated 12 migrations
+Schema "public" is up to date. No migration necessary.
+Tomcat started on port 8080
+```
+
+Verified against the real running server (real Postgres, real Spring Security filter chain, real `AssessmentController` routing):
+
+| Request | Result | Confirms |
+|---|---|---|
+| `GET .../draft` (no token) | `401` | `/api/v1/assessments/**` correctly requires auth |
+| `GET .../draft` (garbage `Bearer` token) | `401`, no stack trace in logs | `FirebaseTokenFilter`'s catch block handles a malformed token gracefully, not a 500 |
+| `GET /api/v1/assessments` (no token) | `401` | Same enforcement on the list endpoint |
+| `PATCH .../draft` (no token, invalid body) | `401` (auth checked before body validation) | Security filter runs before controller/bean-validation |
+| `POST /api/v1/auth/register` (no idToken) | `422 [{"field":"idToken","message":"must not be blank"}]` | Clean validation error, not a crash — and confirms registration itself requires a **client-side-issued** Firebase ID token, so there is genuinely no path to mint a real authenticated session without an actual Firebase project in this environment |
+
+**Ceiling reached:** exercising the actual authenticated happy path (`GetCurrentDraftHandler`/`UpdateAssessmentDraftHandler`/`RegenerateAssessmentDraftHandler` executing against real rows) requires a Firebase ID token signed by a real Firebase project — confirmed at the infrastructure level (`FirebaseAuth.verifyIdToken()` needs Google's public certs for a *real* project, and even registration needs a client-issued token first). This is the same category of limitation `task-09` already documented for authenticated browser walkthroughs, now confirmed to extend to server-side smoke testing too — not a gap specific to this task's implementation.
+
+**What this adds beyond the mocked integration tests:** real Postgres connectivity, real Flyway schema validation (12 migrations, matches what `task-01`–`task-11` produced), real Spring Security filter chain behavior, and confirmation that unauthenticated/malformed-token requests fail cleanly (401, not 500) — none of which the jsdom-mocked integration tests could verify, since they never touch a real HTTP server or database.
+
+Environment cleaned up after verification: process killed, `docker compose down` (container + network removed). No changes committed from this exploration — `application-local.yml` is git-ignored (`api/.gitignore:57`).
 
 ### 10. Incidental fix — misplaced test file directory
 
@@ -189,7 +215,7 @@ Reuses the `task-05`/`task-10`/`task-11` Pino decision — no re-decision. `load
 - [x] 404/422/500 (plus 502/503 agent errors) each show a distinct, translated message — no 409 case, since none exists for these endpoints (`task-07`/`task-08`) — see §5's full mapping table with test references; confirmed via grep that no 409 branch exists anywhere in the implementation.
 - [x] No fake/mocked dataset remains — see §3.
 - [x] All tests pass; `npm run lint` passes — see §§6, 8.
-- [x] Software smoke test check above passes (build/startup/connectivity confirmed against a real local `api/`); for git-enabled tasks, implementation is committed, pushed, and published in a task PR before human developer PR review, with corrections pushed to the same PR — build/dev-server smoke confirmed in §9; real-`api/` connectivity explicitly documented as not attempted with rationale (§9); task branch created off the up-to-date story branch, PR pending publish.
+- [x] Software smoke test check above passes (build/startup/connectivity confirmed against a real local `api/`); for git-enabled tasks, implementation is committed, pushed, and published in a task PR before human developer PR review, with corrections pushed to the same PR — build/dev-server smoke confirmed in §9; real `api/` + real Postgres (via Docker) started and connectivity confirmed (§9) — Flyway validated 12 migrations, security filter chain correctly rejects unauthenticated/malformed-token requests with clean 401s; the authenticated happy path remains out of reach without a real Firebase project (confirmed at the infrastructure level, not assumed), consistent with `task-09`'s documented limitation; task branch created off the up-to-date story branch, PR pending publish.
 - [x] Logging follows `.planning/LOGGING.md`: correlation/trace context present, with INFO/DEBUG/WARN/ERROR levels chosen by criticality per this task's Logging / Observability section — see §11.
 - [x] Task test suite is generated/refreshed with `/plan-test-suite`, and every applicable quality gate above has command output or documented evidence — `test-suites/task-12-connect-real-api-draft-builder-screen-test-suite.md` regenerated and filled; integration/smoke/unit/coverage/static-analysis/architecture-review all have evidence; acceptance/e2e and security/mutation marked N/A with rationale.
 - [x] Database/ORM: N/A — static DB/ORM consistency and runtime persistence smoke checks do not apply; no database, ORM, or persistence artifact is touched.

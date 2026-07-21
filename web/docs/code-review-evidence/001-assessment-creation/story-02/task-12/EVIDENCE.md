@@ -185,6 +185,39 @@ Real-`api/` connectivity smoke: **not attempted** — no local Postgres/Docker i
 
 ---
 
+## Real `api/` Smoke Test (Docker, unsandboxed)
+
+Re-attempted the real backend connectivity smoke gate with `dangerouslyDisableSandbox` to get past this environment's default docker-socket restriction:
+
+```bash
+cd api/ && docker compose up -d          # Postgres 16, api/compose.yml
+./mvnw spring-boot:run -Dspring-boot.run.profiles=local
+```
+Used a syntactically-valid-but-fake service-account JSON for `firebase.credentials-path` — `FirebaseConfig`'s `GoogleCredentials.fromStream(...)` only parses the key locally at boot, no network call until a token is actually verified.
+
+```
+Started GradeOpsApiApplication in 3.709 seconds
+Database: jdbc:postgresql://localhost:5432/gradeops (PostgreSQL 16.14)
+Successfully validated 12 migrations — Schema "public" is up to date
+Tomcat started on port 8080
+```
+
+| Request | Result | Confirms |
+|---|---|---|
+| `GET .../draft` (no token) | `401` | Auth correctly required |
+| `GET .../draft` (garbage token) | `401`, no stack trace | `FirebaseTokenFilter` fails gracefully, not 500 |
+| `GET /api/v1/assessments` (no token) | `401` | Same enforcement on list endpoint |
+| `PATCH .../draft` (no token) | `401` before body validation | Security runs before controller |
+| `POST /api/v1/auth/register` (no `idToken`) | `422` clean validation error | Confirms registration itself needs a **client-issued** Firebase token — no path to a real session without an actual Firebase project |
+
+**Ceiling reached, confirmed at the infrastructure level, not assumed:** the authenticated happy path (`GetCurrentDraftHandler`/`UpdateAssessmentDraftHandler`/`RegenerateAssessmentDraftHandler` against real rows) needs a Firebase ID token signed by a real project. Same category of limitation `task-09` already documented for manual browser walkthroughs, now confirmed to extend to server-side smoke testing.
+
+**Value added over the mocked integration tests:** real Postgres connectivity, real Flyway schema validation, real Spring Security filter chain behavior, confirmed clean (non-crashing) handling of unauthenticated/malformed-token requests — none of which jsdom-mocked tests can verify.
+
+Environment torn down after verification: process killed, `docker compose down` (container + network removed, nothing left running). No repo changes from this exploration — `application-local.yml` is git-ignored.
+
+---
+
 ## Supporting Evidence Files
 - **`test-results.log`** — full output of the test command above
 - **`build-results.log`** — full output of `npm run build`

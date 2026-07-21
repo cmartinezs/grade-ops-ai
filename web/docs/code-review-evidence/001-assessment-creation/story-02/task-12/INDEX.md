@@ -68,7 +68,7 @@ grep -n "409" src/features/assessment-creation/hooks/useAssessmentDraftBuilderPa
 | **No fake dataset** | ✅ VERIFIED | grep confirma 0 matches |
 | **No 409 handling** | ✅ VERIFIED | grep confirma 0 matches en ningún archivo |
 | **Smoke (build/dev)** | ✅ PASS | `npm run dev` arranca limpio, `GET / → 307` (redirect esperado) |
-| **Smoke (api/ real)** | ⚠️ N/A documentado | Sin Postgres/Docker local — misma limitación que task-09 ya documentó |
+| **Smoke (api/ real)** | ✅ PASS (hasta el límite real) | Docker Postgres + Spring Boot real arrancados. Flyway validó 12 migraciones. Seguridad rechaza limpiamente requests sin token / con token inválido (401, sin crash). El happy path autenticado requiere un proyecto Firebase real — confirmado a nivel de infraestructura (el registro mismo requiere un idToken ya emitido client-side), no asumido. |
 
 ---
 
