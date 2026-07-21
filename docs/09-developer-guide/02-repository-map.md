@@ -11,197 +11,52 @@ GradeOps AI is organized as a multi-repo workspace. Each subdirectory under the 
 **Spring Boot version:** 4.1.0
 **Key dependencies:** Spring Web MVC, Spring Data JPA, Spring Security, Flyway, PostgreSQL driver, Firebase Admin SDK 9.3, Logstash Logback Encoder
 
-### Source tree
+### Current source tree
 
 ```
 api/src/main/java/cl/gradeops/ai/api/
 ├── GradeOpsApiApplication.java
-├── config/
-│   └── FirebaseConfig.java
-├── security/
-│   ├── SecurityConfig.java
-│   ├── InternalAuthFilter.java
-│   ├── FirebaseTokenFilter.java
-│   ├── EmailVerifiedFilter.java
-│   ├── AuthenticatedTeacher.java
-│   └── OwnershipVerifier.java
+├── agentclient/             — Internal client used by api/ to call agents/
 ├── auth/
-│   ├── AuthController.java
-│   ├── AuthService.java
-│   ├── RegisterRequest.java
-│   ├── RegisterResponse.java
-│   └── InvalidTokenException.java
-├── internal/teacher/
-│   ├── InternalTeacherController.java
-│   ├── ProvisionTeacherService.java
-│   ├── ProvisionTeacherRequest.java
-│   ├── ProvisionTeacherResponse.java
-│   ├── PilotFlagService.java
-│   ├── PilotFlagRequest.java
-│   └── PilotFlagResponse.java
+│   ├── application/         — Register, sign-out, password reset use cases and ports
+│   ├── domain/              — Auth provider/value objects and reset-code domain
+│   └── infrastructure/      — Web controllers, Firebase adapter, email adapter, persistence
 ├── assessment/
-│   ├── AssessmentController.java
-│   ├── AssessmentService.java
-│   ├── AssessmentStatus.java
-│   └── AssessmentSummaryDto.java
-├── domain/teacher/
-│   ├── TeacherEntity.java
-│   └── TeacherRepository.java
-└── common/
-    ├── GlobalExceptionHandler.java
-    ├── ResourceNotFoundException.java
-    ├── DuplicateEmailException.java
-    └── InvalidTokenException.java   (defined in auth/, referenced here)
+│   ├── application/         — Brief/draft commands, ports, handlers, generation coordinator
+│   ├── domain/              — Assessment aggregate, brief, draft, status, execution log
+│   └── infrastructure/      — /api/v1 controller, persistence adapters, mappers, config
+├── teacher/
+│   ├── application/         — Provision teacher and pilot flags use cases
+│   ├── domain/              — Teacher aggregate and exceptions
+│   └── infrastructure/      — Internal web controller and persistence adapter
+└── shared/
+    ├── application/         — Shared application exceptions and ownership verifier
+    ├── domain/              — Aggregate root, domain events, domain exceptions
+    └── infrastructure/      — Firebase/security config, filters, storage/email config, errors
 ```
 
-### File-by-file reference
+### Implemented API slices
 
-#### Entry point
+| Slice | Implemented surface |
+| --- | --- |
+| Auth | `/api/v1/auth/register`, `/api/v1/auth/sign-out`, forgot/reset password flow. |
+| Internal teacher ops | `/internal/teachers`, `/internal/teachers/{uid}/flags`, protected by `X-Internal-Key`. |
+| Assessment draft | `/api/v1/assessments`, `/api/v1/assessments/{id}/draft`, regenerate/update/current/version endpoints. |
+| Agent integration | `agentclient` calls `agents/` and persists `AgentExecutionLog` through assessment application ports. |
 
-**`GradeOpsApiApplication.java`**
-Standard `@SpringBootApplication` entry point. No custom configuration.
-
-#### `config/`
-
-**`FirebaseConfig.java`**
-Declares two Spring beans: `FirebaseApp` and `FirebaseAuth`. Both are annotated with `@ConditionalOnMissingBean` so test configurations can substitute mocks without overriding the production beans.
-
-Credentials are loaded via `GoogleCredentials.getApplicationDefault()`:
-- Local dev: reads the path in `GOOGLE_APPLICATION_CREDENTIALS` env var (points to a service account JSON file)
-- Cloud Run: uses the Cloud Run service account via the GCP metadata server (no env var needed, provided the SA has `roles/firebaseauth.admin`)
-
-#### `security/`
-
-**`SecurityConfig.java`**
-Defines the Spring Security filter chain. Key settings:
-- CSRF disabled (stateless REST API, no cookie sessions)
-- Session creation policy: `STATELESS`
-- Authentication entry point: returns HTTP 401 (not a redirect)
-- Permits `/internal/**`, `/auth/register`, and `/auth/verify/resend` without authentication
-- All other requests require authentication
-- Filter insertion order: `InternalAuthFilter` and `FirebaseTokenFilter` are inserted before `UsernamePasswordAuthenticationFilter`; `EmailVerifiedFilter` runs after `FirebaseTokenFilter`
-
-**`InternalAuthFilter.java`**
-`OncePerRequestFilter` that guards paths starting with `/internal/`. Reads the `X-Internal-Key` request header and compares it to the value of `app.internal.secret` (from `application.yml`). Returns HTTP 403 with `{"error":"FORBIDDEN"}` if the header is absent or wrong. Skips itself for all non-internal paths via `shouldNotFilter()`.
-
-**`FirebaseTokenFilter.java`**
-`OncePerRequestFilter` that verifies Firebase ID tokens. Reads `Authorization: Bearer <token>`. Calls `firebaseAuth.verifyIdToken(token, true)` with `checkRevoked=true`. On success:
-- Sets `request.setAttribute("firebaseToken", decodedToken)` so downstream filters can read claims without re-verifying
-- Builds an `AuthenticatedTeacher` principal and sets it in `SecurityContextHolder`
-
-On failure, logs the error at DEBUG level and clears the security context. Does not reject the request — that is left to Spring Security's access rules.
-
-**`EmailVerifiedFilter.java`**
-`OncePerRequestFilter` that runs after `FirebaseTokenFilter`. Reads the `"firebaseToken"` request attribute set by the preceding filter. If absent (unauthenticated request), the filter passes through. If present and the token's `email_verified` claim is `false`, returns HTTP 401 with `{"error":"EMAIL_NOT_VERIFIED"}`. Whitelisted paths (`/auth/register`, `/auth/verify/resend`) always pass through regardless of verification status.
-
-**`AuthenticatedTeacher.java`**
-A Java record used as the Spring Security principal:
-```java
-public record AuthenticatedTeacher(String uid, String email) {}
-```
-Accessed in controllers and services via:
-```java
-AuthenticatedTeacher teacher = (AuthenticatedTeacher)
-    SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-```
-
-**`OwnershipVerifier.java`**
-Spring component injected into service classes that need to verify resource ownership. The `verify(ownerUid, authenticatedUid, resourceId)` method throws `ResourceNotFoundException` (HTTP 404) if the UIDs differ. Throwing 404 rather than 403 is intentional: it does not reveal to an attacker that a resource exists for a different teacher. A `WARN` log is also emitted and captured by Cloud Logging via the JSON appender.
-
-#### `auth/`
-
-**`AuthController.java`**
-REST controller at `/auth`. Two endpoints:
-- `POST /auth/register` — public; delegates to `AuthService.register()`
-- `POST /auth/sign-out` — authenticated; reads the principal from `SecurityContextHolder`, delegates to `AuthService.signOut(uid)`
-
-**`AuthService.java`**
-Business logic for auth operations:
-- `register(RegisterRequest)`: verifies the ID token from the request body (not from the Authorization header, because the client sends the token explicitly here), then creates or retrieves a `TeacherEntity`. Idempotent: calling register twice for the same Firebase UID returns the existing UID without error.
-- `signOut(uid)`: calls `firebaseAuth.revokeRefreshTokens(uid)`. This invalidates all refresh tokens for the user; existing ID tokens remain valid for up to 1 hour unless `checkRevoked=true` is used (which it is, in `FirebaseTokenFilter`).
-
-**`RegisterRequest.java`** — `record(String idToken, String name)`
-**`RegisterResponse.java`** — `record(String firebaseUid)`
-**`InvalidTokenException.java`** — runtime exception mapped to HTTP 401
-
-#### `internal/teacher/`
-
-**`InternalTeacherController.java`**
-REST controller for operator-only endpoints. Protected by `InternalAuthFilter` (the `X-Internal-Key` header), not by Firebase token auth.
-- `POST /internal/teachers` — provisions a new teacher (returns HTTP 201)
-- `PATCH /internal/teachers/{uid}/flags` — updates pilot flags on an existing teacher (returns HTTP 200)
-
-**`ProvisionTeacherService.java`**
-Creates a Firebase user and a `TeacherEntity` in the same transaction. Key behavior:
-- Creates the Firebase user with `emailVerified=true` (bypasses the normal email verification flow)
-- Does not set a password in the `CreateRequest`; instead calls `generatePasswordResetLink()` to return an invite link the operator can send to the teacher
-- If the DB save fails after Firebase user creation, compensates by deleting the Firebase user to avoid orphaned Firebase records
-- Throws `DuplicateEmailException` (HTTP 409) if `EMAIL_ALREADY_EXISTS` is returned by Firebase
-
-**`PilotFlagService.java`**
-Partial update of pilot-related fields on a `TeacherEntity`. All `PilotFlagRequest` fields are optional — null fields are ignored. Always sets `flag_set_at` and `updated_at` to the current timestamp.
-
-**`ProvisionTeacherRequest.java`** — `record(String name, String email)`
-**`ProvisionTeacherResponse.java`** — `record(String firebaseUid, String inviteLink)`
-**`PilotFlagRequest.java`** — `record(String planType, Boolean relatedParty, String offerDetails, String evidenceLink, String setBy)`
-**`PilotFlagResponse.java`** — `record(String firebaseUid, String planType, boolean relatedParty, String flagSetAt)`
-
-#### `assessment/`
-
-**`AssessmentController.java`**
-`GET /assessments` — retrieves the principal from `SecurityContextHolder` and passes the teacher UID to `AssessmentService.listForTeacher()`. The scoping happens at the service level so no teacher can ever see another teacher's assessments, even if the controller were accidentally called without proper auth.
-
-**`AssessmentService.java`**
-Currently returns an empty list. Contains a `TODO Epic 02` comment marking where the repository query will be added when the assessment table exists.
-
-**`AssessmentStatus.java`** — enum: `DRAFT`, `OPEN`, `GRADING`, `CLOSED`
-
-**`AssessmentSummaryDto.java`**
-```java
-record AssessmentSummaryDto(
-    String id,
-    String title,
-    AssessmentStatus status,
-    int submissionCount,
-    int pendingApprovals,
-    String reportLink  // nullable
-)
-```
-
-#### `domain/teacher/`
-
-**`TeacherEntity.java`**
-JPA entity mapped to the `teacher` table. Primary key is `firebase_uid` (a Firebase UID, not a database-generated ID). Includes pilot flag columns added in V2 migration. The constructor sets `created_at` and `updated_at` to the current timestamp at construction time.
-
-**`TeacherRepository.java`**
-`JpaRepository<TeacherEntity, String>` with additional queries:
-- `findByEmail(String)` — look up by email
-- `existsByEmail(String)` — check for duplicate email
-- `findByPlanType(String)` — operator reporting query
-- `findByRelatedParty(boolean)` — operator reporting query
-
-#### `common/`
-
-**`GlobalExceptionHandler.java`**
-`@RestControllerAdvice` handling three exception types:
-- `DuplicateEmailException` → HTTP 409, body `{"error":"EMAIL_ALREADY_EXISTS","email":"..."}`
-- `ResourceNotFoundException` → HTTP 404, body `{"error":"NOT_FOUND","resource":"..."}`
-- `InvalidTokenException` → HTTP 401, body `{"error":"INVALID_TOKEN"}`
-
-**`ResourceNotFoundException.java`** — runtime exception; carries `resourceId` for the response body
-**`DuplicateEmailException.java`** — runtime exception; carries `email` for the response body
+All protected endpoints derive the teacher from Firebase auth and enforce ownership in application/service boundaries. Cross-teacher access should return 404 rather than exposing resource existence.
 
 ### Resources
 
 ```
 api/src/main/resources/
 ├── application.yml                    — Default config (env var overrides)
-├── application-local.yml              — Local dev overrides (gitignored)
+├── application-local.example.yml      — Template for local dev overrides
 ├── logback-spring.xml                 — JSON structured logging (Cloud Logging compatible)
 └── db/migration/
-    ├── V1__create_teacher_table.sql   — teacher table with PK, email unique index
-    └── V2__add_pilot_flag_columns.sql — plan_type, related_party, offer_details,
-                                         evidence_link, flag_set_by, flag_set_at
+    ├── V1__create_teacher_table.sql
+    ├── ...
+    └── V12__add_agent_execution_logs.sql
 ```
 
 **`application.yml`** reads from environment variables with sensible local defaults:
@@ -339,7 +194,7 @@ Initializes the Firebase app as a singleton (guards against double-initializatio
 
 #### `lib/api/assessments.ts`
 
-Single function `getAssessments()` that calls `GET /api/assessments` via `apiClient` and returns `AssessmentSummaryDto[]`.
+Single function `getAssessments()` that calls `GET /api/v1/assessments` via `apiClient` and returns `AssessmentSummaryDto[]`.
 
 #### `types/assessment.ts`
 
@@ -367,73 +222,69 @@ Tests are co-located with components in `__tests__/` directories. The test runne
 
 ---
 
-## `agents/` — Spring Boot 4 / Spring AI (scaffolding)
+## `agents/` — Spring Boot 4 / Spring AI
 
-The agents service is scaffolded but contains no implemented agent logic yet. Implementation begins in Epic 03 (Rubric Agent) and continues through Epic 13.
+The agents service has a real Assessment Agent vertical slice. It exposes `POST /internal/agents/assessment`, loads the versioned prompt at `agents/src/main/resources/prompts/assessment-generation.st`, supports Gemini and Groq adapters, validates structured output, and returns an execution payload to `api/` for persistence.
 
-**Expected package root:** `cl.gradeops.ai.agents`
+**Package root:** `cl.gradeops.ai.agents`
 
-When implemented, the package structure will be:
+Current implemented structure:
 
 ```
 agents/src/main/java/cl/gradeops/ai/agents/
-├── open/
-│   ├── assessment/          — Assessment Agent (Command, Result, Service, Controller)
-│   ├── rubric/              — Rubric Agent
-│   ├── grading/             — Grading Agent
-│   ├── feedback/            — Feedback Agent
-│   ├── learninggap/         — Learning Gap Agent
-│   ├── recovery/            — Recovery Agent
-│   └── teacherreport/       — Teacher Report Agent
-├── closed/
-│   ├── questiongeneration/  — Question Generation Agent
-│   ├── distractorquality/   — Distractor Quality Agent
-│   ├── ambiguityreview/     — Ambiguity Review Agent
-│   ├── assessmentassembly/  — Assessment Assembly Agent
-│   └── itemanalytics/       — Item Analytics Agent
-├── ops/evidence/            — Ops Evidence Agent
-├── shared/
-│   ├── envelope/            — AgentCommand base structure
-│   ├── logging/             — AgentExecutionLog recording
-│   ├── output/              — Shared structured output base types
-│   └── cost/                — Token and cost estimation utilities
-└── provider/gemini/         — Spring AI Vertex AI configuration and adapters
+├── GradeOpsAgentsApplication.java
+├── assessment/
+│   ├── application/
+│   │   ├── command/         — AssessmentCommand
+│   │   ├── orchestrator/    — AssessmentAgentOrchestrator
+│   │   ├── port/            — GenerateAssessmentDraftUseCase and provider ports
+│   │   ├── result/          — AssessmentResult and AgentExecutionLogPayload
+│   │   └── usecase/         — GenerateAssessmentDraftHandler
+│   └── infrastructure/
+│       ├── adapter/in/web/  — POST /internal/agents/assessment
+│       ├── adapter/out/gemini/
+│       ├── adapter/out/groq/
+│       └── config/          — provider-specific ChatClient wiring
+└── shared/infrastructure/
+    ├── adapter/in/web/      — internal auth, correlation IDs, error response
+    └── config/              — dotenv and web config
 ```
 
 Prompt templates are stored in `agents/src/main/resources/prompts/` as versioned StringTemplate (`.st`) files. Prompts must never be inlined in Java code.
 
-Each agent package follows the same four-class pattern:
+Planned agents should follow the same boundary:
 
 | Class | Role |
 |-------|------|
 | `{Agent}Command` | Input envelope received from the API via `agentclient` |
 | `{Agent}Result` | Structured output returned to the API |
-| `{Agent}Service` | Orchestration: load prompt, build envelope, call Gemini, validate output, log execution |
-| `{Agent}Controller` | REST endpoint (`POST /agents/open/{name}`, etc.) |
+| `{Agent}Handler` or orchestrator | Load prompt, build envelope, select provider, validate output, estimate cost/log payload |
+| `{Agent}Controller` | Internal REST endpoint called only by `api/` |
 
 ---
 
-## `infra/` — Terraform (scaffolding)
+## `infra/` — Terraform
 
 Infrastructure as code for Google Cloud. The primary target is the `demo` environment.
 
 ```
 infra/terraform/
-├── modules/
-│   ├── cloud-run/       — Reusable Cloud Run service module
-│   ├── cloud-sql/       — PostgreSQL instance and database
-│   ├── cloud-storage/   — Storage buckets and lifecycle rules
-│   ├── secret-manager/  — Secret creation and IAM bindings
-│   └── iam/             — Service accounts and IAM roles
 └── environments/
-    ├── demo/
-    │   ├── main.tf               — Cloud Run services, SQL, Storage, IAM for demo
-    │   ├── variables.tf          — Input variables (project ID, region, image tags)
-    │   └── terraform.tfvars.example — Example values (do not commit actual .tfvars)
-    └── prod/
-        ├── main.tf
+    └── demo/
+        ├── artifact_registry.tf
+        ├── cloud_run.tf
+        ├── cloud_sql.tf
+        ├── firebase_admin_iam.tf
+        ├── firebase_app_hosting.tf
+        ├── firebase_web_app.tf
+        ├── groq.tf
+        ├── identity_platform.tf
+        ├── outputs.tf
+        ├── providers.tf
+        ├── service_accounts.tf
+        ├── smtp.tf
         ├── variables.tf
-        └── terraform.tfvars.example
+        └── workload_identity.tf
 ```
 
 **Google Cloud services provisioned:**
@@ -443,12 +294,12 @@ infra/terraform/
 | Cloud Run | `web`, `api`, and `agents` services |
 | Cloud SQL (PostgreSQL 15) | Primary database for the API |
 | Cloud Storage | Student submission files, report exports, evidence artifacts |
-| Secret Manager | `INTERNAL_API_SECRET`, DB password, Gemini API key |
+| Secret Manager | `INTERNAL_API_SECRET`, DB password, Groq/Gemini/provider keys, SMTP secrets |
 | Artifact Registry | Docker image storage for CI/CD |
 | IAM | Service accounts and role bindings for service-to-service auth |
 | Cloud Logging | Structured log output from all services |
 
-**Service-to-service authentication:** The API calls the agents service via Cloud Run's internal URL. Authentication uses OIDC tokens issued to the API's service account. The agents service is not publicly reachable — it accepts requests only from the API.
+**Service-to-service authentication:** The API calls the agents service through the `agentclient` module. In `demo`, use Cloud Run service-to-service auth/OIDC where provisioned; in local/beta, use the documented internal shared secret until OIDC is available.
 
 **Demo environment commands:**
 
@@ -466,14 +317,14 @@ No application code. The canonical source of truth for product strategy, archite
 
 ```
 docs/
-├── 00-project/     — Vision, pitch, roadmap, hackathon strategy
+├── 00-project/     — Vision, pitch, roadmap, cost model
 ├── 01-business/    — Business model, pricing, go-to-market
 ├── 02-product/     — Personas, MVP scope, user stories
 ├── 03-ai-agents/   — Agent roles, contracts, execution logs
 ├── 04-architecture/ — System design, data model, API design, security
 ├── 05-evidence/    — Usage, revenue, testimonials, agent log evidence
 ├── 06-ux/          — Screen inventory, interaction model
-├── 07-hackathon/   — Demo script, evidence checklist, submission narrative
+├── archive/        — Historical material no longer active
 ├── 08-user-guide/  — End-user documentation
 ├── 09-developer-guide/ — This guide
 ├── 99-decisions/   — Architecture decision records (ADR format)

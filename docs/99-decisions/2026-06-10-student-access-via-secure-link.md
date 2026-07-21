@@ -28,7 +28,7 @@ Specifically:
 - Real assessment operations require real student participation; teacher-loaded submissions alone are not sufficient for scalable pilots.
 - Secure links are the industry-standard pattern for account-free access (magic links, invitation tokens).
 - Avoids building a full student portal, student social features, or student authentication flow.
-- Consistent with the principle "avoid building a full LMS during the hackathon."
+- Consistent with the principle "avoid building a full LMS before the assessment workflow proves value."
 - Enables genuine graded submissions (not just teacher-simulated ones), which strengthens business evidence.
 
 ## Consequences

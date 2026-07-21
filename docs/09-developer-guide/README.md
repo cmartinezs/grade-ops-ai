@@ -1,6 +1,6 @@
 # Developer Guide
 
-This guide is for engineers working on the GradeOps AI codebase. It covers local environment setup, repository layout, the implemented API, and the security model. It assumes familiarity with Java/Spring Boot, React/Next.js, and PostgreSQL.
+This guide is for engineers working on the GradeOps AI codebase. It covers local environment setup, repository layout, the implemented API/agent slice, and the security model. It assumes familiarity with Java/Spring Boot, Spring AI, React/Next.js, and PostgreSQL.
 
 ---
 
@@ -31,7 +31,7 @@ Before starting, verify the following tools are installed:
 | Maven | Ships with project (use `./mvnw`) | `./mvnw --version` |
 | Node.js | 18 | `node -v` |
 | npm | 9 | `npm -v` |
-| PostgreSQL | 15 | `psql --version` |
+| Docker | 24 | `docker --version` |
 | Git | Any recent version | `git --version` |
 | Firebase project | Email/password sign-in enabled | Firebase console |
 
@@ -39,44 +39,49 @@ Before starting, verify the following tools are installed:
 
 ## Quick start (3 commands)
 
-These assume PostgreSQL is running with the `gradeops` database already created (see [01-local-setup.md](01-local-setup.md) for database creation steps):
+These assume the API local profile can start PostgreSQL through `api/compose.yml` and that Firebase local config is present (see [01-local-setup.md](01-local-setup.md)):
 
 ```bash
 # 1. Start the API
 cd api && ./mvnw spring-boot:run -Dspring.profiles.active=local
 
-# 2. Start the web app (separate terminal)
+# 2. Start the web app in a separate terminal
 cd web && npm install && npm run dev
 
 # 3. Verify the API is healthy
 curl http://localhost:8080/actuator/health
 ```
 
-The web app is then available at http://localhost:3000 and the API at http://localhost:8080.
+The web app is then available at http://localhost:3000 and the API at http://localhost:8080. Assessment draft generation also requires the agents service on http://localhost:8081.
 
 ---
 
 ## What is currently implemented
 
-### Epic 01 — Teacher Onboarding (implemented)
+### Implemented now
 
-The following is fully implemented and tested:
+The following is implemented and covered by local tests:
 
 - Teacher self-registration via Firebase email/password
+- Google sign-in provider support in the auth domain
 - Firebase ID token verification on every protected API request
 - Email verification enforcement (unverified users are blocked)
 - Teacher record persistence in PostgreSQL (`teacher` table)
+- Password reset code lifecycle and email adapter
 - Sign-out with server-side Firebase refresh token revocation
 - Operator provisioning of teacher accounts via internal API (bypasses email verification)
 - Pilot flag management on teacher records (plan type, related-party flag, evidence link)
-- Assessment list stub endpoint returning an empty array (wires to data in Epic 02)
-- Web: AuthGuard, login/register/verify-email pages, dashboard with empty state
+- Assessment aggregate, brief, draft versioning, and assessment list persistence
+- API `agentclient` integration with the internal agents service
+- Agents service Assessment Agent vertical slice at `POST /internal/agents/assessment`
+- Gemini and Groq provider adapters for assessment draft generation
+- `AgentExecutionLog` persistence for assessment draft agent calls
+- Web: AuthGuard, login/register/verify-email/forgot-password/reset-password pages, dashboard shell, and protected placeholder routes
 
-### Epics 02–13 (planned)
+### Planned next
 
-The following have documented designs but are not yet implemented:
+The following have documented designs but are not yet implemented end to end:
 
-- **Epic 02** — Assessment creation and management
 - **Epic 03** — AI rubric generation and approval
 - **Epic 04** — Student submission ingestion
 - **Epic 05** — AI grading suggestions and teacher review
@@ -89,7 +94,7 @@ The following have documented designs but are not yet implemented:
 - **Epic 12** — Closed assessment: assessment assembly
 - **Epic 13** — Item analytics and evidence dashboard
 
-See [`docs/04-architecture/api-design.md`](../04-architecture/api-design.md) for the planned endpoint contracts.
+Closed assessment user stories are P0 in the product cut, but the current code does not yet implement question bank, signed student links, deterministic attempt grading, or item analytics. See [`docs/04-architecture/api-design.md`](../04-architecture/api-design.md) for the planned endpoint contracts.
 
 ---
 

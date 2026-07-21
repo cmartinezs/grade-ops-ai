@@ -287,7 +287,7 @@ public FirebaseAuth firebaseAuth(FirebaseApp firebaseApp) {
 
 ## Session revocation on sign-out
 
-`POST /auth/sign-out` calls `firebaseAuth.revokeRefreshTokens(uid)`.
+`POST /api/v1/auth/sign-out` calls `firebaseAuth.revokeRefreshTokens(uid)`.
 
 **What this does:** Revokes all refresh tokens for the UID. Firebase stores a `tokensValidAfterTime` claim on the user record and updates it to the current time.
 

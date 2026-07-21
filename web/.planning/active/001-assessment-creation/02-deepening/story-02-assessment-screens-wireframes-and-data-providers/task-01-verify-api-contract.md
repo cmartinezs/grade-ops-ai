@@ -29,6 +29,21 @@ A confirmed, written record of the exact request/response shape for every `api/`
 
 ---
 
+## API / Agent / Web Contract Gate
+
+> Added to `develop` post-divergence (commit `e2703d5`, 2026-07-20); reconciled into this already-DONE task during story-02 closeout (2026-07-21) with real evidence, not left as the generic prescriptive text.
+
+| Gate | Required check | Task answer |
+|---|---|---|
+| API as orchestrator | Confirm `web/` calls only `api/` functional endpoints and no `agents/` URL/provider/prompt contract leaks into the screen plan | **Confirmed.** The 7-method exhaustive controller listing in § Verification Summary contains no `agents/` URL, provider name, model name, or prompt reference anywhere — every endpoint is a plain `assessments`/`draft` resource route. No downstream task (05/06/10/11/12) DTO carries an agent/provider/prompt field either (cross-checked against each task's own Verification Summary). |
+| Richardson REST maturity | Record resource URI, method, expected status behavior, validation errors and unsupported transitions for all six endpoints | Level 2 (resources + HTTP verbs), not Level 3/HATEOAS: all 6 endpoints are plain resource routes (`/assessments`, `/assessments/{id}/draft`, `/assessments/{id}/draft/versions`, `/assessments/{id}/draft/regenerate`) using standard GET/POST/PATCH. Draft generation/regeneration return the full `GenerateAssessmentDraftResponse` body synchronously (`200`/`201`) — no `202 Accepted` + `Location` header, no `AiOperation` polling handle anywhere in the transcribed response records. |
+| AI operation model | Identify whether each endpoint is sync-only today or operation-backed | Sync legacy, confirmed by the verbatim response records above (`GenerateAssessmentDraftResponse` returns the full generated draft directly, not an operation id/status). The operation-backed contract (R01 follow-up) does not exist in `api/` as of this planning; no downstream task fakes one. |
+| Idempotency | Confirm whether mutating GenAI endpoints require/admit `Idempotency-Key` | **Absent.** None of the 4 request records transcribed above (`CreateAssessmentBriefRequest`, `RegenerateAssessmentDraftRequest`, `UpdateAssessmentDraftRequest`, plus the no-body draft-generation call) declare an `Idempotency-Key` header or equivalent field. Confirmed no downstream task fakes one: `task-06`/`task-12` never auto-retry a failed generate/regenerate call — every retry in the real UI is an explicit teacher-initiated resubmit. |
+| Contract testing | Verify DTOs directly from `api/` source and identify the contract-test gap | Closed by downstream tasks, not left open: `task-05`'s `CreateAssessmentBriefRequestDto`/`ResponseDto` and `task-10`'s `AssessmentDraftDto` were each verified field-for-field against these exact records (see those tasks' own Verification Summary sections) and covered by `assessments.test.ts`'s unit tests. |
+| Web route functionality | Ensure endpoint contract supports `/assessments/new` and `/assessments/{id}/draft` states without invented actions | Confirmed via `task-07`/`task-08`'s wireframe/hierarchy docs: no restore/rollback affordance exists anywhere in `web/` — `VersionHistorySectionProps` only exposes `onViewVersion` (read-only), matching this task's own row-7 exhaustive-listing finding that no such endpoint exists. |
+
+---
+
 ## Implementation Steps
 
 1. Read `AssessmentController.java` in full; list every `@GetMapping`/`@PostMapping`/`@PatchMapping` method, its path, and its request/response types.
@@ -139,6 +154,7 @@ public record GenerateAssessmentDraftResponse(
 
 - [x] All 7 verification rows above are re-confirmed directly against current `api/` source (not assumed from this story's Context section alone) — see § Verification Summary for the raw controller mappings and record definitions transcribed on 2026-07-15 at `api/` commit `0a23627aa2d737f233e0a8a2be864f7187725139`.
 - [x] Any mismatch found between the Context section and the actual `api/` source is corrected in both this task file and the story's Context section before `task-05`/`task-10`/`task-11` start — see § Verification Summary's "Diff against this task's Verification table" line: none found, nothing to correct.
+- [x] API / Agent / Web Contract Gate is completed, including Richardson REST notes and current idempotency/operation-model gaps — reconciled 2026-07-21 (story-02 closeout) after this gate was added to `develop` post-divergence (commit `e2703d5`); see § API / Agent / Web Contract Gate for the evidence-filled table.
 - [x] Software smoke/build/startup/connectivity checks: N/A, no runtime surface (see Software Smoke Test Check); for git-enabled tasks, this task is committed, pushed, and published in a task PR before human developer PR review, with corrections pushed to the same PR. PR #66 (`tasks/story-02-.../task-01-verify-api-contract` → `story-02-assessment-screens-wireframes-and-data-providers`) opened, reviewed, approved, and merged 2026-07-15 (merge commit `911557b`).
 - [x] Logging/observability: N/A — no executable code, no correlation/trace/INFO/DEBUG/WARN/ERROR log levels apply.
 - [x] Task test suite: N/A — the generated test-suite quality gates in this task's Generated Test Suite section are architecture-review only.

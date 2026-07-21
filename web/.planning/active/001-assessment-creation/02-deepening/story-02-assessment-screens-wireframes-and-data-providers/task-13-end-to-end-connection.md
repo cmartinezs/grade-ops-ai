@@ -23,6 +23,21 @@ The full Intake → Draft Builder flow works end-to-end against a real local `ap
 
 ---
 
+## API / Agent / Web Contract Gate
+
+> Added to `develop` post-divergence (commit `e2703d5`, 2026-07-20); reconciled into this already-DONE task during story-02 closeout (2026-07-21). This task's own real browser walkthrough already produced exactly the evidence this gate asks for — filled in below rather than left as the generic prescriptive text.
+
+| Gate | Required check | Task answer |
+|---|---|---|
+| API as orchestrator | Full walkthrough proves `web` uses only `api` routes and `api` remains the intermediary to `agents` | **Confirmed live.** The real Playwright-MCP walkthrough captured every network request via `browser_network_requests` — every call target was `/api/v1/...` (proxied to `api/` on `localhost:8080`); zero calls to any `agents/` URL, provider endpoint, or prompt/model route from the browser at any point (registration, login, intake, draft render/edit/save, regenerate). |
+| Richardson REST maturity | Validate route behavior against resource/status/error expectations from `task-01`, including unsupported restore action absence | Confirmed live: every observed response matched `task-01`'s confirmed shapes exactly (201 on create, 200 on save/get, 503 `AGENT_CALL_FAILED` on generate/regenerate with `agents/` unreachable). No restore/rollback UI exists anywhere in the real rendered Draft Builder screen — `VersionHistorySectionProps` only exposes read-only version viewing, confirmed by direct interaction. |
+| AI operation model | Confirm current UI behavior matches current sync API and records any R01 operation/polling residual explicitly | Confirmed live: the "agent-down" error banner appeared immediately on the synchronous 503 response — no polling spinner, no `operationId`, no hidden retry loop observed in the browser network log during the entire walkthrough. |
+| Idempotency | Confirm no invisible retry/double submit behavior can trigger duplicate generation | Confirmed live: every generate/regenerate attempt in the walkthrough corresponded to exactly one explicit button click by the (simulated) teacher; the network log shows no automatic duplicate POST following a failure. |
+| Contract testing | End-to-end evidence ties route states back to verified API contract and task tests | Done — see § Verification Summary's bug table (3 real bugs found/fixed, each tied back to a specific `task-01`-confirmed contract expectation) and Step 4's full test-suite re-run (289 api/ tests, 153 web/ tests, all passing against the same contract). |
+| Web route functionality | `/assessments/new` -> `/assessments/{id}/draft` flow covers loading, success, edit, regenerate, version history, refresh and safe errors | Confirmed live — every state in this row was exercised in the real walkthrough: loading, intake-error-banner (agents/ down), seeded-draft render, edit+save+refresh persistence, regenerate-error-preserves-state, and version history display. See § Verification Summary steps 1-6. |
+
+---
+
 ## Implementation Steps
 
 1. `grep -r` for leftover fake-data markers (`setTimeout`, hardcoded fixture objects, a stray `mocks/` directory) under `src/features/assessment-creation/`; remove or justify each hit.
@@ -167,6 +182,7 @@ Docker Desktop's WSL2 integration dropped twice during this task's walkthrough (
 
 - [x] No fake-data residue remains under `src/features/assessment-creation/` — see Step 1 above; the only `setTimeout` hits are test-timing code in `loadAssessmentDraftBuilderPage.test.ts`, no `mocks/`/fixture directory exists.
 - [x] The full flow works end-to-end against real `api/` with real ids — see Step 2/3 walkthrough above (real `teacher` row, real `assessments` row `cb77bcfb-b454-4000-90a3-e8795176e90f`, real draft render/edit/save).
+- [x] API / Agent / Web Contract Gate is completed with evidence from browser/network/manual walkthrough — reconciled 2026-07-21 (story-02 closeout); see § API / Agent / Web Contract Gate.
 - [x] Draft and version history survive a page refresh — see walkthrough step 5 (edit persisted after refresh, re-fetched from the API).
 - [x] Story-01's in-scope Done Criteria are confirmed against the real flow, not just the mockups — see the cross-check table above, including the one documented partial-coverage gap (version-history-after-regeneration, blocked by no `agents/` service in this environment, covered instead by task-12's existing test evidence).
 - [x] Full test suite and lint pass across everything this story touched — see Step 4 above: web/ 153/153 tests + lint clean; api/ 289/289 tests (including the corrected `EmailVerifiedFilterTest` and new `SecurityConfigTest`), BUILD SUCCESS.

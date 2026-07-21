@@ -1,0 +1,111 @@
+# Master Plan — GradeOps AI
+
+## Proposito
+
+Este Master Plan transforma la documentacion, decisiones, user stories y estado real de GradeOps AI en una secuencia de releases incrementales, demostrables y orientadas a valor.
+
+## Alcance
+
+Incluye:
+
+- diagnostico documental y tecnico;
+- decisiones, supuestos y riesgos;
+- mapa de capacidades;
+- inventario de user stories;
+- inventario de automatizacion;
+- estrategia transversal de Agent Runtime;
+- estrategia API-Agent Orchestration;
+- estrategia ejecutiva de releases;
+- resumen ejecutivo;
+- documentos detallados de releases R01-R06;
+- reporte de validacion integral.
+
+## Estado general
+
+| Area | Estado |
+|---|---|
+| Fase 01: diagnostico | Completa |
+| Fase 02: capacidades y US | Completa |
+| Fase 03: automatizacion | Completa |
+| Fase 04: estrategia de releases | Completa |
+| Fase 05: documentos por release | Completa para R01-R06 |
+| Fase 06: validacion final | Completa con condiciones |
+
+## Convenciones
+
+- `P0` indica alcance validacion MVP.
+- `P1` indica mejora posterior o no bloqueante para primer valor.
+- `US-PROPUESTA-*` indica historia faltante recomendada, aun no creada como archivo en `docs/02-product/user-stories/`.
+- `Asistida`, `Supervisada` y `Automatizada` siguen los niveles definidos en la especificacion maestra.
+- `Agent Runtime` es una capacidad transversal: se implementa mediante vertical slices funcionales, no como una mega-release tecnica.
+- `API-Agent Orchestration` es una capacidad transversal: se incorpora en las releases funcionales como reglas de API, dominio, agents y web, no como una release tecnica separada.
+- Los documentos de analisis son fuente de contexto; los archivos de release R01-R06 son la fuente operativa por release.
+
+## Orden de lectura
+
+1. [Diagnostico de documentacion](analysis/documentation-diagnosis.md)
+2. [Decisiones y supuestos](analysis/decisions-and-assumptions.md)
+3. [Mapa de capacidades](analysis/capability-map.md)
+4. [Inventario de user stories](analysis/user-story-inventory.md)
+5. [Inventario de automatizacion](analysis/automation-inventory.md)
+6. [Estrategia transversal de Agent Runtime](analysis/agent-runtime-strategy.md)
+7. [Estrategia API-Agent Orchestration](analysis/api-agent-orchestration-strategy.md)
+8. [Estrategia de releases](analysis/release-strategy.md)
+9. [Master Plan Ejecutivo](master-plan-executive.md)
+10. [Reporte de validacion](validation-report.md)
+
+## Tabla de releases
+
+| Release | Nombre | Estado | Complejidad | Archivo |
+|---|---|---|---|---|
+| R01 | Assessment Creation + Evidence Backbone | Documentada | M | [release-01-assessment-creation-evidence-backbone.md](releases/release-01-assessment-creation-evidence-backbone.md) |
+| R02 | Open Graded Feedback Thin Slice | Documentada | L | [release-02-open-graded-feedback-thin-slice.md](releases/release-02-open-graded-feedback-thin-slice.md) |
+| R03 | Open Cohort Report and Impact | Documentada | M | [release-03-open-cohort-report-impact.md](releases/release-03-open-cohort-report-impact.md) |
+| R04 | Closed Question Bank to Snapshot | Documentada | L | [release-04-closed-question-bank-snapshot.md](releases/release-04-closed-question-bank-snapshot.md) |
+| R05 | Closed Student Response and Item Analytics | Documentada | L | [release-05-closed-response-item-analytics.md](releases/release-05-closed-response-item-analytics.md) |
+| R06 | Business Evidence and Operational Readiness | Documentada | M | [release-06-business-evidence-operational-readiness.md](releases/release-06-business-evidence-operational-readiness.md) |
+| R07 | Open Workflow Refinements | Roadmap | M | `releases/release-07-open-workflow-refinements.md` |
+| R08 | Closed and Curriculum Refinements | Roadmap | M | `releases/release-08-closed-curriculum-refinements.md` |
+
+## Enlaces relativos
+
+- [Estrategia de releases](analysis/release-strategy.md)
+- [Estrategia transversal de Agent Runtime](analysis/agent-runtime-strategy.md)
+- [Estrategia API-Agent Orchestration](analysis/api-agent-orchestration-strategy.md)
+- [Resumen ejecutivo](master-plan-executive.md)
+- [Reporte de validacion](validation-report.md)
+- [Especificacion maestra](../.prompting/master-plan-prompts/master-plan-specification.md)
+- [Prompts de fases](../.prompting/master-plan-prompts/README.md)
+
+## Leyenda de estados
+
+| Estado | Significado |
+|---|---|
+| Completa | Artefacto generado y revisado para la fase actual. |
+| Documentada | Release con archivo detallado generado. |
+| Planificada | Release definida a nivel estrategico; falta archivo operativo detallado. |
+| Roadmap | Release posterior al corte validacion MVP. |
+| Pendiente | Trabajo aun no ejecutado. |
+| Bloqueada | Requiere decision externa antes de avanzar. |
+
+## Ultima actualizacion
+
+2026-07-20.
+
+## Reglas de mantenimiento
+
+- No modificar artefactos de fases anteriores sin registrar el cambio en su historial.
+- No crear archivos de release fuera de Fase 05.
+- Cada release debe conservar trazabilidad hacia capacidades, US, automatizaciones y evidencias.
+- Toda nueva decision relevante debe registrarse en `analysis/decisions-and-assumptions.md`.
+- Mantener D-01 visible hasta resolver entorno `demo`/`beta`.
+- No mover P1 al MVP sin retirar o dividir otra carga equivalente.
+- Toda release con IA debe declarar capacidades de Agent Runtime, herramientas, validadores, autonomia, HITL, limites, costo y evidencia.
+- Toda release que toque `api/`, `agents/` o rutas funcionales de `web/` debe aplicar la estrategia API-Agent Orchestration y el gate Richardson REST en las tareas que definan endpoints, contratos o rutas.
+
+## Historial de cambios
+
+| Fecha | Cambio | Motivo | Elementos afectados | Decision asociada |
+|---|---|---|---|---|
+| 2026-07-20 | Incorporacion de API-Agent Orchestration | Hacer obligatorias las reglas de intermediacion API entre `web/` y `agents/`, con madurez REST por tarea | README, analysis/api-agent-orchestration-strategy.md, releases, templates | D-API-01..D-API-10 |
+| 2026-07-20 | Incorporacion de Agent Runtime transversal y actualizacion de estado Fase 05/06 | Alinear el README con releases documentadas, validacion final y estrategia runtime | README, orden de lectura, reglas de mantenimiento | D-04, D-06 |

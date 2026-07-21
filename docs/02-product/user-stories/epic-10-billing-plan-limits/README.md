@@ -24,7 +24,7 @@ Establish the metering and business evidence layer. In MVP, the goal is tracking
 - Comparison of actual usage against plan limits
 - Operator-visible overuse reporting
 - Linking payment evidence (paid / commitment / manual) to customer records (P1)
-- Related-party flag on revenue events (required for hackathon evidence reporting) (P1)
+- Related-party flag on revenue events for transparent traction reporting (P1)
 
 **Out of scope**
 - Automated payment processing or invoice generation

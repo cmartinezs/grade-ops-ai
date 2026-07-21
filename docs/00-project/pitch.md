@@ -28,7 +28,7 @@ Instead of giving teachers another chatbot or quiz generator, GradeOps AI operat
 
 The teacher remains the final pedagogical authority. Agents do the repetitive operational work, while every important decision is logged with model, cost, status, approval state, and output evidence.
 
-The first sellable offer is simple: **we operate your next programming assessment with AI agents**. That makes the product easy to pilot, easy to demonstrate, and easy to connect to real revenue during the hackathon.
+The first sellable offer is simple: **we operate your next programming assessment with AI agents**. That makes the product easy to pilot, easy to demonstrate, and easy to connect to real revenue during early validation.
 
 ## What GradeOps AI Is
 
@@ -81,7 +81,7 @@ The first sellable offer is a paid pilot, not a broad subscription platform:
 
 > We operate your next 3 programming assessments with AI agents: assessment design, rubric, grading assistance, personalized feedback, learning-gap report, and teacher approval.
 
-Recommended hackathon offer:
+Recommended validation offer:
 
 | Offer | Price | Includes |
 | --- | ---: | --- |

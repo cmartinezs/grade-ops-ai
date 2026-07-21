@@ -31,6 +31,21 @@ The Intake screen calls the real `api/` via `submitAssessmentBrief`, redirects t
 
 ---
 
+## API / Agent / Web Contract Gate
+
+> Added to `develop` post-divergence (commit `e2703d5`, 2026-07-20); reconciled into this already-DONE task during story-02 closeout (2026-07-21) with real evidence, not left as the generic prescriptive text.
+
+| Gate | Required check | Task answer |
+|---|---|---|
+| API as orchestrator | Screen submits to `submitAssessmentBrief`; it never calls `agents/` or handles provider/model/prompt choices | **Confirmed.** `useIntakeAssessmentPage.ts` calls only `submitAssessmentBrief` (`task-05`); confirmed via the real-stack smoke run in § Verification Summary (real `POST /api/v1/assessments` → real `POST /assessments/{id}/draft`, never a direct `agents/` call from the browser). |
+| Richardson REST maturity | The route honors current API status/error semantics and does not assume unsupported `202 Location`/operation polling | Confirmed: the redirect fires only after `submitAssessmentBrief` resolves with a real `assessmentId` (synchronous 201/201 response), no `202`/`Location`/polling logic exists anywhere in the hook. |
+| AI operation model | Generation may become operation-backed in R01; current web route must not fake operation state | Confirmed: the hook's `SubmitState` union (`idle/submitting/success/error`) has no operation-id/polling state — the real-stack run's happy path returned the full generated draft synchronously, matching this. |
+| Idempotency | Avoid automatic invisible retries of generation when API has no `Idempotency-Key` support | Confirmed: `handleSubmit` makes exactly one `submitAssessmentBrief` call per teacher-initiated form submit; no retry loop, timeout-based resubmit, or `useEffect` re-triggers it. A failed submit requires the teacher to click "Crear evaluación" again. |
+| Contract testing | Tests cover navigation with real `assessmentId` plus 422/500 mapping | Done: `NewAssessmentPage.test.tsx`'s 6 cases (success+navigation, field-error 422, `AGENT_REJECTED`, `AGENT_ERROR`/`UNREACHABLE` 502/503, generic 500) plus the real-stack smoke run in § Verification Summary that found and fixed the English-string-leak bug this mocked suite alone couldn't catch. |
+| Web route functionality | `/assessments/new` exposes submit loading, success redirect, safe validation/server errors and brief-created/generation-failed warning | Confirmed — all 5 states (`isSubmitting`, success+redirect, field errors, agent-rejected banner, service-unavailable banner) implemented and tested; none shows a raw status code or English string (see § Verification Summary's "Distinguishable error messages" note). |
+
+---
+
 ## Implementation Steps
 
 1. Replace `useIntakeAssessmentPage`'s fake submit with a call to `submitAssessmentBrief(brief)`.
@@ -107,6 +122,7 @@ N/A — no database or ORM involved in `web/`.
 ## Done Criteria
 
 - [x] Submitting the real form creates a brief, generates a draft, and navigates to the real draft screen with the real `assessmentId`. Verified twice: via `NewAssessmentPage.test.tsx`'s navigation test (mocked `submitAssessmentBrief`), and for real against the local `api/`/`agents/`/Postgres stack once Docker became available mid-task — real 201/201, real `assessmentId`, real Groq-generated draft (see Verification Summary).
+- [x] API / Agent / Web Contract Gate is completed; no implicit retry or fake operation state is introduced — reconciled 2026-07-21 (story-02 closeout); see § API / Agent / Web Contract Gate.
 - [x] Both 422 shapes (`List<FieldErrorResponse>` and `ApiErrorResponse{AGENT_REJECTED}`), 502/503 (`agents/` down), and 500 responses each show a distinct, translated, teacher-facing message — not raw codes/English strings, and not collapsed into one generic "422/500" bucket. 4 dedicated tests, one per shape.
 - [x] No fake/mocked submit code remains. Confirmed via grep (see Verification Summary).
 - [x] All tests pass; `npm run lint` passes. `80 tests, 75 passed` (same 5 pre-existing unrelated failures); `npm run lint` N/A (no ESLint config, pre-existing) — substituted `tsc --noEmit`, clean.

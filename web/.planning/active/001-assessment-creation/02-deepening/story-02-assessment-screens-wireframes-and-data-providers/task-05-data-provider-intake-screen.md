@@ -45,6 +45,21 @@ DTOs for the brief-intake/draft-generation endpoints and a `submitAssessmentBrie
 
 ---
 
+## API / Agent / Web Contract Gate
+
+> Added to `develop` post-divergence (commit `e2703d5`, 2026-07-20); reconciled into this already-DONE task during story-02 closeout (2026-07-21) with real evidence, not left as the generic prescriptive text.
+
+| Gate | Required check | Task answer |
+|---|---|---|
+| API as orchestrator | `submitAssessmentBrief` calls `api/` only; it does not know `agents/`, provider/model, prompts or internal generation URLs beyond public API routes | **Confirmed.** `submitAssessmentBrief`/`createAssessmentBrief`/`generateAssessmentDraft` (`src/lib/api/assessments.ts`) call only `/api/v1/assessments` and `/api/v1/assessments/{id}/draft` via the shared `apiClient`. `CreateAssessmentBriefRequestDto`/`ResponseDto` carry no agent/provider/prompt field — confirmed against the Interfaces/contracts block above. |
+| Richardson REST maturity | `POST /api/v1/assessments` creates a resource; `POST /api/v1/assessments/{id}/draft` starts generation; status/error semantics are mapped explicitly | Preserved exactly: `createAssessmentBrief` expects `201` + `{assessmentId}`; `generateAssessmentDraft` expects the full synchronous `GenerateAssessmentDraftResponse` body, no `202`/`Location` invented (matches `task-01`'s confirmed contract — the R01 operation-backed gap is `api/`'s to close, not simulated here). |
+| AI operation model | Draft generation is sync legacy until R01 adds operation-backed contract | Confirmed: `submitAssessmentBrief` returns `{assessmentId}` only, used purely for routing (`task-06`'s redirect target) — no `operationId`/polling state is fabricated anywhere in this task's functions. |
+| Idempotency | Mutating GenAI generation should use `Idempotency-Key` when API supports it | Per `task-01`'s Contract Gate finding: absent from `api/`. Confirmed no client-side retry logic exists in `submitAssessmentBrief`/`createAssessmentBrief`/`generateAssessmentDraft` — a failure surfaces as a thrown, typed error for the caller (`task-06`) to show the teacher, never a silent automatic re-POST that could double-generate. |
+| Contract testing | DTO tests must assert exact request shape, paths and error branch after brief-created/generation-failed | Done: `assessments.test.ts`'s 7 cases (see § Verification Summary) assert exact request shapes for both steps, the correct path per call, and the distinguishable `GenerateAssessmentDraftError`-after-`createAssessmentBrief`-succeeded case explicitly. |
+| Web route functionality | Intake submit must support submitting, success redirect, brief-created/generation-failed warning, auth/validation/server errors | This task's own scope is the `lib/api` layer only (route/UI states are `task-06`'s scope) — confirmed the two distinct error classes (`CreateAssessmentBriefError`, `GenerateAssessmentDraftError`) this task exports are exactly what let `task-06` build that distinguishable UI without inventing its own error taxonomy. |
+
+---
+
 ## Implementation Steps
 
 1. Add `CreateAssessmentBriefRequestDto`/`CreateAssessmentBriefResponseDto` to `src/types/assessment.ts`, matching `task-01`'s confirmed shapes exactly.
@@ -121,6 +136,7 @@ N/A — no database or ORM involved in `web/`.
 
 - [x] `CreateAssessmentBriefRequestDto`/`ResponseDto` match `task-01`'s confirmed shapes exactly.
 - [x] `submitAssessmentBrief` orchestrates both calls sequentially and distinguishes which step failed. Two distinct error classes (`CreateAssessmentBriefError`, `GenerateAssessmentDraftError`), the latter carrying `assessmentId`.
+- [x] API / Agent / Web Contract Gate is completed; no agent/provider/prompt fields leak into `web` DTOs — reconciled 2026-07-21 (story-02 closeout); see § API / Agent / Web Contract Gate.
 - [x] All new/extended tests in `assessments.test.ts` pass — `7 passed, 7 total`.
 - [~] `npm run lint` passes — N/A, no ESLint config in this repo (pre-existing gap, unchanged from prior tasks); substituted `npx tsc --noEmit`, 0 errors outside the pre-existing test-typings gap.
 - [x] Logging mechanism decision is recorded in `.planning/LOGGING.md` before this task is marked done, or explicitly deferred to `task-06` with the human's sign-off recorded here. Recorded: Pino, structured JSON, human-confirmed 2026-07-16, before any implementation.

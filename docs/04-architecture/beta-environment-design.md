@@ -86,24 +86,32 @@ Spring AI's `ChatClient` is the port. No custom interface is needed — Spring A
 
 | Provider | Profile | Spring AI starter |
 |---|---|---|
-| Vertex AI Gemini | `demo` | `spring-ai-vertex-ai-gemini-spring-boot-starter` |
-| Google AI Studio | `beta` (primary) | `spring-ai-google-ai-gemini-spring-boot-starter` |
-| OpenAI-compatible (Groq, Together AI, OpenRouter) | `beta` (fallback) | `spring-ai-openai-spring-boot-starter` with custom `base-url` |
+| Vertex AI / Google GenAI Gemini | `demo`, supported in `beta` when configured | Spring AI Google GenAI / Vertex-compatible model support |
+| OpenAI-compatible Groq | `beta`, current default provider | Spring AI OpenAI-compatible model support with custom `base-url` |
 
-The model name is never hardcoded. It is set via `AI_MODEL_NAME` environment variable, resolved in `application-beta.yml`. This allows the model to be updated without a code change as provider offerings evolve.
+> **Decision update (2026-07-20):** `docs/99-decisions/2026-07-20-agent-provider-model-policy.md` formalizes the current policy: Groq is the current default provider for the implemented Assessment Agent slice, while Gemini remains supported for Google Cloud-oriented deployments.
+
+The model name is never hardcoded. Both providers are wired via `agents/src/main/resources/application-beta.yml`, keyed off environment variables so the model can change without a code change:
 
 ```yaml
 # application-beta.yml
 spring:
   ai:
     google:
-      ai:
-        gemini:
-          api-key: ${GOOGLE_AI_API_KEY}
-          model: ${AI_MODEL_NAME}
+      genai:
+        api-key: ${GRADEOPS_GEMINI_API_KEY}
+        chat:
+          options:
+            model: ${GRADEOPS_GEMINI_MODEL}
+    openai:
+      api-key: ${GRADEOPS_GROQ_API_KEY}
+      base-url: ${GRADEOPS_GROQ_BASE_URL:https://api.groq.com/openai/v1}
+      chat:
+        options:
+          model: ${GRADEOPS_GROQ_MODEL}
 ```
 
-To switch to an OpenAI-compatible provider (e.g., Groq), swap the Maven starter and update two config properties — no Java changes.
+Both providers can be configured in the same profile. `app.agents.llm.default-provider` selects which one handles a request that does not explicitly name a provider; there is no Maven-starter swap required to change providers.
 
 ---
 
@@ -174,7 +182,13 @@ Two separate Web Services. Agents is configured as an Internal Service (not publ
 
 - Go to [ai.google.dev](https://ai.google.dev) → Get API key
 - No billing required
-- Set `AI_MODEL_NAME` to the current free model (verify available models at deploy time)
+- Set `GRADEOPS_GEMINI_MODEL` to the current free model (verify available models at deploy time)
+
+### Groq — AI (fallback / current default, see the drift note above)
+
+- Go to [console.groq.com](https://console.groq.com) → API Keys
+- No billing required for free tier
+- Set `GRADEOPS_GROQ_MODEL` to the current free model (e.g. `llama-3.3-70b-versatile`)
 
 ---
 
@@ -199,8 +213,10 @@ CORS_ALLOWED_ORIGINS=https://<vercel-app>.vercel.app
 
 ```
 SPRING_PROFILES_ACTIVE=beta
-GOOGLE_AI_API_KEY=<google ai studio api key>
-AI_MODEL_NAME=<model name from ai.google.dev>
+GRADEOPS_GEMINI_API_KEY=<google ai studio api key>
+GRADEOPS_GEMINI_MODEL=<model name from ai.google.dev>
+GRADEOPS_GROQ_API_KEY=<groq api key>
+GRADEOPS_GROQ_MODEL=<model name from console.groq.com, e.g. llama-3.3-70b-versatile>
 INTERNAL_API_SECRET=<same shared secret as api>
 ```
 

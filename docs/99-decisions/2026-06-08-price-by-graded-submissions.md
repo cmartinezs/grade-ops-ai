@@ -6,7 +6,7 @@
 
 ## Context
 
-GradeOps AI needs a pricing model that aligns with the value delivered to educators and can be validated early in the hackathon window with real or near-real usage.
+GradeOps AI needs a pricing model that aligns with the value delivered to educators and can be validated early with real or near-real usage.
 
 Pricing models considered:
 
@@ -41,7 +41,7 @@ Pricing tiers bundle submissions into monthly or per-pilot allotments. A free ti
 - The `AgentExecutionLog` and evidence records must include submission-level tracking from day one.
 - Open and closed submissions are treated as equivalent billing units in the MVP; differential pricing by mode can be introduced post-validation.
 - AI inference cost per submission must be tracked to protect margin as usage scales.
-- The free tier submission allowance serves as both an onboarding tool and a hackathon evidence generator.
+- The free tier submission allowance serves as both an onboarding tool and a validation evidence generator.
 
 <!-- nav -->
 

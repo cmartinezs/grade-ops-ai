@@ -1,8 +1,10 @@
-# Deployment Guide — Cloud (demo environment)
+# Deployment Guide — Cloud (`demo` environment)
 
 This guide walks through deploying GradeOps AI to Google Cloud from scratch. It covers infrastructure creation, image builds, Cloud Run deployment, and post-deploy verification.
 
 > **Before starting:** complete [00-gcp-project-setup.md](00-gcp-project-setup.md) — you must have a GCP project with Firebase linked and billing attached before any step below.
+>
+> **Environment role:** `demo` is the Google Cloud target with a Gemini-capable provider path. `beta` is the product-evidence environment documented in [`../04-architecture/beta-environment-design.md`](../04-architecture/beta-environment-design.md). Do not claim Google Cloud deployment until the public URL, GCP project evidence and provider/API usage evidence exist.
 
 ---
 
@@ -16,7 +18,7 @@ flowchart TD
     D --> E[Create INTERNAL_API_SECRET<br/>Step 4]
     E --> F[Build + push images<br/>Step 5]
     F --> G[Deploy api/ to Cloud Run<br/>Step 6]
-    G --> H[Deploy web/ to Cloud Run<br/>Step 7]
+    G --> H[Deploy web/ via Firebase App Hosting or Cloud Run<br/>Step 7]
     H --> I[Update authorized domains<br/>Step 8]
     I --> J[Verify deployment<br/>Step 9]
 ```
@@ -65,7 +67,7 @@ gcloud sql instances create gradeops-demo \
   --project=YOUR_PROJECT_ID
 ```
 
-> `--no-assign-ip` and `--enable-google-private-path` configure the instance for private Cloud Run access only. For the hackathon demo, a public IP with Cloud SQL Connector (socket factory) is simpler and equally secure — remove those flags if you prefer.
+> `--no-assign-ip` and `--enable-google-private-path` configure the instance for private Cloud Run access only. For a small validation demo, a public IP with Cloud SQL Connector (socket factory) can be simpler while still avoiding direct password exposure — remove those flags if you prefer.
 
 Create the database and user:
 
@@ -355,7 +357,7 @@ curl -I https://grade-ops-ai-web-HASH-uc.a.run.app
 curl -X POST https://grade-ops-ai-api-HASH-uc.a.run.app/internal/teachers \
   -H "X-Internal-Key: YOUR_INTERNAL_SECRET" \
   -H "Content-Type: application/json" \
-  -d '{"name": "Demo Teacher", "email": "demo@example.com"}'
+  -d '{"firstName": "Demo", "lastName": "Teacher", "email": "demo@example.com"}'
 # Expected: HTTP 201 with firebaseUid and inviteLink
 ```
 
@@ -365,9 +367,10 @@ curl -X POST https://grade-ops-ai-api-HASH-uc.a.run.app/internal/teachers \
 
 | Environment | Purpose | Infrastructure |
 |-------------|---------|---------------|
-| `demo` | Hackathon live demo and pilot users | Cloud Run + Cloud SQL (provisioned by this guide) |
+| `beta` | Product evidence and fast iteration | Vercel + Render + Neon + R2 + Firebase Authentication; see architecture guide |
+| `demo` | Google Cloud target | Firebase App Hosting, Cloud Run, Cloud SQL, Cloud Storage, Secret Manager, Firebase Authentication, Gemini-capable provider path |
 | `local` | Developer workstation | Local PostgreSQL + local Firebase project — see [01-local-setup.md](01-local-setup.md) |
-| `prod` | Post-hackathon production | Not yet provisioned |
+| `prod` | Production | Not yet provisioned |
 
 ---
 
@@ -377,12 +380,13 @@ curl -X POST https://grade-ops-ai-api-HASH-uc.a.run.app/internal/teachers \
 |--------|----------|---------|------------|
 | `FIREBASE_ADMIN_CREDENTIALS` | Secret Manager | `api/` Cloud Run | `firebase_admin_iam.tf` via Terraform |
 | `INTERNAL_API_SECRET` | Secret Manager | `api/` Cloud Run | Manual — Step 4 of this guide |
+| `GRADEOPS_GROQ_API_KEY` | Secret Manager | `agents/` Cloud Run | `groq.tf`; value added manually |
 | Database password | `--set-env-vars` | `api/` Cloud Run | Manual — set during `gcloud run deploy` |
 
 Rules:
 - Never commit secret values to the repository
 - Use `--set-secrets` (not `--set-env-vars`) for values from Secret Manager — this prevents them from appearing in deployment logs
-- Database password is currently passed as a plain env var in the deploy command; for post-hackathon production, store it in Secret Manager too
+- Database password is currently passed as a plain env var in the deploy command; before production, store it in Secret Manager too
 
 ---
 
@@ -403,7 +407,16 @@ Declares the `hashicorp/google` (≥ 5.0, < 6.0) and `hashicorp/google-beta` pro
 | `api_cloud_run_sa_email` | Yes | Email of the api/ Cloud Run SA; granted Secret Manager accessor on `FIREBASE_ADMIN_CREDENTIALS` |
 
 ### `identity_platform.tf`
-Enables Firebase Authentication APIs, configures email/password sign-in, and sets the `authorized_domains` list. **Update `authorized_domains` after Step 7** to add the web Cloud Run hostname.
+Enables Firebase Authentication APIs, configures email/password sign-in, and sets the `authorized_domains` list. **Update `authorized_domains` after Step 7** to add the web hosting hostname.
+
+### `cloud_run.tf`
+Defines Cloud Run services for `api/` and `agents/`, including internal invocation from API to agents. The current Terraform uses placeholder images and `lifecycle.ignore_changes = [template]`; image rollout is still handled by deployment steps or CI/CD.
+
+### `cloud_sql.tf`
+Defines the demo PostgreSQL database infrastructure used by `api/`.
+
+### `firebase_app_hosting.tf`
+Enables the Firebase App Hosting API. The backend itself still requires Firebase CLI / GitHub OAuth setup outside Terraform.
 
 ### `firebase_admin_iam.tf`
 Creates the `firebase-admin-sa` service account (with `roles/firebaseauth.admin`), generates its key, stores the key in Secret Manager as `FIREBASE_ADMIN_CREDENTIALS`, and grants `var.api_cloud_run_sa_email` Secret Manager accessor on that secret.
@@ -411,15 +424,17 @@ Creates the `firebase-admin-sa` service account (with `roles/firebaseauth.admin`
 ### `firebase_web_app.tf`
 Registers a Firebase web app and reads back its configuration via a data source.
 
+### `groq.tf`
+Creates the `GRADEOPS_GROQ_API_KEY` secret used by the current Groq provider adapter. Gemini remains supported for Google Cloud-oriented deployments, and the demo Terraform reflects the implemented provider policy.
+
 ### `outputs.tf`
 Exports `NEXT_PUBLIC_FIREBASE_*` values and admin references (`firebase_admin_credentials_secret_id`, `firebase_admin_sa_email`).
 
-**What Terraform does NOT provision** (manual — this guide):
-- Cloud SQL instance and database
-- Artifact Registry repository
-- api/ service account (`grade-ops-api-sa`)
-- `INTERNAL_API_SECRET`
-- Cloud Run services
+**What Terraform does NOT fully provision** (manual or CI/CD — this guide):
+- Artifact Registry repository, if not already managed externally.
+- Secret values for `INTERNAL_API_SECRET`, database password, SMTP and provider keys.
+- Firebase App Hosting backend creation through Firebase CLI / GitHub OAuth.
+- Final application container image rollout, because current Cloud Run resources use placeholder images and ignore template changes.
 
 ---
 
@@ -451,7 +466,7 @@ Triggers: push to `main`, pull request to `main`
 
 ### `agents/` — `.github/workflows/agents.yml`
 
-Same structure as `api/`. Not implemented — agents service is scaffolding-only.
+Same structure as `api/`: test, build image, push to Artifact Registry and deploy to the internal Cloud Run agents service. The agents service is not scaffolding-only; the Assessment Agent vertical slice and Gemini/Groq provider adapters already exist.
 
 ---
 

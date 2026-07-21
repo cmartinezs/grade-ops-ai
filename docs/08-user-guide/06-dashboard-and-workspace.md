@@ -6,7 +6,7 @@ The teacher workspace is your operational environment for managing every assessm
 
 ## 1. Dashboard Overview
 
-The dashboard at `/teacher/dashboard` is your command center. Every time you sign in, this is your starting point.
+The current web dashboard route is `/dashboard`. Some UX target documents use `/teacher/dashboard` to describe the future teacher workspace namespace; do not assume that route exists until navigation is explicitly migrated.
 
 The dashboard answers three questions at a glance:
 
@@ -48,6 +48,17 @@ The status badge shows where an assessment is in its lifecycle. Color gives you 
 
 A GRADING badge paired with a non-zero pending approvals count is your most common action signal.
 
+Additional review states may appear inside workflow screens:
+
+| State | Meaning |
+|---|---|
+| **generated** | AI produced an output, but you have not reviewed it yet. |
+| **needs review** | Your action is required before the workflow can continue. |
+| **approved** | You accepted or edited-and-accepted the output. |
+| **published** | Approved content or results are visible/exportable. |
+| **blocked** | Missing input, validation failure, or policy prevents progress. |
+| **error** | A system or agent operation failed and needs retry or support. |
+
 ---
 
 ## 4. Pending Approvals Count
@@ -85,6 +96,8 @@ The workspace has a main navigation structure with the following sections:
 | **Account / Settings** | Your account details and sign-out option |
 
 From any assessment card on the dashboard, clicking the card opens the assessment's internal navigation (draft, rubric, submissions, grading, feedback, gaps, recovery, report).
+
+Availability note: current protected web routes include `/assessments`, `/bank`, `/students`, and `/reports`, but some are placeholders until their release slices are implemented.
 
 ---
 
@@ -161,6 +174,8 @@ Go to **Agent Logs** in the workspace navigation. You see a searchable, filterab
 | **Submission** | The specific student submission, if applicable |
 | **Timestamp** | When the agent ran |
 | **Model used** | The AI model that processed this run |
+| **Provider** | Runtime provider such as Gemini or Groq |
+| **Prompt version** | Prompt/template version or hash used for the run |
 | **Token estimate** | Approximate number of tokens consumed |
 | **Cost estimate** | Estimated cost of this agent run |
 | **Status** | succeeded, failed, retried, or requires human review |

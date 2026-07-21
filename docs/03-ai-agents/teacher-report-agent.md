@@ -24,7 +24,7 @@ The Teacher Report Agent must not publish reports without teacher validation, ex
 | `recovery_activities` | Yes | Draft or approved recovery suggestions. |
 | `agent_logs_summary` | Yes | Agent runs and cost summary. |
 | `teacher_notes` | No | Teacher comments to include. |
-| `audience` | No | teacher_internal, operator_summary, student_safe_summary, hackathon_evidence. |
+| `audience` | No | teacher_internal, operator_summary, student_safe_summary, validation_evidence. |
 
 ## Output Contract
 
@@ -91,7 +91,7 @@ Minimum report sections:
 | `teacher_internal` | Full teacher-facing report. |
 | `operator_summary` | Cohort and business outcome focus. |
 | `student_safe_summary` | Shareable summary without private/internal evidence. |
-| `hackathon_evidence` | Usage, agent, cost, and value proof focus. |
+| `validation_evidence` | Usage, agent, cost, and value proof focus. |
 
 ## Quality Rules
 

@@ -12,7 +12,8 @@
 | 01 | agents-assessment-agent-coordination | AG | — | M | — | IN PROGRESS |
 | 02 | api-assessment-creation-coordination | AP | 01 | M | — | IN PROGRESS |
 | 03 | web-assessment-creation-coordination | WB | 02 | L | — | TODO |
-| 04 | e2e-integration-verification | IN | 01, 02 | M | — | TODO |
+| 04 | e2e-integration-verification | IN | 01, 02 | M | — | DONE |
+| 05 | automated-cross-service-test-suite | IN | 01, 02, 04 | M | — | TODO |
 
 > **Correction (2026-07-09, extended 2026-07-14):** Stories 01 and 02 were originally scoped in this root planning as full implementation stories. That violated the monorepo parent/child coordination rule — `agents/` and `api/` each have (or now have) their own `.planning/` workspace, so their implementation must live in a child planning there, not duplicated in the parent. Both were converted to coordination stories; see `Linked Child Plannings` below for where the real implementation tasks now live. **Story 03 received the same correction on 2026-07-14** — `web/` now has its own `.planning/` workspace (`web/.planning/active/001-assessment-creation`), and Story 03's original 6-task implementation breakdown was moved there unchanged; this story is now a coordination story like 01 and 02.
 >
@@ -20,6 +21,8 @@
 > `infra/` no requiere story — Cloud Run, Artifact Registry, IAM (incluyendo `aiplatform.user` para la SA de `agents/`) y Secret Manager ya están provisionados en `infra/terraform/environments/demo/` para los tres servicios; esta planning extiende servicios existentes, no introduce uno nuevo.
 >
 > **Story 04 added 2026-07-14** (post-initial-expansion discovery): both child coordination stories (01, 02) verify their own child planning's Done Criteria, but neither proves `api/` can actually reach `agents/` over the network — `api/003`'s own test suite mocks `AssessmentAgentClient` at every layer (unit tests, integration tests, the full end-to-end flow test), so no automated test anywhere exercises a real HTTP call between the two services. Story 04 closes that gap directly at the root level, since no single child workspace owns cross-service reachability — same reasoning as Story 03 being implemented directly here. No new Terraform/infra resources are introduced (root `compose.yml` and the already-documented Render `beta` environment, not `infra/terraform/`), area `IN` reflects the deployment/reachability nature of the work, not a literal `infra/` directory match.
+>
+> **API-Agent Orchestration update (2026-07-20):** continuing Story 03 or any follow-up task must apply `docs/master-plan/analysis/api-agent-orchestration-strategy.md`. Endpoint/routing tasks in `web/.planning/active/001-assessment-creation` now include an API / Agent / Web Contract Gate with Richardson REST maturity, idempotency, operation-model and functional-route checks. This does not create a new technical release; it strengthens the R01 assessment-creation slice.
 
 Stories covered: **US-010** Assessment Brief Intake (P0), **US-011** Assessment Draft Generation (P0), **US-012** Assessment Draft Regeneration (P1) — `docs/02-product/user-stories/epic-02-assessment-creation/`.
 
@@ -102,6 +105,7 @@ Use `L`, `M`, or `H` for impact and likelihood. Carry high risks into the relate
 | 02 | — | — | — |
 | 03 | — | — | — |
 | 04 | — | — | — |
+| 05 | — | — | — |
 
 ---
 

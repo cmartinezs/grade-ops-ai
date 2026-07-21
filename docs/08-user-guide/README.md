@@ -25,6 +25,15 @@ GradeOps AI generates suggestions and drafts. You make final decisions. This is 
 
 You can always edit, reject, or request a regeneration of any AI output. Your edits and approvals are tracked in an audit log, giving you a clear record of every decision made during an assessment cycle.
 
+## Availability Note
+
+This guide describes the target teacher experience for the MVP release cut. Current implementation is incremental:
+
+- account creation, login, email verification, password reset, dashboard shell, assessment brief/draft persistence, Assessment Agent draft generation, and agent execution logging are implemented;
+- rubric, grading assistance, feedback, learning-gap, recovery, teacher report, Closed question bank, signed student links, deterministic attempts, and item analytics are planned release slices unless the product UI explicitly exposes them.
+
+When a screen is not present in the current workspace, treat the corresponding section as workflow guidance for implementation and validation, not as a promise that the feature is already available.
+
 ## Navigation
 
 | Guide | Description |

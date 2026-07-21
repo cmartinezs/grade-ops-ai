@@ -8,7 +8,7 @@ It is the operational layer that helps GradeOps AI demonstrate AI-native operati
 
 Capture, summarize, and monitor workflow evidence across agents, assessments, submissions, customers, costs, approvals, and pilot outcomes.
 
-The Ops Agent is not only a technical logger. It produces evidence for product quality, hackathon submission, unit economics, customer validation, operational debugging, and business dashboards.
+The Ops Agent is not only a technical logger. It produces evidence for product quality, unit economics, customer validation, operational debugging, and business dashboards.
 
 ## Non-Goals
 
@@ -107,15 +107,15 @@ Track model cost estimate, cloud runtime estimate if available, storage/logging 
 
 ## Human Control
 
-Operators can review the dashboard, correct metadata, attach evidence links, mark related-party status, export evidence, exclude private data from public views, and prepare hackathon summaries. Ops Agent must not publish evidence externally by itself.
+Operators can review the dashboard, correct metadata, attach evidence links, mark related-party status, export evidence, exclude private data from public views, and prepare validation summaries. Ops Agent must not publish evidence externally by itself.
 
 ## Privacy Rules
 
-Ops evidence must separate internal private data, judge-verifiable private evidence, public demo evidence, anonymized customer proof, and student-safe summaries. Student-level data should be minimized in business-facing evidence.
+Ops evidence must separate internal private data, controlled private evidence, public demo evidence, anonymized customer proof, and student-safe summaries. Student-level data should be minimized in business-facing evidence.
 
 ## Logging Requirements
 
-The Ops Agent itself logs evidence summaries generated, dashboard exports, missing evidence warnings, manual operator corrections, public/private evidence classification, and submission readiness.
+The Ops Agent itself logs evidence summaries generated, dashboard exports, missing evidence warnings, manual operator corrections, public/private evidence classification, and validation readiness.
 
 ## Acceptance Criteria
 

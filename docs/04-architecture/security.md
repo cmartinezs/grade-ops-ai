@@ -11,7 +11,7 @@ The MVP security posture must be simple but serious.
 3. Preserve teacher approval over sensitive outputs.
 4. Keep agent operations auditable.
 5. Avoid leaking secrets or personal data into prompts/logs.
-6. Make hackathon evidence credible without exposing private student data.
+6. Make validation evidence credible without exposing private student data.
 7. Use production-grade cloud configuration even for small pilots.
 
 ## Security Principles
@@ -195,7 +195,7 @@ For pilot use:
 
 Secrets must never be committed to the repo.
 
-Secrets include Gemini API keys, Google Cloud credentials, database passwords, JWT signing secrets, OAuth client secrets, and payment provider secrets.
+Secrets include Gemini API keys, Groq/OpenAI-compatible provider keys, Google Cloud credentials, database passwords, JWT/internal API secrets, OAuth client secrets, SMTP credentials, and payment provider secrets.
 
 Recommended handling:
 
@@ -203,6 +203,8 @@ Recommended handling:
 - Google Secret Manager or Cloud Run secrets for production;
 - `.env.example` only with placeholder names;
 - rotate exposed secrets immediately.
+
+Provider keys are server-side only. The web frontend may receive public Firebase web configuration, but it must never receive Gemini, Groq, database, SMTP, internal API, billing or storage credentials.
 
 ## Network And Deployment Security
 

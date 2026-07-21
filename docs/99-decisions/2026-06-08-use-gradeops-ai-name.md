@@ -6,7 +6,7 @@
 
 ## Context
 
-The product needed a unique, positioning-accurate name for external use, marketing, and the XPRIZE AI hackathon submission.
+The product needed a unique, positioning-accurate name for external use, marketing, and customer-facing validation.
 
 The prior internal product was called "GRADE" — a structured evaluative domain focused on question banks and deterministic grading. GradeOps AI is a different product: it adopts GRADE's domain model as a foundation but centers on AI-native assessment *operations*, not just grading mechanics.
 
@@ -15,7 +15,7 @@ Names considered:
 - **GRADE** — the prior product name; too narrow (implies only grading) and already associated with a different scope.
 - **AssessOps** — accurate but generic; does not emphasize the education or AI-native angle.
 - **GradeOps** — combines grading (the primary educator job) with ops (workflow operations); signals a platform, not a feature.
-- **GradeOps AI** — adds the AI-native positioning explicitly, which matters for the hackathon context and the product's differentiator.
+- **GradeOps AI** — adds the AI-native positioning explicitly, which matters for the product's differentiator.
 
 ## Decision
 
@@ -36,7 +36,7 @@ The short form **GradeOps** is acceptable in informal or technical contexts. The
 - All documentation, marketing copy, code repositories, and agent contracts use "GradeOps AI" as the canonical product name.
 - The prior product "GRADE" is referenced only as historical context in `.raw/` notes; it is not the same product.
 - The name creates clear guardrails: if a description of GradeOps AI reads like a quiz generator, a chatbot, or an LMS, the name is being misapplied.
-- Domain and branding decisions (URL, social handles, hackathon profile) should use `gradeops` or `gradeopsal` as the handle root.
+- Domain and branding decisions (URL, social handles, product profiles) should use `gradeops` or `gradeopsal` as the handle root.
 
 <!-- nav -->
 

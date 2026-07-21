@@ -2,7 +2,7 @@
 
 A closed assessment uses objective question types: True/False, single-choice (one correct answer), and multiple-choice (one or more correct answers). AI agents help you build and curate a question bank. Students receive a unique secure link to respond — no account required. Grading is always deterministic: calculated automatically against a frozen answer key that you approved. You review exceptions and publish results.
 
-This guide walks through the complete cycle from generating questions to publishing student results.
+This guide walks through the target complete cycle from generating questions to publishing student results. Closed assessment is P0 in the product scope, but the current code does not yet implement question bank, signed student links, deterministic attempts, or item analytics end to end.
 
 ---
 

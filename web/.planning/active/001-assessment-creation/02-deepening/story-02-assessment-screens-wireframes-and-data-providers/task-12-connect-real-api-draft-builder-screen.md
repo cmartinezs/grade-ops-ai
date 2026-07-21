@@ -26,6 +26,21 @@ The Draft Builder screen loads via `loadAssessmentDraftBuilderPage`, saves edits
 
 ---
 
+## API / Agent / Web Contract Gate
+
+> Added to `develop` post-divergence (commit `e2703d5`, 2026-07-20); reconciled into this already-DONE task during story-02 closeout (2026-07-21) with real evidence, not left as the generic prescriptive text.
+
+| Gate | Required check | Task answer |
+|---|---|---|
+| API as orchestrator | Draft Builder calls only `api/` loader/mutations; it never calls `agents/` or exposes provider/model controls | **Confirmed.** `useAssessmentDraftBuilderPage` calls only `loadAssessmentDraftBuilderPage`/`updateAssessmentDraft`/`regenerateAssessmentDraft` (task-10/task-11) — no `agents/` reference, no provider/model UI control anywhere in the hook or its rendered sections. |
+| Richardson REST maturity | The route maps resource reads, partial updates and regenerate command statuses into explicit UI states | Confirmed: §5's full mapping table translates each real status (200/404/422/502/503/500) into a distinct UI state; no restore affordance exists in `VersionHistorySectionProps` (only `onViewVersion`, read-only). |
+| AI operation model | Regenerate is sync legacy unless API exposes `AiOperation`; route should be ready to add polling only after contract change | Confirmed: `onRegenerate` handles submitting/success/error/refetch synchronously (§4) — no `operationId`/polling state anywhere in `useAssessmentDraftBuilderPage`'s state shape. |
+| Idempotency | Regenerate retry must be teacher-visible unless API idempotency is confirmed | Confirmed: `isRegenerating`/`isSaving` gate the buttons while a call is in flight, but no automatic retry exists on failure — a failed save/regenerate requires the teacher to click again, per task-11's design (no `Idempotency-Key` support in `api/`). |
+| Contract testing | Tests cover load, save, regenerate, refetch, 404/409/422/500 and absence of fake dataset | Done, with the correction that **no 409 case exists to test** (confirmed no draft endpoint returns 409, per `task-07`/`task-11`) — §5-6's tests cover 404/422/502/503/500 and refetch-after-mutation explicitly; §3 confirms zero fake dataset remains via grep. |
+| Web route functionality | `/assessments/{id}/draft` supports loading, not-found, conflict, validation, server error, save/regenerate submitting states and read-only historical preview | Confirmed — every state except "conflict" is implemented and tested (no conflict state exists because the real API has none); read-only historical preview enforced (`isViewingHistoricalVersion` disables the editor), matching `task-08`'s hierarchy finding. |
+
+---
+
 ## Implementation Steps
 
 1. Replace `useAssessmentDraftBuilderPage`'s fake dataset with a `loadAssessmentDraftBuilderPage(assessmentId)` call on mount, using the `RemoteData` states from `task-09`.
@@ -239,6 +254,7 @@ The 2 failed suites/5 failed tests are the same pre-existing `SignOutButton.test
 ## Done Criteria
 
 - [x] Draft Builder screen loads, edits/saves, and regenerates against the real API — see §§3-4; fake dataset fully removed, hook calls only `loadAssessmentDraftBuilderPage`/`updateAssessmentDraft`/`regenerateAssessmentDraft`.
+- [x] API / Agent / Web Contract Gate is completed; no unsupported restore or fake operation state is introduced — reconciled 2026-07-21 (story-02 closeout); see § API / Agent / Web Contract Gate.
 - [x] Version list refetches after both save and regenerate — see §4, verified by dedicated tests asserting the refetch call count.
 - [x] 404/422/500 (plus 502/503 agent errors) each show a distinct, translated message — no 409 case, since none exists for these endpoints (`task-07`/`task-08`) — see §5's full mapping table with test references; confirmed via grep that no 409 branch exists anywhere in the implementation.
 - [x] No fake/mocked dataset remains — see §3.

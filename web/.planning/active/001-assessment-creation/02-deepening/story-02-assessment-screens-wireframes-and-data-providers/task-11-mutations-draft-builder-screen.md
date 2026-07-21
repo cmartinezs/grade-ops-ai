@@ -45,6 +45,21 @@
 
 ---
 
+## API / Agent / Web Contract Gate
+
+> Added to `develop` post-divergence (commit `e2703d5`, 2026-07-20); reconciled into this already-DONE task during story-02 closeout (2026-07-21) with real evidence, not left as the generic prescriptive text.
+
+| Gate | Required check | Task answer |
+|---|---|---|
+| API as orchestrator | Mutations call `api/` only; regenerate does not call or configure `agents/` from `web` | **Confirmed.** `updateAssessmentDraft`/`regenerateAssessmentDraft` call only `/api/v1/assessments/{id}/draft` (PATCH) and `.../draft/regenerate` (POST) — neither `UpdateAssessmentDraftRequestDto` nor the regenerate call signature carries any provider/model/prompt field. |
+| Richardson REST maturity | `PATCH /draft` is partial update; `POST /draft/regenerate` is command-style generation under the assessment resource | Preserved exactly: `PATCH` sends only caller-changed keys (§ Verification Summary #1), `POST .../regenerate` sends `{adjustmentNotes}` (§2) — matching `task-01`'s confirmed contract; no `202`/`Location` invented. |
+| AI operation model | Regeneration is GenAI-backed but sync legacy today | Confirmed: `regenerateAssessmentDraft` returns the full `AssessmentDraftDto` synchronously (§ Verification Summary #2) — no `operationId`/polling state fabricated. |
+| Idempotency | Regeneration should use `Idempotency-Key` when API supports it; PATCH should avoid duplicate unintended writes via changed-key-only payloads | Per `task-01`'s gate finding: absent from `api/`. `updateAssessmentDraft` already avoids unintended writes via the changed-keys-only design (§ Verification Summary #1); no client-side auto-retry exists for either mutation — a failed save/regenerate requires an explicit teacher re-click (`task-12`). |
+| Contract testing | Tests assert exact PATCH body, regenerate body, paths and conflict behavior | Done, with the important correction that **no conflict (409) behavior exists to test** — `task-07` traced the real backend and found no draft endpoint returns 409; the explicit test sending a mocked 409 (§ Verification Summary #3) proves no special branch catches it, i.e., 409 is correctly treated as an ordinary unmapped status, not silently assumed away. |
+| Web route functionality | Save/regenerate support submitting, success, conflict, validation and server-error states | This task's own scope is the `lib/api` layer only (route/UI states are `task-12`'s scope); the two distinct error classes this task exports (`UpdateAssessmentDraftError`, `RegenerateAssessmentDraftError`) are exactly what let `task-12` build submitting/success/validation/server-error states without a conflict state, since none is backed by the real API. |
+
+---
+
 ## Implementation Steps
 
 1. Add `UpdateAssessmentDraftRequestDto` to `src/types/assessment.ts` — all fields optional, matching `task-01`'s confirmed `UpdateAssessmentDraftRequest` partial-update semantics exactly (only include keys actually being changed).
@@ -169,6 +184,7 @@ $ npm run build
 
 - [x] `updateAssessmentDraft` only sends caller-provided keys, matching the partial-update contract — see § Verification Summary #1.
 - [x] `regenerateAssessmentDraft` sends adjustment notes and returns the new draft — see § Verification Summary #2.
+- [x] API / Agent / Web Contract Gate is completed; regenerate does not leak agent/provider/prompt concerns into `web` — reconciled 2026-07-21 (story-02 closeout); see § API / Agent / Web Contract Gate.
 - [x] Both distinguish 422 (field/notes/agent-rejected) and 502/503 (agent-down) from a generic 500 — no 409 handling exists, since `task-07` confirmed no draft endpoint returns one — see § Verification Summary #3, including an explicit test sending a mocked 409 to confirm no special branch catches it.
 - [x] All new/extended tests pass; `npm run lint` passes — 27/27 tests pass (§4); lint scoped to this task's affected files passes with exit 0 (§5, with rationale for the pre-existing unrelated test/lint noise).
 - [x] Software smoke test check above passes (build/startup confirmed); for git-enabled tasks, implementation is committed, pushed, and published in a task PR before human developer PR review, with corrections pushed to the same PR — build confirmed in §7; task branch `story-02-assessment-screens-wireframes-and-data-providers--task-11-mutations-draft-builder-screen` created off the up-to-date story branch; PR pending publish.

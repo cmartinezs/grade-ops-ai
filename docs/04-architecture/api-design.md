@@ -22,7 +22,7 @@ Recommended MVP style:
 - REST API;
 - JSON request/response;
 - authenticated teacher/operator access;
-- server-side Gemini calls only;
+- server-side agent/provider calls only;
 - idempotency support for long-running commands where possible;
 - pagination for list endpoints;
 - consistent error response.
@@ -323,7 +323,7 @@ Returns agent execution detail with model, operation, status, estimated cost, an
 
 ### `GET /evidence/dashboard`
 
-Returns hackathon/demo metrics:
+Returns validation/demo metrics:
 
 - assessments processed;
 - submissions processed;

@@ -8,7 +8,7 @@
 
 ## Goal
 
-Produce the final human-readable artifact of the open-assessment pipeline: a teacher report that consolidates approved grading, feedback, and gap analysis into a single deliverable. The report also serves as hackathon evidence of AI-native operations.
+Produce the final human-readable artifact of the open-assessment pipeline: a teacher report that consolidates approved grading, feedback, and gap analysis into a single deliverable. The report also serves as validation evidence of AI-native operations.
 
 ## Stories
 

@@ -43,6 +43,21 @@
 
 ---
 
+## API / Agent / Web Contract Gate
+
+> Added to `develop` post-divergence (commit `e2703d5`, 2026-07-20); reconciled into this already-DONE task during story-02 closeout (2026-07-21) with real evidence, not left as the generic prescriptive text.
+
+| Gate | Required check | Task answer |
+|---|---|---|
+| API as orchestrator | The loader reads current/versioned draft state from `api/` only; `web` does not infer agent state or query `agents/` | **Confirmed.** `getAssessmentDraft`/`getAssessmentDraftVersions` (`src/lib/api/assessments.ts`) call only `/api/v1/assessments/{id}/draft` and `.../draft/versions` via `apiClient` — no `agents/` reference anywhere in the loader or the DTO. |
+| Richardson REST maturity | Both GET endpoints are resource reads and should map 401/403/404/server errors to safe route states | Preserved exactly per `task-01`'s confirmed contract; `GetAssessmentDraftError`/`GetAssessmentDraftVersionsError` (added during code review, see § Code Review Corrections P3 #2) carry the real status/body so `task-12` maps 404/401/403/500 without inventing new statuses. |
+| AI operation model | Read endpoints consume persisted artifacts, not live agent operations | Confirmed: both GETs return the already-persisted `GenerateAssessmentDraftResponse` shape (no polling/operation state); the loader's `RemoteData`-style result has no operation-id field. |
+| Idempotency | Read-only GETs do not need `Idempotency-Key` | N/A, confirmed by design — both calls are side-effect-free reads. |
+| Contract testing | DTO and loader tests must assert exact paths, DTO fields and partial-load failure behavior | Done: 29/29 tests pass including 3 dedicated partial/full-failure cases in `loadAssessmentDraftBuilderPage.test.ts` (see § Verification Summary #2, #4). |
+| Web route functionality | Draft route must support loading, success, no-current-draft/404, safe error and read-only historical version preview | This task's own scope is the facade only (route/UI states are `task-12`'s scope) — confirmed the facade is the sole caller (§ Verification Summary #3, grep evidence), so `task-12` cannot bypass it. |
+
+---
+
 ## Implementation Steps
 
 1. Add `AssessmentDraftDto` to `src/types/assessment.ts`, matching `task-01`'s confirmed `GenerateAssessmentDraftResponse` shape exactly.
@@ -221,6 +236,7 @@ $ npm run build
 
 - [x] `AssessmentDraftDto` matches `task-01`'s confirmed shape exactly — see § Verification Summary #1.
 - [x] `loadAssessmentDraftBuilderPage` fetches both sources in parallel and returns one composed view model — see § Verification Summary #2.
+- [x] API / Agent / Web Contract Gate is completed; no component bypasses API facade or invents unsupported restore/operation behavior — reconciled 2026-07-21 (story-02 closeout); see § API / Agent / Web Contract Gate.
 - [x] No component or page calls `getAssessmentDraft`/`getAssessmentDraftVersions` directly, bypassing the facade — see § Verification Summary #3 (grep evidence).
 - [x] All new/extended tests pass; `npm run lint` passes — 29/29 tests pass (§ Verification Summary #2); lint scoped to this task's affected files passes with exit 0 (§ Verification Summary #5, with rationale for why unscoped repo-wide lint isn't the correct gate here).
 - [x] Logging mechanism decision recorded in `.planning/LOGGING.md` (shared with `task-05` if not already resolved) — already confirmed by task-05 on 2026-07-16; no re-decision needed (§ Verification Summary #8).

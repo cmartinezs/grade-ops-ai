@@ -61,10 +61,10 @@ Never use raw `fetch` for API calls. The `apiClient` wrapper handles:
 import { apiClient } from "@/lib/api/client";
 
 // Basic call
-const response = await apiClient("/api/assessments");
+const response = await apiClient("/api/v1/assessments");
 
 // With method and body
-const response = await apiClient("/api/assessments", {
+const response = await apiClient("/api/v1/assessments", {
   method: "POST",
   body: JSON.stringify(payload),
 });
@@ -75,7 +75,7 @@ Domain-specific wrappers in `src/lib/api/` call `apiClient` internally:
 ```typescript
 // src/lib/api/assessments.ts
 export async function getAssessments(): Promise<AssessmentSummary[]> {
-  const response = await apiClient("/api/assessments");
+  const response = await apiClient("/api/v1/assessments");
   if (!response.ok) {
     throw new Error(`Failed to fetch assessments: ${response.status}`);
   }
@@ -98,7 +98,7 @@ Do not use `any` to work around type mismatches. Fix the interface instead.
 
 `next.config.ts` contains a rewrite rule that proxies `/api/:path*` to `${API_BASE_URL}/:path*`. This means:
 
-- All `apiClient` calls use paths that start with `/api/`: `apiClient("/api/assessments")`
+- All `apiClient` calls use paths that start with `/api/`: `apiClient("/api/v1/assessments")`
 - In local development (`API_BASE_URL` not set), Next.js proxies to `http://localhost:8080` — the Spring Boot API
 - In production (Cloud Run), `API_BASE_URL` is set to the Cloud Run api/ service URL
 

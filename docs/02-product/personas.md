@@ -309,7 +309,7 @@ This persona is not required for MVP unless a pilot explicitly involves multiple
 
 ### Enterprise Institution Buyer
 
-Large institutions have procurement, compliance, SSO, legal, and integration needs. They may be valuable later, but they are too slow for the hackathon MVP.
+Large institutions have procurement, compliance, SSO, legal, and integration needs. They may be valuable later, but they are too slow for the first MVP validation loop.
 
 ### Teacher Looking For A Full LMS
 
