@@ -23,6 +23,7 @@ docs/code-review-evidence/
 | Tarea | Estado | Verificación |
 |-------|--------|--------------|
 | **001/story-02/task-09** | ✅ Complete | [Evidencia](./001-assessment-creation/story-02/task-09/) |
+| **001/story-02/task-10** | ✅ Complete | [Evidencia](./001-assessment-creation/story-02/task-10/) |
 
 ## Cómo Usar
 

@@ -1,8 +1,10 @@
 import { apiClient } from "@/lib/api/client";
 import { logger } from "@/lib/logging/logger";
+import { createCorrelationId } from "@/lib/logging/correlationId";
 import type {
   AssessmentSummaryDto,
   ApiErrorResponse,
+  AssessmentDraftDto,
   CreateAssessmentBriefRequestDto,
   CreateAssessmentBriefResponseDto,
   FieldErrorResponse,
@@ -33,6 +35,28 @@ export class GenerateAssessmentDraftError extends Error {
   ) {
     super(`generateAssessmentDraft failed with status ${status} for assessment ${assessmentId}`);
     this.name = "GenerateAssessmentDraftError";
+  }
+}
+
+export class GetAssessmentDraftError extends Error {
+  constructor(
+    public status: number,
+    public body: ApiErrorResponse,
+    public assessmentId: string
+  ) {
+    super(`getAssessmentDraft failed with status ${status} for assessment ${assessmentId}`);
+    this.name = "GetAssessmentDraftError";
+  }
+}
+
+export class GetAssessmentDraftVersionsError extends Error {
+  constructor(
+    public status: number,
+    public body: ApiErrorResponse,
+    public assessmentId: string
+  ) {
+    super(`getAssessmentDraftVersions failed with status ${status} for assessment ${assessmentId}`);
+    this.name = "GetAssessmentDraftVersionsError";
   }
 }
 
@@ -74,13 +98,6 @@ export async function generateAssessmentDraft(assessmentId: string, log: Logger 
   log.info({ dependency: "api/assessments/draft", status: res.status, latencyMs, assessmentId }, "generateAssessmentDraft succeeded");
 }
 
-// Correlation ids are for log tracing only, not security — a timestamp + random
-// suffix avoids depending on crypto.randomUUID(), which real browsers/Node support
-// but jsdom's test environment does not implement.
-function createCorrelationId(): string {
-  return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
-}
-
 export async function submitAssessmentBrief(
   brief: CreateAssessmentBriefRequestDto
 ): Promise<{ assessmentId: string }> {
@@ -93,4 +110,34 @@ export async function submitAssessmentBrief(
 
   log.info({ assessmentId }, "submitAssessmentBrief completed");
   return { assessmentId };
+}
+
+export async function getAssessmentDraft(assessmentId: string, log: Logger = logger): Promise<AssessmentDraftDto> {
+  const startedAt = Date.now();
+  const res = await apiClient(`/api/v1/assessments/${assessmentId}/draft`);
+  const latencyMs = Date.now() - startedAt;
+
+  if (!res.ok) {
+    const body: ApiErrorResponse = await res.json().catch(() => ({ error: "UNKNOWN", message: null }));
+    log.error({ dependency: "api/assessments/draft", status: res.status, latencyMs, assessmentId }, "getAssessmentDraft failed");
+    throw new GetAssessmentDraftError(res.status, body, assessmentId);
+  }
+
+  log.debug({ dependency: "api/assessments/draft", status: res.status, latencyMs, assessmentId }, "getAssessmentDraft succeeded");
+  return res.json();
+}
+
+export async function getAssessmentDraftVersions(assessmentId: string, log: Logger = logger): Promise<AssessmentDraftDto[]> {
+  const startedAt = Date.now();
+  const res = await apiClient(`/api/v1/assessments/${assessmentId}/draft/versions`);
+  const latencyMs = Date.now() - startedAt;
+
+  if (!res.ok) {
+    const body: ApiErrorResponse = await res.json().catch(() => ({ error: "UNKNOWN", message: null }));
+    log.error({ dependency: "api/assessments/draft/versions", status: res.status, latencyMs, assessmentId }, "getAssessmentDraftVersions failed");
+    throw new GetAssessmentDraftVersionsError(res.status, body, assessmentId);
+  }
+
+  log.debug({ dependency: "api/assessments/draft/versions", status: res.status, latencyMs, assessmentId }, "getAssessmentDraftVersions succeeded");
+  return res.json();
 }

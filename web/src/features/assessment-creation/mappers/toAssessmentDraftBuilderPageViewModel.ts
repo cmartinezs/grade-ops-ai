@@ -1,16 +1,4 @@
-// Mirrors task-01's confirmed `GenerateAssessmentDraftResponse` shape. Moves to
-// src/types/assessment.ts as `AssessmentDraftDto` once task-10 adds the real
-// lib/api functions — this task only needs the shape to feed the mapper below.
-export interface AssessmentDraftDto {
-  draftId: string;
-  title: string;
-  context: string;
-  instructions: string;
-  objectives: string[];
-  deliverables: string[];
-  constraints: string[];
-  versionNumber: number;
-}
+import type { AssessmentDraftDto } from "@/types/assessment";
 
 export interface AssessmentDraftViewModel {
   draftId: string;
