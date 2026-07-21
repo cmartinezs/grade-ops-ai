@@ -179,4 +179,32 @@ $ npm run build
 
 ---
 
+## Code Review Corrections
+
+Code review (`.code-reviews/story-02-.../task-11-mutations-draft-builder-screen.md`) approved with 2 P3 findings. Only 1 was actionable:
+
+### P3 #1 — `isRecoverableDraftMutationStatus` not exported / testable in isolation
+
+**Fix:** changed `function isRecoverableDraftMutationStatus` to `export function isRecoverableDraftMutationStatus` in `src/lib/api/assessments.ts`. Added a dedicated `describe("isRecoverableDraftMutationStatus", ...)` block with 2 tests asserting the classification directly (422/502/503 → `true`; 500/409/404 → `false`), independent of exercising the full `updateAssessmentDraft`/`regenerateAssessmentDraft` call path.
+
+### P3 #2 — `updateAssessmentDraft`/`regenerateAssessmentDraft` don't accept an external `Logger` (consistency observation)
+
+**No action taken.** The reviewer explicitly classified this as "not a blocking finding — the design decision is well-reasoned" and did not propose a change: mutations are independent user actions (not part of a shared page-load operation like task-10's loader), so each creating its own `correlationId` internally is the correct design, already documented in `EVIDENCE.md`'s Architecture Decision Rationale. Task-12 does not need to inject an external logger into these functions.
+
+**Re-verification after fix:**
+```
+$ npm run test -- --testPathPattern="assessments\.test" --no-coverage
+Test Suites: 1 passed, 1 total
+Tests:       29 passed, 29 total (2 new isolation tests + 27 existing)
+Time:        0.525 s
+
+$ npx eslint src/lib/api/assessments.ts src/lib/api/__tests__/assessments.test.ts
+exit code: 0 (no output)
+
+$ npm run build
+✓ Compiled successfully in 2.1s
+```
+
+---
+
 > [← story file](../story-02-assessment-screens-wireframes-and-data-providers.md)

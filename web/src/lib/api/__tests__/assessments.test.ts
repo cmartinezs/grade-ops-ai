@@ -6,6 +6,7 @@ import {
   getAssessmentDraftVersions,
   updateAssessmentDraft,
   regenerateAssessmentDraft,
+  isRecoverableDraftMutationStatus,
   CreateAssessmentBriefError,
   GenerateAssessmentDraftError,
   GetAssessmentDraftError,
@@ -239,6 +240,20 @@ describe("getAssessmentDraftVersions", () => {
     const result = await getAssessmentDraftVersions("assess-1");
 
     expect(result).toEqual([]);
+  });
+});
+
+describe("isRecoverableDraftMutationStatus", () => {
+  it("classifies 422, 502, and 503 as recoverable", () => {
+    expect(isRecoverableDraftMutationStatus(422)).toBe(true);
+    expect(isRecoverableDraftMutationStatus(502)).toBe(true);
+    expect(isRecoverableDraftMutationStatus(503)).toBe(true);
+  });
+
+  it("classifies 500, 409, and 404 as not recoverable", () => {
+    expect(isRecoverableDraftMutationStatus(500)).toBe(false);
+    expect(isRecoverableDraftMutationStatus(409)).toBe(false);
+    expect(isRecoverableDraftMutationStatus(404)).toBe(false);
   });
 });
 

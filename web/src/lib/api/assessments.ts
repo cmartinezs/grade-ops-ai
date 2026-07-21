@@ -168,7 +168,7 @@ export async function getAssessmentDraftVersions(assessmentId: string, log: Logg
 // WARN for recoverable, teacher-facing errors (422 field validation, 502/503 agent down);
 // ERROR for everything else (500). No 409 handling — task-07 traced neither draft mutation
 // handler implements optimistic locking, so no draft endpoint can ever return one.
-function isRecoverableDraftMutationStatus(status: number): boolean {
+export function isRecoverableDraftMutationStatus(status: number): boolean {
   return status === 422 || status === 502 || status === 503;
 }
 
