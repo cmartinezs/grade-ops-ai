@@ -232,9 +232,12 @@ Campos minimos nuevos o extendidos:
 
 ## 21. Seguridad y privacidad
 
+- Aplicar [`security-strategy.md`](../analysis/security-strategy.md) a reportes, gaps, recovery, agregados y herramientas read-only.
 - Mantener auth y ownership server-side.
+- Report/gap/recovery endpoints requieren permissions semanticas y scope por assessment/cohort.
 - Reporte debe minimizar student-level detail.
 - Gap summary debe preferir agregados.
+- Herramientas de `agents` solo pueden leer hechos persistidos ya autorizados por `api`; no reciben acceso libre a datos crudos.
 - No crear perfiles personales ni predicciones high-stakes.
 - No exponer prompts internos, payloads completos ni datos sensibles innecesarios.
 - Reportes student-safe, si existen, deben omitir evidencia interna y costos.
@@ -242,6 +245,10 @@ Campos minimos nuevos o extendidos:
 
 ## 22. Observabilidad y auditoria
 
+- Aplicar [`observability-strategy.md`](../analysis/observability-strategy.md) a reportes, gaps, recovery, tools read-only y estimacion de impacto.
+- Trazar handoffs desde grading/feedback hacia gaps, recovery y teacher report usando operation/run IDs estables.
+- Registrar eventos canonicos de teacher decision, gap confirmed/rejected, recovery approved y report validated.
+- Versionar la metodologia de time-saved estimate; no inferir impacto desde logs tecnicos.
 - `grading_score_edited`.
 - `grading_suggestion_rejected`.
 - `teacher_decision_recorded`.
@@ -474,21 +481,27 @@ Time saved debe quedar etiquetado como estimacion. Si el docente entrega baselin
 ## 34. Criterios de seguridad
 
 - Ownership denial mantiene patron consistente de la API.
+- Report/gap/recovery permissions y ownership quedan cubiertos por pruebas negativas.
 - Student-level details no aparecen en reportes agregados salvo necesidad explicita.
+- Tools read-only reciben datasets scoped y no pueden consultar fuera del assessment/cohort autorizado.
 - No se guardan secretos ni prompts completos en logs visibles.
 - No se exponen datos de costo internos en modos student-safe.
 - No hay publicacion sin teacher validation.
 - Internal auth `api` -> `agents` sigue la decision vigente.
+- Pruebas negativas cubren reporte de otro teacher, intento de ver costo/evidencia interna en modo student-safe y tool input fuera de scope.
 
 ## 35. Criterios de observabilidad
 
 - 100% de gap/recovery/report agent runs tienen log.
+- El journey Open completo hasta teacher report puede reconstruirse por trace/correlation ID.
 - Failed runs tambien se loguean.
 - Teacher overrides y rejections quedan auditados.
 - Report generated y validated quedan separados.
 - Time-saved estimate queda versionado o trazable.
 - Cost estimate existe o queda marcado como missing con razon.
 - Correlation ID permite seguir request entre `web`, `api` y `agents`.
+- Herramientas read-only registran dataset scope, version y resultado sin volcar datos student-level.
+- Reportes student-safe no exponen costos, evidencia interna ni trazas operacionales.
 
 ## 36. Criterios de despliegue
 
@@ -702,6 +715,8 @@ Criterios:
 
 | Fecha | Cambio | Motivo | Elementos afectados | Decision asociada |
 |---|---|---|---|---|
+| 2026-07-21 | Incorporacion de Observability & Telemetry | Alinear R03 con trazabilidad de handoffs, herramientas read-only, decisiones docentes e impacto versionado | Observabilidad, DoD operativo | D-OBS-01..D-OBS-08 |
+| 2026-07-21 | Incorporacion de Security & Authorization | Alinear R03 con reportes agregados seguros, herramientas read-only scoped y proteccion de datos student-level | Seguridad, DoD operativo | D-SEC-01..D-SEC-08 |
 | 2026-07-20 | Incorporacion de capacidades de Agent Runtime | Declarar handoffs tipados y herramientas read-only/agregadas para impacto Open | Runtime, gaps, recovery, reports | D-04, D-06 |
 | 2026-07-20 | Incorporacion de API-Agent Orchestration | Mantener reportes/gaps/recovery como intenciones de `api/` con provenance y operaciones consultables | API, agents, web routes, DoD operativo | D-API-01..D-API-10 |
 | 2026-07-20 | Creacion inicial | Ejecucion de Fase 05 para R03 | Todo el documento | D-04, D-06 |

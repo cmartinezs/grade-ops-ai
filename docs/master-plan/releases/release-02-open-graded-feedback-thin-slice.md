@@ -239,9 +239,14 @@ Campos minimos nuevos o extendidos:
 
 ## 21. Seguridad y privacidad
 
+- Aplicar [`security-strategy.md`](../analysis/security-strategy.md) a rubric, submission, grading, feedback, file ingestion y rutas web.
 - Mantener auth y ownership server-side en assessment, rubric, submission, grading y feedback.
+- Aplicar permissions semanticas para rubric/grading/feedback; la UI solo representa capacidades devueltas por `api`.
 - Usar identificador de estudiante minimo; evitar PII innecesaria.
 - Validar extension, tamano, contenido no vacio y ownership de archivos.
+- Rechazar archivos fuera de policy con errores seguros, sin procesar contenido ni despachar agentes.
+- Exigir idempotencia/replay protection para comandos GenAI mutantes de rubric/grading/feedback.
+- `agents` solo acepta provider/model/capability permitidos por `api` y presupuesto del request.
 - No exponer prompts internos ni payloads completos sensibles en logs visibles.
 - Logs deben guardar summaries y referencias, no submissions completas cuando no sea necesario.
 - No ejecutar codigo subido por estudiantes.
@@ -250,6 +255,10 @@ Campos minimos nuevos o extendidos:
 
 ## 22. Observabilidad y auditoria
 
+- Aplicar [`observability-strategy.md`](../analysis/observability-strategy.md) a rubric, submission, grading, feedback y eventos de aprobacion docente.
+- Crear spans para ingestion/validation, rubric generation, grading suggestion, feedback generation y approval.
+- Registrar eventos canonicos de producto/IA para submission received, grading suggestion generated/edited/approved/rejected y feedback approved/published.
+- Medir latencia, tokens, costo, retries, validation failures y calidad IA por aprobacion/edicion/rechazo docente.
 - `rubric_generated`.
 - `rubric_validated`.
 - `rubric_approved`.
@@ -491,22 +500,28 @@ La carga de una submission no consume graded submission. El consumo ocurre cuand
 ## 34. Criterios de seguridad
 
 - Ownership denial mantiene patron consistente de la API.
+- Permissions cubren rubric, submission, grading y feedback; la UI no puede habilitar acciones sin capability devuelta por API.
 - Student identifiers se tratan como datos sensibles.
 - Archivos se validan antes de persistir/procesar.
+- Archivos rechazados no generan AgentRun ni costo.
 - No se guardan secretos ni prompts completos en logs visibles.
 - Feedback no contiene datos personales inventados.
 - No hay ejecucion de codigo ni llamadas inseguras sobre submissions.
 - Internal auth `api` -> `agents` sigue la decision vigente.
+- Pruebas negativas cubren archivo invalido, ownership cruzado, rol sin permiso, replay/idempotency conflict y provider/model no permitido.
 
 ## 35. Criterios de observabilidad
 
 - 100% de rubric/grading/feedback agent runs tienen log.
+- El journey assessment -> rubric -> submission -> grading -> feedback puede reconstruirse por trace/correlation ID.
 - Failed runs tambien se loguean.
 - Usage event existe para cada submission analizada.
 - Cost estimate existe o queda marcado como missing con razon.
 - `uncertainty_flags` quedan persistidas y visibles.
 - Correlation ID permite seguir request entre `web`, `api` y `agents`.
 - Aprobaciones de rubrica y feedback quedan auditadas.
+- Edicion/rechazo docente queda como evento de producto, no inferido desde logs tecnicos.
+- Archivos rechazados generan evento/metric de rechazo sin AgentRun ni costo.
 
 ## 36. Criterios de despliegue
 
@@ -713,6 +728,8 @@ Criterios:
 
 | Fecha | Cambio | Motivo | Elementos afectados | Decision asociada |
 |---|---|---|---|---|
+| 2026-07-21 | Incorporacion de Observability & Telemetry | Alinear R02 con telemetria de graded submission, calidad IA, aprobacion docente y costo por resultado | Observabilidad, DoD operativo | D-OBS-01..D-OBS-08 |
+| 2026-07-21 | Incorporacion de Security & Authorization | Alinear R02 con permissions, ingestion segura, minimizacion PII, provider/model allowlist y pruebas negativas | Seguridad, DoD operativo | D-SEC-01..D-SEC-08 |
 | 2026-07-20 | Incorporacion de capacidades de Agent Runtime | Declarar el segundo consumidor real del runtime y sus limites de autonomia | Runtime, agentes Rubric/Grading/Feedback | D-04, D-06 |
 | 2026-07-20 | Incorporacion de API-Agent Orchestration | Asegurar que rubric/grading/feedback usen `api/` como orquestador funcional y no como proxy de agentes | API, agents, web routes, DoD operativo | D-API-01..D-API-10 |
 | 2026-07-20 | Creacion inicial | Ejecucion de Fase 05 para R02 | Todo el documento | D-04, D-06 |

@@ -801,7 +801,7 @@ Recomendaciones:
 
 | Dependencia | Afecta | Estado |
 |---|---|---|
-| D-01 entorno `demo` vs `beta` | AUT-16, AUT-17, AUT-18, criterios de evidencia | Pendiente |
+| D-01 roles de entorno `demo`/`beta` | AUT-16, AUT-17, AUT-18, criterios de evidencia | Resuelta; queda gate de evidence/proof por ambiente |
 | D-04 ADR Groq/default provider | AUT-01, AUT-02, AUT-16, AUT-17, costos | Pendiente |
 | D-06 modelo unico de agent log | AUT-16, AUT-18 | Pendiente |
 | D-07 pricing canonical | AUT-17, AUT-20 | Pendiente |

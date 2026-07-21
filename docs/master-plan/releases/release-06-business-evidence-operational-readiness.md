@@ -1,6 +1,6 @@
 # Release 06 - Business Evidence and Operational Readiness
 
-> Bloqueo de cierre: R06 puede documentarse y ejecutarse en paralelo, pero no puede marcarse como release candidate de validacion MVP hasta resolver D-01. La narrativa final tampoco puede cerrarse hasta resolver D-07.
+> Bloqueo de cierre: R06 puede documentarse y ejecutarse en paralelo, pero no puede marcarse como release candidate de validacion MVP con claims de `beta`, `demo` o provider sin deployment/provider proof del ambiente correspondiente. La narrativa final tampoco puede cerrarse hasta resolver D-07.
 
 ## 1. Identificacion
 
@@ -9,7 +9,7 @@
 | Release | R06 |
 | Nombre | Business Evidence and Operational Readiness |
 | Archivo | `docs/master-plan/releases/release-06-business-evidence-operational-readiness.md` |
-| Estado | Documentada; ejecucion condicionada por D-01 y D-07 |
+| Estado | Documentada; ejecucion condicionada por deployment/provider proof y D-07 |
 | Complejidad | M |
 | Corte | MVP / cierre operativo y de evidencia de validacion |
 | Fuente estrategica | `docs/master-plan/analysis/release-strategy.md` |
@@ -20,18 +20,18 @@
 |---|---|
 | La release existe en `master-plan-executive.md` | OK |
 | Sus US estan asignadas | OK: US-082, US-090, US-091; cuatro US propuestas requeridas |
-| No existen decisiones bloqueantes | Condicion: D-01 bloquea el cierre como release candidate; D-07 bloquea la narrativa final |
+| No existen decisiones bloqueantes | Condicion: D-01 esta resuelta; falta proof por ambiente para claims de release candidate; D-07 bloquea la narrativa final |
 | La release no es XL | OK si se limita a dashboard interno, ledgers, checklist y paquete de evidencia |
 | Habilita un flujo vertical | OK: operator revisa pilotos, uso, costos, revenue y cumplimiento, luego exporta un paquete validado |
 | Dependencias anteriores claras | OK: evidencia acumulada desde R01 y outputs de R02, R03 y R05 |
 
-R06 no esta bloqueada para instrumentar ledgers, dashboard, alertas, accesos y recopilacion de evidencia. Si D-01 o D-07 siguen pendientes al intentar marcarla `RELEASED`, debe pasar a `BLOCKED` y no sustituir la decision con supuestos silenciosos.
+R06 no esta bloqueada para instrumentar ledgers, dashboard, alertas, accesos y recopilacion de evidencia. Si falta proof de ambiente/provider para los claims elegidos, o si D-07 sigue pendiente al intentar marcarla `RELEASED`, debe pasar a `BLOCKED` y no sustituir evidencia con supuestos silenciosos.
 
 ## 3. Objetivo ejecutivo
 
 Consolidar evidencia real de operacion, usuarios, pilotos, uso, costos, revenue, related-party y cumplimiento tecnico en un dashboard interno y un paquete exportable, privado por defecto y validado por un Operator.
 
-R06 convierte los eventos producidos desde R01-R05 en prueba auditable de producto, operacion AI-native y viabilidad comercial. Tambien verifica que el paquete de validacion use una narrativa de pricing coherente y evidencia de despliegue compatible con la decision D-01.
+R06 convierte los eventos producidos desde R01-R05 en prueba auditable de producto, operacion AI-native y viabilidad comercial. Tambien verifica que el paquete de validacion use una narrativa de pricing coherente y evidencia de despliegue compatible con los roles de entorno definidos por D-01.
 
 ## 4. Problema
 
@@ -188,7 +188,7 @@ Estas historias no existen como archivos en `docs/02-product/user-stories/`. Deb
 - Ningun resumen IA puede crear o alterar montos, counts o estados fuente.
 - Operator aprueba todo export y toda evidencia publica.
 - Pricing final debe usar la fuente canonica decidida en D-07.
-- Readiness de validacion requiere D-01 resuelta y evidencia acorde.
+- Readiness de validacion requiere evidencia acorde al ambiente y provider declarados.
 
 ## 17. Dependencias
 
@@ -197,7 +197,7 @@ Estas historias no existen como archivos en `docs/02-product/user-stories/`. Deb
 | R01 Evidence Backbone | Previa obligatoria | Reutilizar AgentExecutionLog, costo e idempotencia |
 | R02/R03 Open evidence | Previa para narrativa Open | Agregar submissions, feedback, reports y time saved |
 | R04/R05 Closed evidence | Previa si Closed entra al demo | Agregar snapshots, attempts, grading y analytics |
-| D-01 demo GCP/Gemini vs beta | Bloqueante de cierre | Resolver y adjuntar deployment/API proof |
+| D-01 roles de entorno `demo`/`beta` | Resuelta; proof requerido para claims | Adjuntar deployment/API/provider proof del ambiente declarado |
 | D-04 provider policy | Requerida para costos confiables | Mantener provider/model dinamicos |
 | D-06 rich agent log | Requerida | Usar esquema rico, no vista reducida |
 | D-07 canonical pricing | Bloqueante de narrativa final | Reconciliar pricing antes del export final |
@@ -268,7 +268,9 @@ Migraciones Flyway deben incluir constraints, indexes por periodo/customer y uni
 
 ## 21. Seguridad y privacidad
 
+- Aplicar [`security-strategy.md`](../analysis/security-strategy.md) a Operator, dashboards, corrections, health, exports, ledgers y evidence links.
 - Operator requiere autenticacion y autorizacion server-side.
+- Endpoints `/api/v1/operator/**` requieren role/permission explicito y auditoria de cada accion sensible.
 - Queries y exports respetan tenant/customer scope.
 - Evidence links privados no se exponen a teachers, students ni public exports.
 - No guardar credenciales cloud, payment tokens o signed URLs permanentes en el ledger.
@@ -279,9 +281,18 @@ Migraciones Flyway deben incluir constraints, indexes por periodo/customer y uni
 - Logs de dashboard/export no contienen el contenido privado del evidence link.
 - Health endpoint no revela variables, stack traces, providers keys ni topologia sensible.
 - Retencion e invalidacion de evidencia deben quedar auditadas.
+- `web` debe separar rutas Operator de Teacher y no derivar permisos desde pathname/correo/variables publicas.
+- Readiness debe reportar ambiente (`demo`, `beta` o ambos), commit, revision, provider path y controles de aislamiento sin exponer secretos.
+- `beta` debe contar con manifiesto versionado o infraestructura declarativa equivalente para Vercel, Render, Neon, R2, Firebase y secretos.
+- Previews de Vercel no pueden apuntar a datos reales de `beta` salvo autorizacion explicita, temporal y auditada.
 
 ## 22. Observabilidad y auditoria
 
+- Aplicar [`observability-strategy.md`](../analysis/observability-strategy.md) a Operator dashboard, health, costs, revenue, readiness, exports, alerts y runbooks.
+- Dashboard Operator debe consumir APIs/agregados autorizados; no leer Cloud Logging, Vercel logs, Render logs ni queries libres como modelo de producto.
+- Definir baseline SLI/SLO a partir de datos reales de `beta`/`demo`; no convertirlos en compromiso contractual sin historia suficiente.
+- Consolidar alertas por burn rate, 5xx sostenidos, LLM degradado, queue/stuck runs, costos anomalos, cero trafico inesperado y fallo de exportador.
+- Cada alerta debe tener owner, severidad, runbook, senales de confirmacion, mitigacion y criterio de cierre.
 - `usage_event_recorded`.
 - `usage_limit_compared`.
 - `usage_overage_detected`.
@@ -337,7 +348,7 @@ Cada evento incluye actor, timestamp, correlation/request ID, source entity, pre
 - Mantener todos los calculos de ledgers, usage, cost, revenue y readiness en `api/`/DB; Ops Agent solo resume o explica hechos persistidos.
 - Exponer endpoints REST de recursos operacionales (`ai-operations`, health, evidence, usage, costs, revenue, exports) con affordances de drill-down y export.
 - Requerir Operator/founder access antes de retries privilegiados, dead-letter handling, exports o corrections.
-- Usar operaciones consultables para exports o recomputations largos; no usar LLM para cerrar D-01/D-07.
+- Usar operaciones consultables para exports o recomputations largos; no usar LLM para producir proof de entorno ni cerrar D-07.
 - Someter endpoints/rutas nuevas al gate Richardson REST, con links `self`, `runs`, `attempts`, `export`, `retry`, `cancel` cuando existan, y errores seguros sin PII/secrets.
 
 ### Herramientas requeridas
@@ -353,7 +364,7 @@ Cada evento incluye actor, timestamp, correlation/request ID, source entity, pre
 ### Validadores determinísticos
 
 - Totales de usage, cost y revenue se calculan en API/DB, no por LLM.
-- Readiness es una matriz deterministicamente evaluada contra D-01/D-07 y evidencia requerida.
+- Readiness es una matriz deterministicamente evaluada contra D-01, D-07 y evidencia requerida: D-01 aporta roles de entorno; el proof confirma claims.
 - Related-party no puede ser nulo.
 - Export public-safe usa allowlist.
 
@@ -361,7 +372,7 @@ Cada evento incluye actor, timestamp, correlation/request ID, source entity, pre
 
 - Ops Agent: `EXECUTE_READ_ONLY`.
 - Operator revisa, corrige metadata por eventos auditados y aprueba export.
-- Founder/Release Manager resuelve D-01 y D-07.
+- Founder/Release Manager valida proof de entorno y resuelve D-07.
 
 ### Límites operacionales
 
@@ -383,7 +394,7 @@ Cada evento incluye actor, timestamp, correlation/request ID, source entity, pre
 - Dashboard y export reconciliados contra consultas fuente.
 - Tests de allowlist private/public-safe.
 - Health/readiness smoke con environment, commit y timestamp.
-- D-01/D-07 registradas antes de release candidate.
+- D-01/proof de entorno y D-07 registrados antes de release candidate.
 
 ### Deuda o capacidades diferidas
 
@@ -412,7 +423,7 @@ Cada evento incluye actor, timestamp, correlation/request ID, source entity, pre
 - Operator decide que evidencia es private, controlled-private o public-safe.
 - Operator valida testimonios y consentimientos.
 - Operator aprueba cada export y el paquete final de validacion.
-- Founder/Release Manager resuelve D-01 y D-07.
+- Founder/Release Manager valida proof de entorno y resuelve D-07.
 - El sistema nunca publica, cobra ni declara traction autonomamente.
 
 ## 26. Guardrails
@@ -426,7 +437,7 @@ Cada evento incluye actor, timestamp, correlation/request ID, source entity, pre
 - No PII estudiantil en dashboard de negocio o export.
 - No secrets ni URLs firmadas permanentes en exports.
 - No export publico sin approval Operator.
-- No release candidate con D-01 pendiente.
+- No release candidate con claims de entorno/provider sin proof.
 - No narrativa final con D-07 pendiente.
 - No implementar R07/R08 desde R06.
 
@@ -470,7 +481,7 @@ Repetir una importacion, request o callback no debe duplicar uso, costo, revenue
 - Alert acknowledgement se puede reabrir si la condicion persiste.
 - Pilot state se corrige con historial.
 - Despliegue sigue rollback normal por revision/imagen; la evidencia conserva commit y revision originales.
-- D-01/D-07 se registran documentalmente antes de cambiar el criterio final.
+- D-01/proof de entorno y D-07 se registran documentalmente antes de cambiar el criterio final.
 
 ## 30. Consumo y costos
 
@@ -533,6 +544,7 @@ Metricas derivadas incluyen costo por run, assessment, graded submission, teache
 ## 34. Criterios de seguridad
 
 - Solo Operator autorizado accede a C14/C15.
+- Teacher/student no pueden acceder rutas, endpoints, exports ni corrections de Operator.
 - Pruebas cubren acceso denegado para teacher/student y cross-tenant.
 - Public export usa allowlist y no contiene PII, secrets ni private links.
 - Controlled-private export requiere canal controlado.
@@ -540,6 +552,8 @@ Metricas derivadas incluyen costo por run, assessment, graded submission, teache
 - Health no filtra configuracion sensible.
 - Audit events no pueden editarse desde UI.
 - Evidencia revocada deja de estar disponible sin borrar el historial.
+- Pruebas negativas cubren export cross-tenant, evidence link revocado, correction sin permiso, health probing y UI manipulada.
+- Pruebas multiambiente cubren token Firebase cruzado, JWT interno con `env`/audience/capability incorrecto, CORS/preflight del dominio canonico y bloqueo de preview no autorizado.
 
 ## 35. Criterios de observabilidad
 
@@ -551,17 +565,22 @@ Metricas derivadas incluyen costo por run, assessment, graded submission, teache
 - Infra deploy y smoke registran environment, revision, commit y timestamp.
 - Alert delivery/acknowledgement queda auditado.
 - Health history permite distinguir outage de dato desconocido.
+- Dashboard puede filtrar/comparar `demo` y `beta` con misma semantica de eventos, metricas, estados y errores.
+- Export/bundle incluye manifest, checksum, source IDs, environment, revision, freshness y clasificacion de datos.
+- Fallo del exportador OTel/log drain genera alerta pero no detiene el flujo funcional.
 
 ## 36. Criterios de despliegue
 
-- Debe correr integrado en local y en el entorno decidido por D-01.
+- Debe correr integrado en local y en el ambiente declarado para el claim: `beta`, `demo` o ambos segun D-01.
 - `infra/terraform/environments/demo/` debe verificarse para cambios de `api/`, `agents/` y `web/`.
+- Para `beta`, debe existir manifiesto versionado o configuracion declarativa verificable de Vercel, Render, Neon, R2, Firebase, secrets, dominios, CORS y previews.
 - Scope infra obligatorio debe cubrir Cloud Run o hosting equivalente, Cloud SQL, Artifact Registry, IAM y Secret Manager segun cada servicio afectado.
 - Terraform `fmt`, `validate` y `plan` deben quedar documentados cuando el entorno/credenciales lo permitan.
 - API/Agents health checks y web dashboard deben pasar smoke.
 - Deployment proof incluye URL, commit, revision, timestamp y evidencia de provider/API aplicable.
+- Deployment proof incluye prueba de que el build no mezcla Firebase project, API URL, DB/storage ni secrets de otro ambiente.
 - La tarea infra debe estar DONE antes de marcar R06 completa.
-- D-01 determina si `beta`, `demo` o ambos forman el paquete final.
+- D-01 define los roles de `beta` y `demo`; el paquete final debe incluir solo los ambientes con proof verificable.
 
 ## 37. Criterios de negocio
 
@@ -578,7 +597,7 @@ Metricas derivadas incluyen costo por run, assessment, graded submission, teache
 
 - [ ] US-082/090/091 enriquecidas antes de atomizar.
 - [ ] US-PROPUESTA-01/05/06/08 creadas o aceptadas como tareas explicitas.
-- [ ] D-01 resuelta y registrada.
+- [ ] D-01 referenciada como roles de entorno y proof adjunto para los claims de `beta`, `demo` o ambos.
 - [ ] D-07 resuelta y narrativa reconciliada.
 - [ ] Operator access funciona con RBAC server-side.
 - [ ] Usage, Revenue y Cost ledgers persisten eventos idempotentes.
@@ -589,7 +608,7 @@ Metricas derivadas incluyen costo por run, assessment, graded submission, teache
 - [ ] Export private/public-safe es versionado, revisable y revocable.
 - [ ] Validation readiness bloquea faltantes reales.
 - [ ] Infra scope para servicios afectados esta DONE.
-- [ ] Terraform/smoke/deployment proof estan documentados segun D-01.
+- [ ] Terraform/smoke/deployment/provider proof estan documentados segun los claims de entorno.
 - [ ] Tests funcionales, seguridad, ledger y export pasan.
 - [ ] README/planning/release artifacts actualizados.
 
@@ -613,7 +632,7 @@ Metricas derivadas incluyen costo por run, assessment, graded submission, teache
 ```gherkin
 Given an authorized operator and real product events from R01 through R05
 And a pilot with usage, cost, revenue or commitment evidence
-And D-01 and D-07 have recorded resolutions
+And D-01 roles are recorded, environment proof is attached, and D-07 has a recorded resolution
 When the operator opens the evidence dashboard for the validation period
 And reviews missing evidence, budget alerts and agent service health
 And classifies evidence for controlled-private and public-safe use
@@ -661,7 +680,7 @@ And the approved package records its source snapshot, commit and environment
 - Evidence export manifest.
 - Validation readiness matrix.
 - Demo/product URLs, commit, revision and timestamps.
-- GCP/Cloud Run/Cloud SQL/Gemini proof required by D-01.
+- GCP/Cloud Run/Cloud SQL/Gemini proof when the package claims `demo` or Google Cloud/Gemini evidence.
 - Terraform plan/apply or deployment evidence, without secrets.
 - Tests, smoke output, planning and PR references.
 
@@ -669,7 +688,7 @@ And the approved package records its source snapshot, commit and environment
 
 | Riesgo | Mitigacion |
 |---|---|
-| D-01 sigue pendiente | Trabajar dashboard/ledgers en paralelo; bloquear release candidate hasta decidir y probar entorno. |
+| Proof de entorno falta o contradice claims | Trabajar dashboard/ledgers en paralelo; bloquear release candidate hasta probar el ambiente/provider declarado. |
 | D-07 produce pricing contradictorio | No exportar narrativa final; reconciliar fuente canonica y registrar decision. |
 | US-082 crece a BI suite | Limitar widgets al evidence checklist y dividir export/readiness si hace falta. |
 | Operator no tiene acceso | Priorizar US-PROPUESTA-01 y aplicar RBAC minimo antes del dashboard. |
@@ -683,7 +702,7 @@ And the approved package records its source snapshot, commit and environment
 
 ## 44. Resultado esperado
 
-Al cerrar R06, GradeOps AI dispone de un panel interno y un paquete de evidencia versionado que demuestran uso real, operacion de agentes, control humano, costos, revenue/commitments, related-party, pilotos y cumplimiento tecnico sin exponer datos privados. La release candidata queda vinculada a un entorno y commit verificables, con D-01/D-07 resueltas, infraestructura validada y todos los faltantes visibles en una matriz de readiness.
+Al cerrar R06, GradeOps AI dispone de un panel interno y un paquete de evidencia versionado que demuestran uso real, operacion de agentes, control humano, costos, revenue/commitments, related-party, pilotos y cumplimiento tecnico sin exponer datos privados. La release candidata queda vinculada a un entorno y commit verificables, con D-01 aplicada como roles de entorno, D-07 resuelta, infraestructura validada y todos los faltantes visibles en una matriz de readiness.
 
 ## 45. Prompt ejecutable `/release-*`
 
@@ -717,7 +736,7 @@ Fuentes obligatorias:
 - infra/terraform/environments/demo/
 
 Precondiciones:
-- Resolver D-01 antes de marcar release candidate o RELEASED.
+- Adjuntar proof de entorno/provider antes de marcar release candidate o RELEASED.
 - Resolver D-07 antes de aprobar narrativa/pricing final.
 - No inventar planning IDs. Crear las plannings con el flujo vigente si no existen.
 - Ejecutar /us-enrich sobre US-082, US-090 y US-091.
@@ -735,7 +754,7 @@ Comandos:
    /release-add <VERSION> <PLANNING_ID_R06_PRODUCT> <PLANNING_ID_R06_INFRA>
 4. Revisar estado:
    /release-status <VERSION>
-5. Marcar BLOCKED si D-01/D-07 impiden el cierre y el estado real lo soporta:
+5. Marcar BLOCKED si falta proof de entorno, D-07 impide el cierre o el estado real lo soporta:
    /release-status <VERSION> --mark-blocked
 6. Marcar RELEASED solo con todas las plannings COMPLETED:
    /release-status <VERSION> --mark-released
@@ -772,7 +791,7 @@ Automatizacion:
 Trazabilidad:
 - Cada cifra incluye source ID, periodo y freshness.
 - Registrar contradicciones de docs/codigo y decisiones; no resolver silenciosamente.
-- Mantener D-01/D-07 visibles hasta su resolucion documentada.
+- Mantener D-01/proof de entorno y D-07 visibles hasta su resolucion documentada.
 - Infra planning debe estar DONE antes de cerrar.
 
 Metricas:
@@ -793,13 +812,16 @@ Entregables:
 - Dashboard/ledger/export/readiness implementados y probados.
 - Evidence package y manifest.
 - Deployment/provider proof segun D-01.
-- Documentacion de D-01/D-07 y estado de release actualizados.
+- Documentacion de D-01/proof de entorno, D-07 y estado de release actualizados.
 ```
 
 ## 46. Historial de cambios
 
 | Fecha | Cambio | Motivo | Elementos afectados | Decision asociada |
 |---|---|---|---|---|
+| 2026-07-21 | Incorporacion de Observability & Telemetry | Alinear R06 con dashboard Operator, SLI/SLO baseline, alertas, runbooks, exports y comparacion multiambiente | Observabilidad, DoD operativo | D-OBS-01..D-OBS-08 |
+| 2026-07-21 | Incorporacion de topologia de seguridad multiambiente | Hacer que R06 cierre readiness con aislamiento comprobado de `demo`/`beta` y manifiesto de beta | Seguridad, despliegue, readiness, DoD operativo | D-SEC-01..D-SEC-08 |
+| 2026-07-21 | Incorporacion de Security & Authorization | Alinear R06 con Operator auth, exports allowlisted, evidence links revocables, health seguro y auditoria no editable | Seguridad, DoD operativo | D-SEC-01..D-SEC-08 |
 | 2026-07-20 | Incorporacion de capacidades de Agent Runtime | Declarar Ops Agent read-only y observabilidad/costo/readiness del runtime | Runtime, Ops Agent, evidence dashboard | D-01, D-04, D-06, D-07 |
 | 2026-07-20 | Incorporacion de API-Agent Orchestration | Asegurar que evidencia, health, costs y exports sean hechos de API/DB y no salidas autoritativas de LLM | API, agents, web/operator routes, DoD operativo | D-API-01..D-API-10 |
 | 2026-07-20 | Creacion inicial | Ejecucion de Fase 05 para R06 | Todo el documento | D-01, D-04, D-06, D-07 |

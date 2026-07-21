@@ -40,7 +40,7 @@ El estado general es: **documentación de intención sólida, documentación de 
 - **Guía de desarrollador (09-developer-guide)**: la carpeta más desfasada del corpus — tres archivos distintos repiten independientemente que `agents/` no tiene lógica implementada, lo cual es falso.
 - **Buenas prácticas (10-best-practices)**: genérica, transferible, no específica de GradeOps AI; irónicamente advierte sobre el mismo patrón de drift documental que se encontró en 09-developer-guide.
 - **Decisiones (99-decisions)**: 13 ADRs, todos en estado "Accepted", ninguno formalmente contradicho entre sí — pero dos decisiones de facto importantes (Groq, entorno beta) nunca se registraron como ADR pese a estar ya implementadas.
-- **User stories (02-product/user-stories)**: catálogo de 62 historias en 2 niveles de madurez muy distintos — 15 historias (épicas 01-02) completamente enriquecidas; 47 historias (épicas 03-13) esqueléticas (solo Story + Acceptance Criteria, sin DoD/Technical Notes/Dependencies).
+- **User stories (02-product/user-stories)**: catalogo de 62 historias en niveles de madurez distintos — 15 historias de épicas 01-02 enriquecidas y con ejecución real; US-080/US-081 materializadas documentalmente para R01; 45 historias restantes esqueléticas (solo Story + Acceptance Criteria, sin DoD/Technical Notes/Dependencies).
 
 ## Cobertura funcional
 
@@ -113,7 +113,7 @@ El estado general es: **documentación de intención sólida, documentación de 
 - `99-decisions/README.md` no lista los dos ADRs más recientes (`2026-06-21-form-validation-react-hook-form-zod.md`, `2026-06-21-web-design-system.md`).
 - `roadmap.md` no tiene ningún mecanismo de registro de avance real contra el plan semanal — no es posible, solo con documentación, saber en qué semana/fase se encuentra el proyecto.
 - `02-product/user-stories.md` (README raíz de historias) declara 9 historias para Epic 01 cuando en realidad hay 12 — índice desactualizado.
-- 47 de 62 historias de usuario (épicas 03-13) carecen de Definition of Done, Technical Notes y Dependencies a nivel de historia individual — esperable en esta etapa, pero es un vacío real que Fase 02 deberá tratar explícitamente.
+- 45 de 62 historias de usuario (épicas 03-13, excluyendo US-080/US-081) carecen de Definition of Done, Technical Notes y Dependencies a nivel de historia individual — esperable en esta etapa, pero es un vacío real que cada release deberá tratar explícitamente antes de atomizar.
 - Sin epic ni agente propio para 3 de los 13 agentes (Ops Evidence, Distractor Quality, Ambiguity Review) — quedan implícitos en el alcance de otra historia.
 
 ## Diferencias entre código y documentación
@@ -137,7 +137,7 @@ Ver tabla de contradicciones C2, C3, C9, C10, C11 arriba — son, en esencia, to
 
 ## Recomendaciones
 
-1. Resolver primero, y con más urgencia que cualquier otra cosa en este diagnóstico, la pregunta del entorno de despliegue objetivo para el validacion MVP (`demo`/GCP vs. `beta`/Render) — ver decisión bloqueante D-01 en `decisions-and-assumptions.md`.
+1. Mantener aplicada la decision D-01: `beta` sostiene evidencia funcional y `demo` queda como target Google Cloud/Gemini-capable; antes de publicar claims de validacion MVP debe existir proof por ambiente/provider.
 2. Antes de iniciar la Fase 02 formalmente, renumerar la colisión de IDs entre Epic 01 y Epic 02 (fuera del alcance de escritura de las fases del Master Plan — requiere edición directa de las historias originales).
 3. Redactar los dos ADRs faltantes (proveedor Groq por defecto; adopción del entorno beta) para que `99-decisions/` refleje decisiones ya tomadas y ejecutadas.
 4. Actualizar `CLAUDE.md` raíz para reflejar el estado real de madurez de cada repo (ya no "Scaffolding"), incluir Firebase en el diagrama de arquitectura, y mencionar la existencia del entorno beta.
