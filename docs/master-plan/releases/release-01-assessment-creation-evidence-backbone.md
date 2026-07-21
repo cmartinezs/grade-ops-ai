@@ -130,8 +130,8 @@ Teacher signs in
 | US-013 | Postman Collection | READY; verificar si existe antes de incluir como tarea |
 | US-014 | Google Sign-In for Teachers | Implementada |
 | US-015 | Password Recovery | Implementada con discrepancias de DoD pendientes |
-| US-080 | Agent Execution Log | Esqueletica; R01 debe enriquecer y materializar corte minimo |
-| US-081 | Cost Estimate Per Run | Esqueletica; R01 debe enriquecer y materializar corte minimo |
+| US-080 | Agent Execution Log | Materializada; R01 debe convertir su DoD/notas tecnicas en tareas de API/Agents/Web/observabilidad |
+| US-081 | Cost Estimate Per Run | Materializada; R01 debe convertir su DoD/notas tecnicas en tareas de costo, provider/model policy y agregacion |
 
 ## 14. Historias propuestas o modificadas
 
@@ -145,7 +145,7 @@ Estas propuestas no se crean como archivos de user story dentro de esta release 
 
 ## 15. Consideraciones adicionales para las US
 
-- US-080 y US-081 son P0 pero estan esqueléticas. Deben pasar por `/us-enrich` antes de implementar si la planning necesita tareas ejecutables.
+- US-080 y US-081 son P0 y ya estan materializadas con DoD, notas tecnicas, dependencias y complejidad. No requieren `/us-enrich` antes de R01; requieren atomizacion por owner y trazabilidad contra el bridge de release.
 - US-015 tiene dos discrepancias documentadas en su DoD: metodo HTTP y granularidad de errores. R01 debe decidir si las corrige o si las deja como deuda explicitamente excluida del release candidate.
 - US-003/US-006 mencionan operator access indefinido. No bloquea R01 si el operator evidence se limita a inspeccion interna o developer/admin temporal, pero debe quedar como riesgo para R06.
 - US-013 debe verificar si ya existe `docs/postman/` o equivalente antes de planificar trabajo nuevo.

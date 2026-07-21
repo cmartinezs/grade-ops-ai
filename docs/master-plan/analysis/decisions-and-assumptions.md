@@ -132,13 +132,13 @@
 
 ---
 
-## A-02 — Las 15 historias enriquecidas de Epic 01-02 reflejan fielmente lo implementado
+## A-02 — Las historias enriquecidas de Epic 01-02 reflejan fielmente lo implementado
 
 - **Tipo**: Supuesto.
-- **Contexto**: Epic 01 y Epic 02 son las únicas con historias enriquecidas (DoD, Technical Notes, Dependencies, Complexity) y son las únicas con ejecución real vía plannings cerradas/activas.
+- **Contexto**: Epic 01 y Epic 02 son las únicas con historias enriquecidas y ejecución real vía plannings cerradas/activas. US-080/US-081 tambien estan materializadas documentalmente para R01, pero todavia no tienen implementacion verificada.
 - **Evidencia**: `.planning/active/008-assessment-creation/01-expansion.md` (menciona enriquecimiento vía `/us-enrich` antes de la expansión).
 - **Alternativas**: n/a.
-- **Recomendación**: la Fase 02 puede tratar estas 15 historias con mayor confianza de readiness que las 47 restantes, sin necesidad de re-diagnóstico profundo más allá de contrastar contra el código ya verificado en esta fase.
+- **Recomendación**: la Fase 02 puede tratar las 15 historias de Epic 01-02 con mayor confianza de readiness implementada que las restantes, y tratar US-080/US-081 como listas para atomizacion documental dentro de R01. Las otras 45 historias requieren enriquecimiento antes de atomizar.
 - **Consecuencia si resulta falsa**: la Fase 02 subestimaría trabajo pendiente en Epic 01-02.
 - **Estado**: Aceptado como supuesto de trabajo.
 - **Responsable sugerido**: n/a.

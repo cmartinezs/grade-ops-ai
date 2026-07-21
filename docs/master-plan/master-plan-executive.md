@@ -6,7 +6,7 @@ GradeOps AI debe avanzar como producto de operaciones de evaluacion para docente
 
 El plan queda organizado en ocho releases. Las primeras seis componen el corte validacion MVP; las dos ultimas concentran refinamientos P1 para no convertir el MVP en un backlog XL.
 
-La decision de planificacion mas importante ya tomada es que **Open y Closed son P0** para el Master Plan. La decision mas critica aun pendiente es **D-01: entorno `demo` GCP/Gemini vs `beta` Render/Groq**. La estrategia avanza con el supuesto operativo recomendado: `beta` sostiene evidencia real de producto y `demo` debe resolverse como cumplimiento minimo si las bases exigen GCP/Gemini efectivo.
+La decision de planificacion mas importante ya tomada es que **Open y Closed son P0** para el Master Plan. D-01 ya resolvio los roles de entorno: `beta` sostiene evidencia funcional y pilotos tempranos; `demo` se mantiene como target Google Cloud/Gemini-capable para claims que requieran prueba en GCP. La restriccion restante no es de decision, sino de evidencia: cada claim debe apuntar al ambiente, commit y provider realmente probados.
 
 La Plataforma de Agentes se trata como capacidad transversal: no se implementa como una release tecnica aislada, sino como incrementos del runtime generico dentro de cada release funcional. El objetivo es evolucionar desde el Assessment Agent actual, que ejecuta una llamada LLM estructurada, hacia un runtime headless capaz de iterar con herramientas autorizadas, validar salidas, declarar bloqueos y registrar pasos sin entregar autoridad de dominio al modelo.
 
@@ -32,7 +32,7 @@ La observabilidad y telemetria siguen la misma regla: no se crea una release tec
 
 | ID | Estado | Impacto en el plan |
 |---|---|---|
-| D-01 | Pendiente | Condiciona criterios de despliegue y evidencia de R06. |
+| D-01 | Resuelta: roles de entorno | `beta` puede sostener evidencia funcional; `demo` prueba target Google Cloud solo cuando exista deployment/provider evidence. |
 | D-02 | Resuelta: Closed = P0 | R04/R05 entran al corte validacion MVP. |
 | D-03 | Resuelta | Trazabilidad de US queda estable. |
 | D-04 | Pendiente | R01 debe formalizar provider/model policy para costos. |
@@ -74,8 +74,8 @@ Ambas convergen en C13/C14: sin logs/costos/aprobaciones no hay prueba de valor,
 ## Diagnostico global de US
 
 - 62 historias in-scope, 5 out-of-scope.
-- 15 historias enriquecidas en Epics 01-02.
-- 47 historias esqueléticas en Epics 03-13 que requieren `/us-enrich` antes de atomizar.
+- 17 historias enriquecidas o materializadas: Epics 01-02 mas US-080/US-081.
+- 45 historias esqueléticas en Epics 03-13 que requieren `/us-enrich` antes de atomizar, excluyendo US-080/US-081 ya materializadas para R01.
 - 41 historias P0, 17 P1, 1 condicional.
 - 8 US propuestas cubren gaps de operator access, privacidad, fallos/retry, idempotencia, costos, health, provider transparency y pilotos.
 
@@ -159,12 +159,12 @@ La secuencia prioriza:
 
 ## Camino critico
 
-1. Resolver D-01 antes de cerrar R06.
-2. Cerrar R01 con logs/costos/provider policy confiables.
-3. Implementar R02 como primer valor economico: graded submission.
-4. Usar R03 para producir narrativa de impacto.
-5. Construir Closed como dos thin slices (R04/R05).
-6. Consolidar R06 con evidencia comercial, costos y deployment proof.
+1. Cerrar R01 con logs/costos/provider policy confiables.
+2. Implementar R02 como primer valor economico: graded submission.
+3. Usar R03 para producir narrativa de impacto.
+4. Construir Closed como dos thin slices (R04/R05).
+5. Consolidar R06 con evidencia comercial, costos y deployment proof por ambiente.
+6. Mantener claims de `beta` y `demo` separados hasta que cada uno tenga evidencia real.
 
 ## Hitos
 
@@ -204,7 +204,7 @@ La secuencia prioriza:
 
 | Riesgo | Mitigacion |
 |---|---|
-| D-01 sin resolver | Decision explicita antes de R06; mantener beta como evidencia real mientras se valida demo GCP. |
+| Claims de entorno sin evidencia | Mantener `beta` como evidencia funcional y `demo` como target GCP solo cuando exista deployment/provider proof. |
 | Scope creep por Closed P0 | Dividir Closed en R04/R05 y dejar refinamientos en R08. |
 | Evidencia tardia | AUT-16/AUT-17 desde R01. |
 | Historias NOT READY | Ejecutar enriquecimiento antes de atomizar cada release. |
@@ -220,16 +220,17 @@ La secuencia prioriza:
 | Human control | approvals, edits, rejections, overrides |
 | Unit economics | cost per run, assessment, graded submission, customer |
 | Business | pilots, revenue, commitments, related-party split |
-| Validacion MVP | demo video, dashboard/export, deployment/Gemini evidence |
+| Validacion MVP | demo video, dashboard/export, deployment/provider evidence por ambiente |
 
 ## Siguiente accion
 
-Ejecutar **R01 — Assessment Creation + Evidence Backbone** usando `docs/master-plan/releases/release-01-assessment-creation-evidence-backbone.md` y `docs/master-plan/analysis/agent-runtime-strategy.md` como fuentes operativas. R01 no debe bloquearse por D-01, pero si debe cerrar o registrar explicitamente D-04/D-06, enriquecer/materializar US-080/US-081 y estabilizar el baseline runtime del Assessment Agent antes de escalar a Rubric/Grading/Feedback.
+Ejecutar **R01 — Assessment Creation + Evidence Backbone** usando `docs/master-plan/releases/release-01-assessment-creation-evidence-backbone.md`, `docs/master-plan/analysis/agent-runtime-strategy.md` y `.planning/active/008-assessment-creation/R01-RELEASE-BRIDGE.md` como fuentes operativas. R01 no debe bloquearse por D-01, pero si debe cerrar o registrar explicitamente D-04/D-06, usar US-080/US-081 ya materializadas y estabilizar el baseline runtime del Assessment Agent antes de escalar a Rubric/Grading/Feedback.
 
 ## Historial de cambios
 
 | Fecha | Cambio | Motivo | Elementos afectados | Decision asociada |
 |---|---|---|---|---|
+| 2026-07-21 | Aplicacion de fit review del planning plugin | Reconciliar D-01 como decision resuelta, apuntar R01 al release bridge y dejar claro el gate de evidencia por ambiente | Resumen, decisiones, camino critico, siguiente accion | D-01, D-04, D-06 |
 | 2026-07-21 | Incorporacion de Observability & Telemetry | Alinear el Master Plan con observabilidad por release funcional desde `docs/.prompting/master-plan-observabilioty-and-telemetry/` | Resumen, estado documental, Observability & Telemetry | D-OBS-01..D-OBS-08 |
 | 2026-07-21 | Incorporacion de topologia de seguridad multiambiente | Alinear `demo` GCP y `beta` Vercel-Render-Neon con un contrato comun de seguridad y mecanismos distintos | Resumen, estado documental, Security & Authorization | D-SEC-01..D-SEC-08 |
 | 2026-07-21 | Incorporacion de Security & Authorization | Alinear el Master Plan con controles de seguridad por release funcional desde `docs/.prompting/master-plan-security/` | Resumen, estado documental, Security & Authorization | D-SEC-01..D-SEC-08 |

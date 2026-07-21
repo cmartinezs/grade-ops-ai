@@ -6,7 +6,7 @@ Resultado general: **PASS WITH CONDITIONS**.
 
 El Master Plan es usable para comenzar R01. La secuencia R01-R06 esta documentada, las releases tienen valor vertical demostrable, los prompts `/release-*` usan comandos existentes del plugin local, y no hay enlaces relativos rotos dentro de `docs/master-plan/`.
 
-Las condiciones principales son de gobierno y readiness: D-01 bloquea el cierre de R06 como release candidate del validacion MVP, D-07 bloquea la narrativa final de pricing, varias historias asignadas a releases posteriores siguen en estado `NOT READY`, y el README/documento ejecutivo quedaron desactualizados despues de generar las releases de Fase 05. Nada de eso impide iniciar R01, pero si impide marcar el Master Plan como completamente cerrado.
+Las condiciones principales son de gobierno y readiness: D-01 ya esta resuelta como roles de entorno, pero R06 todavia debe adjuntar deployment/provider proof para los claims que haga sobre `beta`, `demo` o ambos; D-07 bloquea la narrativa final de pricing; varias historias asignadas a R02-R06 siguen en estado `NOT READY`; y R07/R08 siguen como roadmap sin archivo detallado. Nada de eso impide iniciar R01.
 
 ## Resultado general
 
@@ -23,11 +23,11 @@ Las condiciones principales son de gobierno y readiness: D-01 bloquea el cierre 
 
 ## Hallazgos por severidad
 
-### BLOCKER-01 — D-01 bloquea el cierre validacion MVP/R06, no el inicio de R01
+### RESOLVED-01 — D-01 ya no bloquea por decision; queda gate de evidencia de entorno
 
-- **Evidencia**: `docs/master-plan/master-plan-executive.md:9` identifica D-01 como decision critica pendiente; `docs/master-plan/master-plan-executive.md:22` dice que condiciona despliegue y evidencia de R06; `docs/master-plan/releases/release-06-business-evidence-operational-readiness.md:3` y `:23-28` prohiben cerrar R06 como release candidate si D-01 sigue pendiente.
+- **Evidencia**: `docs/master-plan/analysis/decisions-and-assumptions.md` registra D-01 como resuelta: `beta` sostiene evidencia funcional y `demo` es target Google Cloud/Gemini-capable para claims que requieran GCP. La condicion restante es adjuntar deployment/API/provider proof coherente con el ambiente afirmado.
 - **Archivos afectados**: `analysis/decisions-and-assumptions.md`, `master-plan-executive.md`, `releases/release-06-business-evidence-operational-readiness.md`, `infra/terraform/environments/demo/`.
-- **Correccion recomendada**: resolver y registrar si el paquete final usa `demo` GCP/Gemini, `beta` Render/Groq, o ambos; adjuntar deployment/API proof antes de marcar R06 released.
+- **Correccion aplicada**: actualizar los documentos ejecutivos/R06 para tratar D-01 como resuelta y conservar un gate de evidencia por ambiente antes de marcar R06 released.
 - **Responsable sugerido**: Founder / Release Manager.
 
 ### BLOCKER-02 — D-07 bloquea la narrativa final de pricing
@@ -46,16 +46,16 @@ Las condiciones principales son de gobierno y readiness: D-01 bloquea el cierre 
 
 ### HIGH-02 — Las releases posteriores dependen de historias `NOT READY`
 
-- **Evidencia**: `docs/master-plan/master-plan-executive.md:61-65` resume 47 historias esqueleticas; `docs/master-plan/analysis/user-story-inventory.md:90-97` exige `/us-enrich` antes de atomizar; R02-R06 repiten esa precondicion en sus archivos.
+- **Evidencia**: `docs/master-plan/master-plan-executive.md` resume 45 historias esqueleticas restantes; `docs/master-plan/analysis/user-story-inventory.md` exige `/us-enrich` antes de atomizar ese backlog; R02-R06 repiten esa precondicion en sus archivos.
 - **Impacto**: el plan es valido como Master Plan, pero no se debe crear planning ejecutable de R02-R06 sin enriquecer primero sus US.
 - **Correccion recomendada**: antes de atomizar cada release, ejecutar `/us-enrich` sobre las US listadas por esa release y crear/enriquecer las `US-PROPUESTA-*` requeridas.
 - **Responsable sugerido**: Product Owner de cada release.
 
-### MEDIUM-01 — README y ejecutivo quedaron con estado anterior a Fase 05
+### RESOLVED-02 — README, ejecutivo y bridge de R01 quedaron reconciliados
 
-- **Evidencia**: `docs/master-plan/README.md:19` dice que aun no incluye archivos detallados de release; `docs/master-plan/README.md:29-30` mantiene Fase 05 y 06 como pendientes; `docs/master-plan/master-plan-executive.md:168` recomienda ejecutar Fase 05 para R01, aunque R01-R06 ya existen.
-- **Impacto**: no rompe la trazabilidad, pero confunde el orden de lectura y el estado real del paquete.
-- **Correccion recomendada**: despues de esta Fase 06, actualizar README y ejecutivo con historial de cambios.
+- **Evidencia**: `docs/master-plan/README.md`, `docs/master-plan/master-plan-executive.md` y `.planning/active/008-assessment-creation/R01-RELEASE-BRIDGE.md` registran el estado post Fase 05/06 y el puente operativo para R01.
+- **Impacto**: R01 ya no depende solo del release doc para pasar a planning coordinada; el bridge define inventario de child plannings, gates y briefs por owner.
+- **Correccion aplicada**: mantener README/ejecutivo como fuente de estado, y usar el bridge de R01 como handoff entre release y plannings padre/hijos.
 - **Responsable sugerido**: Documentation owner.
 
 ### MEDIUM-02 — Las US propuestas transversales aparecen en multiples releases
@@ -86,31 +86,31 @@ Las condiciones principales son de gobierno y readiness: D-01 bloquea el cierre 
 
 ## Validaciones pendientes
 
-1. Resolver D-01 para el paquete final de validacion MVP.
+1. Adjuntar deployment/provider proof por ambiente para el paquete final de validacion MVP.
 2. Resolver D-07 antes de narrativa/export final.
 3. Resolver D-04/D-06 durante R01.
-4. Enriquecer US-080/US-081 antes de cerrar R01 si se atomizan como historias ejecutables.
+4. Atomizar US-080/US-081 por owner dentro de R01 usando sus historias ya materializadas.
 5. Enriquecer las US `NOT READY` de cada release antes de atomizar R02-R06.
 6. Crear o formalizar las `US-PROPUESTA-*` antes de implementarlas.
 7. Aclarar si R07/R08 requieren archivos de release ahora o quedan como roadmap sin Fase 05.
-8. Actualizar README/ejecutivo despues de aceptar este reporte.
+8. Mantener README/ejecutivo/bridge sincronizados al cerrar cada planning o release.
 
 ## Riesgos residuales
 
 | Riesgo | Estado | Manejo recomendado |
 |---|---|---|
-| D-01 se resuelve tarde | Abierto | Trabajar R01-R05 y R06 parcial en paralelo, pero no declarar release candidate sin decision |
+| Claims de entorno sin proof | Abierto | Trabajar R01-R05 y R06 parcial en paralelo, pero no declarar release candidate con claims no probados |
 | Historias esqueleticas entran a implementacion | Abierto | Gate obligatorio de `/us-enrich` antes de atomizar |
 | Provider/cost model nace Groq/Gemini-inconsistente | Abierto | Cerrar D-04 en R01 |
 | AgentExecutionLog queda insuficiente para R06 | Abierto | Cerrar D-06 en R01, validar cobertura en R06 |
-| README mantiene estado obsoleto | Abierto | Corregir despues de Fase 06 con historial |
+| README/ejecutivo/bridge vuelven a divergir | Abierto | Actualizar los tres artefactos cuando cambie el estado de R01 o de las releases |
 
 ## Orden de correccion
 
-1. Aceptar este reporte como cierre de Fase 06.
-2. Actualizar README y `master-plan-executive.md` para reflejar Fase 05 completa y Fase 06 generada.
-3. Iniciar R01 con foco en D-04, D-06, US-080/US-081, idempotencia/retry y UI assessment creation.
-4. Resolver D-01 en paralelo antes de que R06 pueda cerrar.
+1. Iniciar R01 como planning coordinada desde `.planning/active/008-assessment-creation/R01-RELEASE-BRIDGE.md`.
+2. Cerrar o registrar D-04/D-06 dentro de R01.
+3. Atomizar US-080/US-081 por owner y mantener trazabilidad contra sus DoD/notas tecnicas.
+4. Preparar deployment/provider proof por ambiente antes de que R06 pueda cerrar.
 5. Resolver D-07 antes de narrativa/export final.
 6. Antes de cada release posterior, ejecutar `/us-enrich` y definir ownership de `US-PROPUESTA-*`.
 7. Decidir tratamiento documental de R07/R08.
@@ -119,6 +119,8 @@ Las condiciones principales son de gobierno y readiness: D-01 bloquea el cierre 
 
 | Fecha | Cambio aplicado | Hallazgo relacionado | Estado |
 |---|---|---|---|
+| 2026-07-21 | R01 bridge creado y US-080/US-081 materializadas; se elimina el lenguaje stale que las trataba como esqueleto | RESOLVED-02 | Corregido en R01/validation |
+| 2026-07-21 | D-01 reconciliada como decision resuelta; queda gate de evidencia por ambiente | RESOLVED-01 | Corregido en Master Plan/R06 |
 | 2026-07-20 | Se agrego `analysis/agent-runtime-strategy.md`, se actualizo README/ejecutivo y se incorporo el bloque `Capacidades de IA y Agent Runtime` en R01-R06 | MEDIUM-01 y estrategia transversal no formalizada | Corregido en el Master Plan |
 
 R07/R08 siguen como roadmap sin archivo detallado; HIGH-01 permanece como condicion hasta decidir si esas filas son releases formales o placeholders de roadmap.
@@ -132,15 +134,15 @@ Prerrequisitos para comenzar:
 - Usar `docs/master-plan/releases/release-01-assessment-creation-evidence-backbone.md` como fuente operativa.
 - No exigir D-01 para iniciar R01.
 - Cerrar D-04/D-06 dentro de R01 o registrar explicitamente el residual tecnico.
-- Enriquecer o materializar el corte minimo de US-080/US-081 antes de atomizar tareas de evidencia/log/costo.
+- Usar US-080/US-081 ya materializadas para atomizar tareas de evidencia/log/costo por owner.
 - Verificar el estado real de `web/.planning/active/001-assessment-creation` antes de declarar la UI completa.
 
 ## Cierre obligatorio
 
 1. **Resultado general:** PASS WITH CONDITIONS.
-2. **Blockers:** D-01 bloquea release candidate/R06; D-07 bloquea narrativa final de pricing. No hay blocker para iniciar R01.
+2. **Blockers:** D-07 bloquea narrativa final de pricing; R06 conserva gate de deployment/provider proof por ambiente. No hay blocker para iniciar R01.
 3. **Primera release ejecutable:** R01 — Assessment Creation + Evidence Backbone.
-4. **Prerrequisitos:** cerrar D-04/D-06 dentro de R01, enriquecer US-080/US-081 si se atomizan, mantener D-01 visible para R06.
+4. **Prerrequisitos:** cerrar D-04/D-06 dentro de R01, usar US-080/US-081 ya materializadas si se atomizan, mantener el gate de evidencia de entorno visible para R06.
 5. **Archivo a revisar:** `docs/master-plan/releases/release-01-assessment-creation-evidence-backbone.md`.
 6. **Comando `/release-*` recomendado:** iniciar con `/release-init` si `.releases/` no existe; luego crear R01 con `/release-new`.
 7. **Prompt exacto a utilizar:**
@@ -160,7 +162,7 @@ Fuentes obligatorias:
 Precondiciones:
 - No bloquear R01 por D-01.
 - Resolver o registrar D-04 y D-06 dentro de R01.
-- Enriquecer/materializar US-080 y US-081 antes de atomizar tareas de evidencia.
+- Usar US-080 y US-081 ya materializadas antes de atomizar tareas de evidencia.
 - No inventar version semantica, target period, fecha estimada ni planning IDs.
 
 Comandos:

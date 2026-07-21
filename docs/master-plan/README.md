@@ -106,7 +106,7 @@ Incluye:
 - No crear archivos de release fuera de Fase 05.
 - Cada release debe conservar trazabilidad hacia capacidades, US, automatizaciones y evidencias.
 - Toda nueva decision relevante debe registrarse en `analysis/decisions-and-assumptions.md`.
-- Mantener D-01 visible hasta resolver entorno `demo`/`beta`.
+- Mantener D-01 visible como roles de entorno resueltos y exigir proof antes de hacer claims de `demo`, `beta` o provider.
 - No mover P1 al MVP sin retirar o dividir otra carga equivalente.
 - Toda release con IA debe declarar capacidades de Agent Runtime, herramientas, validadores, autonomia, HITL, limites, costo y evidencia.
 - Toda release que toque `api/`, `agents/` o rutas funcionales de `web/` debe aplicar la estrategia API-Agent Orchestration y el gate Richardson REST en las tareas que definan endpoints, contratos o rutas.

@@ -21,6 +21,7 @@ Enable the first step of the open-assessment pipeline: turning a teacher's learn
 
 - [Initial context](00-initial.md)
 - [Expansion plan](01-expansion.md)
+- [R01 release-to-planning bridge](R01-RELEASE-BRIDGE.md)
 - [Story details](02-deepening/)
 - [Traceability](TRACEABILITY.md)
 - [Retrospective raw notes](RETROSPECTIVE-RAW.md)

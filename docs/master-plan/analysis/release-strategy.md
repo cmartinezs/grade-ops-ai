@@ -183,8 +183,8 @@ La regla de extraccion es conservadora: una capacidad comun se generaliza cuando
 | Nivel de automatizacion | Supervisada por Operator; determinista para ledgers y alertas. |
 | Evidencias | RevenueEvent, CostEvent, usage limits, related-party split, dashboard/export, GCP/Gemini proof si aplica. |
 | Metricas | paid pilots, revenue by month, cost coverage, evidence completeness, agent run success rate. |
-| Dependencias | D-01 debe resolverse antes de release candidate validacion MVP; D-07 antes de narrativa final. |
-| Riesgos | D-01 sigue pendiente; dashboard puede crecer a L si se agregan demasiadas vistas. |
+| Dependencias | D-01 ya define roles de entorno; release candidate requiere deployment/provider proof coherente con los claims. D-07 debe resolverse antes de narrativa final. |
+| Riesgos | Claims de entorno sin proof; dashboard puede crecer a L si se agregan demasiadas vistas. |
 | Complejidad | M. |
 | Estado | Planificada; debe correr en paralelo operativo desde R01. |
 
@@ -255,16 +255,16 @@ Dependencias bloqueantes:
 - R01 bloquea todo lo que necesite evidencia real y costo por run.
 - R02 bloquea el primer uso economico Open: graded submission.
 - R04 bloquea cualquier acceso estudiante Closed.
-- R06 depende de D-01 para definir que cuenta como despliegue demostrable/elegible.
+- R06 depende de D-01 como definicion de roles de entorno y del proof asociado para confirmar que cada claim de `beta`, `demo` o provider es demostrable/elegible.
 
 ## Camino critico
 
-1. **Resolver D-01**: confirmar si la submission necesita `demo` GCP/Gemini real, o si `beta` + evidencia de Gemini basta.
-2. **Cerrar R01**: provider/model policy, logs, costos e idempotencia minima en assessment creation.
-3. **Entregar R02**: primer graded submission con feedback aprobado y costo por submission.
-4. **Entregar R03**: reporte e impacto para narrativa y pilotos.
-5. **Entregar R04/R05 en thin slices**: Closed P0 con una evaluacion pequena, pocos estudiantes y analytics basica.
-6. **Consolidar R06**: evidence dashboard, revenue/cost ledger, related-party split, demo package.
+1. **Cerrar R01**: provider/model policy, logs, costos e idempotencia minima en assessment creation.
+2. **Entregar R02**: primer graded submission con feedback aprobado y costo por submission.
+3. **Entregar R03**: reporte e impacto para narrativa y pilotos.
+4. **Entregar R04/R05 en thin slices**: Closed P0 con una evaluacion pequena, pocos estudiantes y analytics basica.
+5. **Consolidar R06**: evidence dashboard, revenue/cost ledger, related-party split, demo package.
+6. **Adjuntar proof por ambiente/provider**: separar claims de `beta` y `demo` hasta que cada uno tenga URL, commit, revision, timestamp y evidencia de provider.
 
 Pruebas tecnicas tempranas:
 
@@ -306,7 +306,7 @@ No hay releases XL en esta estrategia. Los cortes L son verticales pero limitado
 
 | Riesgo | Donde aparece | Manejo |
 |---|---|---|
-| D-01 no resuelta antes de R06 | R06 | Mantener `beta` para evidencia real y crear release/hito minimo `demo` si se confirma requisito GCP. |
+| Claims de entorno sin proof antes de R06 | R06 | Mantener `beta` para evidencia funcional y crear release/hito minimo `demo` solo si se necesita claim GCP/Gemini real. |
 | Closed P0 compite con Open | R04/R05 | Separar Closed en dos releases y no adelantar refinamientos P1. |
 | Evidencia tarde | Todas | R01 incluye AUT-16/AUT-17/AUT-21 como base. |
 | Historias NOT READY entran directo a implementacion | R02-R08 | Ejecutar `/us-enrich` antes de atomizar cada grupo. |
