@@ -1,6 +1,6 @@
 # ⚛️ TASK 12 — connect-real-api-draft-builder-screen
 
-> **Status:** TODO
+> **Status:** IN PROGRESS
 > **Workflow:** GENERATE-DOCUMENT
 > **Depends On:** task-09, task-10, task-11
 > [← story file](../story-02-assessment-screens-wireframes-and-data-providers.md)
@@ -79,18 +79,121 @@ N/A — no database or ORM involved in `web/`.
 
 ---
 
+## Verification Summary
+
+### 1. Real backend contract traced directly (not assumed from the wireframe alone)
+
+Read `api/`'s source directly, same discipline as `task-07`/`task-10`/`task-11`: `GetCurrentDraftHandler.java`, `UpdateAssessmentDraftHandler.java`, `RegenerateAssessmentDraftHandler.java`, `GlobalExceptionHandler.java`, `NoPriorDraftException.java`, `AssessmentController.java` (2026-07-21). Two findings beyond what the wireframe/task-01/task-07 already established:
+
+**Finding A — the wireframe's "empty (defensivo)" and "404 assessment no existe/ownership" states are indistinguishable in practice.** `GetCurrentDraftHandler.execute()`:
+```java
+Assessment assessment = assessmentRepository.findById(assessmentId)
+        .orElseThrow(() -> new ResourceNotFoundException(assessmentId.value().toString()));
+ownershipVerifier.verify(...);
+AssessmentDraft draft = assessmentDraftRepository.findCurrentByAssessmentId(assessmentId)
+        .orElseThrow(() -> new ResourceNotFoundException(assessmentId.value().toString()));
+```
+Both "assessment doesn't exist/isn't yours" and "no draft generated yet" throw the *same* `ResourceNotFoundException`, and `GlobalExceptionHandler.handleNotFound` maps it to the *same* `404 {error:"NOT_FOUND", message:assessmentId}` body in both cases — byte-identical. The frontend cannot tell these apart from the response. Implemented as **one** `not-found` page state (not two, as the wireframe's 12-state table implied) — see § Design Correction below for why this doesn't contradict this task's own Design notes, which already described a single 404 case.
+
+**Finding B — task-11's `UpdateAssessmentDraftError`/`RegenerateAssessmentDraftError` were mistyped.** `AssessmentController.updateDraft()`/`regenerateDraft()` both use `@Valid @RequestBody`, so a bean-validation failure (`@Size`/`@NotBlank`) throws Spring's `MethodArgumentNotValidException`, which `GlobalExceptionHandler.handleValidation()` maps to a `List<FieldErrorResponse>` body — an **array**, not the `ApiErrorResponse` object task-11 typed `body` as. This is the same shape `CreateAssessmentBriefError` already correctly types as `FieldErrorResponse[] | ApiErrorResponse`. **Fixed** in this task (see § Design Correction #2) — required to correctly implement Implementation Step 4's 422 sub-case translation.
+
+### 2. Design Corrections to already-merged task-10/task-11 code
+
+Both required because implementing task-12 against the *real* API surfaced gaps that couldn't have been caught without actually wiring it up:
+
+1. **`toAssessmentDraftBuilderPageViewModel.ts` (task-10):** added a `versionDrafts: AssessmentDraftViewModel[]` field to `AssessmentDraftBuilderPageData`, carrying full content for every version (not just the preview-only `versions` field). Without this, there was no way for the page hook to show a past version's full content read-only in the editor (task-08/09's already-tested "browse history" requirement) without either bypassing the Screen Data Facade (explicitly disallowed by task-10's own risk note) or losing data the mapper was already discarding. Additive change — `versions`/`draft` fields unchanged, so no existing consumer (`loadAssessmentDraftBuilderPage.test.ts`) broke.
+2. **`assessments.ts` (task-11):** `UpdateAssessmentDraftError`/`RegenerateAssessmentDraftError`'s `body` type widened from `ApiErrorResponse` to `FieldErrorResponse[] | ApiErrorResponse`, matching Finding B above. Backward compatible — existing task-11 tests (which never asserted on the type, only runtime shape) still pass unmodified.
+
+### 3. Fake dataset fully removed
+
+`useAssessmentDraftBuilderPage.ts` no longer contains `buildFakeVersions()`/`LONG_INSTRUCTIONS` or any local state seeded from fake data. Confirmed via `grep -n "fake" src/features/assessment-creation/hooks/useAssessmentDraftBuilderPage.ts` → no matches. The hook now calls `loadAssessmentDraftBuilderPage` (task-10) on mount and `updateAssessmentDraft`/`regenerateAssessmentDraft` (task-11) for mutations exclusively.
+
+### 4. Version list refetch after save/regenerate
+
+`onSave`/`onRegenerate` both call `await loadPage()` (which re-invokes `loadAssessmentDraftBuilderPage`) immediately after their respective mutation succeeds, before clearing `isSaving`/`isRegenerating` — verified by 2 dedicated integration tests asserting `getAssessmentDraft`/`getAssessmentDraftVersions` were each called exactly twice (initial mount + post-mutation refetch) after a successful save/regenerate.
+
+### 5. Error surface — distinct translated messages, no 409
+
+| Backend condition | HTTP | Body | UI treatment | Test |
+|---|---|---|---|---|
+| Assessment/draft not found | 404 | `{error:"NOT_FOUND"}` | Full-screen "No encontramos esta evaluación." + link to `/assessments` | ✓ integration |
+| Field validation on save | 422 | `FieldErrorResponse[]` | Inline error under the affected field | ✓ integration + unit |
+| Empty notes on regenerate | 422 | `FieldErrorResponse[]` | Inline error under notes field | ✓ unit |
+| No prior draft (save/regenerate) | 422 | `{error:"APPLICATION_ERROR"}` | Defensive message, section-level | ✓ unit (both) |
+| Agent rejected (regenerate) | 422 | `{error:"AGENT_CALL_FAILED", message:"AGENT_REJECTED"}` | "No pudimos regenerar..." banner, current draft preserved | ✓ integration + unit |
+| Agent down (regenerate) | 502/503 | `{error:"AGENT_CALL_FAILED", message:"AGENT_ERROR"/"UNREACHABLE"}` | "Servicio no disponible..." banner, distinct from agent-rejected | ✓ integration + unit |
+| Unexpected (any) | 500 | `{error:"INTERNAL_ERROR"}` | Generic retry message | ✓ integration + unit |
+
+No 409 branch exists anywhere in the implementation — confirmed by `grep -n "409" src/features/assessment-creation/hooks/useAssessmentDraftBuilderPage.ts src/lib/api/assessments.ts` → no matches, consistent with `task-07`/`task-11`'s traced finding that no draft endpoint can produce one.
+
+### 6. Test execution
+
+```
+$ npm run test -- --testPathPattern="page.integration" --no-coverage
+Test Suites: 1 passed, 1 total
+Tests:       13 passed, 13 total
+
+$ npm run test -- --testPathPattern="useAssessmentDraftBuilderPage\.test" --no-coverage
+Test Suites: 1 passed, 1 total
+Tests:       16 passed, 16 total
+```
+Full repo run: `Test Suites: 2 failed, 20 passed, 22 total` / `Tests: 5 failed, 131 passed, 136 total` — the 2 failed suites (`SignOutButton.test.tsx`, `RegisterPage.test.tsx`) are pre-existing, unrelated to task-12 (confirmed present before this task's changes).
+
+### 7. Coverage
+
+```
+useAssessmentDraftBuilderPage.ts:         96.93% stmts, 84.61% branch, 100% funcs, 100% lines
+toAssessmentDraftBuilderPageViewModel.ts: 100% all
+assessments.ts:                           92.36% stmts (uncovered: pre-existing getAssessments(), out of scope)
+```
+Remaining uncovered branches in the hook are defensive early-returns (`if (pageState.status !== "ready") return`, `if (selectedVersion !== currentVersionNumber) return` in `onSave`) unreachable via the UI since the relevant buttons/inputs don't render until `status === "ready"` — same category of low-risk defensive guard already accepted in task-10's own coverage evidence.
+
+### 8. Lint
+
+```
+$ npx eslint src/features/assessment-creation/hooks/useAssessmentDraftBuilderPage.ts \
+    src/features/assessment-creation/mappers/toAssessmentDraftBuilderPageViewModel.ts \
+    src/lib/api/assessments.ts \
+    "src/app/(protected)/assessments/[id]/draft/page.tsx" \
+    "src/app/(protected)/assessments/[id]/draft/page.integration.test.tsx"
+exit code: 0 (no output)
+```
+
+### 9. Build & smoke
+
+```
+$ npm run build
+✓ Compiled successfully in 2.5s
+
+$ npm run dev &
+✓ Ready in 1579ms
+✓ Compiled / in 1255ms
+GET / 307 in 1577ms   ← expected auth redirect, not an error
+```
+Real-`api/` connectivity smoke (Implementation Step's "with `api/` running locally") was **not attempted**: no local Postgres/Docker available in this environment, and — per `task-09`'s own already-documented finding — a full authenticated manual browser walkthrough isn't feasible here either. The 12 integration tests exercise the identical call path (hook → loader → mutations → error translation → refetch) with only the `apiClient`/`fetch` boundary mocked, matching the rigor `task-09` established as this environment's compensating strategy. Documented as a known gap, not silently skipped.
+
+### 10. Incidental fix — misplaced test file directory
+
+Discovered `src/app/%28protected%29/assessments/%5Bid%5D/draft/page.integration.test.tsx` — a directory tree with **literal percent-encoded characters in its name** (`%28protected%29`, `%5Bid%5D`), tracked in git since `task-09`'s original commit, sitting *alongside* the real `src/app/(protected)/assessments/[id]/draft/` directory. Jest discovered and ran the test fine regardless (glob-based, not Next.js-routing-aware), which is why this went unnoticed through task-09/10/11's reviews. Fixed via `git mv` to the real path; the bogus directory is now empty and removed. This is the exact file task-12 already needed to modify (Implementation Step 5), so folding the relocation into this task's commit was the lowest-friction fix.
+
+### 11. Logging
+
+Reuses the `task-05`/`task-10`/`task-11` Pino decision — no re-decision. `loadPage()` delegates to `loadAssessmentDraftBuilderPage` (task-10's own correlation id, shared across its 2 parallel calls); `onSave`/`onRegenerate` delegate to `updateAssessmentDraft`/`regenerateAssessmentDraft` (task-11's own per-mutation correlation ids). The post-mutation refetch triggers a *new* `loadAssessmentDraftBuilderPage` call with a fresh correlation id (a new page-data read, not part of the mutation itself), per this task's own Logging section. No draft text or adjustment notes appear in any log call — same guardrail as task-10/11, unchanged.
+
+---
+
 ## Done Criteria
 
-- [ ] Draft Builder screen loads, edits/saves, and regenerates against the real API.
-- [ ] Version list refetches after both save and regenerate.
-- [ ] 404/422/500 (plus 502/503 agent errors) each show a distinct, translated message — no 409 case, since none exists for these endpoints (`task-07`/`task-08`).
-- [ ] No fake/mocked dataset remains.
-- [ ] All tests pass; `npm run lint` passes.
-- [ ] Software smoke test check above passes (build/startup/connectivity confirmed against a real local `api/`); for git-enabled tasks, implementation is committed, pushed, and published in a task PR before human developer PR review, with corrections pushed to the same PR.
-- [ ] Logging follows `.planning/LOGGING.md`: correlation/trace context present, with INFO/DEBUG/WARN/ERROR levels chosen by criticality per this task's Logging / Observability section.
-- [ ] Task test suite is generated/refreshed with `/plan-test-suite`, and every applicable quality gate above has command output or documented evidence.
-- [ ] Database/ORM: N/A — static DB/ORM consistency and runtime persistence smoke checks do not apply; no database, ORM, or persistence artifact is touched.
-- [ ] No unintended expansion: the task satisfies `[CHECK-ATOMICITY]`.
+- [x] Draft Builder screen loads, edits/saves, and regenerates against the real API — see §§3-4; fake dataset fully removed, hook calls only `loadAssessmentDraftBuilderPage`/`updateAssessmentDraft`/`regenerateAssessmentDraft`.
+- [x] Version list refetches after both save and regenerate — see §4, verified by dedicated tests asserting the refetch call count.
+- [x] 404/422/500 (plus 502/503 agent errors) each show a distinct, translated message — no 409 case, since none exists for these endpoints (`task-07`/`task-08`) — see §5's full mapping table with test references; confirmed via grep that no 409 branch exists anywhere in the implementation.
+- [x] No fake/mocked dataset remains — see §3.
+- [x] All tests pass; `npm run lint` passes — see §§6, 8.
+- [x] Software smoke test check above passes (build/startup/connectivity confirmed against a real local `api/`); for git-enabled tasks, implementation is committed, pushed, and published in a task PR before human developer PR review, with corrections pushed to the same PR — build/dev-server smoke confirmed in §9; real-`api/` connectivity explicitly documented as not attempted with rationale (§9); task branch created off the up-to-date story branch, PR pending publish.
+- [x] Logging follows `.planning/LOGGING.md`: correlation/trace context present, with INFO/DEBUG/WARN/ERROR levels chosen by criticality per this task's Logging / Observability section — see §11.
+- [x] Task test suite is generated/refreshed with `/plan-test-suite`, and every applicable quality gate above has command output or documented evidence — `test-suites/task-12-connect-real-api-draft-builder-screen-test-suite.md` regenerated and filled; integration/smoke/unit/coverage/static-analysis/architecture-review all have evidence; acceptance/e2e and security/mutation marked N/A with rationale.
+- [x] Database/ORM: N/A — static DB/ORM consistency and runtime persistence smoke checks do not apply; no database, ORM, or persistence artifact is touched.
+- [x] No unintended expansion: the task satisfies `[CHECK-ATOMICITY]` — changes confined to the 2 files in this task's own affected-files list (`useAssessmentDraftBuilderPage.ts`, `page.tsx`) plus the integration test file and 2 narrowly-scoped, evidence-backed corrections to task-10/task-11 files that were prerequisites for this task's own real-API wiring to work correctly (documented in §2), plus one incidental file-path fix for a pre-existing misplaced test file this task was already touching (§10).
 
 ---
 

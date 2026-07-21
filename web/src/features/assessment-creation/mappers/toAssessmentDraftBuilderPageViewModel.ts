@@ -21,6 +21,11 @@ export interface AssessmentDraftVersionViewModel {
 export interface AssessmentDraftBuilderPageData {
   draft: AssessmentDraftViewModel;
   versions: AssessmentDraftVersionViewModel[];
+  // Full content per version (current + past) — the history section (`versions` above) only
+  // carries preview fields, but the page hook needs full content to show a past version
+  // read-only in the editor when the teacher browses history, without a second network
+  // round-trip or bypassing the Screen Data Facade (task-10's own risk note).
+  versionDrafts: AssessmentDraftViewModel[];
 }
 
 const TITLE_PREVIEW_MAX_LENGTH = 48;
@@ -70,5 +75,6 @@ export function toAssessmentDraftBuilderPageViewModel(input: {
   return {
     draft: toDraftViewModel(input.draft),
     versions,
+    versionDrafts: input.versions.map(toDraftViewModel),
   };
 }
