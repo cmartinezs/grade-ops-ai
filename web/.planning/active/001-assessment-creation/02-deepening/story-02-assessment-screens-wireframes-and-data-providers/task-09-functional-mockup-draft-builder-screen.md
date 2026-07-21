@@ -1,6 +1,6 @@
 # ⚛️ TASK 09 — functional-mockup-draft-builder-screen
 
-> **Status:** IN PROGRESS
+> **Status:** DONE
 > **Workflow:** GENERATE-DOCUMENT
 > **Depends On:** task-07, task-08, task-14
 > [← story file](../story-02-assessment-screens-wireframes-and-data-providers.md)
