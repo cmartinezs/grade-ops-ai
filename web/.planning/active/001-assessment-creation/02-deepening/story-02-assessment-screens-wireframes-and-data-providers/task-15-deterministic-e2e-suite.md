@@ -156,6 +156,16 @@ $ npm run build
 
 Draft generation's actual AI happy path is not exercised by this suite, for the same reason task-13 couldn't exercise it live: `agents/` (Gemini/Vertex AI) is not available in this local/CI environment. Both draft-builder specs create the assessment directly via the real `api/` endpoint and seed a draft via SQL, exactly like task-13's manual walkthrough — this is an environment ceiling carried forward from task-06/task-12/task-13, not a gap introduced by this task.
 
+### Code review corrections
+
+Human review (`.code-reviews/story-02-assessment-screens-wireframes-and-data-providers/task-15-deterministic-e2e-suite.md`, 2026-07-21) found 1 blocking finding:
+
+- **P1 — `e2e/` wasn't excluded from the project's ESLint config, causing 2 false-positive `react-hooks/rules-of-hooks` errors** in `e2e/fixtures/auth.ts` (lines 19, 28). Root cause: Playwright's own fixture API parameter name (`use`, as in `base.extend<T>({ x: async (..., use) => { await use(value) } })`) is indistinguishable, by name alone, from React's `use()` hook to the `react-hooks/rules-of-hooks` rule inherited via `next/core-web-vitals` — and `npm run lint` (`next lint`) didn't catch it because `next lint`'s file resolution doesn't include arbitrary top-level directories like `e2e/`, only `src/`-style conventional ones; the reviewer caught it by running `npx eslint e2e/` directly.
+  - Fix: added `{ ignores: ["e2e/**", "scripts/**"] }` as the first entry in `eslint.config.mjs`'s config array (reviewer's recommended Option A over renaming the `use` parameter, since `use` is Playwright's own documented convention).
+  - Verified: `npx eslint e2e/` before the fix → 2 errors (reproduced exactly); after the fix → `ESLint couldn't find files to lint` (fully ignored, as intended). `npm run lint`, `npm run test -- --silent` (153/153), and `npm run build` all re-confirmed green after the fix.
+
+All other findings in the review were positive observations (no action needed).
+
 ---
 
 ## Done Criteria

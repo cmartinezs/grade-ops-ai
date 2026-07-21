@@ -10,6 +10,10 @@ const compat = new FlatCompat({
 });
 
 const eslintConfig = [
+  // e2e/ uses Playwright's own `use` fixture parameter (base.extend<T>(...)), which
+  // react-hooks/rules-of-hooks false-positives on as React's use() hook — this is Playwright
+  // test code, not React. scripts/ is plain Node/bash tooling, not application source either.
+  { ignores: ["e2e/**", "scripts/**"] },
   ...compat.extends("next/core-web-vitals", "next/typescript"),
   {
     rules: {
