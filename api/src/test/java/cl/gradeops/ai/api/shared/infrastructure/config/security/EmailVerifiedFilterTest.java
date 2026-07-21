@@ -61,7 +61,7 @@ class EmailVerifiedFilterTest {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"/auth/register", "/auth/verify/resend"})
+    @ValueSource(strings = {"/api/v1/auth/register", "/api/v1/auth/verify/resend"})
     void shouldProceedWhenUnverifiedTokenOnWhitelistedPath(String path) throws Exception {
         TeacherIdentity identity = unverifiedIdentity();
         when(request.getAttribute("teacherIdentity")).thenReturn(identity);
