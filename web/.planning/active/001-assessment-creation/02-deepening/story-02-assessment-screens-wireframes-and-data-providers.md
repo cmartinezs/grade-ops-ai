@@ -68,7 +68,7 @@ This story delivers the wireframes, the navigable fake-data mockups, the DTOs/vi
 | 11 | [mutations-draft-builder-screen](story-02-assessment-screens-wireframes-and-data-providers/task-11-mutations-draft-builder-screen.md) | GENERATE-DOCUMENT | DONE | `updateAssessmentDraft` + `regenerateAssessmentDraft` en `lib/api` |
 | 12 | [connect-real-api-draft-builder-screen](story-02-assessment-screens-wireframes-and-data-providers/task-12-connect-real-api-draft-builder-screen.md) | GENERATE-DOCUMENT | DONE | Draft Builder screen conectada a `api/` real |
 | 13 | [end-to-end-connection](story-02-assessment-screens-wireframes-and-data-providers/task-13-end-to-end-connection.md) | GENERATE-DOCUMENT | DONE | Flujo completo verificado sin datos fake residuales |
-| 15 | [deterministic-e2e-suite](story-02-assessment-screens-wireframes-and-data-providers/task-15-deterministic-e2e-suite.md) | GENERATE-DOCUMENT | IN PROGRESS | **Inserted out of numeric order — added after task-13 closed.** Suite Playwright determinística + script de orquestación que reproduce el walkthrough de task-13 sin intervención manual |
+| 15 | [deterministic-e2e-suite](story-02-assessment-screens-wireframes-and-data-providers/task-15-deterministic-e2e-suite.md) | GENERATE-DOCUMENT | DONE | **Inserted out of numeric order — added after task-13 closed.** Suite Playwright determinística + script de orquestación que reproduce el walkthrough de task-13 sin intervención manual |
 
 ---
 

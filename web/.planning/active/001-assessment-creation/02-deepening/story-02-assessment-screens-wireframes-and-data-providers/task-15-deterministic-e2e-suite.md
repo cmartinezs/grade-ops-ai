@@ -1,6 +1,6 @@
 # ⚛️ TASK 15 — deterministic-e2e-suite
 
-> **Status:** IN PROGRESS
+> **Status:** DONE
 > **Workflow:** GENERATE-DOCUMENT
 > **Depends On:** task-13
 > [← story file](../story-02-assessment-screens-wireframes-and-data-providers.md)
