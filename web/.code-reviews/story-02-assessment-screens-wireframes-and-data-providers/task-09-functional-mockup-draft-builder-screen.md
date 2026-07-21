@@ -7,42 +7,22 @@ Scope: `src/app/(protected)/assessments/[id]/draft/page.tsx`, `src/features/asse
 
 ✅ **APPROVED — READY TO MERGE**
 
-Los 5 findings P3 + 2 lint errors fueron atendidos completamente.
+Todos los findings cerrados. Todos los gates limpios.
 
 ---
 
-## Gates verificados en vivo (final)
+## Gates verificados en vivo (re-review final)
 
 | Gate | Resultado |
 |------|-----------|
-| 28 tests (5 integración + 23 unitarios) | ✅ 28/28 PASS — 0.919s |
-| Lint | ✅ CLEAN — 0 errors, 0 warnings |
-| Build | ✅ Compiled successfully in 2.2s |
+| 28 tests (5 integración + 23 unitarios) | ✅ 28/28 PASS — 1.328s |
+| Lint | ✅ CLEAN — 0 errors, 0 warnings | ✅ Compiled successfully in 2.2s |
 
 ---
 
 ## Issues Cerrados (5 P3 + 2 Lint)
 
-### Original P3 Findings — ✅ ALL CLOSED
-
-| # | Issue | Fix |
-|---|-------|-----|
-| 1 | `shellConfig` dead code | Removed from interface |
-| 2 | Duplicate tests 4 & 5 | Merged into single test |
-| 3 | `getByDisplayValue("")` fragile | Changed to `getByLabelText` |
-| 4 | `void assessmentId` parameter | Renamed to `_assessmentId` |
-| 5 | Incorrect async typing | `void` → `Promise<void>` |
-
-### Lint Errors (introducidos por correcciones) — ✅ ALL CLOSED
-
-| # | Error | Fix |
-|---|-------|-----|
-| 6 | `no-empty-object-type` in `protected-page-render.tsx` | Converted `interface` to `type` |
-| 7 | `no-unused-vars` warning for `_assessmentId` | Added `argsIgnorePattern: "^_"` to eslint.config.mjs |
-
-**Status:** All 7 items closed. Tests re-verified. Build and lint clean.
-
----
+### Historial de findings — estado final
 
 ## Scope real del PR
 
@@ -59,23 +39,18 @@ El INDEX describe el PR como "2 archivos nuevos" pero el scope real es significa
 | Tests integración | `page.integration.test.tsx` |
 | Helper | `protected-page-render.tsx` |
 
-El INDEX debería reflejar esto para que los reviewers sepan de antemano qué revisar.
-
 ---
 
-## Findings
+## Historial de findings — estado final
 
-✅ **All 5 P3 findings CLOSED & FIXED**
-
-| # | Título | Status | Fix |
-|---|--------|--------|-----|
-| 1 | `shellConfig` dead code | ✅ FIXED | Removed from `ProtectedPageRenderOptions` interface |
-| 2 | Duplicate tests 4 & 5 | ✅ FIXED | Merged into single test (many-versions edge case) |
-| 3 | Fragile `getByDisplayValue("")` | ✅ FIXED | Changed to `getByLabelText(/^Notas de ajuste/)` |
-| 4 | `void assessmentId` parameter | ✅ FIXED | Renamed to `_assessmentId` (TS idiom) |
-| 5 | Incorrect async typing | ✅ FIXED | `onSave`/`onRegenerate`: `void` → `Promise<void>` |
-
-All tests re-verified: **5/5 pass** (integration test suite). Build: ✓ Compiled successfully. Lint: 0 errors, 0 warnings.
+| # | Finding | Corrección aplicada |
+|---|---------|--------------------|
+| 1 | `shellConfig` dead code | `shellConfig` eliminado de interfaz y JSDoc |
+| 2 | Tests 4 y 5 idénticos | Fusionados en 1 (28 tests totales) |
+| 3 | `getByDisplayValue("")` frágil | Reemplazado con `getByLabelText(/^Notas de ajuste/)` |
+| 4 | `void assessmentId` | Renombrado a `_assessmentId` + `argsIgnorePattern: "^_"` en `eslint.config.mjs` |
+| 5 | `onSave`/`onRegenerate` `void` → `Promise<void>` | Actualizado en interface y firma |
+| 6 | Interface vacía `no-empty-object-type` | `interface` → `type ProtectedPageRenderOptions = Omit<RenderOptions, "wrapper">` |
 
 ---
 

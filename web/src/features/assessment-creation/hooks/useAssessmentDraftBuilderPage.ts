@@ -4,10 +4,10 @@ import { useMemo, useState } from "react";
 import {
   toAssessmentDraftBuilderPageViewModel,
   toDraftViewModel,
-  type AssessmentDraftDto,
   type AssessmentDraftViewModel,
   type AssessmentDraftVersionViewModel,
 } from "../mappers/toAssessmentDraftBuilderPageViewModel";
+import type { AssessmentDraftDto } from "@/types/assessment";
 import type { DraftEditableField, DraftEditableFields } from "./useDraftEditorSection";
 
 // No second consumer needs this yet — promote to a shared module once another

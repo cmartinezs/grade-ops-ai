@@ -3,6 +3,7 @@ import { logger } from "@/lib/logging/logger";
 import type {
   AssessmentSummaryDto,
   ApiErrorResponse,
+  AssessmentDraftDto,
   CreateAssessmentBriefRequestDto,
   CreateAssessmentBriefResponseDto,
   FieldErrorResponse,
@@ -93,4 +94,34 @@ export async function submitAssessmentBrief(
 
   log.info({ assessmentId }, "submitAssessmentBrief completed");
   return { assessmentId };
+}
+
+export async function getAssessmentDraft(assessmentId: string, log: Logger = logger): Promise<AssessmentDraftDto> {
+  const startedAt = Date.now();
+  const res = await apiClient(`/api/v1/assessments/${assessmentId}/draft`);
+  const latencyMs = Date.now() - startedAt;
+
+  if (!res.ok) {
+    await res.json().catch(() => ({ error: "UNKNOWN", message: null }));
+    log.error({ dependency: "api/assessments/draft", status: res.status, latencyMs, assessmentId }, "getAssessmentDraft failed");
+    throw new Error(`Failed to fetch assessment draft: ${res.status}`);
+  }
+
+  log.debug({ dependency: "api/assessments/draft", status: res.status, latencyMs, assessmentId }, "getAssessmentDraft succeeded");
+  return res.json();
+}
+
+export async function getAssessmentDraftVersions(assessmentId: string, log: Logger = logger): Promise<AssessmentDraftDto[]> {
+  const startedAt = Date.now();
+  const res = await apiClient(`/api/v1/assessments/${assessmentId}/draft/versions`);
+  const latencyMs = Date.now() - startedAt;
+
+  if (!res.ok) {
+    await res.json().catch(() => ({ error: "UNKNOWN", message: null }));
+    log.error({ dependency: "api/assessments/draft/versions", status: res.status, latencyMs, assessmentId }, "getAssessmentDraftVersions failed");
+    throw new Error(`Failed to fetch assessment draft versions: ${res.status}`);
+  }
+
+  log.debug({ dependency: "api/assessments/draft/versions", status: res.status, latencyMs, assessmentId }, "getAssessmentDraftVersions succeeded");
+  return res.json();
 }

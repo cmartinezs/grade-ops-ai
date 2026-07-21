@@ -21,6 +21,17 @@ export interface CreateAssessmentBriefResponseDto {
   assessmentId: string;
 }
 
+export interface AssessmentDraftDto {
+  draftId: string;
+  title: string;
+  context: string;
+  instructions: string;
+  objectives: string[];
+  deliverables: string[];
+  constraints: string[];
+  versionNumber: number;
+}
+
 export interface FieldErrorResponse {
   field: string;
   message: string;

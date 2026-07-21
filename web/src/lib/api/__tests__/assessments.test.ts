@@ -2,15 +2,17 @@ import {
   createAssessmentBrief,
   generateAssessmentDraft,
   submitAssessmentBrief,
+  getAssessmentDraft,
+  getAssessmentDraftVersions,
   CreateAssessmentBriefError,
   GenerateAssessmentDraftError,
 } from "../assessments";
 import { apiClient } from "../client";
-import type { CreateAssessmentBriefRequestDto } from "@/types/assessment";
+import type { CreateAssessmentBriefRequestDto, AssessmentDraftDto } from "@/types/assessment";
 
 jest.mock("../client");
 jest.mock("@/lib/logging/logger", () => ({
-  logger: { info: jest.fn(), warn: jest.fn(), error: jest.fn(), child: jest.fn().mockReturnThis() },
+  logger: { info: jest.fn(), warn: jest.fn(), error: jest.fn(), debug: jest.fn(), child: jest.fn().mockReturnThis() },
 }));
 
 const mockApiClient = apiClient as jest.Mock;
@@ -137,5 +139,89 @@ describe("submitAssessmentBrief", () => {
 
     expect(caught).toBeInstanceOf(CreateAssessmentBriefError);
     expect(mockApiClient).toHaveBeenCalledTimes(1);
+  });
+});
+
+const sampleDraft: AssessmentDraftDto = {
+  draftId: "draft-uuid-1",
+  title: "Recursividad: Fibonacci",
+  context: "Evaluación práctica",
+  instructions: "Implementa una función recursiva para calcular Fibonacci.",
+  objectives: ["Comprender recursividad"],
+  deliverables: ["Archivo .py"],
+  constraints: ["No usar librerías externas"],
+  versionNumber: 1,
+};
+
+describe("getAssessmentDraft", () => {
+  beforeEach(() => jest.clearAllMocks());
+
+  it("fetches from GET /api/v1/assessments/{assessmentId}/draft and returns AssessmentDraftDto", async () => {
+    mockApiClient.mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: () => Promise.resolve(sampleDraft),
+    });
+
+    const result = await getAssessmentDraft("assess-1");
+
+    expect(mockApiClient).toHaveBeenCalledWith("/api/v1/assessments/assess-1/draft");
+    expect(result).toEqual(sampleDraft);
+  });
+
+  it("throws an error on failed response", async () => {
+    mockApiClient.mockResolvedValue({
+      ok: false,
+      status: 404,
+      json: () => Promise.resolve({ error: "NOT_FOUND", message: "Draft not found" }),
+    });
+
+    await expect(getAssessmentDraft("assess-missing")).rejects.toThrow("Failed to fetch assessment draft: 404");
+  });
+});
+
+describe("getAssessmentDraftVersions", () => {
+  beforeEach(() => jest.clearAllMocks());
+
+  it("fetches from GET /api/v1/assessments/{assessmentId}/draft/versions and returns AssessmentDraftDto[]", async () => {
+    const versions: AssessmentDraftDto[] = [
+      { ...sampleDraft, versionNumber: 1 },
+      { ...sampleDraft, title: "Recursividad: Fibonacci (revisado)", versionNumber: 2 },
+      { ...sampleDraft, title: "Recursividad: Fibonacci con análisis", versionNumber: 3 },
+    ];
+
+    mockApiClient.mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: () => Promise.resolve(versions),
+    });
+
+    const result = await getAssessmentDraftVersions("assess-1");
+
+    expect(mockApiClient).toHaveBeenCalledWith("/api/v1/assessments/assess-1/draft/versions");
+    expect(result).toEqual(versions);
+    expect(result).toHaveLength(3);
+  });
+
+  it("throws an error on failed response", async () => {
+    mockApiClient.mockResolvedValue({
+      ok: false,
+      status: 500,
+      json: () => Promise.resolve({ error: "INTERNAL_ERROR", message: "Server error" }),
+    });
+
+    await expect(getAssessmentDraftVersions("assess-1")).rejects.toThrow("Failed to fetch assessment draft versions: 500");
+  });
+
+  it("returns an empty array when no versions exist", async () => {
+    mockApiClient.mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: () => Promise.resolve([]),
+    });
+
+    const result = await getAssessmentDraftVersions("assess-1");
+
+    expect(result).toEqual([]);
   });
 });
