@@ -67,7 +67,7 @@ This story delivers the wireframes, the navigable fake-data mockups, the DTOs/vi
 | 10 | [data-provider-draft-builder-screen](story-02-assessment-screens-wireframes-and-data-providers/task-10-data-provider-draft-builder-screen.md) | GENERATE-DOCUMENT | DONE | DTO + `loadAssessmentDraftBuilderPage` Screen Data Facade |
 | 11 | [mutations-draft-builder-screen](story-02-assessment-screens-wireframes-and-data-providers/task-11-mutations-draft-builder-screen.md) | GENERATE-DOCUMENT | DONE | `updateAssessmentDraft` + `regenerateAssessmentDraft` en `lib/api` |
 | 12 | [connect-real-api-draft-builder-screen](story-02-assessment-screens-wireframes-and-data-providers/task-12-connect-real-api-draft-builder-screen.md) | GENERATE-DOCUMENT | DONE | Draft Builder screen conectada a `api/` real |
-| 13 | [end-to-end-connection](story-02-assessment-screens-wireframes-and-data-providers/task-13-end-to-end-connection.md) | GENERATE-DOCUMENT | TODO | Flujo completo verificado sin datos fake residuales |
+| 13 | [end-to-end-connection](story-02-assessment-screens-wireframes-and-data-providers/task-13-end-to-end-connection.md) | GENERATE-DOCUMENT | IN PROGRESS | Flujo completo verificado sin datos fake residuales |
 
 ---
 
