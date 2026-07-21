@@ -2,8 +2,18 @@
 
 **PR:** #86
 **Planning:** `001-assessment-creation/story-02/task-12`
-**Status:** ✅ Ready for Review
+**Status:** ✅ APPROVED — 1 P3 finding fixed
 **Date:** 2026-07-21
+
+---
+
+## Code Review Finding — Closed
+
+| # | Finding | Status | Fix |
+|---|---------|--------|-----|
+| 1 | `translateRegenerateError`'s 502/503 branch untested for a non-`AGENT_CALL_FAILED` body (coverage gap, not a bug) | ✅ Fixed | Added test: 502 + `BAD_GATEWAY` body → falls back to `GENERIC_RETRY_MESSAGE` |
+
+Re-verified: 16/16 unit tests pass (1 new), scoped lint clean, 148/153 repo-wide (5 pre-existing unrelated failures unchanged).
 
 ---
 
