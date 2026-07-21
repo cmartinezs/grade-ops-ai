@@ -60,67 +60,61 @@ export default function Input({
   const resolvedType = showToggle ? (showPassword ? "text" : "password") : type;
 
   return (
-    <div>
-      <div style={{ position: "relative" }}>
-        {icon && (
-          <span
-            style={{
-              position: "absolute",
-              left: 12,
-              top: "50%",
-              transform: "translateY(-50%)",
-              color: "var(--text-subtle)",
-              display: "flex",
-              alignItems: "center",
-              pointerEvents: "none",
-            }}
-          >
-            {icon}
-          </span>
-        )}
-        <input
-          type={resolvedType}
-          disabled={disabled}
-          style={inputStyle}
-          className={`ds-input${className ? ` ${className}` : ""}`}
-          onFocus={(e) => {
-            setIsFocused(true);
-            onFocus?.(e);
+    <div style={{ position: "relative" }}>
+      {icon && (
+        <span
+          style={{
+            position: "absolute",
+            left: 12,
+            top: "50%",
+            transform: "translateY(-50%)",
+            color: "var(--text-subtle)",
+            display: "flex",
+            alignItems: "center",
+            pointerEvents: "none",
           }}
-          onBlur={(e) => {
-            setIsFocused(false);
-            onBlur?.(e);
+        >
+          {icon}
+        </span>
+      )}
+      <input
+        type={resolvedType}
+        disabled={disabled}
+        aria-invalid={error ? true : undefined}
+        style={inputStyle}
+        className={`ds-input${className ? ` ${className}` : ""}`}
+        onFocus={(e) => {
+          setIsFocused(true);
+          onFocus?.(e);
+        }}
+        onBlur={(e) => {
+          setIsFocused(false);
+          onBlur?.(e);
+        }}
+        {...props}
+      />
+      {showToggle && (
+        <button
+          type="button"
+          aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
+          onClick={() => setShowPassword((v) => !v)}
+          style={{
+            position: "absolute",
+            right: 10,
+            top: "50%",
+            transform: "translateY(-50%)",
+            background: "none",
+            border: "none",
+            padding: 4,
+            cursor: "pointer",
+            color: "var(--text-subtle)",
+            display: "flex",
+            alignItems: "center",
+            lineHeight: 0,
           }}
-          {...props}
-        />
-        {showToggle && (
-          <button
-            type="button"
-            aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
-            onClick={() => setShowPassword((v) => !v)}
-            style={{
-              position: "absolute",
-              right: 10,
-              top: "50%",
-              transform: "translateY(-50%)",
-              background: "none",
-              border: "none",
-              padding: 4,
-              cursor: "pointer",
-              color: "var(--text-subtle)",
-              display: "flex",
-              alignItems: "center",
-              lineHeight: 0,
-            }}
-          >
-            <LucideIcon name={showPassword ? "eye-off" : "eye"} size={16} />
-          </button>
-        )}
-      </div>
-      {error && (
-        <p style={{ fontSize: "var(--text-sm)", color: "var(--danger-600)", marginTop: 4, marginBottom: 0 }}>
-          {error}
-        </p>
+        >
+          <LucideIcon name={showPassword ? "eye-off" : "eye"} size={16} />
+        </button>
       )}
     </div>
   );

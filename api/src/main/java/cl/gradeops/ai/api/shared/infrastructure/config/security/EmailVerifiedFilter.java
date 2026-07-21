@@ -15,9 +15,15 @@ import java.util.Map;
 
 public class EmailVerifiedFilter extends OncePerRequestFilter {
 
+    // Full servlet paths, matching AuthController's actual @RequestMapping("/api/v1/auth") +
+    // @PostMapping mappings — HttpServletRequest.getRequestURI() returns the full path
+    // including the /api/v1 prefix, not the path relative to the controller's own mapping.
+    // A fresh self-registration's token always has emailVerified=false (chicken-and-egg:
+    // registration is what lets a not-yet-verified user create their Teacher row at all),
+    // so this whitelist must match the real path or every email/password registration 401s.
     private static final List<String> WHITELIST = List.of(
-            "/auth/register",
-            "/auth/verify/resend"
+            "/api/v1/auth/register",
+            "/api/v1/auth/verify/resend"
     );
 
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();

@@ -6,7 +6,7 @@ import path from 'node:path';
 const VALID_STORY_STATUSES = new Set(['TODO', 'IN PROGRESS', 'DONE', 'BLOCKED', 'SKIPPED', 'STANDBY']);
 const VALID_TASK_STATUSES = new Set(['TODO', 'IN PROGRESS', 'DONE', 'BLOCKED']);
 const CODE_EXTENSIONS = /\.(java|kt|ts|tsx|js|jsx|mjs|cjs|py|go|cs|rs|php|rb|scala|sql|tf|yaml|yml|json)$/i;
-const DB_ORM_PATTERN = /\b(migration|schema|database|db|table|column|index|seed|prisma|typeorm|sequelize|sqlalchemy|hibernate|jpa|entity|model|repository|generated client|persistence|ddl|flyway|liquibase)\b/i;
+const DB_ORM_PATTERN = /\b(migration|database|db|prisma|typeorm|sequelize|sqlalchemy|hibernate|jpa|persistence|ddl|flyway|liquibase)\b|(?:\b(schema|table|column|index|seed|entity|model|repository|generated client)\b.{0,60}\b(database|db|orm|persistence|sql|jpa|hibernate|prisma|typeorm|sequelize|sqlalchemy|flyway|liquibase)\b)|(?:\b(database|db|orm|persistence|sql|jpa|hibernate|prisma|typeorm|sequelize|sqlalchemy|flyway|liquibase)\b.{0,60}\b(schema|table|column|index|seed|entity|model|repository|generated client)\b)/i;
 
 const root = process.cwd();
 const planningRoot = path.join(root, '.planning');
@@ -385,8 +385,149 @@ function isCodeTask(text) {
   return CODE_EXTENSIONS.test(text) || /\b(code|api|endpoint|service|controller|component|repository|migration|schema|database|cli|worker|adapter|module)\b/i.test(text);
 }
 
+function stripNegativeDbOrmLines(text) {
+  return text.split(/\r?\n/)
+    .filter((line) => {
+      const normalized = line.toLowerCase();
+      if (/^\s*-\s*\*\*(layer design|data and persistence design):\*\*/i.test(line)
+        && /\b(no|not|none|n\/a|na|without)\b.*\b(database|db|orm|persistence|schema|migration|migrations|table|tables|column|columns|entity|entities|repository|repositories|generated client)\b|\b(database|db|orm|persistence|schema|migration|migrations|table|tables|column|columns|entity|entities|repository|repositories|generated client)\b.*\b(not involved|not required|not applicable|no changes|unchanged|not touched|not changed|without changes)\b/.test(normalized)) {
+        return false;
+      }
+      const mentionsDbOrm = /\b(database|db|orm|persistence|schema|migration|migrations|table|tables|column|columns|entity|entities|repository|repositories|generated client)\b/.test(normalized);
+      const negatesDbOrm = /\b(no|not|none|n\/a|na|without)\b.*\b(database|db|orm|persistence|schema|migration|migrations|table|tables|column|columns|entity|entities|repository|repositories|generated client)\b|\b(database|db|orm|persistence|schema|migration|migrations|table|tables|column|columns|entity|entities|repository|repositories|generated client)\b.*\b(not involved|not required|not applicable|no changes|unchanged|not touched|not changed|without changes)\b/.test(normalized);
+      return !(mentionsDbOrm && negatesDbOrm);
+    })
+    .join('\n');
+}
+
 function isDbOrmTask(text) {
-  return DB_ORM_PATTERN.test(text);
+  return DB_ORM_PATTERN.test(stripNegativeDbOrmLines(text));
+}
+
+function isReviewOnlyTask(text) {
+  const field = /\*\*Review-only:\*\*\s*([^\n\r]+)/i.exec(text);
+  if (field) return /^(yes|true|si|sí)\b/i.test(field[1].trim());
+  return /\b(read-only review|solo de revisi[oó]n|solo revisi[oó]n|this is a review-only task|review-only task)\b/i.test(text);
+}
+
+function escapeRegExp(value) {
+  return String(value).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+function isFrontendTask(text) {
+  if (isReviewOnlyTask(text)) return false;
+  const field = /\*\*Frontend task:\*\*\s*([^\n\r]+)/i.exec(text);
+  if (field) return /^(yes|true|si|sí)\b/i.test(field[1].trim());
+  const scan = [
+    text.split(/\r?\n/).slice(0, 8).join('\n'),
+    section(text, 'Objective'),
+    section(text, 'Technical Design'),
+    section(text, 'Implementation Steps'),
+  ].join('\n');
+  return /\b(frontend|front-end|ui|ux|web|client|browser|page|view|screen|route|component|layout|form|modal|dashboard|react|vue|angular|svelte|jsx|tsx|css|tailwind)\b/i.test(scan);
+}
+
+function isBackendTask(text) {
+  if (isReviewOnlyTask(text)) return false;
+  const field = /\*\*Backend\/API task:\*\*\s*([^\n\r]+)/i.exec(text);
+  if (field) return /^(yes|true|si|sí)\b/i.test(field[1].trim());
+  const scan = [
+    text.split(/\r?\n/).slice(0, 8).join('\n'),
+    section(text, 'Objective'),
+    section(text, 'Technical Design'),
+    section(text, 'Implementation Steps'),
+  ].join('\n');
+  return /\b(backend|back-end|api|server|endpoint|controller|handler|route|use-?case|repository|dao|adapter|port|dto|schema|migration|entity|model|database|persistence|queue|event|worker|spring|express|fastapi|django|rails|nestjs|maven|gradle)\b/i.test(scan);
+}
+
+function hasEmptySummaryEvidence(text) {
+  const summary = section(text, 'Summary Evidence').trim();
+  if (!summary) return true;
+  return /\[(Files, docs|Inline summary|Accepted \/ blocked|Use fenced language snippets)/i.test(summary)
+    || /\bFill during execution\b/i.test(summary);
+}
+
+function missingFrontendDesignLabels(text) {
+  const design = section(text, 'Frontend Design Plan').trim();
+  if (!design) return ['Frontend Design Plan'];
+  const required = [
+    'Frontend task',
+    'Idea to implementation path',
+    'View description',
+    'UI/UX principles',
+    'Wireframe / representation',
+    'Functional mockup before real activity',
+    'Component pattern',
+    'Page logic layer',
+    'Business logic layer',
+    'External communication layer',
+    'Reuse / modify / create decision',
+  ];
+  return required.filter((label) => !new RegExp(`\\*\\*${escapeRegExp(label)}:\\*\\*`, 'i').test(design));
+}
+
+function hasPlaceholderFrontendDesign(text) {
+  const design = section(text, 'Frontend Design Plan').trim();
+  if (!design) return true;
+  return /\[(Problem\/intent|What the user sees|Hierarchy|ASCII wireframe|Static or locally mocked|Existing component|Routing|Validation|Services, APIs|For each affected)/i.test(design)
+    || /\b(Describe problem\/intent|Describe visible layout|Document hierarchy|Add an ASCII wireframe|Plan static or locally mocked|Identify existing component|Define routing|Define validation|Define services|State which view)\b/i.test(design)
+    || /\bN\/A\b/i.test(design);
+}
+
+function missingBackendDesignLabels(text) {
+  const design = section(text, 'Backend/API Design Plan').trim();
+  if (!design) return ['Backend/API Design Plan'];
+  const required = [
+    'Backend/API task',
+    'Style/coding guide source',
+    'Functional design',
+    'Technical design',
+    'Contract definition',
+    'Layer design',
+    'Data and persistence design',
+    'External communication',
+    'Reuse / modify / create decision',
+    'Guide compliance checks',
+  ];
+  return required.filter((label) => !new RegExp(`\\*\\*${escapeRegExp(label)}:\\*\\*`, 'i').test(design));
+}
+
+function backendStyleGuideSource(text) {
+  const design = section(text, 'Backend/API Design Plan');
+  const match = /\*\*Style\/coding guide source:\*\*\s*([^\n\r]+)/i.exec(design);
+  return match ? match[1].trim() : '';
+}
+
+function hasPlaceholderBackendDesign(text) {
+  const design = section(text, 'Backend/API Design Plan').trim();
+  if (!design) return true;
+  const styleSource = backendStyleGuideSource(text);
+  return /\[(Existing guide|Use case|Language\/framework|Endpoints|Controller\/handler|Entities\/models|Internal\/external|For each affected|Style\/lint)/i.test(design)
+    || /\b(Existing backend style\/coding guide path|Define use case|Define language\/framework|Define endpoints|Define controller\/handler|Define entities\/models|Define services|State which module|List style\/lint)\b/i.test(design)
+    || !styleSource
+    || /\bN\/A\b/i.test(styleSource);
+}
+
+function hasPlaceholderTestExecutionEvidence(text) {
+  const generated = section(text, 'Generated Test Suite');
+  const evidence = /^###\s+Test Execution Evidence\s*$/im.test(generated)
+    ? generated.replace(/^[\s\S]*?^###\s+Test Execution Evidence\s*$/im, '').trim()
+    : '';
+  if (!evidence) return true;
+  return /\[(e\.g\.|exact command|env vars|local, CI|paste concise|pass\/fail|profile, ports|startup log|response\/log)/i.test(evidence)
+    || !/\b(unit|integration|acceptance|e2e|smoke|static|style|architecture|security|mutation|manual)\b/i.test(evidence)
+    || !/\b(pass|fail|skipped|passed|failed|error|success|0 failures|build success|tests run)\b/i.test(evidence);
+}
+
+function hasUnlabeledCodeFence(text) {
+  let inFence = false;
+  for (const line of text.split(/\r?\n/)) {
+    const match = /^```\s*([A-Za-z0-9_+.-]*)\s*$/.exec(line);
+    if (!match) continue;
+    if (!inFence && !match[1]) return true;
+    inFence = !inFence;
+  }
+  return false;
 }
 
 function validateRequiredPlanningFiles(planning, results) {
@@ -597,6 +738,27 @@ function validateTaskFile(planning, storyFile, taskFile, taskRow, catalog, confi
   if (section(text, 'Verification').trim().length === 0 && !hasHeading(text, 'Unit Tests')) {
     add(results, 'FAIL', `${taskId} has an empty Verification section`, taskFile, lineOf(text, '## Verification'));
   }
+  if (isReviewOnlyTask(text)) {
+    if (!hasHeading(text, 'Summary Evidence') || hasEmptySummaryEvidence(text)) {
+      add(results, 'FAIL', `${taskId} review-only task missing concrete Summary Evidence`, taskFile, lineOf(text, /Review-only|Summary Evidence/i), 'Add ## Summary Evidence with reviewed scope, evidence artifact, conclusion, and links/snippets as needed.');
+    } else if (hasUnlabeledCodeFence(section(text, 'Summary Evidence'))) {
+      add(results, 'WARN', `${taskId} Summary Evidence has a code fence without a language label`, taskFile, lineOf(text, '## Summary Evidence'), 'Use fenced snippets with a language name, for example ```ts or ```java.');
+    }
+  }
+  if (isFrontendTask(text)) {
+    const missingLabels = missingFrontendDesignLabels(text);
+    if (!hasHeading(text, 'Frontend Design Plan') || missingLabels.length > 0 || hasPlaceholderFrontendDesign(text)) {
+      const details = missingLabels.length > 0 ? ` Missing fields: ${missingLabels.join(', ')}.` : '';
+      add(results, 'FAIL', `${taskId} frontend task missing complete Frontend Design Plan`, taskFile, lineOf(text, /Frontend Design Plan|Frontend task|frontend|ui/i), `Add ## Frontend Design Plan with idea-to-code flow, view behavior, UI/UX principles, wireframe or equivalent representation, functional mockup, component pattern, page/business/external communication layers, services/APIs/libs, and reuse/modify/create decisions.${details}`);
+    }
+  }
+  if (isBackendTask(text)) {
+    const missingLabels = missingBackendDesignLabels(text);
+    if (!hasHeading(text, 'Backend/API Design Plan') || missingLabels.length > 0 || hasPlaceholderBackendDesign(text)) {
+      const details = missingLabels.length > 0 ? ` Missing fields: ${missingLabels.join(', ')}.` : '';
+      add(results, 'FAIL', `${taskId} backend/API task missing complete Backend/API Design Plan`, taskFile, lineOf(text, /Backend\/API Design Plan|Backend\/API task|backend|api/i), `Add ## Backend/API Design Plan with style/coding guide source or prerequisite guide task, functional design, technical design, contracts, layers, data/persistence, external communication, reuse/modify/create decisions, and guide compliance checks.${details}`);
+    }
+  }
   if (/\b(and|plus|also)\b/i.test(section(text, 'Objective'))) {
     add(results, 'WARN', `${taskId} objective may name more than one deliverable`, taskFile, lineOf(text, '## Objective'), 'Consider splitting if the deliverables are independently verifiable.');
   }
@@ -618,6 +780,11 @@ function validateTaskFile(planning, storyFile, taskFile, taskRow, catalog, confi
     }
     if (!hasSubheading(text, 'Generated Test Suite') || !/generated|test-suite|quality gate|acceptance dependency/i.test(done)) {
       add(results, 'FAIL', `${taskId} missing generated test-suite gate evidence criteria`, taskFile, lineOf(text, '## Done Criteria'));
+    }
+    if (!hasSubheading(text, 'Test Execution Evidence')) {
+      add(results, 'FAIL', `${taskId} missing Test Execution Evidence section`, taskFile, lineOf(text, /Generated Test Suite|Done Criteria/i), 'Add ### Test Execution Evidence with type, source, command, parameters/profile/env, environment, config/scripts, output log/report, and result for every applicable generated, detected, or manual gate.');
+    } else if (['IN PROGRESS', 'DONE'].includes(status.toUpperCase()) && hasPlaceholderTestExecutionEvidence(text)) {
+      add(results, 'FAIL', `${taskId} has incomplete Test Execution Evidence`, taskFile, lineOf(text, '### Test Execution Evidence'), 'Replace placeholder rows with real executed gates, output logs/reports, results, or explicit skipped-gate rationale.');
     }
     if (isDbOrmTask(text) && (!hasSubheading(text, 'Database / ORM Consistency Check') || !/static.*(db|database|orm)|runtime.*(persistence|smoke)|persistence smoke/i.test(done))) {
       add(results, 'FAIL', `${taskId} missing DB/ORM static consistency and runtime persistence smoke criteria`, taskFile, lineOf(text, '## Done Criteria'));

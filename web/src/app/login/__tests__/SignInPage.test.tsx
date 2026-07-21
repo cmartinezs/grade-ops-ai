@@ -1,5 +1,6 @@
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { signInWithEmailAndPassword } from "firebase/auth";
+import { useRouter, useSearchParams } from "next/navigation";
 import LoginPage from "../page";
 
 jest.mock("@/lib/firebase/client", () => ({ auth: {} }));
@@ -14,14 +15,14 @@ const mockSignIn = signInWithEmailAndPassword as jest.Mock;
 describe("LoginPage", () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    jest.mocked(require("next/navigation").useSearchParams).mockReturnValue({
+    jest.mocked(useSearchParams).mockReturnValue({
       get: jest.fn().mockReturnValue(null),
-    });
+    } as unknown as ReturnType<typeof useSearchParams>);
   });
 
   it("redirects to /dashboard when credentials are valid and email is verified", async () => {
     const pushMock = jest.fn();
-    jest.mocked(require("next/navigation").useRouter).mockReturnValue({ push: pushMock });
+    jest.mocked(useRouter).mockReturnValue({ push: pushMock } as unknown as ReturnType<typeof useRouter>);
 
     mockSignIn.mockResolvedValue({
       user: { emailVerified: true },
@@ -41,7 +42,7 @@ describe("LoginPage", () => {
 
   it("redirects to /verify-email when credentials are valid but email is not verified", async () => {
     const pushMock = jest.fn();
-    jest.mocked(require("next/navigation").useRouter).mockReturnValue({ push: pushMock });
+    jest.mocked(useRouter).mockReturnValue({ push: pushMock } as unknown as ReturnType<typeof useRouter>);
 
     mockSignIn.mockResolvedValue({
       user: { emailVerified: false },
@@ -74,9 +75,9 @@ describe("LoginPage", () => {
   });
 
   it("shows session expired banner when ?reason=expired is in the URL", async () => {
-    jest.mocked(require("next/navigation").useSearchParams).mockReturnValue({
+    jest.mocked(useSearchParams).mockReturnValue({
       get: (key: string) => (key === "reason" ? "expired" : null),
-    });
+    } as unknown as ReturnType<typeof useSearchParams>);
 
     render(<LoginPage />);
 

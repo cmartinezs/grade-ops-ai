@@ -1,6 +1,6 @@
 # 🔍 DEEPENING: Story 02 — assessment-screens-wireframes-and-data-providers
 
-> **Status:** TODO
+> **Status:** DONE
 > [← 01-expansion.md](../01-expansion.md) | [← planning/README.md](../../README.md)
 
 ---
@@ -56,19 +56,21 @@ This story delivers the wireframes, the navigable fake-data mockups, the DTOs/vi
 
 | # | Task | Workflow | Status | Output |
 |---|------|----------|--------|--------|
-| 1 | [verify-api-contract](story-02-assessment-screens-wireframes-and-data-providers/task-01-verify-api-contract.md) | GENERATE-DOCUMENT | TODO | Confirmed request/response shapes for all 6 endpoints, verified against `AssessmentController.java` |
-| 2 | [wireframe-intake-screen](story-02-assessment-screens-wireframes-and-data-providers/task-02-wireframe-intake-screen.md) | GENERATE-DOCUMENT | TODO | Wireframe textual + estados documentados |
-| 3 | [component-hierarchy-intake-screen](story-02-assessment-screens-wireframes-and-data-providers/task-03-component-hierarchy-intake-screen.md) | GENERATE-DOCUMENT | TODO | Jerarquía de componentes documentada |
-| 4 | [functional-mockup-intake-screen](story-02-assessment-screens-wireframes-and-data-providers/task-04-functional-mockup-intake-screen.md) | GENERATE-DOCUMENT | TODO | Maqueta funcional navegable (TSX, datos fake) |
-| 5 | [data-provider-intake-screen](story-02-assessment-screens-wireframes-and-data-providers/task-05-data-provider-intake-screen.md) | GENERATE-DOCUMENT | TODO | DTOs + `submitAssessmentBrief` en `lib/api` |
-| 6 | [connect-real-api-intake-screen](story-02-assessment-screens-wireframes-and-data-providers/task-06-connect-real-api-intake-screen.md) | GENERATE-DOCUMENT | TODO | Intake screen conectada a `api/` real |
-| 7 | [wireframe-draft-builder-screen](story-02-assessment-screens-wireframes-and-data-providers/task-07-wireframe-draft-builder-screen.md) | GENERATE-DOCUMENT | TODO | Wireframe textual + estados documentados |
-| 8 | [component-hierarchy-draft-builder-screen](story-02-assessment-screens-wireframes-and-data-providers/task-08-component-hierarchy-draft-builder-screen.md) | GENERATE-DOCUMENT | TODO | Jerarquía de componentes documentada |
-| 9 | [functional-mockup-draft-builder-screen](story-02-assessment-screens-wireframes-and-data-providers/task-09-functional-mockup-draft-builder-screen.md) | GENERATE-DOCUMENT | TODO | Maqueta funcional navegable (TSX, datos fake) |
-| 10 | [data-provider-draft-builder-screen](story-02-assessment-screens-wireframes-and-data-providers/task-10-data-provider-draft-builder-screen.md) | GENERATE-DOCUMENT | TODO | DTO + `loadAssessmentDraftBuilderPage` Screen Data Facade |
-| 11 | [mutations-draft-builder-screen](story-02-assessment-screens-wireframes-and-data-providers/task-11-mutations-draft-builder-screen.md) | GENERATE-DOCUMENT | TODO | `updateAssessmentDraft` + `regenerateAssessmentDraft` en `lib/api` |
-| 12 | [connect-real-api-draft-builder-screen](story-02-assessment-screens-wireframes-and-data-providers/task-12-connect-real-api-draft-builder-screen.md) | GENERATE-DOCUMENT | TODO | Draft Builder screen conectada a `api/` real |
-| 13 | [end-to-end-connection](story-02-assessment-screens-wireframes-and-data-providers/task-13-end-to-end-connection.md) | GENERATE-DOCUMENT | TODO | Flujo completo verificado sin datos fake residuales |
+| 1 | [verify-api-contract](story-02-assessment-screens-wireframes-and-data-providers/task-01-verify-api-contract.md) | GENERATE-DOCUMENT | DONE | Confirmed request/response shapes for all 6 endpoints, verified against `AssessmentController.java` |
+| 2 | [wireframe-intake-screen](story-02-assessment-screens-wireframes-and-data-providers/task-02-wireframe-intake-screen.md) | GENERATE-DOCUMENT | DONE | Wireframe textual + estados documentados |
+| 3 | [component-hierarchy-intake-screen](story-02-assessment-screens-wireframes-and-data-providers/task-03-component-hierarchy-intake-screen.md) | GENERATE-DOCUMENT | DONE | Jerarquía de componentes documentada |
+| 14 | [design-system-form-primitives](story-02-assessment-screens-wireframes-and-data-providers/task-14-design-system-form-primitives.md) | GENERATE-DOCUMENT | DONE | **Inserted out of numeric order — must run before task-04/task-09.** `Form`/`Field`/`Input`/`Textarea`/`Select`/`Checkbox`/`DynamicForm` per `pdr-001-design-system-form-primitives.md` |
+| 4 | [functional-mockup-intake-screen](story-02-assessment-screens-wireframes-and-data-providers/task-04-functional-mockup-intake-screen.md) | GENERATE-DOCUMENT | DONE | Maqueta funcional navegable (TSX, datos fake) — depends on task-14 |
+| 5 | [data-provider-intake-screen](story-02-assessment-screens-wireframes-and-data-providers/task-05-data-provider-intake-screen.md) | GENERATE-DOCUMENT | DONE | DTOs + `submitAssessmentBrief` en `lib/api` |
+| 6 | [connect-real-api-intake-screen](story-02-assessment-screens-wireframes-and-data-providers/task-06-connect-real-api-intake-screen.md) | GENERATE-DOCUMENT | DONE | Intake screen conectada a `api/` real |
+| 7 | [wireframe-draft-builder-screen](story-02-assessment-screens-wireframes-and-data-providers/task-07-wireframe-draft-builder-screen.md) | GENERATE-DOCUMENT | DONE | Wireframe textual + estados documentados |
+| 8 | [component-hierarchy-draft-builder-screen](story-02-assessment-screens-wireframes-and-data-providers/task-08-component-hierarchy-draft-builder-screen.md) | GENERATE-DOCUMENT | DONE | Jerarquía de componentes documentada |
+| 9 | [functional-mockup-draft-builder-screen](story-02-assessment-screens-wireframes-and-data-providers/task-09-functional-mockup-draft-builder-screen.md) | GENERATE-DOCUMENT | DONE | Maqueta funcional navegable (TSX, datos fake) — depends on task-14 |
+| 10 | [data-provider-draft-builder-screen](story-02-assessment-screens-wireframes-and-data-providers/task-10-data-provider-draft-builder-screen.md) | GENERATE-DOCUMENT | DONE | DTO + `loadAssessmentDraftBuilderPage` Screen Data Facade |
+| 11 | [mutations-draft-builder-screen](story-02-assessment-screens-wireframes-and-data-providers/task-11-mutations-draft-builder-screen.md) | GENERATE-DOCUMENT | DONE | `updateAssessmentDraft` + `regenerateAssessmentDraft` en `lib/api` |
+| 12 | [connect-real-api-draft-builder-screen](story-02-assessment-screens-wireframes-and-data-providers/task-12-connect-real-api-draft-builder-screen.md) | GENERATE-DOCUMENT | DONE | Draft Builder screen conectada a `api/` real |
+| 13 | [end-to-end-connection](story-02-assessment-screens-wireframes-and-data-providers/task-13-end-to-end-connection.md) | GENERATE-DOCUMENT | DONE | Flujo completo verificado sin datos fake residuales |
+| 15 | [deterministic-e2e-suite](story-02-assessment-screens-wireframes-and-data-providers/task-15-deterministic-e2e-suite.md) | GENERATE-DOCUMENT | DONE | **Inserted out of numeric order — added after task-13 closed.** Suite Playwright determinística + script de orquestación que reproduce el walkthrough de task-13 sin intervención manual |
 
 ---
 
@@ -93,7 +95,7 @@ This story delivers the wireframes, the navigable fake-data mockups, the DTOs/vi
 
 | # | Description | Docs Involved | Status | Resolution Path |
 |---|-------------|--------------|--------|----------------|
-| — | *None yet* | — | — | — |
+| 1 | `task-01` (verify-api-contract, `DONE`/merged) only transcribed success-path request/response shapes. Tracing `task-02`'s two endpoints' actual exception paths in `api/` found a much richer error surface than the generic 401/403/404/409/422/500 taxonomy in `docs/gradeops-ai-frontend-guidelines/06-estado-datos-y-api.md` §9: 422 has two distinct body shapes (`List<FieldErrorResponse>` for Bean Validation vs. `ApiErrorResponse{error, message}` for everything else), and draft generation can return 502/503 when `agents/` is down. | `task-01-verify-api-contract.md`, `task-02-wireframe-intake-screen.md`, `06-estado-datos-y-api.md` §9 | DONE | Not reopening `task-01` (its narrower success-shape scope is already satisfied). Each remaining task that implements error handling (`task-05`, `task-06`, and `task-10`/`task-11`/`task-12` for the Draft Builder screen's other 4 endpoints) must trace its own endpoints' real exception paths in `api/` source the same way, rather than assuming the generic taxonomy. |
 
 ---
 

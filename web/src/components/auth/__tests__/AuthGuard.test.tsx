@@ -1,5 +1,6 @@
 import { render, screen, act } from "@testing-library/react";
 import { onAuthStateChanged } from "firebase/auth";
+import { useRouter } from "next/navigation";
 import AuthGuard from "../AuthGuard";
 
 jest.mock("@/lib/firebase/client", () => ({ auth: {} }));
@@ -18,7 +19,7 @@ describe("AuthGuard", () => {
 
   it("redirects to /login when user is null (unauthenticated)", async () => {
     const replaceMock = jest.fn();
-    jest.mocked(require("next/navigation").useRouter).mockReturnValue({ replace: replaceMock });
+    jest.mocked(useRouter).mockReturnValue({ replace: replaceMock } as unknown as ReturnType<typeof useRouter>);
 
     mockOnAuthStateChanged.mockImplementation((_auth: unknown, callback: (user: null) => void) => {
       callback(null);
@@ -35,7 +36,7 @@ describe("AuthGuard", () => {
 
   it("redirects to /verify-email when email is not verified and user is not a Google user", async () => {
     const replaceMock = jest.fn();
-    jest.mocked(require("next/navigation").useRouter).mockReturnValue({ replace: replaceMock });
+    jest.mocked(useRouter).mockReturnValue({ replace: replaceMock } as unknown as ReturnType<typeof useRouter>);
 
     mockOnAuthStateChanged.mockImplementation((_auth: unknown, callback: (user: FakeUser) => void) => {
       callback({ emailVerified: false, providerData: [{ providerId: "password" }] });
@@ -52,7 +53,7 @@ describe("AuthGuard", () => {
 
   it("renders children when user is authenticated and email is verified", async () => {
     const replaceMock = jest.fn();
-    jest.mocked(require("next/navigation").useRouter).mockReturnValue({ replace: replaceMock });
+    jest.mocked(useRouter).mockReturnValue({ replace: replaceMock } as unknown as ReturnType<typeof useRouter>);
 
     mockOnAuthStateChanged.mockImplementation((_auth: unknown, callback: (user: FakeUser) => void) => {
       callback({ emailVerified: true, providerData: [{ providerId: "password" }] });
@@ -69,7 +70,7 @@ describe("AuthGuard", () => {
 
   it("renders children for Google user without email verification", async () => {
     const replaceMock = jest.fn();
-    jest.mocked(require("next/navigation").useRouter).mockReturnValue({ replace: replaceMock });
+    jest.mocked(useRouter).mockReturnValue({ replace: replaceMock } as unknown as ReturnType<typeof useRouter>);
 
     mockOnAuthStateChanged.mockImplementation((_auth: unknown, callback: (user: FakeUser) => void) => {
       callback({ emailVerified: false, providerData: [{ providerId: "google.com" }] });
