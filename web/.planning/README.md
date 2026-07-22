@@ -31,11 +31,10 @@ Central directory for all project plannings.
 
 ### 🚧 In Progress → see [`active/README.md`](active/README.md)
 
-- [001-assessment-creation](active/001-assessment-creation/01-expansion.md) — Build the teacher-facing UI for assessment creation (intake form, draft edit, regenerate, version history).
 
 ### ✅ Completed → see [`finished/README.md`](finished/README.md)
 
-*(none yet)*
+- [001-assessment-creation](finished/001-assessment-creation/README.md) — Build the intake form, editable draft view, regeneration flow, and version history for assessment creation, integrating against `api/003-assessment-creation`'s already-`DONE` endpoints. (COMPLETED 2026-07-22)
 
 ### 🆕 Initial
 

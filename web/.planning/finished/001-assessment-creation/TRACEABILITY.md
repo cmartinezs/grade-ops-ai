@@ -51,7 +51,7 @@ Term and concept traceability for this planning. For global consolidated view, s
 
 | ID | Term / Issue | Blocker | Status | Target Resolution |
 |----|-------------|---------|--------|------------------|
-| — | *None* | — | — | — |
+| R-POST-01 | Post-closeout R01 revalidation required for i18n, UI data semantics, API I/O, sync/async completion and UI-action reachability under the updated Master Plan (see `story-02-assessment-screens-wireframes-and-data-providers.md` § Residuals). | Master Plan i18n / UI-data-semantics / testing gates introduced after this story's closure (2026-07-22 addendum) | Open | R01 release readiness / follow-up planning (Master Plan) |
 
 ---
 
