@@ -39,6 +39,19 @@ This story delivers the wireframes, the navigable fake-data mockups, the DTOs/vi
 
 ---
 
+## Master Plan Addendum — i18n, UI Data Semantics and Testing
+
+Added during the `planning/master-plan` merge from `develop` on 2026-07-22. This story was already `DONE` in `develop`; the addendum does not rewrite historic task evidence. It records the release-readiness gates that must be revalidated or converted into follow-up tasks before R01 is considered complete under the updated Master Plan:
+
+- UI entry paths must be tested from visible actions, especially `/dashboard` "Nueva evaluacion" -> `/assessments/new`; direct URL access alone is not accepted as the happy path.
+- Intake and Draft Builder screens must keep DS-first field/control semantics: long text, enum/catalog, numeric/preset, read-only provenance and generated editable content cannot all collapse into unrestricted text inputs.
+- All screen read/write data, catalog labels, safe errors and operation states must be backed by `api/` contracts or explicit residuals.
+- Generation/regeneration must declare sync vs async behavior; async flows require an API-backed completion/progress mechanism.
+- i18n applies beyond static labels: UI copy, validation, safe errors, catalog labels and generated draft/regeneration output must respect effective locale/`outputLocale`; source code, DTO fields, status/error codes, logs and telemetry remain in English.
+- Existing `DONE` evidence predates the full i18n strategy unless a task explicitly proves locale/fallback/output-language behavior. Missing coverage is a release-readiness residual, not evidence that i18n is already implemented.
+
+---
+
 ## Risk
 
 | Risk | Impact | Likelihood | Mitigation |
@@ -47,6 +60,7 @@ This story delivers the wireframes, the navigable fake-data mockups, the DTOs/vi
 | Version-history UI implies a "restore version" action that the API doesn't support | M | L | Context above states explicitly: version history is read-only browsing in this MVP |
 | Draft Builder screen's loader duplicates calls already made in a shared hook, defeating the Screen Data Facade's purpose | L | L | Single `loadAssessmentDraftBuilderPage` per Screen Data Facade rule; no ad hoc `getX()` calls from the Page/TSX |
 | New API orchestration rules are only present in templates and are missed by already-atomized tasks | M | M | Endpoint-facing tasks in this story must include the API / Agent / Web Contract Gate before implementation/review |
+| Story was completed before the full Master Plan i18n/UI data/testing gates existed | H | M | Treat this addendum as a R01 revalidation checklist; open follow-up tasks for gaps instead of marking i18n/API I/O/DS semantics as implicitly satisfied |
 
 ---
 
@@ -105,7 +119,7 @@ This story delivers the wireframes, the navigable fake-data mockups, the DTOs/vi
 
 | # | Description | Deferred To | Status |
 |---|-------------|------------|--------|
-| — | *None* | — | — |
+| R-POST-01 | Post-closeout R01 revalidation required for i18n, UI data semantics, API I/O, sync/async completion and UI-action reachability under the updated Master Plan. | R01 release readiness / follow-up planning | Open |
 
 ---
 

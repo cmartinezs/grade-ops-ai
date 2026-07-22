@@ -251,6 +251,14 @@ The 2 failed suites/5 failed tests are the same pre-existing `SignOutButton.test
 
 ---
 
+## Master Plan Addendum — Connected Draft i18n Gate
+
+Added after this task was already `DONE` in `develop`. Any R01 revalidation or future connected Draft Builder change must prove the real loader/mutations preserve content-locale metadata, pass regenerate `outputLocale`/`contentLocale`, render localized copy/errors/version labels and avoid raw backend strings in user-facing UI.
+
+Async regenerate must use only API-backed completion/progress; locale cannot change for an in-flight operation because the UI language changed later.
+
+---
+
 ## Done Criteria
 
 - [x] Draft Builder screen loads, edits/saves, and regenerates against the real API — see §§3-4; fake dataset fully removed, hook calls only `loadAssessmentDraftBuilderPage`/`updateAssessmentDraft`/`regenerateAssessmentDraft`.

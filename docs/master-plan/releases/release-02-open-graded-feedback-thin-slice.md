@@ -484,6 +484,9 @@ La carga de una submission no consume graded submission. El consumo ocurre cuand
 - `agents` devuelve outputs estructurados segun contratos de Rubric, Grading y Feedback Agent.
 - Persistencia separa suggestion, teacher state y final approval.
 - Migraciones Flyway cubren rubrics, submissions, suggestions, feedback, approvals, usage y logs.
+- Pantallas de rubric/submission/grading/feedback aplican UI Design/Data Semantics: pesos/scores numericos, archivos, estados reviewable, flags y feedback editable usan controles DS acordes a fuente de verdad.
+- Pantallas de rubric/submission/grading/feedback declaran API I/O contract y sync/async por accion; grading/feedback async debe exponer completion model por operacion/polling/SSE/WebSocket/webhook/push segun contrato.
+- Pantallas y outputs R02 aplican i18n: copy/safe errors/catalog labels localizados, feedback student-facing en `outputLocale`, y logs/telemetria/codes tecnicos en ingles.
 - Tests cubren happy path y errores principales.
 - Cross-service smoke test prueba `api` -> `agents` para grading y feedback real o provider controlado.
 
@@ -550,6 +553,10 @@ La carga de una submission no consume graded submission. El consumo ocurre cuand
 - [ ] Usage/cost queda registrado por analyzed submission.
 - [ ] Idempotencia y retry cubiertos por tests o evidencia manual reproducible.
 - [ ] Logs de rubric/grading/feedback incluyen provider, model, status, timestamps, costo y errores.
+- [ ] Gate de testing R02 cumplido: contratos rubric/grading/feedback, acceptance de artefactos, Compose Open full-chain y performance smoke segun impacto.
+- [ ] Gate UI Design/Data Semantics cumplido para UI afectada: controles DS, campos numericos/restringidos, archivos, estados y flags no se implementan como texto libre por defecto.
+- [ ] Gate API I/O + sync/async cumplido: datos de pantalla respaldados por `api/`, y acciones async con completion/progress/failure probado.
+- [ ] Gate i18n cumplido: UI copy, safe errors, catalog labels y feedback generado respetan locale; logs/traces/metrics/event/error codes siguen en ingles.
 - [ ] README/planning/release artifacts actualizados.
 
 ## 39. Validacion
@@ -560,9 +567,18 @@ Validaciones esperadas:
 - Integration tests de `api` con persistencia real para el flujo completo.
 - Tests de `agents` para Rubric, Grading y Feedback structured output.
 - Tests de `web` para rubric approval, submission intake, review queue y feedback approval.
+- Tests de `web` para controles semanticos: pesos/scores numericos, file upload/textarea segun submission, estados reviewable, uncertainty flags y feedback editable con valores validos/invalidos.
+- Tests Web-API para lectura/escritura de pantallas y completion model si grading/feedback usa async.
+- Tests i18n para translation keys, fallback, safe errors/catalog labels y `outputLocale` en Rubric/Grading/Feedback Agents cuando el output sea visible.
 - Smoke local con `api` y `agents` reales o provider controlado.
 - Prueba de idempotencia para doble submit en grading y feedback.
 - Prueba de falla para archivo no soportado y agent timeout.
+- Contract checks Web-API y API-Agents para rubric, grading y feedback, con fixtures actualizados en el mismo PR que cambie el contrato.
+- Aceptacion aislada de `web`, `api` y `agents` con Firebase, Agents y GenAI simulados segun frontera afectada.
+- Compose `full-chain` Open para assessment aprobado -> rubric -> submission -> grading -> feedback, con PostgreSQL real y GenAI simulado.
+- Coverage/no-regression y Sonar quality gate sobre codigo nuevo en los artefactos modificados.
+- JMeter smoke de rutas criticas de submission/grading/feedback cuando cambien endpoints, payloads, archivos o timeouts; carga completa queda fuera del PR.
+- Artefactos JUnit, coverage, Playwright, contract diff, Compose logs y summary normalizado publicados.
 
 ## 40. Escenario Given/When/Then
 
@@ -728,6 +744,10 @@ Criterios:
 
 | Fecha | Cambio | Motivo | Elementos afectados | Decision asociada |
 |---|---|---|---|---|
+| 2026-07-21 | Incorporacion de i18n por release funcional | Alinear R02 con locale en UI, safe errors, catalogos y feedback student-facing sin localizar telemetria | UI/API/Agents, DoD operativo, validacion | D-I18N-01..D-I18N-10 |
+| 2026-07-21 | Incorporacion de UI Design/Data Semantics | Alinear R02 con controles DS y semantica de datos para rubric/submission/grading/feedback | UI, DoD operativo, validacion | D-UI-01..D-UI-08 |
+| 2026-07-21 | Incorporacion de API I/O y sync/async contract | Alinear R02 con datos de pantalla respaldados por `api/` y completion model para grading/feedback async | UI/API, DoD operativo, validacion | D-UI-01..D-UI-08, D-API-01..D-API-10 |
+| 2026-07-21 | Incorporacion de Testing & Quality Gates | Alinear R02 con contratos rubric/grading/feedback, acceptance por artefacto, Compose Open y performance smoke de rutas criticas | Testing, CI/testkit, DoD operativo | D-TEST-01..D-TEST-09 |
 | 2026-07-21 | Incorporacion de Observability & Telemetry | Alinear R02 con telemetria de graded submission, calidad IA, aprobacion docente y costo por resultado | Observabilidad, DoD operativo | D-OBS-01..D-OBS-08 |
 | 2026-07-21 | Incorporacion de Security & Authorization | Alinear R02 con permissions, ingestion segura, minimizacion PII, provider/model allowlist y pruebas negativas | Seguridad, DoD operativo | D-SEC-01..D-SEC-08 |
 | 2026-07-20 | Incorporacion de capacidades de Agent Runtime | Declarar el segundo consumidor real del runtime y sus limites de autonomia | Runtime, agentes Rubric/Grading/Feedback | D-04, D-06 |

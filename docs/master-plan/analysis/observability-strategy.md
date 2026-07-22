@@ -18,6 +18,8 @@ Observabilidad no significa agregar logs. GradeOps AI debe separar:
 
 El dashboard futuro no debe leer archivos de log ni depender del formato propietario de GCP, Vercel o Render como modelo de producto. Debe consumir APIs sobre eventos canonicos, agregados y artefactos autorizados.
 
+i18n no cambia el idioma operacional de observabilidad: logs, metric names, span names, event names, error codes y warning codes permanecen en ingles. Locale puede registrarse como atributo normalizado (`requested_locale`, `effective_locale`, `content_locale`, `output_locale`, `fallback_locale`, `locale_source`) siempre que sea baja cardinalidad y no contenga PII.
+
 ## Fuentes incorporadas
 
 | Area | Fuente |
@@ -81,6 +83,7 @@ El checkpoint debe verificar:
 - IDs propagados y no confundidos: trace, request, correlation, operation, run y attempt.
 - Logs JSON estructurados con `service.name`, `service.version`, `deployment.environment`, severity, event name y error code.
 - Metricas con dimensiones de baja cardinalidad; no usar user IDs, assessment IDs, operation IDs, run IDs o submission IDs como labels.
+- Locale registrado solo como dimension controlada de baja cardinalidad; no usar textos traducidos como labels, event names, span names, metric names ni log messages tecnicos.
 - Eventos canonicos de producto/IA persistidos en PostgreSQL/Neon cuando sean evidencia durable.
 - Redaccion de PII, prompts, respuestas completas, tokens, secrets y signed links.
 - Instrumentacion multiambiente: `demo` y `beta` producen la misma semantica aunque usen adaptadores distintos.
@@ -98,9 +101,11 @@ Una release no queda lista solo porque puede diagnosticarse manualmente. Debe de
 - Datos sensibles no aparecen en logs, spans, labels, dashboards ni exports.
 - `demo` y `beta` comparten semantica de eventos, metricas, estados y errores.
 - Las senales incluyen ambiente, servicio, version y plataforma.
+- Logs, traces, metrics y eventos tecnicos mantienen nombres/codes en ingles aunque el journey user-facing se ejecute en otro locale.
 
 ## Historial de cambios
 
 | Fecha | Cambio | Motivo | Elementos afectados | Decision asociada |
 |---|---|---|---|---|
+| 2026-07-21 | Incorporacion de i18n en observabilidad | Mantener telemetria/logs en ingles y registrar locale solo como atributo controlado | Observability strategy, gates, criterios de salida | D-I18N-01..D-I18N-10 |
 | 2026-07-21 | Creacion inicial | Convertir `master-plan-observabilioty-and-telemetry` en reglas operativas por release sin crear una release tecnica transversal | Master Plan, R01-R06, tareas futuras de api/agents/web/infra | D-OBS-01..D-OBS-08 |

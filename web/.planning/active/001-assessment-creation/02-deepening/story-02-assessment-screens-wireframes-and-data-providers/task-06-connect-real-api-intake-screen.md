@@ -119,6 +119,14 @@ N/A — no database or ORM involved in `web/`.
 
 ---
 
+## Master Plan Addendum — Connected Intake i18n Gate
+
+Added after this task was already `DONE` in `develop`. Any R01 revalidation or future connected-intake change must prove the real UI propagates effective locale through the confirmed API mechanism, renders localized safe errors/catalog labels/copy and keeps `outputLocale`/`contentLocale` separate from programming `language`.
+
+Existing evidence that maps English backend validation text into Spanish copy is useful but not sufficient for full i18n. Locale fallback, alternate-locale behavior and non-localized logs/telemetry must be covered by follow-up tests or residuals.
+
+---
+
 ## Done Criteria
 
 - [x] Submitting the real form creates a brief, generates a draft, and navigates to the real draft screen with the real `assessmentId`. Verified twice: via `NewAssessmentPage.test.tsx`'s navigation test (mocked `submitAssessmentBrief`), and for real against the local `api/`/`agents/`/Postgres stack once Docker became available mid-task — real 201/201, real `assessmentId`, real Groq-generated draft (see Verification Summary).

@@ -102,6 +102,14 @@ N/A — no database or ORM involved.
 
 ---
 
+## Master Plan Addendum — Intake Mockup Gates
+
+Added after this task was already `DONE` in `develop`. Any R01 revalidation or future mockup change must prove localized labels, helper text, validation messages, safe server errors and catalog labels are sourced from i18n resources or API-backed localized labels, not final hardcoded component literals.
+
+Fake data must still mirror the API I/O and sync/async contract, but it also needs locale/fallback cases and an explicit generated-content locale (`outputLocale`/`contentLocale`) separate from programming `language`.
+
+---
+
 ## Done Criteria
 
 - [x] `/assessments/new` renders a navigable form with all 5 fields, using fake/local submit state only. Confirmed via `NewAssessmentPage.test.tsx` (real hook, no mocks) and `HTTP 200` on `curl http://localhost:3000/assessments/new`.

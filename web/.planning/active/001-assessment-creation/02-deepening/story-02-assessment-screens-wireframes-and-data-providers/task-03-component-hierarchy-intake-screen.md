@@ -101,6 +101,14 @@ N/A — this task produces no executable code.
   - Tightening `task-06`'s Interfaces/contracts bullet and Implementation Step 3 to state explicitly that a real 422's `fieldErrors` reuses the exact mechanism `task-04` builds, with no new prop/component — making its "no other component changes" claim actually true instead of just asserted.
   - Added `task-06-connect-real-api-intake-screen.md` to this task's Affected files list (Technical Design, above) since it was touched during this fix.
 
+## Master Plan Addendum — Intake Hierarchy Gates
+
+Added after this task was already `DONE` in `develop`. Any R01 revalidation or future hierarchy change must identify ownership for effective locale, localized copy/error/catalog labels, `outputLocale`/`contentLocale`, API I/O boundaries and async completion.
+
+Components must not own final hardcoded user-facing strings or fake completion timers. The page/hook boundary resolves locale and API state; presentational components receive localized strings/view models and code identifiers remain in English.
+
+---
+
 ## Done Criteria
 
 - [x] `wireframes/intake-screen-hierarchy.md` names every file, its responsibility, and Server/Client designation. — §1 hierarchy table, all 6 files.

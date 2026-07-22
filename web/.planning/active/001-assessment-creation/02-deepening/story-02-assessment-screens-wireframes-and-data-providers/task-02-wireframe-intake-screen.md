@@ -87,6 +87,14 @@ N/A — this task produces no executable code.
 - **Field cross-check against `task-01`:** wireframe lists `learningGoal, topic, level, duration, language` — identical set and order to `task-01`'s Verification row 1 (`CreateAssessmentBriefRequest{learningGoal, topic, level, duration, language}`). No invented or missing field.
 - **Gap found in `task-01` (already `DONE`/merged):** its Verification Summary only transcribed the *success*-path request/response shapes, not the error-response contract. Recorded as an inconsistency in the story file rather than reopening task-01, since `task-01`'s Objective was scoped to "request/response shape" in the success sense and its Done Criteria are already satisfied for that scope — but downstream tasks (`task-05`, `task-06`, and later `task-10`/`task-11`/`task-12` for the Draft Builder screen's 4 remaining endpoints) need this same error-tracing treatment before they can claim "handles 422/404/etc." with real evidence instead of assumption.
 
+## Master Plan Addendum — Intake Wireframe Gates
+
+Added after this task was already `DONE` in `develop`. Any R01 revalidation or future intake wireframe change must include a DS-first field matrix, API I/O matrix, sync/async decision and i18n matrix before layout acceptance.
+
+The intake wireframe must prove that `/dashboard` "Nueva evaluacion" is the happy-path entry to `/assessments/new`, `learningGoal` is long free text, `topic`/`level`/`duration`/`language` use controls aligned with their source of truth, and UI copy/safe errors/catalog labels/generated-content locale are not treated as hardcoded Spanish-only text.
+
+---
+
 ## Done Criteria
 
 - [x] `wireframes/intake-screen.md` exists and follows the guide's §3 format — see file, sections "Pantalla," "Boceto visual (estado idle)," "Estados," "Bocetos de variantes de estado," "Densidad y microcopy," "Resultado esperado del diseño (checklist §10)." Added ASCII box-drawing sketches for the idle layout plus 4 state variants (validando, enviando, error de campo, error de banner) — the guide's §3 format accepts text/Markdown wireframes, but a plain state table alone didn't convey layout/spacing; the sketches show field pairing, banner-vs-inline error placement, and button disabled treatment concretely.

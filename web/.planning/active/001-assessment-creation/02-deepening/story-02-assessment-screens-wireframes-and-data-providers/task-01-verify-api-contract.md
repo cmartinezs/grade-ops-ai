@@ -150,6 +150,20 @@ public record GenerateAssessmentDraftResponse(
 
 ---
 
+## Master Plan Addendum — i18n and Data Contract Gates
+
+Added after this task was already `DONE` in `develop`. Do not reinterpret the historical verification summary as proof of full i18n coverage. Any R01 revalidation or future change touching this contract must also verify:
+
+- locale negotiation (`Accept-Language`, profile preference, tenant/product fallback or explicit field);
+- stable English DTO field names, enum/status/error codes and observability identifiers;
+- localized or translatable safe errors and catalog labels;
+- `outputLocale`/`contentLocale` support for draft generation/regeneration, separate from programming `language`;
+- API-backed source of truth for restricted values, catalogs, operation states and sync/async completion.
+
+Missing support is an `api/`/`agents/`/`web` follow-up or release-readiness residual, not a `web` fixture.
+
+---
+
 ## Done Criteria
 
 - [x] All 7 verification rows above are re-confirmed directly against current `api/` source (not assumed from this story's Context section alone) — see § Verification Summary for the raw controller mappings and record definitions transcribed on 2026-07-15 at `api/` commit `0a23627aa2d737f233e0a8a2be864f7187725139`.

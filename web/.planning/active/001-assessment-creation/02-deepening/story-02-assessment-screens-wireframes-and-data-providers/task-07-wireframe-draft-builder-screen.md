@@ -83,6 +83,14 @@ N/A — this task produces no executable code.
 - **Editable fields cross-check:** wireframe's Section 1 lists `title, context, instructions, objectives, deliverables, constraints` — identical set to `GenerateAssessmentDraftResponse`'s fields confirmed in `task-01`'s Verification Summary (`task-01-verify-api-contract.md` § Verification Summary, response records). No invented or missing field.
 - **Additional finding beyond the task's original scope (§9 AI-disclosure):** read `AssessmentDraft.java` to design the "generado por IA" vs "editado por el docente" indicator against real data, not an assumed flag. Finding: `applyEdit()` preserves the original `agentExecutionLogId`/`versionNumber`/`createdAt` — **no `editedByTeacher` flag or edit timestamp is persisted anywhere**; a saved edit is indistinguishable from freshly-generated content once read back from `GET .../draft`. Documented as a real backend-contract gap in the wireframe's own "Nota sobre disclosure de IA" section, with a designed workaround (client-side-only "just generated" state, valid only within the same session, reverting to a neutral label after any save or reload) rather than fabricating a persisted distinction the API cannot back.
 
+## Master Plan Addendum — Draft Wireframe i18n Gate
+
+Added after this task was already `DONE` in `develop`. Any R01 revalidation or future Draft Builder wireframe change must include generated-content locale in the API I/O model: current draft, version list, save, regenerate, errors and async operation states must preserve or display `outputLocale`/`contentLocale` where relevant.
+
+UI copy, version labels, conflict/not-found/server-error states and AI-generated-content disclosures must be localizable while technical codes and observability stay in English.
+
+---
+
 ## Done Criteria
 
 - [x] `wireframes/draft-builder-screen.md` exists and follows the guide's §3 format — see file, sections "Pantalla," "Boceto visual (estado listo)," "Estados," "Bocetos de variantes de estado," "Nota sobre disclosure de IA," "Densidad y microcopy," "Resultado esperado del diseño (checklist §10)."

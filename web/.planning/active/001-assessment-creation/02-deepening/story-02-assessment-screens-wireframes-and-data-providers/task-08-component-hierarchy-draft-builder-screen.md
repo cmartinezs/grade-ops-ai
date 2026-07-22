@@ -86,6 +86,14 @@ N/A — this task produces no executable code.
   - **P2, zero-prior-versions fixture conflicts with the always-including-current versions contract:** `task-09`'s fixture wording changed from "empty version list" to "one-item version list containing only the current draft" throughout (Implementation Steps, Risk, Verification, Done Criteria); the hierarchy's `versions` field now explicitly documents it is never an empty array.
   - **P2, `task-11`/`task-12` still required 409 handling after `task-07`/`task-08` ruled it out:** removed all 409 assumptions from `task-11` (Technical Design, Implementation Steps, Verification, Logging, Done Criteria) and `task-12` (Objective, Technical Design, Implementation Steps, Verification, Logging, Done Criteria), replacing them with the real traced error surface (404/422/500 plus 502/503 agent errors) and an explicit note that the last-write-wins concurrency risk is a documented backend limitation, not a UI-detectable conflict.
 
+## Master Plan Addendum — Draft Hierarchy i18n Gate
+
+Added after this task was already `DONE` in `develop`. Any R01 revalidation or future hierarchy change must keep i18n/API ownership at the page hook/view-model boundary: sections receive localized strings, safe errors, version labels and content-locale metadata; sections do not call `api/`, infer generated language or hardcode final user-facing copy.
+
+Regenerate remains a user action with explicit sync/async completion ownership and no invented operation state.
+
+---
+
 ## Done Criteria
 
 - [x] `wireframes/draft-builder-screen-hierarchy.md` names every file, its responsibility, and Server/Client designation — see § 1 Hierarchy table.

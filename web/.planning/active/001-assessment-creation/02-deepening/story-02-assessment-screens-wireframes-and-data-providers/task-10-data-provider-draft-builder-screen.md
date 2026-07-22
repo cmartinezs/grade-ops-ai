@@ -232,6 +232,14 @@ $ npm run build
 
 ---
 
+## Master Plan Addendum — Draft Loader i18n Gate
+
+Added after this task was already `DONE` in `develop`. Any R01 revalidation or future loader change must verify effective-locale request behavior and API-backed content-locale metadata for current draft and versions.
+
+If `api/` does not expose `outputLocale`/`contentLocale`, localized labels or safe error contracts, the loader must record an API residual rather than invent persisted locale state in `web`.
+
+---
+
 ## Done Criteria
 
 - [x] `AssessmentDraftDto` matches `task-01`'s confirmed shape exactly — see § Verification Summary #1.

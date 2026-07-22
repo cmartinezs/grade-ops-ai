@@ -132,6 +132,14 @@ N/A — no database or ORM involved in `web/`.
 
 ---
 
+## Master Plan Addendum — Intake Provider i18n Gate
+
+Added after this task was already `DONE` in `develop`. Any R01 revalidation or future provider change must treat locale as part of the Web-API contract, not as UI decoration.
+
+`submitAssessmentBrief` and related DTO tests must verify effective-locale propagation when supported, safe localized error mapping, localized catalog label handling, and generated draft `outputLocale`/`contentLocale` support. The programming `language` field remains a programming-language/catalog value and must not be reused as natural-language locale.
+
+---
+
 ## Done Criteria
 
 - [x] `CreateAssessmentBriefRequestDto`/`ResponseDto` match `task-01`'s confirmed shapes exactly.

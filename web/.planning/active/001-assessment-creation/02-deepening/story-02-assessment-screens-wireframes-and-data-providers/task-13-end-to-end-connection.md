@@ -178,6 +178,14 @@ Docker Desktop's WSL2 integration dropped twice during this task's walkthrough (
 
 ---
 
+## Master Plan Addendum — E2E i18n Gate
+
+Added after this task was already `DONE` in `develop`. Any R01 revalidation or future E2E change must extend the deterministic journey to cover locale behavior end to end: visible UI action from dashboard, localized UI copy/errors/catalog labels, locale metadata in Web-API requests, generated-content `outputLocale`/`contentLocale`, fallback behavior and verification that logs/traces/metrics/event/error codes stay in English.
+
+Existing E2E evidence remains valid for connectivity and persistence, but it does not close the full i18n strategy unless those locale-specific checks are present.
+
+---
+
 ## Done Criteria
 
 - [x] No fake-data residue remains under `src/features/assessment-creation/` — see Step 1 above; the only `setTimeout` hits are test-timing code in `loadAssessmentDraftBuilderPage.test.ts`, no `mocks/`/fixture directory exists.

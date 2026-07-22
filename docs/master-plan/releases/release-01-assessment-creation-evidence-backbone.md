@@ -65,6 +65,10 @@ Si el primer flujo de generacion de assessment produce logs completos, costo est
 
 - Teacher onboarding existente: login, registro, Google sign-in, email verification, sign-out, dashboard, ownership, provisioning y pilot flags.
 - Assessment brief intake.
+- UI de assessment intake con diseno previo desde Design System y matriz de campos; no se acepta `/assessments/new` como formulario definitivo de inputs libres para todos los datos.
+- Contrato API I/O para pantallas R01: datos de lectura/escritura, catalogos/defaults/capabilities, mutations y estados de operacion deben estar respaldados por `api/`.
+- Decision sync/async para create brief, generation y regeneration; si generation/regeneration pasa a async, `api/` debe exponer completion model para `web/`.
+- Fundacion i18n R01: locale efectivo de usuario, copy dashboard/intake/draft traducible, safe errors/catalog labels localizados o traducibles, `outputLocale` para generation/regeneration y logs/telemetria en ingles.
 - Assessment draft generation.
 - Assessment draft regeneration.
 - Draft version history y seleccion de version actual cuando aplique.
@@ -100,7 +104,7 @@ Si el primer flujo de generacion de assessment produce logs completos, costo est
 
 ```text
 Teacher signs in
-  -> dashboard shows create assessment entry point
+  -> dashboard "Nueva evaluacion" action opens /assessments/new
   -> teacher creates an assessment brief
   -> API persists the brief before invoking the agent
   -> API calls agents service through agentclient
@@ -124,7 +128,7 @@ Teacher signs in
 | US-007 | Cross-Teacher Access Denial | Implementada; patron de ownership requerido |
 | US-008 | Teacher Self-Registration | Implementada |
 | US-009 | Email Verification | Implementada |
-| US-010 | Assessment Brief Intake | Implementada en `api/`; UI pendiente de cierre en `web/` |
+| US-010 | Assessment Brief Intake | Implementada en `api/`; UI pendiente de cierre en `web/`, incluyendo que el boton "Nueva evaluacion" del dashboard navegue a `/assessments/new` |
 | US-011 | Assessment Draft Generation | Implementada en `api/`/`agents`; UI y evidencia enriquecida deben verificarse |
 | US-012 | Assessment Draft Regeneration | En progreso; debe cerrar versionado visible y log separado |
 | US-013 | Postman Collection | READY; verificar si existe antes de incluir como tarea |
@@ -149,6 +153,9 @@ Estas propuestas no se crean como archivos de user story dentro de esta release 
 - US-015 tiene dos discrepancias documentadas en su DoD: metodo HTTP y granularidad de errores. R01 debe decidir si las corrige o si las deja como deuda explicitamente excluida del release candidate.
 - US-003/US-006 mencionan operator access indefinido. No bloquea R01 si el operator evidence se limita a inspeccion interna o developer/admin temporal, pero debe quedar como riesgo para R06.
 - US-013 debe verificar si ya existe `docs/postman/` o equivalente antes de planificar trabajo nuevo.
+- US-010 debe aplicar UI Design/Data Semantics antes de wireframe/mockup/codigo: `learningGoal` es texto libre largo; `level` es enum/difficulty; `duration` es numero/minutos o preset; `language` es enum/catalogo; `topic` es candidato a dato maestro curricular/tag controlado. Si el contrato actual solo acepta strings, la planning debe decidir ajuste API/modelo o residual explicito antes de cerrar la UI como definitiva.
+- US-010/011/012 deben declarar API I/O y sync/async contract por accion. Si falta endpoint/read model/catalogo/mutation o estado de operacion en `api/`, crear tarea `api/` antes de cerrar UI. Si generation/regeneration es async, definir polling/SSE/WebSocket/webhook/push y estados UI antes de implementar.
+- US-010/011/012 deben declarar i18n contract. `language` de programacion no es locale natural; el flujo debe diferenciar programming language de `outputLocale`/`contentLocale`. `web` indica locale efectivo, `api` resuelve/fallback y `agents` genera draft/regeneration en el idioma solicitado cuando el output es user-facing. Logs, traces, metrics y event/error codes permanecen en ingles.
 
 ## 16. Reglas de negocio
 
@@ -190,6 +197,9 @@ Estas propuestas no se crean como archivos de user story dentro de esta release 
 - `agents/` valida command, construye prompt/version, llama provider y devuelve output estructurado.
 - `AgentExecutionLog` se persiste en `api/` como evidencia de producto, no solo log tecnico.
 - Idempotencia se implementa en el borde de comando de generacion/regeneracion.
+- `web/` parte de `web/design-system/` y de una matriz de campos antes de wireframe/mockup; cada control debe reflejar la fuente de verdad y semantica de dato, no solo la forma actual del DTO.
+- `web/` no crea datos I/O locales como fuente de verdad; toda lectura/escritura debe consumir `api/`. Si `api/` no existe para un dato de pantalla, el alcance R01 debe incorporar la tarea `api/` correspondiente o residual bloqueante.
+- Toda operacion costosa o de IA declara sync/async. Si es async, `api/` devuelve operacion/estado o canal de completion y `web/` muestra queued/running/succeeded/failed/cancelled/timeout.
 
 ## 20. Datos y migraciones
 
@@ -214,6 +224,34 @@ Campos minimos para `AgentExecutionLog` en R01:
 - `input_summary`, `output_summary`.
 - `error_code`, `retry_count`.
 - `requires_teacher_approval`, `teacher_approval_state`.
+
+### Semantica UI del brief
+
+El intake de R01 debe distinguir contrato de transporte y semantica de dominio. El hecho de que el DTO actual use strings no autoriza a renderizar todos los campos como texto libre:
+
+| Campo UI | Naturaleza esperada | Fuente/decision requerida |
+|---|---|---|
+| `learningGoal` | Texto libre largo | `Textarea`, max length y sanitizacion alineada a API |
+| `topic` | Tema curricular, tag o dato maestro | Definir `Subject`/`Topic`/tag controlado o residual; custom solo si API lo permite |
+| `level` | Enum/difficulty | `Select`/`Radio` respaldado por enum/version de dominio |
+| `duration` | Numero de minutos o preset | Numeric input/stepper/select con min/max/unidad; persistir como minutos si el modelo lo exige |
+| `language` | Enum/catalogo de lenguaje o pseudocode | Selector/catalogo; custom controlado solo con regla de negocio |
+
+Datos maestros candidatos para R01/R04-R08: asignaturas, cursos, secciones, materias/unidades, temas, learning outcomes, lenguajes, difficulty/level, tipos de pregunta, estados workflow y tags.
+
+Si falta tabla/API/catalogo, crear una tarea `api/`/DB/infra cuando corresponda o registrar residual aceptado. La UI no debe resolverlo silenciosamente con `input text`.
+
+### API I/O y comunicacion
+
+| Pantalla/accion | Datos I/O requeridos | Contrato esperado | Sync/async |
+|---|---|---|---|
+| Dashboard -> new assessment | assessments summary, capabilities, route action state | `api/` read model/capability si el dashboard muestra datos reales; link/action UI para route | Sync read |
+| Create brief | `learningGoal`, `topic`, `level`, `duration`, `language`, actor/auth | `POST /api/v1/assessments` o contrato equivalente; valida y persiste antes de agent call | Sync aceptable si responde con `assessmentId` rapido |
+| Generate draft | `assessmentId`, brief persistido, idempotency/correlation | `POST /api/v1/assessments/{id}/draft` sync legacy u operation-backed | Debe decidirse en R01; async requiere operacion consultable |
+| Load draft builder | current draft, versions, operation status si aplica | `GET /draft`, `GET /draft/versions`, `GET /operations/{id}` si async | Sync read o polling/SSE/WS para operacion |
+| Regenerate draft | adjustment notes, current draft/version, idempotency/correlation | `POST /draft/regenerate` sync legacy u operation-backed | Debe decidirse en R01; async requiere completion model |
+
+Si generation/regeneration se implementa asincrono, R01 debe definir el mecanismo concreto de finalizacion: polling de operacion, SSE, WebSocket, webhook server-to-server indirecto o push/notification. La UI no puede usar `setTimeout`, mock local o spinner indefinido como sustituto del estado de `api/`.
 
 ## 21. Seguridad y privacidad
 
@@ -288,6 +326,8 @@ Campos minimos para `AgentExecutionLog` en R01:
 - Exigir o admitir `Idempotency-Key` en comandos GenAI mutantes y devolver la operacion existente cuando el mismo request se reintenta.
 - Exponer una ruta consultable de operacion para `web/` cuando la generacion no pueda tratarse como resultado inmediato.
 - Someter todo endpoint/ruta nueva al gate Richardson REST: recurso claro, metodo correcto, status code, `Location` si aplica, errores normalizados, links de estado/transicion y contract tests.
+- Para toda pantalla R01, declarar API I/O contract: lectura, escritura, catalogos, defaults, capabilities, estados de operacion y errores. Si falta un contrato `api/`, crearlo en `api/` o registrar residual bloqueante.
+- Decidir para generation/regeneration si el corte final es sync compatible o async. Si es async, exponer `AiOperation` consultable o canal de completion y definir el consumo en `web/`.
 
 ### Herramientas requeridas
 
@@ -413,6 +453,10 @@ D-04 debe resolverse para que Groq/Gemini no queden codificados de forma contrad
 ## 31. Criterios funcionales
 
 - Teacher puede iniciar sesion y llegar al dashboard.
+- Teacher puede abrir la creacion de evaluacion desde una accion visible en `/dashboard`; `/assessments/new` no puede quedar solo como URL directa.
+- Teacher completa un formulario intake basado en DS y controles semanticos; `level`, `duration`, `language` y `topic` no quedan como texto libre si son enum, numero, catalogo o dato maestro.
+- Teacher ve estados reales de API para submit/generation/regeneration; si una operacion es async, la UI muestra progreso/completion/failure desde el mecanismo acordado.
+- Teacher ve copy, labels, safe errors y catalogos en el locale efectivo; el draft generado/regenerado usa el `outputLocale` solicitado.
 - Teacher puede crear un brief.
 - Brief persiste antes de llamar al agente.
 - Teacher puede generar draft.
@@ -424,6 +468,12 @@ D-04 debe resolverse para que Groq/Gemini no queden codificados de forma contrad
 ## 32. Criterios tecnicos
 
 - `web/` usa React Hook Form + Zod para formularios, segun convención vigente.
+- Toda ruta funcional de `web/` incluida en R01 tiene un entry point de UI probado; en particular, el boton "Nueva evaluacion" del dashboard navega a `/assessments/new`.
+- Toda UI de R01 aplica [`ui-design-data-strategy.md`](../analysis/ui-design-data-strategy.md): diseno previo DS, matriz de campos, componentes DS adecuados y tratamiento explicito de datos maestros/restringidos.
+- Toda UI de R01 declara datos I/O alineados con `api/`; si falta endpoint/read model/catalogo/mutation/estado, se planifica tarea `api/` o residual bloqueante antes de declarar la pantalla lista.
+- Toda accion R01 declara sync/async; async requiere completion model probado, no spinner indefinido.
+- Toda superficie user-facing R01 aplica [`i18n-strategy.md`](../analysis/i18n-strategy.md): translation keys, locale efectivo/fallback, catalog labels/safe errors y `outputLocale` para salidas GenAI visibles.
+- Codigo fuente, DTO fields, enum/error/event/metric/span codes, logs y telemetria R01 permanecen en ingles.
 - `api/` valida ownership y payloads.
 - `api/` no importa Spring AI fuera de `agentclient`.
 - `agents/` devuelve output estructurado validado.
@@ -458,6 +508,7 @@ D-04 debe resolverse para que Groq/Gemini no queden codificados de forma contrad
 ## 35. Criterios de observabilidad
 
 - 100% de generation/regeneration agent runs tienen log.
+- Logs, traces, metrics, event names, error codes y warning codes se mantienen en ingles; locale solo aparece como atributo controlado (`requested_locale`, `effective_locale`, `output_locale`, etc.).
 - El journey generation/regeneration puede reconstruirse por `trace_id`/`correlation_id`.
 - `AiOperation`, `AgentRun` y `AgentAttempt` comparten operation/run/attempt IDs con logs, spans y eventos canonicos.
 - Las senales incluyen `service.name`, `service.version`, `deployment.environment` y plataforma.
@@ -485,12 +536,19 @@ D-04 debe resolverse para que Groq/Gemini no queden codificados de forma contrad
 ## 38. Definition of Done
 
 - [ ] US-010/011/012 verificadas de extremo a extremo incluyendo UI.
+- [ ] `/assessments/new` es alcanzable desde el boton/accion visible "Nueva evaluacion" en `/dashboard`; no se acepta como ruta solo por URL directa.
+- [ ] `/assessments/new` cumple UI Design/Data Semantics: diseno DS previo, matriz de campos, `learningGoal` como texto libre largo, `level`/`language` como enum/catalogo, `duration` como numero/preset y `topic` como dato maestro/tag/residual explicito.
+- [ ] Pantallas R01 cumplen API I/O contract: todos los datos de lectura/escritura estan respaldados por `api/`, o existe tarea/residual bloqueante para lo que falte.
+- [ ] Generation/regeneration declaran sync o async; si son async, existe completion model (`GET operation`, SSE, WebSocket, webhook/push u otro) con estados UI y pruebas.
+- [ ] Gate i18n R01 cumplido: UI copy no esta hardcodeado, locale efectivo/fallback definido, safe errors/catalog labels cubiertos y generation/regeneration reciben `outputLocale`.
+- [ ] Observabilidad R01 no se localiza: logs/traces/metrics/event/error codes siguen en ingles y locale se registra solo como atributo controlado.
 - [ ] `AgentExecutionLog` registra el esquema minimo de R01.
 - [ ] Costo estimado visible o exportable internamente.
 - [ ] Provider/model policy reconciliada con D-04.
 - [ ] D-06 resuelta o el esquema rico adoptado como decision tecnica de R01.
 - [ ] Idempotencia y retry cubiertos por tests o evidencia manual reproducible.
 - [ ] Cross-service smoke test real documentado.
+- [ ] Gate de testing R01 cumplido: unit/component/coverage baseline, contratos Assessment Web-API/API-Agents, aceptacion aislada y Compose minimo documentados.
 - [ ] US-015 discrepancias cerradas o registradas como residual aceptado.
 - [ ] README/planning/release artifacts actualizados.
 
@@ -501,9 +559,23 @@ Validaciones esperadas:
 - Unit tests de `api` para commands, handlers, persistence mappers y ownership.
 - Integration tests de `api` con adapters reales para brief/draft/log.
 - Tests de `agents` para command validation, prompt/template y structured output parsing.
-- Tests de `web` para intake, draft view, regenerate action y errores.
+- Tests de `web` para dashboard action -> intake route, intake form, draft view, regenerate action y errores.
+- Tests de `web` para semantica de controles intake: `Textarea`/limites en `learningGoal`, select/radio para `level`, control numerico o preset para `duration`, selector/catalogo para `language`, y tratamiento de `topic` como dato maestro/tag o residual documentado.
+- Tests Web-API para datos I/O de pantalla: dashboard action/capability, create brief, generate draft, load current draft, versions y regeneration.
+- Tests de sync/async: si generation/regeneration es async, cubrir queued/running/succeeded/failed/timeout/retry/cancel segun contrato y mecanismo elegido.
+- Tests i18n de R01: translation keys para dashboard/intake/draft, locale efectivo/fallback, safe errors/catalog labels, `outputLocale` en comandos de generation/regeneration y salida GenAI simulada en idioma solicitado.
+- Tests/review de observabilidad verifican que logs, traces, metrics y event/error codes no se traducen aunque el flujo se ejecute en `es-CL` u otro locale.
 - Smoke local con `api` y `agents` reales.
 - Smoke `beta` si el entorno esta disponible.
+- Coverage baseline por artefacto afectado, con LCOV/Cobertura para `web` y JaCoCo XML/HTML para `api`/`agents`.
+- Contract checks Assessment Web-API y API-Agents, con fixtures versionados y sin DTOs independientes en `web`.
+- Aceptacion aislada black-box para `api`, `agents` y `web` cuando cambie la frontera publica del flujo de assessment.
+- Acceptance/e2e del happy path inicia en `/dashboard`, hace click en "Nueva evaluacion", valida `/assessments/new` y continua el flujo; una prueba de URL directa solo complementa guards/deep-linking.
+- Acceptance/e2e selecciona valores validos desde controles/catalogos del intake y prueba al menos un valor invalido/restringido sin depender de escribir strings arbitrarios en todos los campos.
+- Acceptance/e2e valida que la UI no dependa de mocks permanentes: los datos I/O del flujo vienen de `api/`. Si el flujo es async, la prueba espera completion por el mecanismo acordado.
+- Compose hermetico minimo para `api-agents`, `web-api` y `full-chain`, usando PostgreSQL real y Firebase/GenAI simulados.
+- Primer `run-manifest.json`/`summary.json` o residual explicito si el testkit compartido se posterga.
+- Sonar quality gate inicial sobre codigo nuevo, calibrado desde baseline real; JMeter solo como smoke si cambian rutas criticas.
 
 ## 40. Escenario Given/When/Then
 
@@ -547,6 +619,10 @@ And the teacher can review, edit, or regenerate the draft without losing previou
 | Groq default sin ADR | Resolver D-04 o documentar provider policy como decision de R01. |
 | Agent log subdimensionado | Adoptar esquema rico de `automation-inventory.md` y cerrar D-06. |
 | Web UI no cerrada | Mantener R01 abierta hasta cerrar `web/.planning/active/001-assessment-creation`. |
+| Intake all-text-input | Aplicar UI Design/Data Semantics; crear catalogos/API/residual para `topic`, `level`, `duration` y `language` antes de cerrar UX definitiva. |
+| UI necesita datos sin API | Crear tarea `api/`/DB/infra para endpoint/read model/catalogo/mutation o marcar residual bloqueante; no cerrar la pantalla con mocks permanentes. |
+| Generation async sin completion model | Definir `AiOperation`/polling/SSE/WebSocket/webhook/push, estados y pruebas antes de implementar la UI. |
+| i18n tratado solo como labels | Aplicar i18n strategy a UI copy, safe errors, catalog labels, `outputLocale` para agents y tests; mantener logs/telemetria en ingles. |
 | Cross-service test con mocks | Exigir smoke real `api` -> `agents`. |
 | Doble submit genera doble costo | Idempotency key obligatoria. |
 | US-015 discrepancias contaminan cierre | Resolver o registrar residual aceptado antes de Done. |
@@ -580,6 +656,8 @@ Fuentes obligatorias:
 - docs/02-product/user-stories/epic-02-assessment-creation/
 - docs/02-product/user-stories/epic-09-evidence-metrics/01-agent-execution-log.md
 - docs/02-product/user-stories/epic-09-evidence-metrics/02-cost-estimate-per-run.md
+- docs/master-plan/analysis/ui-design-data-strategy.md
+- docs/master-plan/analysis/i18n-strategy.md
 
 Objetivo:
 Crear y gestionar la release operativa R01: login -> brief -> draft/regeneracion -> log/costo/idempotencia.
@@ -607,6 +685,10 @@ Arquitectura:
 - agentclient es el unico caller de agents desde api.
 - Provider/model policy debe quedar estructurada.
 - No exponer provider API keys al frontend.
+- Intake UI debe partir del Design System y matriz de campos; `level`, `duration`, `language` y `topic` no se tratan como texto libre sin decision de dominio/API.
+- Pantallas UI deben declarar datos de lectura/escritura alineados con `api/`; si falta API, planificarla o marcar residual bloqueante.
+- Generation/regeneration deben declarar sync vs async; async requiere completion model acordado y estados UI.
+- UI/API/Agents deben aplicar i18n: source code y contratos tecnicos en ingles; copy/safe errors/catalog labels/output GenAI con locale efectivo; logs/telemetria en ingles.
 
 Seguridad:
 - Mantener Firebase auth y ownership server-side.
@@ -634,12 +716,19 @@ Criterios:
 - El flujo es demostrable.
 - Tests y smoke real api -> agents documentados.
 - README/planning/release status actualizados.
+- `/assessments/new` cumple semantica de datos y controles DS, con datos maestros/catalogos o residual explicito para campos restringidos.
+- Datos I/O de pantallas R01 estan respaldados por `api/`; generation/regeneration tienen contrato sync/async y completion model si corresponde.
+- i18n R01 cubre locale efectivo, translation keys, safe errors/catalog labels, `outputLocale` y observabilidad en ingles.
 ```
 
 ## 46. Historial de cambios
 
 | Fecha | Cambio | Motivo | Elementos afectados | Decision asociada |
 |---|---|---|---|---|
+| 2026-07-21 | Incorporacion de i18n por release funcional | Exigir locale efectivo, copy traducible, safe errors/catalog labels y output GenAI localizado sin traducir logs/telemetria | UI/API/Agents, DoD, validacion | D-I18N-01..D-I18N-10 |
+| 2026-07-21 | Incorporacion de API I/O y sync/async contract | Exigir datos de pantalla respaldados por `api/` y completion model para generation/regeneration asincrona | UI/API, operaciones, DoD, validacion | D-UI-01..D-UI-08, D-API-01..D-API-10 |
+| 2026-07-21 | Incorporacion de UI Design/Data Semantics | Evitar que R01 cierre `/assessments/new` como all-text-input y exigir DS/matriz de campos/datos maestros | UI intake, datos, DoD, validacion | D-UI-01..D-UI-08 |
+| 2026-07-21 | Incorporacion de Testing & Quality Gates | Exigir que R01 deje baseline de testing, contratos y Compose minimo para el primer journey `web -> api -> agents` | Testing, CI/testkit, DoD operativo | D-TEST-01..D-TEST-09 |
 | 2026-07-21 | Incorporacion de Observability & Telemetry | Exigir que R01 deje el primer journey IA trazable, con JSON stdout, OTel/W3C propagation y evidencia durable | Observabilidad, DoD operativo | D-OBS-01..D-OBS-08 |
 | 2026-07-21 | Incorporacion de topologia de seguridad multiambiente | Exigir que la fundacion de R01 declare ambiente, aisle identidad/datos/secrets y reemplace el shared-secret segun `demo`/`beta` | Seguridad, service-to-service, DoD operativo | D-SEC-01..D-SEC-08 |
 | 2026-07-21 | Incorporacion de Security & Authorization | Alinear R01 con fundaciones de identidad, permisos, ownership, audit actor y fail-secure sin crear release tecnica | Seguridad, DoD operativo | D-SEC-01..D-SEC-08 |

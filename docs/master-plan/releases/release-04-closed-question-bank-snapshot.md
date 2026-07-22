@@ -497,6 +497,9 @@ Snapshot publish no deberia tener costo LLM si es deterministico; debe registrar
 - `agents` devuelve outputs estructurados para generation, quality, ambiguity y assembly.
 - Snapshot copia preguntas, opciones, answer key, scoring policy y grade scale.
 - Migraciones Flyway cubren bank, curation, composition y snapshot.
+- Pantallas de question bank/composition aplican UI Design/Data Semantics: subject/topic/outcome/type/difficulty/status y snapshot state usan catalogos, selectores, badges o controles DS segun fuente de verdad.
+- Pantallas de question bank/composition declaran API I/O contract y sync/async por accion; generation/review/assembly async debe exponer completion model por operacion/polling/SSE/WebSocket/webhook/push segun contrato.
+- Question authoring aplica i18n: question text/options/explanations se generan en `outputLocale`, catalogos curriculares tienen labels localizados, validators detectan locale mismatch y logs/telemetria quedan en ingles.
 - Tests cubren happy path y errores principales.
 - Cross-service smoke test prueba `api` -> `agents` para question generation y reviews.
 
@@ -564,6 +567,10 @@ Snapshot publish no deberia tener costo LLM si es deterministico; debe registrar
 - [ ] System valida answer key, scoring policy y grade scale.
 - [ ] Publish crea snapshot inmutable.
 - [ ] Logs/costo/idempotencia cubren generation, review, assembly y snapshot.
+- [ ] Gate de testing R04 cumplido: fixtures/golden files, JSON Schema, GenAI mock adversarial, Compose Closed authoring y `ai-eval` separado.
+- [ ] Gate UI Design/Data Semantics cumplido para UI afectada: metadata curricular, tipos de pregunta, dificultad, estados y snapshot controls no se implementan como texto libre.
+- [ ] Gate API I/O + sync/async cumplido: datos de pantalla respaldados por `api/`, y acciones async con completion/progress/failure probado.
+- [ ] Gate i18n cumplido: question generation/review/assembly respeta `outputLocale`, catalog labels localizados y telemetria tecnica en ingles.
 - [ ] README/planning/release artifacts actualizados.
 
 ## 39. Validacion
@@ -574,9 +581,18 @@ Validaciones esperadas:
 - Integration tests de `api` con persistencia real para publish/freeze.
 - Tests de `agents` para Question Generation, Distractor Quality, Ambiguity Review y Assessment Assembly structured output.
 - Tests de `web` para generation form, curation queue, bank filters, composition y publish confirmation.
+- Tests de `web` para controles semanticos: subject/topic/outcome/type/difficulty/status, bank filters, composition constraints y valores invalidos.
+- Tests Web-API para lectura/escritura de pantallas y completion model si generation/review/assembly usa async.
+- Tests i18n para generated questions/options, catalog labels, safe errors, fallback y `locale_mismatch`/`mixed_language_output` en validators.
 - Smoke local con `api` y `agents` reales o provider controlado.
 - Prueba de idempotencia para question generation y snapshot publish.
 - Prueba de immutability del snapshot despues de editar bank.
+- JSON Schema/contract checks para comandos/resultados de Question Generation, Distractor Quality, Ambiguity Review y Assessment Assembly.
+- Golden files versionados para outputs validos, invalidos y adversariales; GenAI real queda fuera del gate de PR.
+- Aceptacion aislada de `agents` con GenAI mock que cubra malformed output, timeout, rate limit y prompt injection fixture.
+- Compose Closed authoring para tags -> generation -> curation -> bank -> composition -> snapshot, con PostgreSQL real y GenAI simulado.
+- Coverage/no-regression y Sonar quality gate sobre codigo nuevo en `api`, `agents` y `web` afectados.
+- `ai-eval` real solo como suite separada/manual o programada, con dataset dorado, presupuesto y revision humana para cambios significativos.
 
 ## 40. Escenario Given/When/Then
 
@@ -743,6 +759,10 @@ Criterios:
 
 | Fecha | Cambio | Motivo | Elementos afectados | Decision asociada |
 |---|---|---|---|---|
+| 2026-07-21 | Incorporacion de i18n por release funcional | Alinear R04 con question generation y catalogos curriculares en locale solicitado | UI/API/Agents, DoD operativo, validacion | D-I18N-01..D-I18N-10 |
+| 2026-07-21 | Incorporacion de UI Design/Data Semantics | Alinear R04 con catalogos/controles DS para metadata curricular, banco, composicion y snapshot | UI, DoD operativo, validacion | D-UI-01..D-UI-08 |
+| 2026-07-21 | Incorporacion de API I/O y sync/async contract | Alinear R04 con datos de pantalla respaldados por `api/` y completion model para Closed authoring async | UI/API, DoD operativo, validacion | D-UI-01..D-UI-08, D-API-01..D-API-10 |
+| 2026-07-21 | Incorporacion de Testing & Quality Gates | Alinear R04 con golden files, JSON Schema, GenAI mock adversarial, Compose Closed authoring y `ai-eval` separado | Testing, CI/testkit, DoD operativo | D-TEST-01..D-TEST-09 |
 | 2026-07-21 | Incorporacion de Observability & Telemetry | Alinear R04 con trazas de Closed authoring, validadores medidos, snapshot auditado y costo por batch/pregunta | Observabilidad, DoD operativo | D-OBS-01..D-OBS-08 |
 | 2026-07-21 | Incorporacion de Security & Authorization | Alinear R04 con ownership de bank/snapshot, snapshot inmutable, policy de agentes y output cerrado | Seguridad, DoD operativo | D-SEC-01..D-SEC-08 |
 | 2026-07-20 | Incorporacion de capacidades de Agent Runtime | R04 es el primer consumidor claro de tool loop controlado y policy engine | Runtime, closed agents, tools, validators | D-04, D-06 |

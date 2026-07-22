@@ -117,6 +117,32 @@
 
 ---
 
+## D-UI — UI Design System y semantica de datos por release funcional
+
+- **Tipo**: Decisión de producto/arquitectura, reversible mediante ADR nuevo.
+- **Contexto**: las pantallas web pueden seguir un proceso correcto de wireframes y mockups, pero aun asi degradar el dominio si convierten enums, numeros, estados o datos maestros en `input text` libres. El caso critico actual es `/assessments/new`, donde el DTO de intake usa strings para `topic`, `level`, `duration` y `language`, mientras el modelo/UX ya sugieren enum, numero, catalogo o dato maestro.
+- **Evidencia**: ADR `99-decisions/2026-07-21-ui-design-data-semantics.md`; `docs/master-plan/analysis/ui-design-data-strategy.md`; `docs/99-decisions/2026-06-21-web-design-system.md`; `docs/04-architecture/data-model.md`; `docs/06-ux/teacher-workspace-ux.md`.
+- **Decisión**: toda implementacion de UI debe partir desde el Design System y una matriz de campos antes de wireframe/mockup/codigo. Cada campo debe declarar naturaleza del dato, fuente de verdad, restricciones, cardinalidad y control. Todo dato de pantalla, tanto lectura como escritura, debe estar respaldado por `api/`. Datos maestros, enums, numeros, fechas, estados y valores restringidos no se implementan como texto libre salvo decision temporal explicita con residual. Toda accion debe declarar si la comunicacion es sync o async; si es async, debe definir como `web/` detecta completion/progress/failure.
+- **Consecuencia**: cada release funcional que toque `web/` debe incluir gate UI Design/Data Semantics, pruebas unitarias/acceptance/e2e de controles/valores validos-invalidos, contrato Web-API para datos I/O, mecanismo de finalizacion async cuando aplique, y scope `api`/DB/infra si se requieren endpoints, catalogos o tablas maestras.
+- **Estado**: Resuelta el 2026-07-21.
+- **Responsable sugerido**: Product/Web owner con API owner para fuentes de verdad.
+- **Fases afectadas**: 04, 05, 06.
+
+---
+
+## D-I18N — i18n por release funcional
+
+- **Tipo**: Decision de producto/arquitectura, reversible mediante ADR nuevo.
+- **Contexto**: i18n no afecta solo labels de UI. Tambien impacta errores seguros, catalogos, emails, reports, exports, contenido generado por IA, preferencias de usuario, contratos Web-API y comandos API-Agents. Al mismo tiempo, el codigo fuente, los contratos tecnicos, logs y telemetria deben permanecer estables en ingles.
+- **Evidencia**: ADR `99-decisions/2026-07-21-i18n-by-release.md`; `docs/master-plan/analysis/i18n-strategy.md`; `docs/source-docs-refresh/audit-report.md` y `validation-report.md` registran politica de idioma canonico pendiente; `docs/09-developer-guide/07-web-development.md` declara UI teacher-facing en espanol como baseline actual.
+- **Decision**: i18n se implementa dentro de cada release funcional, no como release tecnica transversal. Source code, field names, enum/error/event/metric/span codes, logs y telemetria quedan en ingles. Todo texto user-facing y contenido GenAI visible debe tener locale explicito, fallback definido y pruebas. `web` indica locale efectivo, `api` resuelve/preferencias/fallback y persiste locale cuando afecta contenido durable, `agents` recibe `outputLocale`/`contentLocale` en comandos que generan texto visible.
+- **Consecuencia**: las tareas de `web/`, `api/` y `agents/` deben incorporar gate i18n cuando modifiquen pantallas, errores seguros, catalogos, emails, reports, exports o outputs GenAI. Observabilidad debe registrar locale como atributo, pero no traducir logs, metrics, traces ni event names.
+- **Estado**: Resuelta el 2026-07-21.
+- **Responsable sugerido**: Product/Web owner con API/Agents owners para contratos y outputs generados.
+- **Fases afectadas**: 04, 05, 06.
+
+---
+
 ## A-01 — Regla de gobernanza documental de `00-project/` sigue vigente
 
 - **Tipo**: Supuesto.

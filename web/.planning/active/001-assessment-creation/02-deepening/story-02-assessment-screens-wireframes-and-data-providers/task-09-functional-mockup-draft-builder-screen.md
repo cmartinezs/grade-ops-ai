@@ -91,6 +91,14 @@ Implemented the full component tree from `task-08`'s hierarchy with fake local d
 - **No `lib/api` calls yet:** confirmed via `grep -rn "lib/api" src/features/assessment-creation src/app/(protected)/assessments/[id]` — no matches; `useAssessmentDraftBuilderPage`'s `onSave`/`onRegenerate` only mutate local `useState`.
 - **Task test suite:** generated via `/plan-test-suite` before implementation (`test-suites/task-09-functional-mockup-draft-builder-screen-test-suite.md`); applicable gates (unit, static analysis, architecture/design guide review) all have command output above.
 
+## Master Plan Addendum — Draft Mockup i18n Gate
+
+Added after this task was already `DONE` in `develop`. Any R01 revalidation or future mockup change must include fake data for at least default locale, one alternate/fallback case and generated-content locale metadata for drafts/versions/regeneration.
+
+Localized section labels, safe errors, version labels and AI disclosure copy must come from i18n resources or replaceable test dictionaries; fake timers or local fixtures cannot stand in for production sync/async or locale behavior.
+
+---
+
 ## Done Criteria
 
 - [x] `/assessments/[id]/draft` renders all 3 sections navigably with fake data only — see § Verification Summary.

@@ -180,6 +180,14 @@ $ npm run build
 
 ---
 
+## Master Plan Addendum — Draft Mutation i18n Gate
+
+Added after this task was already `DONE` in `develop`. Any R01 revalidation or future mutation change must make regeneration language explicit by passing supported `outputLocale`/`contentLocale` through the confirmed API contract and capturing it at request time.
+
+PATCH preserves existing content-locale semantics unless `api/` explicitly changes them. Regeneration must not infer natural-language output from programming `language`, and logs/telemetry/error codes remain English.
+
+---
+
 ## Done Criteria
 
 - [x] `updateAssessmentDraft` only sends caller-provided keys, matching the partial-update contract — see § Verification Summary #1.
