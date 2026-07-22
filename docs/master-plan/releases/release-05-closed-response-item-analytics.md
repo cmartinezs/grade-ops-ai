@@ -501,6 +501,9 @@ Email y DB pueden registrarse como costo operacional si R06 define ledger, pero 
 - Result access valida learner/result token.
 - Item analytics separa agregados deterministas de interpretacion IA.
 - Migraciones Flyway cubren learner, invitation, attempt, result y analytics.
+- Pantallas teacher/student aplican UI Design/Data Semantics: learner lists, invitation states, answer controls, result visibility y analytics se tratan como controles o read-only provenance segun fuente de verdad.
+- Pantallas teacher/student declaran API I/O contract y sync/async por accion; analytics async o delivery async debe exponer completion model por operacion/polling/SSE/WebSocket/webhook/push segun contrato.
+- Student link, attempts, result publication e item analytics aplican i18n: public screens, emails/messages, result labels y safe errors respetan locale del estudiante/docente; audit/logs tecnicos quedan en ingles.
 - Tests cubren happy path y errores principales.
 
 ## 33. Criterios de calidad
@@ -571,6 +574,10 @@ Email y DB pueden registrarse como costo operacional si R06 define ledger, pero 
 - [ ] Student accede solo a su resultado.
 - [ ] Item analytics report genera stats, flags y reinforcement suggestions.
 - [ ] Logs/idempotencia/fallos cubren invitation, submit, grading, result y analytics.
+- [ ] Gate de testing R05 cumplido: Playwright student-link flow, tests negativos de token/replay/tamper, deterministic grading y JMeter smoke allowlisted.
+- [ ] Gate UI Design/Data Semantics cumplido para UI afectada: learner/invitation/attempt/result/analytics controls respetan fuente de verdad, tokens no son editables y answers usan controles por tipo de pregunta.
+- [ ] Gate API I/O + sync/async cumplido: datos de pantalla respaldados por `api/`, y acciones async con completion/progress/failure probado.
+- [ ] Gate i18n cumplido: pantallas publicas/student-facing, results e item analytics respetan locale y no localizan logs/telemetria tecnica.
 - [ ] README/planning/release artifacts actualizados.
 
 ## 39. Validacion
@@ -582,10 +589,19 @@ Validaciones esperadas:
 - Tests de deterministic grading contra snapshot editado en bank para probar aislamiento.
 - Tests de `web` student flow: open link, answer, review, submit, result access.
 - Tests de teacher flow: learner list, send/resend/revoke, publish results, analytics.
+- Tests de `web` para controles semanticos: answer inputs por tipo de pregunta, estados de invitation/result, visibility, token errors y analytics read-only/provenance.
+- Tests Web-API para lectura/escritura de pantallas y completion model si analytics/delivery usa async.
+- Tests i18n para student link flow, result publication, item analytics labels, safe errors, fallback y logs/telemetria en ingles.
 - Tests de `agents` para Item Analytics structured output.
 - Smoke local con R04 snapshot y al menos dos learners.
 - Prueba de token expired/revoked/tampered.
 - Prueba de no cross-student result access.
+- Playwright student-link flow con link valido, expirado, revocado y manipulado; screenshots/video solo al fallar.
+- Contract checks Web-API para rutas publicas student/result y API-Agents para Item Analytics.
+- Compose Closed full-chain con snapshot R04, invitations, attempts, deterministic grading, result access e item analytics.
+- Coverage/no-regression y Sonar quality gate sobre codigo nuevo en los artefactos modificados.
+- JMeter smoke de rutas publicas allowlisted, con datos sinteticos, anti-enumeracion y abortado por error rate/latencia/costo.
+- Artefactos sin tokens, signed links completos ni PII en logs, traces, JTL, screenshots o summaries.
 
 ## 40. Escenario Given/When/Then
 
@@ -750,6 +766,10 @@ Criterios:
 
 | Fecha | Cambio | Motivo | Elementos afectados | Decision asociada |
 |---|---|---|---|---|
+| 2026-07-21 | Incorporacion de i18n por release funcional | Alinear R05 con student-facing screens/resultados/analytics en locale y audit tecnico estable | UI/API/student routes, DoD operativo, validacion | D-I18N-01..D-I18N-10 |
+| 2026-07-21 | Incorporacion de UI Design/Data Semantics | Alinear R05 con controles DS y semantica de datos para learner links, attempts, results y analytics | UI, DoD operativo, validacion | D-UI-01..D-UI-08 |
+| 2026-07-21 | Incorporacion de API I/O y sync/async contract | Alinear R05 con datos de pantalla respaldados por `api/` y completion model para analytics/delivery async | UI/API, DoD operativo, validacion | D-UI-01..D-UI-08, D-API-01..D-API-10 |
+| 2026-07-21 | Incorporacion de Testing & Quality Gates | Alinear R05 con student-link Playwright, pruebas negativas de token, deterministic grading, Compose Closed y JMeter smoke seguro | Testing, CI/testkit, DoD operativo | D-TEST-01..D-TEST-09 |
 | 2026-07-21 | Incorporacion de Observability & Telemetry | Alinear R05 con trazabilidad de student access, asincronia, attempts, scoring e item analytics | Observabilidad, DoD operativo | D-OBS-01..D-OBS-08 |
 | 2026-07-21 | Incorporacion de Security & Authorization | Alinear R05 con signed links seguros, anti-enumeracion, result access scoped, replay/tamper tests y rate limiting | Seguridad, DoD operativo | D-SEC-01..D-SEC-08 |
 | 2026-07-20 | Incorporacion de capacidades de Agent Runtime | Declarar persistencia/asincronia solo donde analytics o volumen lo justifiquen | Runtime, Item Analytics, student flow | D-04, D-06 |

@@ -466,6 +466,9 @@ Time saved debe quedar etiquetado como estimacion. Si el docente entrega baselin
 - `agents` devuelve outputs estructurados para gaps, recovery y report.
 - Persistencia soporta source snapshots para gaps y reportes.
 - Migraciones Flyway cubren decisions, gaps, recovery, reports y estimates.
+- Pantallas de gaps/recovery/report aplican UI Design/Data Semantics: severidad, filtros, estados, estimaciones y datos agregados se tratan como controles/read-only provenance segun fuente de verdad.
+- Pantallas de gaps/recovery/report declaran API I/O contract y sync/async por accion; reports/gaps/recovery async deben exponer completion model por operacion/polling/SSE/WebSocket/webhook/push segun contrato.
+- Pantallas, reports, recovery suggestions y exports user-facing aplican i18n: locale de reporte, safe errors/catalog labels y outputs GenAI en `outputLocale`, manteniendo evidencia tecnica/logs en ingles.
 - Tests cubren happy path y errores principales.
 - Cross-service smoke test prueba `api` -> `agents` para gaps/recovery/report real o provider controlado.
 
@@ -533,6 +536,10 @@ Time saved debe quedar etiquetado como estimacion. Si el docente entrega baselin
 - [ ] Teacher Report Agent genera reporte con gaps, recovery, costo, uso y time-saved estimate.
 - [ ] Reporte queda pending hasta validacion docente.
 - [ ] Logs/costo/idempotencia cubren gap, recovery y report.
+- [ ] Gate de testing R03 cumplido: agregaciones/reportes/estimates probados, contratos report/gap/recovery y baseline performance de agregaciones.
+- [ ] Gate UI Design/Data Semantics cumplido para UI afectada: filtros, severidad, estados, estimaciones y report provenance no se implementan como inputs libres.
+- [ ] Gate API I/O + sync/async cumplido: datos de pantalla respaldados por `api/`, y acciones async con completion/progress/failure probado.
+- [ ] Gate i18n cumplido: reportes/gaps/recovery/exports user-facing respetan locale y observabilidad tecnica permanece en ingles.
 - [ ] README/planning/release artifacts actualizados.
 
 ## 39. Validacion
@@ -543,9 +550,18 @@ Validaciones esperadas:
 - Integration tests de `api` con persistencia real para el flujo completo.
 - Tests de `agents` para Learning Gap, Recovery y Teacher Report structured output.
 - Tests de `web` para override/reject, gap review, recovery approval y report validation.
+- Tests de `web` para controles semanticos: filtros controlados, severidad/status, estimaciones read-only/provenance y acciones docente con valores validos/invalidos.
+- Tests Web-API para lectura/escritura de pantallas y completion model si report/gap/recovery usa async.
+- Tests i18n para locale de reportes, translation keys, safe errors/catalog labels, exports user-facing y `outputLocale` en outputs GenAI visibles.
 - Smoke local con `api` y `agents` reales o provider controlado.
 - Prueba de idempotencia para gap summary y report generation.
 - Prueba de fuente pending y missing cost data.
+- Contract checks Web-API y API-Agents para report, gap y recovery, con fixtures de datos sinteticos.
+- Integration tests con PostgreSQL real para agregaciones, estimates, teacher decisions y provenance.
+- Compose `full-chain` Open con multiples submissions y GenAI simulado para gap/recovery/report.
+- Coverage/no-regression y Sonar quality gate sobre codigo nuevo en `api`, `agents` y `web` afectados.
+- JMeter baseline o smoke de agregaciones/report endpoints cuando cambien queries, filtros o exportables; no usar datos reales de pilotos.
+- `summary.json` conserva metricas de duracion, flakiness y performance relevantes para comparar contra R02.
 
 ## 40. Escenario Given/When/Then
 
@@ -715,6 +731,10 @@ Criterios:
 
 | Fecha | Cambio | Motivo | Elementos afectados | Decision asociada |
 |---|---|---|---|---|
+| 2026-07-21 | Incorporacion de i18n por release funcional | Alinear R03 con reportes/gaps/recovery/exports localizados y evidencia tecnica estable | UI/API/Agents/exports, DoD operativo, validacion | D-I18N-01..D-I18N-10 |
+| 2026-07-21 | Incorporacion de UI Design/Data Semantics | Alinear R03 con controles DS y semantica de datos para gaps, recovery, reportes y estimaciones | UI, DoD operativo, validacion | D-UI-01..D-UI-08 |
+| 2026-07-21 | Incorporacion de API I/O y sync/async contract | Alinear R03 con datos de pantalla respaldados por `api/` y completion model para reports/gaps/recovery async | UI/API, DoD operativo, validacion | D-UI-01..D-UI-08, D-API-01..D-API-10 |
+| 2026-07-21 | Incorporacion de Testing & Quality Gates | Alinear R03 con pruebas de agregacion, reportes, estimates, contratos y baseline performance de impacto Open | Testing, CI/testkit, DoD operativo | D-TEST-01..D-TEST-09 |
 | 2026-07-21 | Incorporacion de Observability & Telemetry | Alinear R03 con trazabilidad de handoffs, herramientas read-only, decisiones docentes e impacto versionado | Observabilidad, DoD operativo | D-OBS-01..D-OBS-08 |
 | 2026-07-21 | Incorporacion de Security & Authorization | Alinear R03 con reportes agregados seguros, herramientas read-only scoped y proteccion de datos student-level | Seguridad, DoD operativo | D-SEC-01..D-SEC-08 |
 | 2026-07-20 | Incorporacion de capacidades de Agent Runtime | Declarar handoffs tipados y herramientas read-only/agregadas para impacto Open | Runtime, gaps, recovery, reports | D-04, D-06 |

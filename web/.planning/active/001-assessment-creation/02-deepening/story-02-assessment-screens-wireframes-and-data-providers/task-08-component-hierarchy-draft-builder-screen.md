@@ -9,7 +9,7 @@
 
 ## Objective
 
-A written Page → Sections → Components breakdown for the Draft Builder screen, following `03-jerarquia-de-componentes.md`, naming every file `task-09` (mockup) and `task-12` (real API wiring) will create.
+A written Page → Sections → Components breakdown for the Draft Builder screen, following `03-jerarquia-de-componentes.md`, naming every file `task-09` (mockup) and `task-12` (real API wiring) will create. The hierarchy must make API I/O ownership, sync/async completion ownership and i18n ownership explicit.
 
 ---
 
@@ -23,7 +23,7 @@ A written Page → Sections → Components breakdown for the Draft Builder scree
   - `src/features/assessment-creation/components/RegenerateSection.tsx` + `hooks/useRegenerateSection.ts`
   - `src/features/assessment-creation/components/VersionHistorySection.tsx` + `hooks/useVersionHistorySection.ts`
   - `src/features/assessment-creation/mappers/toAssessmentDraftBuilderPageViewModel.ts`
-- **Interfaces / contracts:** `DraftEditorSection` receives the current draft view model + an `onSave` callback; `RegenerateSection` receives an `onRegenerate(adjustmentNotes)` callback + its own submitting/error state; `VersionHistorySection` receives the versions list (read-only) + a `onViewVersion(versionNumber)` callback for local (non-mutating) selection — no `onRestore` callback exists, since no such endpoint exists (`task-01`).
+- **Interfaces / contracts:** `DraftEditorSection` receives the current draft view model + an `onSave` callback; `RegenerateSection` receives an `onRegenerate(adjustmentNotes)` callback + its own submitting/error or async operation state; `VersionHistorySection` receives the versions list (read-only) + a `onViewVersion(versionNumber)` callback for local (non-mutating) selection — no `onRestore` callback exists, since no such endpoint exists (`task-01`). The page hook owns API reads/writes, locale/content-language state and any async completion consumer; sections do not call `api/` directly and do not hardcode user-facing text as final behavior.
 - **Risk:** Low — this is a routine hierarchy decision for a screen with 3 independent concerns, using the same `features/<feature>/` pattern already established by `task-03` for the Intake screen.
 - **Design notes:** Route is `src/app/(protected)/assessments/[id]/draft/` — a dynamic segment, matching the redirect target from `task-06`.
 
@@ -34,6 +34,8 @@ A written Page → Sections → Components breakdown for the Draft Builder scree
 1. Write `wireframes/draft-builder-screen-hierarchy.md` listing every file above with its responsibility and Server/Client designation (all Client Components — interactive state + Firebase-authenticated fetch, same reasoning as `task-03`).
 2. Name the page-level view model shape returned by `useAssessmentDraftBuilderPage`: `{ draft: AssessmentDraftViewModel, versions: AssessmentDraftVersionViewModel[], selectedVersion: number }`.
 3. Confirm each Section's callback names follow the `onX` action-naming convention (`onSave`, `onRegenerate`, `onViewVersion`) per `03-jerarquia-de-componentes.md` §11 — no bare boolean props for variant control.
+4. Identify the API boundary: page hook/loaders own `GET /draft`, `GET /draft/versions`, `PATCH /draft`, `POST /draft/regenerate`, refetches, error mapping and async completion if regeneration is operation-backed.
+5. Identify the i18n boundary: page hook/view model owns effective locale and draft `outputLocale`/`contentLocale`; sections receive localized labels/messages/version labels and content-locale metadata, while code identifiers and observability remain English.
 
 ---
 
@@ -44,6 +46,8 @@ A written Page → Sections → Components breakdown for the Draft Builder scree
 | 1 | Every file named maps to exactly one responsibility, and each of the 3 Sections has its own hook per §9 | Manual review against `03-jerarquia-de-componentes.md` §4-6, §9 |
 | 2 | No callback name is a bare boolean or unnamed function; all use `onX` action naming | Manual review against `03-jerarquia-de-componentes.md` §11 |
 | 3 | No `onRestore`/rollback callback appears anywhere in the hierarchy | Cross-check against `task-01`'s confirmed contract |
+| 4 | Page hook owns API I/O and async completion; sections receive state/callbacks only | Manual review against `06-estado-datos-y-api.md` and task-07 API I/O matrix |
+| 5 | Page hook/view model owns i18n state and sections receive localized strings/content-locale metadata only | Manual review against task-07 i18n matrix |
 
 ### Software Smoke Test Check
 
@@ -73,6 +77,8 @@ N/A — this task produces no executable code.
 - [ ] `wireframes/draft-builder-screen-hierarchy.md` names every file, its responsibility, and Server/Client designation.
 - [ ] Each of the 3 Sections has its own named hook.
 - [ ] No restore/rollback affordance appears anywhere.
+- [ ] API I/O and sync/async status ownership is explicit; no component is assigned direct API calls or fake completion timers.
+- [ ] i18n ownership is explicit: no final hardcoded user-facing section text, generated-content locale is represented in the view model, and observability stays English.
 - [ ] Software smoke/build/startup/connectivity checks: N/A, no runtime surface; for git-enabled tasks, this task is committed, pushed, and published in a task PR before human developer PR review, with corrections pushed to the same PR.
 - [ ] Logging/observability: N/A — no executable code, no correlation/trace/INFO/DEBUG/WARN/ERROR log levels apply.
 - [ ] Task test suite: N/A — the generated test-suite quality gates in this task's Generated Test Suite section are architecture-review only.

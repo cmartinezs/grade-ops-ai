@@ -23,6 +23,9 @@ Build the teacher-facing UI for assessment creation in `web/`: the brief intake 
 - Every form in `web/` uses React Hook Form + Zod (`zodResolver`) — never native HTML validation. This is an established project convention, not new for this story.
 - Types mirror the API DTO contracts — no independent shared-type definitions in `web/`.
 - Gemini/Groq API key is never touched by `web/` — the frontend only calls `api/` endpoints.
+- Story 02 now owns UI Design/Data Semantics for this skipped story's absorbed scope: intake implementation must start from Design System design plus field matrix, and must not implement `topic`, `level`, `duration` and `language` as unrestricted text inputs when they are enum, numeric, catalog/master-data or controlled-custom values.
+- Story 02 now owns API I/O + sync/async for this skipped story's absorbed scope: every screen datum read/written by Intake and Draft Builder must come from `api/`; missing API support becomes child API scope or blocking residual; async generation/regeneration must expose completion/progress/failure through the agreed API-backed mechanism.
+- Story 02 now owns i18n for this skipped story's absorbed scope: user-facing copy/safe errors/catalog labels must use effective locale; generated drafts/regenerations use `outputLocale`; source code/DTO fields/status/error codes/logs/telemetry remain in English.
 
 ---
 
@@ -31,6 +34,9 @@ Build the teacher-facing UI for assessment creation in `web/`: the brief intake 
 | Risk | Impact | Likelihood | Mitigation |
 |------|--------|------------|------------|
 | Draft/version-history UI is built against a stale understanding of `api/`'s response shapes | M | L | `api/003-assessment-creation` is already `DONE` and merged — verify request/response shapes directly against `api/`'s actual source before implementing |
+| Intake form loses domain semantics by rendering every field as text input | H | H | Story 02 task-01/task-02/task-04/task-05/task-06/task-13 now carry UI Design/Data Semantics, field matrix, DS controls and invalid-value tests |
+| UI closes against fixtures/local DTOs or async timers while `api/` lacks required I/O/status support | H | M | Story 02 task-01/task-05/task-06/task-10/task-11/task-12/task-13 now require API I/O mapping and sync/async completion before Done |
+| UI/API/Agents close with inconsistent locale handling | H | M | Story 02 task-01 through task-13 must carry i18n contract, translation keys, safe errors/catalog labels, `outputLocale` and logs/telemetry in English |
 
 ---
 
@@ -52,7 +58,11 @@ Build the teacher-facing UI for assessment creation in `web/`: the brief intake 
 ## Done Criteria
 
 - [ ] Teacher can fill in and submit the intake form; required-field validation blocks submission with missing learning goal, topic, level, duration, or language.
+- [ ] Intake form uses DS controls and field semantics from Story 02, not unrestricted text inputs for all fields.
 - [ ] Submitting the brief persists it via the API before any agent call is triggered, and the teacher sees a clear loading/confirmation state.
+- [ ] Every screen datum shown or submitted is backed by `api/`; missing endpoints/read models/catalogs/mutations/operation states are implemented by the owning child scope or recorded as blocking residuals.
+- [ ] Brief creation, draft generation, save and regeneration declare sync/async behavior; async completion/progress/failure is observed through the agreed API-backed mechanism.
+- [ ] User-facing copy, safe errors, catalog labels and generated draft/regeneration output respect effective locale/`outputLocale`; code/contracts/logs/telemetry remain in English.
 - [ ] Generated draft is rendered fully editable (all six fields) and edits persist via the API.
 - [ ] Teacher can trigger regeneration with adjustment notes from the draft view.
 - [ ] Previous draft version(s) remain visible/accessible after a regeneration — nothing is silently lost.

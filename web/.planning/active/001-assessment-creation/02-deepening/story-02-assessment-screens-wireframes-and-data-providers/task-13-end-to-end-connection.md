@@ -9,13 +9,13 @@
 
 ## Objective
 
-The full Intake → Draft Builder flow works end-to-end against a real local `api/` instance with real ids, no fake/mock data remains anywhere in `src/features/assessment-creation/`, and story-01's Done Criteria that this story's scope covers are demonstrably satisfiable on top of it.
+The full Dashboard → Intake → Draft Builder flow works end-to-end against a real local `api/` instance with real ids, no fake/mock data remains anywhere in `src/features/assessment-creation/`, intake controls preserve DS/data semantics, API I/O comes from `api/`, i18n behavior is real, sync/async completion is real, and story-01's Done Criteria that this story's scope covers are demonstrably satisfiable on top of it.
 
 ---
 
 ## Technical Design
 
-- **Approach:** This task does not add new UI or API functions — `task-06` and `task-12` already connected each screen independently. This task's job is the **seam between them**: confirm the redirect from Intake actually lands on a working Draft Builder screen with real data, and do a final repo-wide sweep for anything `task-04`/`task-09` left behind (fake timers, hardcoded fixtures, dead feature flags).
+- **Approach:** This task does not add new UI or API functions — `task-06` and `task-12` already connected each screen independently. This task's job is the end-to-end boundary between them: confirm the dashboard action reaches Intake, confirm the Intake screen still uses semantic DS controls, confirm all read/write data comes from `api/`, confirm i18n behavior follows the agreed contract, confirm sync/async completion follows the agreed contract, confirm the redirect from Intake actually lands on a working Draft Builder screen with real data, and do a final repo-wide sweep for anything `task-04`/`task-09` left behind (fake timers, hardcoded fixtures, dead feature flags).
 - **Affected files / components:** No new files expected. Possible small fixes if the sweep finds residue: any leftover fake-data code, unused imports, or a `features/assessment-creation/mocks/` directory if one was created and not cleaned up.
 - **Interfaces / contracts:** None new — this task validates the existing contracts from `task-01` hold end-to-end, not just per-function in isolation.
 - **Risk:** Medium — integration seams (redirect target, id propagation, version refetch timing) are exactly the class of bug that per-task unit tests don't catch; this is the only task in the story that exercises the real flow start to finish.
@@ -32,16 +32,50 @@ The full Intake → Draft Builder flow works end-to-end against a real local `ap
 | AI operation model | Confirm current UI behavior matches current sync API and records any R01 operation/polling residual explicitly | No fake `operationId`; no hidden polling unless API exposes it |
 | Idempotency | Confirm no invisible retry/double submit behavior can trigger duplicate generation | Manual double-click/retry observation or documented limitation |
 | Contract testing | End-to-end evidence ties route states back to verified API contract and task tests | Capture manual evidence and command output |
-| Web route functionality | `/assessments/new` -> `/assessments/{id}/draft` flow covers loading, success, edit, regenerate, version history, refresh and safe errors | Required final acceptance surface |
+| Web route functionality | `/dashboard` "Nueva evaluacion" -> `/assessments/new` -> `/assessments/{id}/draft` flow covers loading, success, edit, regenerate, version history, refresh and safe errors | Required final acceptance surface |
+| API I/O completeness | Browser/network evidence proves screen data reads/writes go through `api/` | No browser call to `agents/`; no production fixture source |
+| Sync/async completion | E2E waits through sync response or async completion mechanism agreed with `api/` | No arbitrary wait/timer as proof |
+| i18n contract | E2E proves localized UI copy/errors/catalog labels, effective locale propagation, generated-content locale and English-only observability boundary | Browser/network/log evidence covers locale metadata and no raw backend strings shown |
+
+## UI Design/Data Semantics Gate
+
+| Gate | Required check | Task answer |
+|---|---|---|
+| End-to-end controls | The walkthrough uses actual DS controls for `learningGoal`, `topic`, `level`, `duration`, `language`, not direct DOM value injection into hidden/free text fields | Manual/Playwright evidence starts from dashboard and interacts as a teacher |
+| Valid values | Happy path selects/enters values from allowed enum/catalog/numeric controls | Evidence captures selected values and resulting DTO path |
+| Invalid values | At least one restricted/numeric/catalog invalid case is blocked or mapped to safe 422 feedback | Evidence captured before Done |
+| Source-of-truth gaps | Any missing catalog/master-data endpoint remains recorded as residual and is not disguised as completed UX | Manual review against task-01/task-05 outputs |
+
+## i18n E2E Gate
+
+| Gate | Required check | Task answer |
+|---|---|---|
+| User-facing text | Dashboard action, Intake, Draft Builder, validation, server errors and version labels render through the selected locale | Playwright/manual evidence in at least default locale and one fallback/alternate locale |
+| Locale propagation | Browser/network evidence shows effective locale sent through the confirmed API mechanism | Verify header/field/profile behavior; no reliance on direct URL-only state |
+| Generated content | Draft generation/regeneration uses the selected `outputLocale`/`contentLocale` and persists or displays returned content locale | Programming `language` remains a separate assessment field |
+| Observability | Logs/metrics/traces/event/error codes remain English while locale appears only as metadata | Confirm no user-facing localized message is used as a log/event/code name |
+
+## API I/O + Sync/Async Gate
+
+| Gate | Required check | Task answer |
+|---|---|---|
+| Network source | Browser walkthrough confirms reads/writes call `api/` endpoints only | Inspect network calls/logs |
+| Missing API | No UI feature is marked complete if its API/read model/catalog/mutation is missing | Manual review against residuals |
+| Async completion | If generation/regeneration is async, E2E observes queued/running/succeeded/failed through polling/SSE/WebSocket/webhook/push contract | No local timer or hardcoded success |
+| Error states | API errors and timeout/failure states are visible and safe | Manual/automated evidence |
 
 ---
 
 ## Implementation Steps
 
-1. `grep -r` for leftover fake-data markers (`setTimeout`, hardcoded fixture objects, a stray `mocks/` directory) under `src/features/assessment-creation/`; remove or justify each hit.
-2. With `api/` running locally, manually walk the full flow: submit a real brief on `/assessments/new` → confirm redirect to `/assessments/{realId}/draft` → confirm the generated draft renders → edit a field and save → confirm the edit persists after a page refresh → regenerate with adjustment notes → confirm a new version appears and the version history shows the prior one.
-3. Confirm story-01's Done Criteria that fall within this story's scope hold against the real flow just walked (not the mockups): required-field validation blocks submission; brief persists before the agent call; draft is fully editable and edits persist via the API; regeneration works with adjustment notes; previous versions remain accessible; draft and versions survive a page refresh.
-4. Run the full test suite and lint once more across everything this story touched.
+1. `grep -r` for leftover fake-data markers (`setTimeout`, hardcoded fixture objects, a stray `mocks/` directory, fake operation IDs, local completion timers) under `src/features/assessment-creation/`; remove or justify each hit.
+2. With `api/` running locally, manually walk the full flow: start on `/dashboard` → click "Nueva evaluacion" → confirm navigation to `/assessments/new` → submit a real brief using the actual DS controls/allowed values → confirm sync redirect or async operation completion through the agreed mechanism → confirm `/assessments/{realId}/draft` renders with real data → edit a field and save → confirm the edit persists after a page refresh → regenerate with adjustment notes → confirm a new version appears and the version history shows the prior one.
+3. Try at least one invalid/restricted intake value path (for example invalid duration or unavailable enum/catalog value) and confirm it is blocked client-side or returned as a safe 422 message.
+4. Switch or simulate the teacher's effective locale, then repeat the critical path far enough to confirm localized UI labels/messages/catalog labels, safe localized API errors, locale metadata in requests, and generated-content locale/fallback behavior.
+5. Inspect browser/network logs to confirm reads/writes go through `api/`, not `agents/` or production fixtures, and that locale metadata follows the confirmed contract.
+6. Inspect application logs/telemetry evidence to confirm event names, error codes, trace/span names and log messages remain English, with locale recorded only as metadata and without full brief/draft text.
+7. Confirm story-01's Done Criteria that fall within this story's scope hold against the real flow just walked (not the mockups): required-field validation blocks submission; field controls match semantics; brief persists before the agent call; draft generation completion is observed through the agreed sync/async contract; draft is fully editable and edits persist via the API; regeneration works with adjustment notes; previous versions remain accessible; draft and versions survive a page refresh.
+8. Run the full test suite and lint once more across everything this story touched.
 
 ---
 
@@ -53,6 +87,10 @@ The full Intake → Draft Builder flow works end-to-end against a real local `ap
 | 2 | Full flow (submit brief → generated draft → edit → save → regenerate → version history) works against real `api/` | Manual walkthrough with `api/` running locally |
 | 3 | Draft and version history survive a page refresh (re-fetched from the API, not held only in client state) | Manual refresh mid-walkthrough |
 | 4 | Story-01's in-scope Done Criteria hold against the real flow | Manual cross-check against `../story-01-assessment-creation-ui.md` § Done Criteria |
+| 5 | Happy path starts from `/dashboard` and reaches `/assessments/new` through the visible "Nueva evaluacion" action | Manual walkthrough or Playwright acceptance evidence |
+| 6 | Intake controls preserve UI Design/Data Semantics and invalid restricted/numeric/catalog values are covered | Manual walkthrough or Playwright acceptance evidence |
+| 7 | Screen I/O comes from `api/`, and async completion uses the agreed mechanism if applicable | Manual walkthrough/network evidence or Playwright acceptance evidence |
+| 8 | i18n behavior is verified end to end: localized UI/errors/catalogs, locale propagation, generated-content locale/fallback and English-only observability | Manual walkthrough/network/log evidence or Playwright acceptance evidence |
 
 ### Software Smoke Test Check
 
@@ -61,7 +99,7 @@ The full Intake → Draft Builder flow works end-to-end against a real local `ap
 | 1 | Supporting services are ready | `api/` running locally via `./mvnw spring-boot:run` (with its own local Postgres per `api/`'s own setup) |
 | 2 | App compiles and starts | `npm run build` then `npm run dev` |
 | 3 | Connectivity check succeeds | `web/` successfully reaches `api/` at the configured `NEXT_PUBLIC_API_BASE_URL` (no CORS/network errors in the browser console) |
-| 4 | Changed surface responds correctly | The full manual walkthrough in Implementation Step 2 completes without unhandled errors |
+| 4 | Changed surface responds correctly | The full manual walkthrough in Implementation Step 2 completes without unhandled errors, starting from dashboard |
 | 5 | No regressions are visible | Existing `/assessments` list page and unrelated routes still render without new console errors |
 
 ### Database / ORM Consistency Check
@@ -92,6 +130,12 @@ N/A — this task touches no database or ORM artifacts directly; it exercises `a
 
 - [ ] No fake-data residue remains under `src/features/assessment-creation/`.
 - [ ] The full flow works end-to-end against real `api/` with real ids.
+- [ ] The happy path starts from `/dashboard` "Nueva evaluacion"; `/assessments/new` is not accepted as URL-only.
+- [ ] The full flow uses semantic DS controls for intake and covers at least one invalid/restricted value path.
+- [ ] Any remaining master-data/catalog/API gap is recorded as residual and not presented as completed UX.
+- [ ] Browser/network evidence shows all read/write data comes from `api/`; no production path depends on fixtures or local fake operation state.
+- [ ] Sync/async completion is verified through the agreed contract; no arbitrary wait/timer is used as proof.
+- [ ] i18n is verified end to end: localized UI copy/errors/catalog labels, effective locale propagation, generated-content locale/fallback behavior and English-only observability.
 - [ ] API / Agent / Web Contract Gate is completed with evidence from browser/network/manual walkthrough.
 - [ ] Draft and version history survive a page refresh.
 - [ ] Story-01's in-scope Done Criteria are confirmed against the real flow, not just the mockups.

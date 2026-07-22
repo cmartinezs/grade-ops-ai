@@ -9,13 +9,13 @@
 
 ## Objective
 
-`AssessmentDraftDto` matching `GenerateAssessmentDraftResponse`, and a `loadAssessmentDraftBuilderPage(assessmentId)` Screen Data Facade that fetches the current draft and its version list in parallel and returns one page-level view model — independent of the mockup UI, ready for `task-12` to call.
+`AssessmentDraftDto` matching `GenerateAssessmentDraftResponse`, and a `loadAssessmentDraftBuilderPage(assessmentId)` Screen Data Facade that fetches the current draft and its version list in parallel and returns one page-level view model — independent of the mockup UI, ready for `task-12` to call. Every read datum required by the Draft Builder screen must be backed by `api/`; missing read models, locale/content-language metadata, capability flags, catalogs or operation status become API scope/residual before UI closure.
 
 ---
 
 ## Technical Design
 
-- **Approach:** This screen loads 2 remote sources on render (current draft + version list) — per `06-estado-datos-y-api.md` §7, that mandates a Screen Data Facade, not two separate `getX()` calls from the Page/hook. `loadAssessmentDraftBuilderPage` is that facade: it calls both via `Promise.all` (independent, not sequentially dependent) and returns the already-composed view model from `task-09`'s mapper.
+- **Approach:** This screen loads 2 remote sources on render (current draft + version list) — per `06-estado-datos-y-api.md` §7, that mandates a Screen Data Facade, not two separate `getX()` calls from the Page/hook. `loadAssessmentDraftBuilderPage` is that facade: it calls both via `Promise.all` (independent, not sequentially dependent) and returns the already-composed view model from `task-09`'s mapper. If the screen needs operation status after an async generation/regeneration, or content-locale metadata for generated drafts/versions, the facade must consume the API-backed contract or record the missing API gap.
 - **Affected files / components:**
   - `src/types/assessment.ts` (add `AssessmentDraftDto`)
   - `src/lib/api/assessments.ts` (add `getAssessmentDraft()`, `getAssessmentDraftVersions()`)
@@ -32,12 +32,15 @@
     deliverables: string[];
     constraints: string[];
     versionNumber: number;
+    outputLocale?: string;
+    contentLocale?: string;
   }
   export async function loadAssessmentDraftBuilderPage(
     assessmentId: string
   ): Promise<AssessmentDraftBuilderPageViewModel>
   ```
   Internally: `const [draft, versions] = await Promise.all([getAssessmentDraft(assessmentId), getAssessmentDraftVersions(assessmentId)])`, then `toAssessmentDraftBuilderPageViewModel({ draft, versions })` (mapper from `task-09`).
+  Any additional read data shown on screen must be added here only after its `api/` source is confirmed; components must not fetch hidden local or fixture data. If `api/` does not yet return `outputLocale`/`contentLocale`, the loader records that gap and the UI may show only a documented fallback, not an invented persisted locale.
 - **Risk:** Low — both calls are independent GETs with no ordering dependency, a straightforward `Promise.all` case; the main risk is accidentally calling either `getX()` directly from a component instead of through this facade, which `task-12`'s review must catch.
 - **Design notes:** `draftId` is a UUID string on the wire (per `task-01`) — keep it as `string` in the DTO, don't parse to a branded type unless a real need arises elsewhere.
 
@@ -53,6 +56,9 @@
 | Idempotency | Read-only GETs do not need `Idempotency-Key` | N/A, read-only |
 | Contract testing | DTO and loader tests must assert exact paths, DTO fields and partial-load failure behavior | Extend API client and loader tests accordingly |
 | Web route functionality | Draft route must support loading, success, no-current-draft/404, safe error and read-only historical version preview | Return one composed view model; do not allow components to bypass the facade |
+| API I/O completeness | Every screen read datum comes from `api/` or is recorded as an API task/residual | No permanent local fixture/read model source |
+| Sync/async completion | If generation/regeneration status is async, read operation status through the agreed API mechanism | No hidden polling or invented operation state |
+| i18n contract | Loader reads/sends supported locale metadata and maps localized-safe API errors while preserving English DTO field names/codes | Missing `outputLocale`/`contentLocale`, localized catalog labels or safe error contract is API residual |
 
 ---
 
@@ -62,7 +68,9 @@
 2. Add `getAssessmentDraft(assessmentId: string)` to `src/lib/api/assessments.ts`, `GET`-ing `/api/v1/assessments/${assessmentId}/draft`.
 3. Add `getAssessmentDraftVersions(assessmentId: string)` `GET`-ing `/api/v1/assessments/${assessmentId}/draft/versions`, returning `AssessmentDraftDto[]`.
 4. Create `src/features/assessment-creation/loaders/loadAssessmentDraftBuilderPage.ts` combining both via `Promise.all` and the `task-09` mapper.
-5. Write tests for `getAssessmentDraft`, `getAssessmentDraftVersions`, and the loader (including a case where one of the two parallel calls fails).
+5. Add supported locale request metadata (`Accept-Language`/effective locale) to the load boundary if task-01 confirms it, and map returned `outputLocale`/`contentLocale` or record the API gap explicitly.
+6. Compare the loader output against the API I/O matrix from task-07. If the UI requires capability flags, catalogs, operation status, content-locale metadata or other reads not exposed by `api/`, record API scope/residual before task-12.
+7. Write tests for `getAssessmentDraft`, `getAssessmentDraftVersions`, locale metadata handling, operation/status consumption if applicable, and the loader (including a case where one of the two parallel calls fails).
 
 ---
 
@@ -73,6 +81,8 @@
 | 1 | `getAssessmentDraft`/`getAssessmentDraftVersions` call the correct paths and parse the confirmed DTO shape | `npm run test -- assessments` |
 | 2 | `loadAssessmentDraftBuilderPage` issues both calls in parallel (not sequentially) | `npm run test -- loadAssessmentDraftBuilderPage` (assert both mocked calls are in-flight before either resolves) |
 | 3 | If either parallel call fails, the loader rejects with a usable error (doesn't silently return partial data) | `npm run test -- loadAssessmentDraftBuilderPage` |
+| 4 | All screen read data is API-backed; missing reads/status are recorded as API scope/residual | Manual review against task-07 API I/O matrix |
+| 5 | Content-locale metadata and effective-locale request behavior are API-backed or recorded as residual | `npm run test -- loadAssessmentDraftBuilderPage` plus manual review |
 
 ### Software Smoke Test Check
 
@@ -110,6 +120,9 @@ N/A — no database or ORM involved in `web/`.
 - [ ] `AssessmentDraftDto` matches `task-01`'s confirmed shape exactly.
 - [ ] `loadAssessmentDraftBuilderPage` fetches both sources in parallel and returns one composed view model.
 - [ ] API / Agent / Web Contract Gate is completed; no component bypasses API facade or invents unsupported restore/operation behavior.
+- [ ] API I/O gaps for read models/capabilities/catalogs/operation status are recorded as API scope or residual before task-12.
+- [ ] Sync/async read behavior matches the agreed contract; async status is consumed only through an API-backed mechanism.
+- [ ] i18n read behavior matches the agreed contract; `outputLocale`/`contentLocale`, localized-safe errors and effective-locale metadata are API-backed or residualized.
 - [ ] No component or page calls `getAssessmentDraft`/`getAssessmentDraftVersions` directly, bypassing the facade.
 - [ ] All new/extended tests pass; `npm run lint` passes.
 - [ ] Logging mechanism decision recorded in `.planning/LOGGING.md` (shared with `task-05` if not already resolved).

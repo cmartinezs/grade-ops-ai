@@ -9,20 +9,20 @@
 
 ## Objective
 
-The Draft Builder screen loads via `loadAssessmentDraftBuilderPage`, saves edits and regenerates via the real mutations, refetches versions after either succeeds, and surfaces 404/409/422 — the fake local dataset from `task-09` is fully removed.
+The Draft Builder screen loads via `loadAssessmentDraftBuilderPage`, saves edits and regenerates via the real mutations, refetches versions after either succeeds or follows the agreed async completion contract, honors the i18n/generated-content locale contract, and surfaces localized safe 404/409/422 — the fake local dataset from `task-09` is fully removed.
 
 ---
 
 ## Technical Design
 
-- **Approach:** Swap `useAssessmentDraftBuilderPage`'s fake dataset for a call to `loadAssessmentDraftBuilderPage` (from `task-10`) on mount, and wire `DraftEditorSection`'s `onSave`/`RegenerateSection`'s `onRegenerate` to the real mutations (from `task-11`) instead of their fake stand-ins from `task-09` — no other component changes, since `task-09` already built the real component tree.
+- **Approach:** Swap `useAssessmentDraftBuilderPage`'s fake dataset for a call to `loadAssessmentDraftBuilderPage` (from `task-10`) on mount, and wire `DraftEditorSection`'s `onSave`/`RegenerateSection`'s `onRegenerate` to the real mutations (from `task-11`) instead of their fake stand-ins from `task-09` — no other component changes, since `task-09` already built the real component tree. If regenerate is async, the hook consumes the API-backed completion/progress mechanism agreed in task-11 before updating the draft/version state.
 - **Affected files / components:**
   - `src/features/assessment-creation/hooks/useAssessmentDraftBuilderPage.ts` (replace fake data with the real loader; add save/regenerate handlers)
   - `src/app/(protected)/assessments/[id]/draft/page.tsx` (pass `params.id` through)
   - Section test files (extend for real error states)
-- **Interfaces / contracts:** The page hook's public shape (`RemoteData`-style page state, per `06-estado-datos-y-api.md` §8) stays what `task-09` established — only what feeds it and its handlers changes.
+- **Interfaces / contracts:** The page hook's public shape (`RemoteData`-style page state, per `06-estado-datos-y-api.md` §8) stays what `task-09` established — only what feeds it and its handlers changes. It also owns effective locale and content-locale state from task-10/task-11; sections receive localized strings and view-model metadata only.
 - **Risk:** Medium — per `06-estado-datos-y-api.md` §13, after regenerate (always) or update (when it could affect the version being viewed), the version list must be refetched, not assumed stale-safe; missing this would show the teacher an outdated version list right after they just created a new version.
-- **Design notes:** Per `15-backend-frontend-contracts.md` §4: 404 → assessment not found (shouldn't normally happen via the normal navigation flow from `task-06`, but handle it defensively — e.g. a stale bookmark); 409 → conflict, show a clear message and offer to refresh; 422 → business validation error, translate the message.
+- **Design notes:** Per `15-backend-frontend-contracts.md` §4: 404 → assessment not found (shouldn't normally happen via the normal navigation flow from `task-06`, but handle it defensively — e.g. a stale bookmark); 409 → conflict, show a clear localized message and offer to refresh; 422 → business validation error, localize the message. Do not show raw English backend strings or technical codes to the teacher.
 
 ---
 
@@ -32,21 +32,26 @@ The Draft Builder screen loads via `loadAssessmentDraftBuilderPage`, saves edits
 |---|---|---|
 | API as orchestrator | Draft Builder calls only `api/` loader/mutations; it never calls `agents/` or exposes provider/model controls | Keep route/hook state as API artifact state plus user actions |
 | Richardson REST maturity | The route maps resource reads, partial updates and regenerate command statuses into explicit UI states | Preserve no-restore behavior; no unsupported affordance appears in version history |
-| AI operation model | Regenerate is sync legacy unless API exposes `AiOperation`; route should be ready to add polling only after contract change | Current task handles submitting/success/error/refetch, not invented `operationId` |
+| AI operation model | Regenerate is sync legacy unless API exposes an operation contract; route consumes async status only after contract change | Current task handles submitting/success/error/refetch or the agreed async completion path, not invented `operationId` |
 | Idempotency | Regenerate retry must be teacher-visible unless API idempotency is confirmed | Do not auto-retry failed regenerate behind the teacher's back |
 | Contract testing | Tests cover load, save, regenerate, refetch, 404/409/422/500 and absence of fake dataset | Extend section/hook tests |
 | Web route functionality | `/assessments/{id}/draft` supports loading, not-found, conflict, validation, server error, save/regenerate submitting states and read-only historical preview | All states are backed by real API contracts from `task-01` |
+| API I/O completeness | All screen read/write data comes from `api/` loader/mutations/status contract | Missing API support blocks this task or becomes explicit residual |
+| Sync/async completion | Regenerate follows sync response or async completion mechanism agreed with `api/` | No local timer, invented operation ID or spinner-only completion |
+| i18n contract | Screen consumes API-backed locale/content metadata, passes regenerate `outputLocale`/`contentLocale`, and renders localized copy/errors/version labels | No hardcoded final user-facing text, no programming-language proxy, logs/telemetry remain English |
 
 ---
 
 ## Implementation Steps
 
 1. Replace `useAssessmentDraftBuilderPage`'s fake dataset with a `loadAssessmentDraftBuilderPage(assessmentId)` call on mount, using the `RemoteData` states from `task-09`.
-2. Wire `DraftEditorSection`'s `onSave` to `updateAssessmentDraft`, and on success, refetch the version list (or the full page data) via `loadAssessmentDraftBuilderPage`.
-3. Wire `RegenerateSection`'s `onRegenerate` to `regenerateAssessmentDraft`, and on success, refetch the version list and update the displayed draft to the new version.
-4. Map 404/409/422/500 to translated messages per `15-backend-frontend-contracts.md` §4, surfaced via the existing error-state UI from `task-09`.
-5. Extend Section tests to cover: successful save/regenerate refreshes the version list; a 409 during save/regenerate shows a clear conflict message; a 404 on initial load shows a "not found" state.
-6. Remove the fake dataset code path entirely from `task-09` — no leftover dead code or feature flag.
+2. Confirm every datum rendered or submitted by the screen is backed by the task-10/task-11 API functions or record an API task/residual before marking this task done.
+3. Wire `DraftEditorSection`'s `onSave` to `updateAssessmentDraft`, and on success, refetch the version list (or the full page data) via `loadAssessmentDraftBuilderPage`.
+4. Wire `RegenerateSection`'s `onRegenerate` to `regenerateAssessmentDraft`. On sync success, refetch the version list and update the displayed draft to the new version. On async response, wait for completion/progress/failure through the agreed mechanism before refetch/update.
+5. Pass the effective `outputLocale`/`contentLocale` into regenerate if the API supports it, preserve returned content-locale metadata in the view model, and show fallback/locale labels according to task-07.
+6. Map 404/409/422/500 to localized messages per `15-backend-frontend-contracts.md` §4, surfaced via the existing error-state UI from `task-09`.
+7. Extend Section tests to cover: successful save/regenerate refreshes the version list; a 409 during save/regenerate shows a clear conflict message; a 404 on initial load shows a "not found" state; locale/content metadata is preserved; async regenerate covers queued/running/succeeded/failed/timeout if applicable.
+8. Remove the fake dataset code path entirely from `task-09` — no leftover dead code or feature flag.
 
 ---
 
@@ -59,6 +64,8 @@ The Draft Builder screen loads via `loadAssessmentDraftBuilderPage`, saves edits
 | 3 | Successful regenerate refetches the version list and shows the new version as current | `npm run test` |
 | 4 | 404/409/422/500 each render a distinct, translated message | `npm run test` |
 | 5 | No fake/mocked dataset remains in the hook | Manual code review |
+| 6 | Screen I/O is fully API-backed and async regenerate, if selected, completes through the agreed API mechanism | `npm run test` plus manual/network evidence |
+| 7 | Draft Builder preserves content-locale metadata, passes regenerate locale, and renders localized copy/errors/version labels | `npm run test` plus manual smoke |
 
 ### Software Smoke Test Check
 
@@ -96,6 +103,9 @@ N/A — no database or ORM involved in `web/`.
 
 - [ ] Draft Builder screen loads, edits/saves, and regenerates against the real API.
 - [ ] API / Agent / Web Contract Gate is completed; no unsupported restore or fake operation state is introduced.
+- [ ] Browser/network evidence or tests show all screen read/write data comes from `api/`; no permanent fixture/local data source remains.
+- [ ] Sync/async contract is honored. Async completion/progress/failure is implemented only through the agreed API-backed mechanism.
+- [ ] i18n contract is honored: effective locale/content locale is preserved, regeneration captures `outputLocale`/`contentLocale`, and localized UI/errors/version labels render without raw backend strings.
 - [ ] Version list refetches after both save and regenerate.
 - [ ] 404/409/422/500 each show a distinct, translated message.
 - [ ] No fake/mocked dataset remains.

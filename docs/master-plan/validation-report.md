@@ -4,7 +4,7 @@
 
 Resultado general: **PASS WITH CONDITIONS**.
 
-El Master Plan es usable para comenzar R01. La secuencia R01-R06 esta documentada, las releases tienen valor vertical demostrable, los prompts `/release-*` usan comandos existentes del plugin local, y no hay enlaces relativos rotos dentro de `docs/master-plan/`.
+El Master Plan es usable para comenzar R01. La secuencia R01-R06 esta documentada, las releases tienen valor vertical demostrable, las estrategias transversales de API-Agent, seguridad, observabilidad, testing, UI Design/Data Semantics e i18n se incorporan por release funcional, los prompts `/release-*` usan comandos existentes del plugin local, y no hay enlaces relativos rotos dentro de `docs/master-plan/`.
 
 Las condiciones principales son de gobierno y readiness: D-01 ya esta resuelta como roles de entorno, pero R06 todavia debe adjuntar deployment/provider proof para los claims que haga sobre `beta`, `demo` o ambos; D-07 bloquea la narrativa final de pricing; varias historias asignadas a R02-R06 siguen en estado `NOT READY`; y R07/R08 siguen como roadmap sin archivo detallado. Nada de eso impide iniciar R01.
 
@@ -17,7 +17,9 @@ Las condiciones principales son de gobierno y readiness: D-01 ya esta resuelta c
 | Trazabilidad roadmap R07-R08 | PASS WITH CONDITIONS |
 | User stories | PASS WITH CONDITIONS |
 | Automatizacion | PASS |
-| Calidad, seguridad y operacion | PASS WITH CONDITIONS |
+| Calidad, testing, seguridad y operacion | PASS WITH CONDITIONS |
+| UI Design/Data Semantics | PASS WITH CONDITIONS |
+| i18n | PASS WITH CONDITIONS |
 | Prompts `/release-*` | PASS |
 | Contraste con codigo | PASS WITH CONDITIONS |
 
@@ -72,11 +74,37 @@ Las condiciones principales son de gobierno y readiness: D-01 ya esta resuelta c
 - **Correccion recomendada**: cerrar D-04 y D-06 dentro de R01, ajustando esquema/migraciones/API/UI segun corresponda.
 - **Responsable sugerido**: Tech lead de `agents/` y `api/`.
 
+### MEDIUM-04 — Intake UI puede degradar datos restringidos a texto libre
+
+- **Evidencia**: `docs/04-architecture/data-model.md` modela `Assessment.level` como enum, `language` como enum/string controlado y `duration_minutes` como integer; `docs/06-ux/teacher-workspace-ux.md` define target level y expected duration como datos de brief; la planning web actual parte del contrato `CreateAssessmentBriefRequest{learningGoal, topic, level, duration, language}` y debe evitar que eso se traduzca en cinco inputs libres.
+- **Impacto**: si `/assessments/new` queda con `input text` para todo, el primer flujo IA recibe datos ambiguos, se dificulta validar y normalizar desde `api/`, y se bloquea la evolucion hacia datos maestros curriculares, cursos, asignaturas, temas y lenguajes.
+- **Correccion recomendada**: aplicar `analysis/ui-design-data-strategy.md` en R01 antes de wireframe/mockup/codigo, declarar matriz de campos y crear ajuste de contrato/API/catalogo o residual explicito cuando `topic`, `level`, `duration` o `language` no tengan fuente de verdad suficiente.
+- **Responsable sugerido**: Product/Web owner + API owner para fuentes de verdad.
+
+### MEDIUM-05 — UI puede requerir datos I/O que `api/` aun no expone
+
+- **Evidencia**: la planning web de R01 consume endpoints existentes de assessment creation, pero la pantalla de intake tambien puede requerir catalogos, defaults, capabilities y estados de operacion que no estan garantizados por el contrato actual. Ademas, generation/regeneration puede operar sync legacy u operation-backed async segun el corte R01.
+- **Impacto**: si `web/` implementa la pantalla con fixtures o supuestos locales cuando falta `api/`, se rompe la regla `web -> api -> agents`, aparecen mocks permanentes y la UI no sabe de forma robusta cuando una operacion async termino o fallo.
+- **Correccion recomendada**: cada task UI debe declarar API I/O contract para lectura/escritura. Si falta endpoint/read model/catalogo/mutation/operation state, crear tarea `api/`/DB/infra o residual bloqueante. Para async, definir polling/SSE/WebSocket/webhook/push, estados, timeout, retry/cancel e idempotencia antes de implementar.
+- **Responsable sugerido**: Web owner + API owner.
+
+### MEDIUM-06 — i18n afecta Web-API-Agents, no solo labels de UI
+
+- **Evidencia**: `docs/source-docs-refresh/audit-report.md` ya registraba politica de idioma canonico pendiente; `docs/09-developer-guide/07-web-development.md` asume UI teacher-facing en espanol; los agentes documentan campos de idioma natural como `feedback_language` o `language`, pero el flujo R01 tambien usa `language` como lenguaje de programacion.
+- **Impacto**: si i18n se trata solo como traduccion de labels, `web` puede hardcodear copy, `api` puede devolver safe errors/catalagos sin locale, `agents` puede generar drafts/feedback en idioma incorrecto, y observabilidad puede terminar mezclando mensajes localizados con logs/metricas tecnicas.
+- **Correccion recomendada**: aplicar `analysis/i18n-strategy.md` por release funcional. Mantener codigo/contratos tecnicos/logs/telemetria en ingles; exigir locale efectivo, fallback, safe errors/catalog labels y `outputLocale`/`contentLocale` para salidas GenAI visibles.
+- **Responsable sugerido**: Product/Web owner + API/Agents owners.
+
 ## Validaciones aprobadas
 
 - README, ejecutivo, analisis y releases R01-R06 existen.
 - Los enlaces relativos explicitos dentro de `docs/master-plan/` resuelven correctamente; chequeo mecanico: `missing=0`.
-- Cada archivo R01-R06 conserva una estructura operativa completa y cubre objetivo, alcance, exclusiones, US, automatizacion, Agent Runtime, HITL, seguridad, observabilidad, costos, datos, criterios, validacion, escenario demostrable, metricas, riesgos, prompt y changelog.
+- Cada archivo R01-R06 conserva una estructura operativa completa y cubre objetivo, alcance, exclusiones, US, automatizacion, Agent Runtime, HITL, seguridad, observabilidad, testing, costos, datos, criterios, validacion, escenario demostrable, metricas, riesgos, prompt y changelog.
+- Cada archivo R01-R06 incorpora Testing & Quality Gates dentro del corte funcional, sin crear una release tecnica separada.
+- R01 incorpora el gate de UI Action Reachability: `/assessments/new` debe alcanzarse desde una accion visible en `/dashboard`, no solo por URL directa.
+- R01 incorpora el gate de UI Design/Data Semantics: `/assessments/new` debe partir del Design System, declarar matriz de campos y no tratar `level`, `duration`, `language` o `topic` como texto libre sin decision de dominio.
+- R01 incorpora el gate API I/O + sync/async: todos los datos de pantalla deben estar respaldados por `api/`, y generation/regeneration debe declarar si continua sync o pasa a async con completion model explicito.
+- R01 incorpora el gate i18n: copy user-facing, safe errors/catalog labels y generation/regeneration deben respetar locale efectivo/`outputLocale`, mientras logs/telemetria permanecen en ingles.
 - Las releases R01-R06 son verticales y demostrables: R01 assessment creation, R02 graded feedback, R03 cohort report, R04 closed snapshot, R05 closed attempts/analytics, R06 evidence package.
 - Ninguna release R01-R06 esta clasificada XL.
 - Las dependencias principales no forman ciclo: R01 desbloquea R02/R04/R06; R02 desbloquea R03; R04 desbloquea R05; R06 agrega evidencia desde R01-R05.
@@ -93,7 +121,11 @@ Las condiciones principales son de gobierno y readiness: D-01 ya esta resuelta c
 5. Enriquecer las US `NOT READY` de cada release antes de atomizar R02-R06.
 6. Crear o formalizar las `US-PROPUESTA-*` antes de implementarlas.
 7. Aclarar si R07/R08 requieren archivos de release ahora o quedan como roadmap sin Fase 05.
-8. Mantener README/ejecutivo/bridge sincronizados al cerrar cada planning o release.
+8. Materializar tareas de testing/testkit/.github/infra dentro de cada release cuando sus gates cambien CI, secretos, ambientes, recursos o artefactos.
+9. Aplicar UI Design/Data Semantics a toda nueva pantalla, formulario, filtro, dashboard o tabla antes de wireframe/mockup.
+10. Aplicar API I/O + sync/async contract a toda pantalla: datos de lectura/escritura respaldados por `api/`, y completion model definido para acciones asincronas.
+11. Aplicar i18n a toda superficie user-facing o salida GenAI: locale efectivo, fallback, `outputLocale`/`contentLocale`, translation keys y observabilidad en ingles.
+12. Mantener README/ejecutivo/bridge sincronizados al cerrar cada planning o release.
 
 ## Riesgos residuales
 
@@ -103,6 +135,12 @@ Las condiciones principales son de gobierno y readiness: D-01 ya esta resuelta c
 | Historias esqueleticas entran a implementacion | Abierto | Gate obligatorio de `/us-enrich` antes de atomizar |
 | Provider/cost model nace Groq/Gemini-inconsistente | Abierto | Cerrar D-04 en R01 |
 | AgentExecutionLog queda insuficiente para R06 | Abierto | Cerrar D-06 en R01, validar cobertura en R06 |
+| Testing queda como suite manual tardia | Abierto | Aplicar `analysis/testing-strategy.md` por release y bloquear PR/beta/demo segun impacto |
+| Funcionalidad web queda URL-only | Abierto | Cada US/task UI/prueba debe declarar y validar la accion visible que alcanza la ruta funcional |
+| UI usa inputs libres para datos restringidos | Abierto | Cada US/task UI/prueba debe declarar matriz de campos, DS components, datos maestros/catalogos y validaciones de valores validos/invalidos |
+| UI depende de datos sin contrato `api/` | Abierto | Crear tarea `api/`/DB/infra o residual bloqueante antes de cerrar UI; prohibir mocks permanentes como fuente de verdad |
+| Async sin mecanismo de finalizacion | Abierto | Definir polling/SSE/WebSocket/webhook/push, estados, timeout, retry/cancel e idempotencia por tarea |
+| i18n se implementa solo como labels | Abierto | Exigir gate i18n en Web/API/Agents, safe errors, catalogos, GenAI output, exports/reports y testing; mantener logs/telemetria en ingles |
 | README/ejecutivo/bridge vuelven a divergir | Abierto | Actualizar los tres artefactos cuando cambie el estado de R01 o de las releases |
 
 ## Orden de correccion
@@ -110,15 +148,24 @@ Las condiciones principales son de gobierno y readiness: D-01 ya esta resuelta c
 1. Iniciar R01 como planning coordinada desde `.planning/active/008-assessment-creation/R01-RELEASE-BRIDGE.md`.
 2. Cerrar o registrar D-04/D-06 dentro de R01.
 3. Atomizar US-080/US-081 por owner y mantener trazabilidad contra sus DoD/notas tecnicas.
-4. Preparar deployment/provider proof por ambiente antes de que R06 pueda cerrar.
-5. Resolver D-07 antes de narrativa/export final.
-6. Antes de cada release posterior, ejecutar `/us-enrich` y definir ownership de `US-PROPUESTA-*`.
-7. Decidir tratamiento documental de R07/R08.
+4. Incorporar UI Design/Data Semantics R01: matriz de campos intake, DS components, datos maestros/catalogos o residual explicito para `topic`, `level`, `duration` y `language`.
+5. Incorporar API I/O + sync/async R01: confirmar endpoints/read models/catalogos/mutations necesarios y decidir completion model de generation/regeneration si pasa a async.
+6. Incorporar i18n R01: locale efectivo, UI translation keys, safe errors/catalog labels, `outputLocale` para generation/regeneration, pruebas de fallback y logs/telemetria en ingles.
+7. Incorporar tareas de testing R01: baseline, contratos, acceptance aislada, Compose minimo y artefactos normalizados.
+8. Preparar deployment/provider proof por ambiente antes de que R06 pueda cerrar.
+9. Resolver D-07 antes de narrativa/export final.
+10. Antes de cada release posterior, ejecutar `/us-enrich` y definir ownership de `US-PROPUESTA-*`.
+11. Decidir tratamiento documental de R07/R08.
 
 ## Seguimiento posterior a la validacion
 
 | Fecha | Cambio aplicado | Hallazgo relacionado | Estado |
 |---|---|---|---|
+| 2026-07-21 | i18n incorporado; se exige locale efectivo para UI/API/Agents y salidas GenAI, manteniendo logs/telemetria en ingles | Idioma/UX/API-Web/Agents/observabilidad | Corregido en Master Plan/R01-R06 |
+| 2026-07-21 | UI Design/Data Semantics incorporado; R01 exige diseno DS, matriz de campos y datos maestros/restringidos para `/assessments/new` | Calidad/UX/datos/API-Web | Corregido en Master Plan/R01/web planning |
+| 2026-07-21 | API I/O + sync/async incorporado; R01 exige datos de pantalla respaldados por `api/` y completion model para async | Calidad/UX/API-Web/operacion | Corregido en Master Plan/R01/web planning |
+| 2026-07-21 | UI Action Reachability incorporado; R01 exige dashboard "Nueva evaluacion" -> `/assessments/new` | Calidad/UX/testing | Corregido en Master Plan/R01/web planning |
+| 2026-07-21 | Testing & Quality Gates incorporado como estrategia transversal por release funcional | Calidad/operacion | Corregido en Master Plan/R01-R06 |
 | 2026-07-21 | R01 bridge creado y US-080/US-081 materializadas; se elimina el lenguaje stale que las trataba como esqueleto | RESOLVED-02 | Corregido en R01/validation |
 | 2026-07-21 | D-01 reconciliada como decision resuelta; queda gate de evidencia por ambiente | RESOLVED-01 | Corregido en Master Plan/R06 |
 | 2026-07-20 | Se agrego `analysis/agent-runtime-strategy.md`, se actualizo README/ejecutivo y se incorporo el bloque `Capacidades de IA y Agent Runtime` en R01-R06 | MEDIUM-01 y estrategia transversal no formalizada | Corregido en el Master Plan |
@@ -135,6 +182,11 @@ Prerrequisitos para comenzar:
 - No exigir D-01 para iniciar R01.
 - Cerrar D-04/D-06 dentro de R01 o registrar explicitamente el residual tecnico.
 - Usar US-080/US-081 ya materializadas para atomizar tareas de evidencia/log/costo por owner.
+- Aplicar Testing & Quality Gates de R01: baseline unit/component/coverage, contratos Assessment Web-API/API-Agents, acceptance aislada, Compose minimo y artefactos `summary.json`/`run-manifest.json` o residual explicito.
+- Verificar que `/dashboard` "Nueva evaluacion" navega a `/assessments/new`; el happy path de pruebas no debe iniciar solo con URL directa.
+- Aplicar UI Design/Data Semantics de R01: `learningGoal` como texto libre largo; `level` enum/difficulty; `duration` numero/preset; `language` enum/catalogo; `topic` candidato a dato maestro/tag; crear API/catalogo/residual si el contrato actual de strings no sostiene la semantica.
+- Aplicar API I/O + sync/async de R01: cada dato de pantalla debe mapear a `api/`; si falta endpoint/read model/catalogo/mutation, crear tarea `api/`; generation/regeneration debe declarar sync o async y, si es async, polling/SSE/WebSocket/webhook/push como completion model.
+- Aplicar i18n de R01: codigo/contratos/logs en ingles; copy dashboard/intake/draft, safe errors/catalog labels y outputs generation/regeneration con locale efectivo/`outputLocale`; diferenciar programming language de natural language locale.
 - Verificar el estado real de `web/.planning/active/001-assessment-creation` antes de declarar la UI completa.
 
 ## Cierre obligatorio
@@ -142,7 +194,7 @@ Prerrequisitos para comenzar:
 1. **Resultado general:** PASS WITH CONDITIONS.
 2. **Blockers:** D-07 bloquea narrativa final de pricing; R06 conserva gate de deployment/provider proof por ambiente. No hay blocker para iniciar R01.
 3. **Primera release ejecutable:** R01 — Assessment Creation + Evidence Backbone.
-4. **Prerrequisitos:** cerrar D-04/D-06 dentro de R01, usar US-080/US-081 ya materializadas si se atomizan, mantener el gate de evidencia de entorno visible para R06.
+4. **Prerrequisitos:** cerrar D-04/D-06 dentro de R01, usar US-080/US-081 ya materializadas si se atomizan, aplicar Testing & Quality Gates de R01, probar UI Action Reachability desde dashboard y mantener el gate de evidencia de entorno visible para R06.
 5. **Archivo a revisar:** `docs/master-plan/releases/release-01-assessment-creation-evidence-backbone.md`.
 6. **Comando `/release-*` recomendado:** iniciar con `/release-init` si `.releases/` no existe; luego crear R01 con `/release-new`.
 7. **Prompt exacto a utilizar:**
@@ -158,11 +210,20 @@ Fuentes obligatorias:
 - docs/master-plan/analysis/automation-inventory.md
 - docs/master-plan/analysis/user-story-inventory.md
 - docs/master-plan/analysis/decisions-and-assumptions.md
+- docs/master-plan/analysis/testing-strategy.md
+- docs/master-plan/analysis/ui-design-data-strategy.md
+- docs/master-plan/analysis/i18n-strategy.md
 
 Precondiciones:
 - No bloquear R01 por D-01.
 - Resolver o registrar D-04 y D-06 dentro de R01.
 - Usar US-080 y US-081 ya materializadas antes de atomizar tareas de evidencia.
+- Aplicar los gates de testing R01 sin usar Firebase/GenAI reales en suites hermeticas.
+- El flujo web debe iniciar desde `/dashboard` con la accion visible "Nueva evaluacion" hacia `/assessments/new`; no aceptar URL directa como unico camino.
+- El intake web debe partir desde el Design System y matriz de campos; no aceptar `input text` libre para `level`, `duration`, `language` o `topic` si son enum, numero, catalogo o dato maestro.
+- Cada pantalla debe declarar datos de lectura/escritura respaldados por `api/`; si falta API, planificarla antes de cerrar UI.
+- Generation/regeneration debe acordar sync vs async; si es async, declarar completion model y estados UI.
+- Aplicar i18n: codigo/contratos/logs en ingles; locale efectivo en Web/API; `outputLocale` para outputs GenAI visibles; safe errors/catalog labels localizados o traducibles; no localizar telemetria.
 - No inventar version semantica, target period, fecha estimada ni planning IDs.
 
 Comandos:
@@ -185,7 +246,12 @@ Criterios:
 - UI/API/agents integrados para el flujo assessment creation.
 - Logs de generation/regeneration con provider/model/tokens/cost/status/error y esquema D-06 resuelto o adoptado.
 - Doble submit no crea runs facturables duplicados.
+- Dashboard "Nueva evaluacion" navega a `/assessments/new` y el test de flujo lo cubre desde la accion visible.
+- `/assessments/new` usa controles coherentes con semantica de datos y registra catalogos/API/residuales para datos maestros o restringidos.
+- Datos I/O de pantalla estan alineados con `api/`; flujos async tienen completion model probado.
+- i18n de R01 probado: translation keys, fallback, locale efectivo, `outputLocale` y logs/telemetria en ingles.
 - Smoke cross-service real documentado.
+- Testing gate R01 documentado: unit/component/coverage, contratos, acceptance aislada, Compose minimo y artefactos normalizados.
 - README/planning/release artifacts actualizados al cierre.
 ```
 
@@ -193,5 +259,10 @@ Criterios:
 
 | Fecha | Cambio | Motivo | Elementos afectados | Decision asociada |
 |---|---|---|---|---|
+| 2026-07-21 | Incorporacion de i18n por release funcional | Registrar que i18n afecta UI/API/Agents/GenAI output y que logs/telemetria siguen en ingles | `validation-report.md`, R01-R06, web planning | D-I18N-01..D-I18N-10 |
+| 2026-07-21 | Incorporacion de API I/O y sync/async contract | Registrar que UI debe trabajar con datos respaldados por `api/` y completion model explicito para async | `validation-report.md`, R01, web planning | D-UI-01..D-UI-08, D-API-01..D-API-10 |
+| 2026-07-21 | Incorporacion de UI Design/Data Semantics | Registrar que R01 y futuras UI deben partir del DS y tratar datos maestros/restringidos segun fuente de verdad | `validation-report.md`, R01, web planning | D-UI-01..D-UI-08 |
+| 2026-07-21 | Incorporacion de UI Action Reachability | Registrar que las funcionalidades web deben ser accesibles por accion visible y que R01 debe corregir dashboard -> intake | `validation-report.md`, R01, web planning | D-API-01..D-API-10, D-TEST-01..D-TEST-09 |
+| 2026-07-21 | Incorporacion de Testing & Quality Gates | Registrar testing como gate transversal por release funcional y actualizar precondiciones R01 | `validation-report.md`, README, ejecutivo, R01-R06 | D-TEST-01..D-TEST-09 |
 | 2026-07-20 | Seguimiento post-validacion | Registrar la incorporacion de Agent Runtime transversal y correccion del estado README/ejecutivo | `validation-report.md`, README, ejecutivo, R01-R06 | D-04, D-06 |
 | 2026-07-20 | Creacion inicial | Ejecucion de Fase 06 del Master Plan Ejecutivo | `validation-report.md` | D-01, D-04, D-06, D-07 |

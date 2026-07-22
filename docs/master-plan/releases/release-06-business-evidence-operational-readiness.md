@@ -527,6 +527,9 @@ Metricas derivadas incluyen costo por run, assessment, graded submission, teache
 - Cost rates y currency conversion basis quedan versionados.
 - Health endpoint tiene timeout y respuesta minima.
 - Flyway cubre entidades, constraints e indexes.
+- Pantallas de dashboard/export/readiness aplican UI Design/Data Semantics: ledgers, filtros, freshness, provenance, estados y evidence links son controles/read-only segun fuente de verdad, no texto editable casual.
+- Pantallas de dashboard/export/readiness declaran API I/O contract y sync/async por accion; exports, evidence bundle o refresh async deben exponer completion model por operacion/polling/SSE/WebSocket/webhook/push segun contrato.
+- Operator/evidence UI y exports publicables aplican i18n cuando son user-facing; audit exports, logs, metrics, traces, event names y ledger fields tecnicos permanecen en ingles.
 - Infra planning verifica Cloud Run/API/Agents, hosting web, Cloud SQL, Artifact Registry, IAM y Secret Manager.
 
 ## 33. Criterios de calidad
@@ -610,6 +613,10 @@ Metricas derivadas incluyen costo por run, assessment, graded submission, teache
 - [ ] Infra scope para servicios afectados esta DONE.
 - [ ] Terraform/smoke/deployment/provider proof estan documentados segun los claims de entorno.
 - [ ] Tests funcionales, seguridad, ledger y export pasan.
+- [ ] Gate de testing R06 cumplido: smoke beta/demo, digest promotion proof, Sonar/JMeter summaries, export leakage tests y retention de artefactos.
+- [ ] Gate UI Design/Data Semantics cumplido para dashboards/exports/readiness: datos read-only/provenance, ledgers, filtros controlados, estados, freshness y evidence links usan controles DS coherentes con fuente de verdad.
+- [ ] Gate API I/O + sync/async cumplido: datos de pantalla respaldados por `api/`, y exports/refresh async con completion/progress/failure probado.
+- [ ] Gate i18n cumplido: evidence UI/exports user-facing respetan locale y audit/telemetria tecnica permanece estable en ingles.
 - [ ] README/planning/release artifacts actualizados.
 
 ## 39. Validacion
@@ -622,10 +629,19 @@ Metricas derivadas incluyen costo por run, assessment, graded submission, teache
 - Tests de missing evidence, alert threshold, cooldown y acknowledge.
 - Tests de health timeout/degraded/unknown.
 - Reconciliation de dashboard totals contra SQL de control.
+- Tests de `web` para controles semanticos de dashboard/export/readiness: filtros controlados, read-only provenance, freshness, estados, ledgers y links revocables sin inputs libres indebidos.
+- Tests Web-API para lectura/escritura de pantallas y completion model si exports/readiness refresh usa async.
+- Tests i18n para evidence UI, publicable exports, fallback, safe errors y verificacion de que logs/metrics/traces/event codes no se traducen.
 - Smoke del flujo completo con al menos un piloto, eventos de uso, costo y revenue/commitment.
 - Terraform fmt/validate/plan o bloqueo documentado por credenciales.
 - Smoke de URL/health y captura de commit/revision/environment.
 - Revision manual del paquete contra los criterios de evidencia activos en `docs/05-evidence/`.
+- Smoke post-deploy `beta` y `demo` segun claims, con imagen/digest, ambiente, commit y rollback/procedure documentados.
+- Verificacion de que la imagen promovida conserva el mismo digest validado; no reconstruir entre beta y demo.
+- Sonar quality gate snapshots para `web`, `api` y `agents`, con coverage importado y findings nuevos/resueltos.
+- JMeter smoke/baseline summaries para dashboards, exports, health y rutas criticas autorizadas; carga/soak solo programada y con allowlist.
+- Export leakage tests que prueban ausencia de secretos, tokens, prompts completos, signed links completos y PII no permitida.
+- `run-manifest.json`, `summary.json`, artifact index y retention policy listos para dashboard futuro.
 
 ## 40. Escenario Given/When/Then
 
@@ -819,6 +835,10 @@ Entregables:
 
 | Fecha | Cambio | Motivo | Elementos afectados | Decision asociada |
 |---|---|---|---|---|
+| 2026-07-21 | Incorporacion de i18n por release funcional | Alinear R06 con evidence UI/exports localizables y audit/telemetria tecnica en ingles | UI/API/exports/observabilidad, DoD operativo, validacion | D-I18N-01..D-I18N-10 |
+| 2026-07-21 | Incorporacion de UI Design/Data Semantics | Alinear R06 con controles DS y semantica de datos para dashboards, ledgers, exports y readiness | UI, DoD operativo, validacion | D-UI-01..D-UI-08 |
+| 2026-07-21 | Incorporacion de API I/O y sync/async contract | Alinear R06 con datos de pantalla respaldados por `api/` y completion model para exports/readiness async | UI/API, DoD operativo, validacion | D-UI-01..D-UI-08, D-API-01..D-API-10 |
+| 2026-07-21 | Incorporacion de Testing & Quality Gates | Alinear R06 con smoke beta/demo, proof de digest, Sonar/JMeter summaries, export leakage tests y artefactos normalizados | Testing, CI/testkit, DoD operativo | D-TEST-01..D-TEST-09 |
 | 2026-07-21 | Incorporacion de Observability & Telemetry | Alinear R06 con dashboard Operator, SLI/SLO baseline, alertas, runbooks, exports y comparacion multiambiente | Observabilidad, DoD operativo | D-OBS-01..D-OBS-08 |
 | 2026-07-21 | Incorporacion de topologia de seguridad multiambiente | Hacer que R06 cierre readiness con aislamiento comprobado de `demo`/`beta` y manifiesto de beta | Seguridad, despliegue, readiness, DoD operativo | D-SEC-01..D-SEC-08 |
 | 2026-07-21 | Incorporacion de Security & Authorization | Alinear R06 con Operator auth, exports allowlisted, evidence links revocables, health seguro y auditoria no editable | Seguridad, DoD operativo | D-SEC-01..D-SEC-08 |

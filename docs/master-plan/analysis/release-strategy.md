@@ -48,6 +48,64 @@ El runtime de agentes no se planifica como una release tecnica independiente. Ca
 
 La regla de extraccion es conservadora: una capacidad comun se generaliza cuando existe un segundo consumidor real o una necesidad inmediata de la siguiente release.
 
+## Evolucion transversal de Testing & Quality Gates
+
+Testing no se planifica como una release tecnica independiente. Cada release funcional debe incorporar el gate minimo necesario para probar el valor que entrega, sostener contratos entre artefactos y producir evidencia comparable:
+
+| Release | Incremento de testing | Razon de incorporacion |
+|---|---|---|
+| R01 | Baseline unit/component/coverage, contratos Assessment Web-API/API-Agents, aceptacion aislada, dashboard action -> `/assessments/new` y Compose minimo `api-agents`/`web-api`/`full-chain` | El primer journey IA no puede depender de mocks no gobernados, smoke manual unico ni URL-only access |
+| R02 | Contratos rubric/grading/feedback, acceptance de artefactos, Compose Open full-chain y JMeter smoke de rutas criticas | Primer graded submission agrega upload, datos de estudiante y varios agentes |
+| R03 | Tests de agregacion, estimates y reports; contratos report/gap/recovery; baseline performance de agregaciones | El valor de impacto depende de calculos reproducibles y no solo de salidas IA |
+| R04 | Golden files, JSON Schema, GenAI mock adversarial, Compose Closed authoring y `ai-eval` separado | Closed authoring necesita calidad de pregunta sin usar LLM real como oraculo de PR |
+| R05 | Playwright student-link flow, tests negativos de tokens, deterministic grading y JMeter smoke allowlisted | Student access publico exige aislamiento, anti-replay y capacidad minima |
+| R06 | Smoke beta/demo, proof de digest, Sonar/JMeter summaries, export leakage tests y artefactos normalizados | El paquete de validacion necesita evidencia de calidad, promocion y operacion |
+
+Las suites hermeticas no usan Firebase ni GenAI reales. Los cambios de CI, secretos, ambientes, recursos o testkit requieren tarea `.github/`, `infra/` o manifiesto versionado.
+
+## Evolucion transversal de UI Design/Data Semantics
+
+La UI no se planifica como una capa visual separada del dominio. Cada release funcional que toca `web/` debe partir de `web/design-system/`, clasificar la naturaleza de los datos y confirmar que cada control coincide con su fuente de verdad.
+
+Cada pantalla tambien debe declarar su contrato API I/O: datos de lectura, datos de escritura, endpoint/read model/catalogo/mutation, owner `api/`, errores, capabilities y modo de comunicacion. Si falta `api/`, la release debe agregar el scope `api/`/DB/infra necesario o dejar residual bloqueante. Las acciones deben acordar si son sincrónicas o asincrónicas; si son async, se debe definir completion/progress por polling de operacion, SSE, WebSocket, webhook server-to-server, push/notification u otro mecanismo explicito.
+
+| Release | Incremento UI/data requerido | Razon de incorporacion |
+|---|---|---|
+| R01 | Matriz de campos para assessment intake: `learningGoal` texto libre largo, `topic` candidato a dato maestro/tag, `level` enum, `duration` numero/preset y `language` enum/catalogo; `/assessments/new` no puede cerrar como all-text-input | El primer brief alimenta persistencia y Assessment Agent; datos ambiguos degradan todas las releases posteriores |
+| R02 | Rubric, submission y feedback distinguen pesos/scores numericos, archivos, estados reviewable, uncertainty flags y feedback editable | La primera calificacion asistida requiere validaciones pedagogicas y tecnicas coherentes |
+| R03 | Gap/recovery/report usan severidad, filtros, estados, estimaciones y datos agregados como controles/read-only provenance, no campos libres | Reporte de impacto debe separar hechos, interpretaciones y acciones docentes |
+| R04 | Question bank/snapshot usan catalogos para subject/topic/outcome/type/difficulty/status y composition controls | Closed depende de metadata consistente para filtros, coverage, snapshot y analytics |
+| R05 | Learner/invitation/attempt/result usan controles para links, visibility, answers, token states y result publication | Student access sin cuenta requiere integridad, privacidad y estados no editables indebidamente |
+| R06 | Dashboard/exports/readiness usan ledgers, filtros controlados, freshness/provenance y read-only evidence | Evidencia de negocio debe ser auditable y no editable como texto casual |
+
+Si una release necesita datos maestros que aun no existen, la planificacion debe crear tarea `api/`/DB/infra o registrar residual explicito. `web/` no debe resolver esa ausencia convirtiendo el campo en texto libre salvo decision temporal validada.
+
+Para R01, crear brief puede mantenerse sync si responde con `assessmentId` en tiempo razonable. Draft generation/regeneration debe quedar documentada como sync compatible u operation-backed async; si es async, `api/` debe exponer estado consultable o canal de completion y `web/` debe probar queued/running/succeeded/failed sin spinners indefinidos.
+
+## Evolucion transversal de i18n
+
+i18n no se planifica como una release tecnica independiente. Cada release funcional que expone textos, catalogos, errores seguros, emails, reports, exports o salidas GenAI debe incorporar el incremento minimo de locale necesario para entregar valor sin romper la estabilidad tecnica.
+
+Reglas transversales:
+
+- source code, field names, enum codes, error codes, event names, span names, metric names, log fields y telemetry permanecen en ingles;
+- todo texto user-facing usa locale efectivo y fallback definido;
+- `web` indica locale efectivo en requests que devuelven texto visible o inician generacion visible;
+- `api` resuelve locale, valida allowlist, separa `errorCode` de `safeMessage`, localiza catalog labels o entrega codes traducibles, y persiste `contentLocale`/`outputLocale` cuando afecta artefactos durables;
+- `agents` recibe `outputLocale`/`contentLocale` para outputs visibles y valida warnings de idioma sin localizar logs;
+- observabilidad registra locale como atributo controlado, no como nombres traducidos de eventos, spans, metricas o logs.
+
+| Release | Incremento i18n requerido | Razon de incorporacion |
+|---|---|---|
+| R01 | Fundacion i18n para dashboard/intake/draft: translation keys, locale efectivo, safe errors/catalog labels, `outputLocale` para generation/regeneration y logs tecnicos en ingles | El primer flujo IA debe producir contenido en idioma de usuario y dejar evidencia tecnica estable |
+| R02 | Rubric/submission/grading/feedback con UI localizada y feedback student-facing en locale solicitado | El primer valor pedagogico visible no puede mezclar idioma de interfaz, feedback y evidencia |
+| R03 | Gap/recovery/report y exports user-facing localizados con estimates y copy claro | Reporte de impacto debe ser legible por el docente en su idioma |
+| R04 | Question bank y generated questions con `outputLocale`, catalogos curriculares localizados y validators de idioma | Closed authoring depende de preguntas claras y culturalmente revisables |
+| R05 | Student link flow, attempts, results e item analytics con locale para estudiante/docente | Acceso sin cuenta debe funcionar para usuarios finales fuera del idioma interno |
+| R06 | Operator/evidence UI y exports publicables localizados; audit/telemetria tecnica en ingles | Evidencia de negocio debe ser presentable sin perder auditabilidad tecnica |
+
+R01 debe diferenciar `language` de programacion de `outputLocale` natural. Si el contrato actual usa `language` para lenguaje de programacion, las tareas deben evitar usarlo como locale de interfaz o de generacion.
+
 ## Secuencia de releases
 
 ### R01 — Assessment Creation + Evidence Backbone
@@ -72,6 +130,12 @@ La regla de extraccion es conservadora: una capacidad comun se generaliza cuando
 | Riesgos | Gemini/Groq sin ADR; US-015 con discrepancias de DoD. |
 | Complejidad | M. |
 | Estado | Planificada; parte ya implementada/verificada. |
+
+R01 no puede cerrar el alcance web si `/assessments/new` solo funciona como URL directa. El flujo vertical debe partir desde `/dashboard`, usar la accion visible "Nueva evaluacion" y continuar hacia intake/draft con pruebas unitarias, acceptance y e2e que cubran esa navegacion.
+
+R01 tampoco puede cerrar `/assessments/new` como formulario de `input text` para todo. Antes de wireframe/mockup/codigo, el intake debe declarar diseno DS y matriz de campos: `learningGoal` como texto libre largo; `level` como enum/difficulty; `duration` como numero o preset con unidad; `language` como enum/catalogo; `topic` como candidato a dato maestro curricular o tag controlado. Si `api/` todavia recibe strings para esos campos, el planning debe decidir ajuste de contrato/modelo o residual explicito. Si `api/` no expone los datos I/O requeridos por la pantalla, se debe crear tarea `api/` antes de declarar lista la UI.
+
+R01 tambien debe decidir el locale efectivo del flujo: UI copy de dashboard/intake/draft, labels de catalogos, safe errors y `outputLocale` para draft generation/regeneration. El prompt del Assessment Agent puede permanecer como template tecnico en ingles, pero debe instruir la salida en el idioma solicitado. Logs/telemetria del run siguen en ingles.
 
 ### R02 — Open Graded Feedback Thin Slice
 
@@ -310,6 +374,10 @@ No hay releases XL en esta estrategia. Los cortes L son verticales pero limitado
 | Closed P0 compite con Open | R04/R05 | Separar Closed en dos releases y no adelantar refinamientos P1. |
 | Evidencia tarde | Todas | R01 incluye AUT-16/AUT-17/AUT-21 como base. |
 | Historias NOT READY entran directo a implementacion | R02-R08 | Ejecutar `/us-enrich` antes de atomizar cada grupo. |
+| UI crea inputs libres para datos maestros/restringidos | Todas las releases con `web/` | Aplicar UI Design/Data Semantics antes de wireframe/mockup; crear catalogos/API/tablas o residual explicito. |
+| UI diseña datos sin respaldo de `api/` | Todas las releases con `web/` | Exigir contrato API I/O por pantalla; si falta endpoint/read model/mutation, crear scope `api/`/DB/infra o residual bloqueante. |
+| Async sin completion model | IA, batch, reports, exports, analytics | Definir polling/SSE/WebSocket/webhook/push, estados, timeout, retry/cancel e idempotencia antes de implementar UI. |
+| i18n reducido a labels de UI | Todas las releases con user-facing surfaces o GenAI output | Exigir locale contract Web-API-Agents, safe errors, catalog labels, `outputLocale`, fallback y logs/telemetria en ingles. |
 | Operator sin acceso | R06 | Priorizar US-PROPUESTA-01 o definir operator como rol temporal administrado. |
 | Pricing divergente | R06 | Resolver D-07 antes de narrativa final. |
 
@@ -325,5 +393,8 @@ No hay releases XL en esta estrategia. Los cortes L son verticales pero limitado
 
 | Fecha | Cambio | Motivo | Elementos afectados | Decision asociada |
 |---|---|---|---|---|
+| 2026-07-21 | Incorporacion de i18n por release funcional | Alinear locale en UI/API/Agents y mantener codigo/logs/telemetria en ingles | Secuencia, R01-R06, riesgos | D-I18N-01..D-I18N-10 |
+| 2026-07-21 | Incorporacion de API I/O y sync/async contract | Alinear pantallas con `api/` y exigir completion model para acciones asincronas | Secuencia, R01, riesgos | D-UI-01..D-UI-08, D-API-01..D-API-10 |
+| 2026-07-21 | Incorporacion de UI Design/Data Semantics | Asegurar que cada release con UI use Design System, matriz de campos, fuentes de verdad y datos maestros/restringidos correctos | Secuencia, R01, riesgos | D-UI-01..D-UI-08 |
 | 2026-07-20 | Incorporacion de evolucion transversal del Agent Runtime | Alinear la estrategia de releases con `agent-runtime-strategy.md` | Secuencia, runtime por release | D-04, D-06 |
 | 2026-07-19 | Creacion inicial | Ejecucion de la Fase 04 del Master Plan Ejecutivo | Todo el documento | D-01, D-02, D-04, D-06 |

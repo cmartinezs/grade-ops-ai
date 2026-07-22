@@ -34,6 +34,9 @@ Term and concept traceability for this planning. For global consolidated view, s
 | Render CLI (`render-oss/cli`, `RENDER_API_KEY`) | N/A | N/A | N/A | ✅ | N/A | N/A | Official Render CLI, used by story-04 tasks 03/04 for non-interactive deploy/service status checks |
 | `grade-ops-ai-api` / `grade-ops-ai-agents` (Render service names, `beta`) | ✅ | ✅ | ✅ | ✅ | N/A | N/A | Story-04 task-03 — Render services renamed to match `docs/04-architecture/beta-environment-design.md`; both now track `develop` (previously `grade-ops-agents` tracked stale `master`, ~1 month behind) |
 | `.env.example` Render beta smoke section (`RENDER_API_KEY`, `RENDER_WORKSPACE_ID`, `BETA_API_BASE_URL`) | N/A | N/A | N/A | ✅ | N/A | N/A | Story-04 task-04 — documents the vars `scripts/smoke-e2e-render-beta.sh` requires, added after a code-review P2 finding |
+| API I/O contract | N/A | ⚠️ | ✅ | ⚠️ | ⚠️ | ✅ | R01 gate requiring every screen read/write datum to map to `api/`; missing endpoints/read models/catalogs/mutations/operation states become child scope or blocking residuals |
+| Sync/async completion model | ⚠️ | ⚠️ | ✅ | ⚠️ | ⚠️ | ✅ | Per-action sync/async decision; async completion/progress/failure must use an agreed API-backed mechanism such as operation polling, SSE, WebSocket, webhook/push or equivalent |
+| i18n contract | ⚠️ | ⚠️ | ✅ | N/A | ⚠️ | ✅ | Source code/contracts/logs/telemetry in English; user-facing copy, safe errors, catalog labels and generated content use effective locale/`outputLocale` |
 
 ---
 
@@ -44,6 +47,8 @@ Term and concept traceability for this planning. For global consolidated view, s
 | D-01 | Factor the brief→generate→retrieve smoke flow into a shared `scripts/lib/e2e-smoke-flow.sh` sourced by both the local and Render smoke scripts, instead of duplicating it | Avoids two copies of the same provisioning/auth/generation logic drifting apart across local and deployed environments | `scripts/smoke-e2e-local.sh`, `scripts/smoke-e2e-render-beta.sh` | 2026-07-16 |
 | D-02 | Both `api/` and `agents/` must be warmed up directly before a Render beta smoke run, not just `api/` | A real run found that warming only `api/` isn't enough — a cold `agents/` returns a `429` from Render's edge to the internal `api/`→`agents/` call, distinct from a clean timeout | `scripts/smoke-e2e-render-beta.sh` | 2026-07-16 |
 | D-03 | Render's `*.onrender.com` hostname is a separate slug from the service's display name and does not change when the display name is renamed | Discovered while renaming `gradeops-api`/`gradeops-agents` to match the design doc — `BETA_API_BASE_URL` still needed the original hostname | `.env.example`, `scripts/smoke-e2e-render-beta.sh` | 2026-07-16 |
+| D-04 | R01 UI implementation requires API I/O alignment and explicit sync/async completion before UI Done | Prevents screen data, operation status or async completion from being hidden in fixtures, local DTOs, timers or inferred states | R01 bridge, web child planning, API child planning, cross-service tests | 2026-07-21 |
+| D-05 | R01 implementation requires i18n alignment before UI/API/Agents Done | Prevents treating i18n as labels-only and keeps technical telemetry stable in English | R01 bridge, web/api/agents child planning, tests | 2026-07-21 |
 
 ---
 

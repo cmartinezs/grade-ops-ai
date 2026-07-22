@@ -12,9 +12,17 @@ La Plataforma de Agentes se trata como capacidad transversal: no se implementa c
 
 La orquestacion API-Agent sigue la misma regla: no se crea una release tecnica separada para robustecer `api/`. Cada release funcional debe incorporar el incremento necesario para que `api/` sea el intermediario durable entre `web/` y `agents/`, con endpoints REST de intencion, estados consultables, idempotencia, evidencia y un gate de madurez Richardson para toda tarea que defina endpoints o rutas.
 
+La UI tambien debe cerrar el acceso funcional, no solo la pantalla destino. Toda funcionalidad web debe nacer desde una accion visible de usuario; una ruta que solo funciona al escribir la URL no cuenta como flujo entregado. En R01, esto aplica directamente al boton "Nueva evaluacion" de `/dashboard`, que debe llevar a `/assessments/new`.
+
+La UI ademas debe partir desde el Design System y desde la semantica real de los datos. Wireframes y mockups no sustituyen el diseno previo DS ni la matriz de campos. Cada release que toque `web/` debe distinguir texto libre, texto restringido, enums, datos maestros, seleccion simple/multiple, numeros, booleanos, fechas, datos read-only/provenance y outputs generados editables. Los datos de lectura/escritura deben estar alineados con `api/`; si `api/` no existe para un dato o accion, se debe implementar o registrar residual bloqueante. Toda accion debe acordar si opera sync o async y, si es async, como la UI conoce completion/progress/failure.
+
+i18n tambien se incorpora por release funcional. El codigo fuente y los contratos tecnicos se mantienen en ingles, igual que logs, metricas, traces, event names y error codes. En cambio, todo lo que enfrenta a docentes, estudiantes u operadores debe respetar locale: copy de UI, safe messages, labels de catalogos, emails, exports, reports y salidas GenAI. `web` debe indicar el idioma efectivo, `api` debe resolver/preferir/persistir locale cuando impacta contenido, y `agents` debe generar outputs en el `outputLocale` solicitado sin localizar telemetria.
+
 La seguridad y autorizacion siguen la misma regla: no se crea una release tecnica separada de hardening. Cada release funcional debe incorporar el incremento de roles, permissions, ownership, service-to-service, rutas web, signed links, headers, secretos, exports, topologia multiambiente y pruebas negativas que corresponda al valor entregado.
 
 La observabilidad y telemetria siguen la misma regla: no se crea una release tecnica aislada de logging o dashboard. Cada release funcional debe incorporar las trazas, logs, metricas, eventos canonicos, evidencia durable, alertas y adaptadores multiambiente necesarios para explicar el valor entregado y operar el flujo.
+
+Testing y quality gates siguen la misma regla: no se crea una release tecnica aislada de testkit o CI. Cada release funcional debe incorporar las unitarias/componentes, aceptacion aislada, contratos, integracion Compose, smoke post-deploy, Sonar y JMeter que corresponden al riesgo y valor que entrega.
 
 ## Estado documental
 
@@ -25,6 +33,9 @@ La observabilidad y telemetria siguen la misma regla: no se crea una release tec
 - La estrategia API-Agent Orchestration fija que `api/` es la unica interfaz de `web/`, que `agents/` no persiste dominio y que los endpoints/rutas nuevos se revisan contra madurez REST.
 - La estrategia Security & Authorization fija que `api/` conserva RBAC/ownership/dominio, `agents/` protege capacidades service-to-service, `web/` representa capacidades sin autorizar recursos y `demo`/`beta` deben aislar identidad, datos, secretos y config.
 - La estrategia Observability & Telemetry fija que `web`, `api`, `agents` e `infra` emiten senales portables con OpenTelemetry, W3C Trace Context, eventos canonicos y adaptadores por ambiente.
+- La estrategia Testing & Quality Gates fija que cada release declare gates de PR, beta y demo, sin usar Firebase/GenAI reales en suites hermeticas y con artefactos normalizados para evidencia futura.
+- La estrategia UI Design/Data Semantics fija que toda implementacion `web/` tenga diseno previo DS, matriz de campos, contratos `api/` para lectura/escritura, definicion sync/async por accion y controles acordes a fuente de verdad, restricciones, enums y datos maestros.
+- La estrategia i18n fija que source code/contratos tecnicos/logs/telemetria permanecen en ingles, mientras UI, safe messages, catalogos, exports, reports y outputs GenAI usan locale explicito de usuario.
 - Fase 05 documento R01-R06 y Fase 06 valido el plan con resultado `PASS WITH CONDITIONS`.
 - Los documentos con mayor drift pendiente son `CLAUDE.md`, `09-developer-guide/`, `05-evidence/agent-logs.md`, los cortes P0 de `02-product/user-stories*.md` y la narrativa/pricing de validacion MVP.
 
@@ -41,6 +52,9 @@ La observabilidad y telemetria siguen la misma regla: no se crea una release tec
 | D-07 | Pendiente | R06 debe reconciliar pricing antes del paquete final de validacion. |
 | D-SEC | Aceptada | Seguridad se implementa dentro de cada release funcional con gates de permisos, ownership, service-to-service, datos sensibles, topologia multiambiente y pruebas negativas. |
 | D-OBS | Aceptada | Observabilidad se implementa dentro de cada release funcional con trazas, logs, metricas, eventos canonicos, evidencia durable y adaptadores multiambiente. |
+| D-TEST | Aceptada | Testing y quality gates se implementan dentro de cada release funcional con capas deterministas, contratos, Compose, smoke, Sonar/JMeter y artefactos normalizados. |
+| D-UI | Aceptada | UI Design/Data Semantics se implementa dentro de cada release funcional que toque `web/`, con diseno DS previo, matriz de campos, API I/O contract, sync/async contract y tratamiento correcto de datos maestros/restringidos. |
+| D-I18N | Aceptada | i18n se implementa dentro de cada release funcional: codigo/contratos tecnicos/logs en ingles, superficies user-facing y salidas GenAI con locale explicito. |
 
 ## Objetivos estrategicos
 
@@ -104,7 +118,7 @@ El plan no recomienda autonomia pedagogica durante el MVP. El nivel objetivo par
 
 | Release | Incremento de API robusta | Valor funcional |
 |---|---|---|
-| R01 | `AiOperation`/`AgentRun`/`AgentAttempt` minimos, `Idempotency-Key`, provider/model efectivo, errores enriquecidos y consulta de operacion para assessment generation/regeneration | El primer flujo IA deja evidencia durable y puede ser retomado/reintentado sin doble costo |
+| R01 | `AiOperation`/`AgentRun`/`AgentAttempt` minimos, `Idempotency-Key`, provider/model efectivo, errores enriquecidos, consulta de operacion para assessment generation/regeneration y acceso UI desde dashboard hacia intake | El primer flujo IA deja evidencia durable y puede ser retomado/reintentado sin doble costo ni ruta URL-only |
 | R02 | Contratos REST de intencion para rubric/grading/feedback, registry liviano y contract tests API-Agents/API-Web | Primer ciclo Open usa agentes sin que `web/` orqueste prompts o providers |
 | R03 | Handoffs tipados y herramientas read-only/agregadas detras de endpoints funcionales de reportes/gaps/recovery | Reportes de impacto se basan en hechos persistidos y no en inferencias opacas |
 | R04 | Endpoints de question bank/snapshot con tool loop controlado y validators; snapshot/scoring quedan en API | Closed authoring usa IA supervisada sin entregar grading deterministico al modelo |
@@ -132,6 +146,39 @@ El plan no recomienda autonomia pedagogica durante el MVP. El nivel objetivo par
 | R04 | Question generation/review/assembly trazados, validadores medidos, snapshot auditado y costo por batch/pregunta | Closed authoring operable con calidad y costo visibles |
 | R05 | Attempts, signed links, scoring e item analytics con propagacion asincrona, queue delay, heartbeat, retry y deteccion de estancamiento | Student flow y analytics observables sin duplicar ejecuciones |
 | R06 | Dashboard Operator via APIs/agregados, SLI/SLO baseline, alertas, runbooks, exports, readiness y comparacion `demo`/`beta` | Operacion y evidencia comparables entre ambientes |
+
+## Testing & Quality Gates
+
+| Release | Incremento de testing | Valor funcional |
+|---|---|---|
+| R01 | Baseline unit/component/coverage, contratos Assessment Web-API/API-Agents, aceptacion aislada, dashboard action -> `/assessments/new` y Compose minimo `web -> api -> agents` | Primer flujo IA no depende de smoke manual, mocks no gobernados ni URL-only access |
+| R02 | Contratos rubric/grading/feedback, acceptance por artefacto, Compose Open full-chain y JMeter smoke de rutas criticas | Primer graded submission probado en capas sin usar GenAI real como oraculo |
+| R03 | Tests de agregacion/reportes/estimates, contratos report/gap/recovery y baseline performance de agregaciones | Impacto Open verificable con datos sinteticos y performance medible |
+| R04 | Golden files, JSON Schema, GenAI mock adversarial, Compose Closed authoring y `ai-eval` separado | Closed authoring confiable sin suites masivas contra modelos reales |
+| R05 | Playwright student-link flow, tests negativos token/replay/tamper, deterministic grading y JMeter smoke allowlisted | Student access sin cuenta probado contra privacidad, integridad y capacidad minima |
+| R06 | Smoke beta/demo, proof de digest, Sonar/JMeter summaries, export leakage tests y artefactos `summary.json`/`run-manifest.json` | Evidencia de calidad y promocion lista para validacion MVP |
+
+## UI Design/Data Semantics
+
+| Release | Incremento UI/data requerido | Valor funcional |
+|---|---|---|
+| R01 | Intake desde DS, matriz de campos para `learningGoal`, `topic`, `level`, `duration`, `language`, deteccion de datos maestros/catalogos y correccion del caso all-text-input de `/assessments/new` | El primer brief docente captura datos validos, reutilizables por `api/` y agentes |
+| R02 | Rubric/submission/feedback usan controles por tipo: scores, pesos, archivos, estados, flags y feedback editable con validacion acorde al dominio | Primer graded submission no degrada datos pedagogicos ni archivos a texto ambiguo |
+| R03 | Reportes/gaps/recovery separan hechos, estimaciones, filtros, severidad y estados reviewable con controles/badges coherentes | Reporte de impacto legible, seguro y accionable |
+| R04 | Question bank usa catalogos de subject/topic/outcome/type/difficulty/status y controles de composition/snapshot | Closed authoring puede filtrar, componer y publicar sin metadata libre inconsistente |
+| R05 | Student/teacher flows usan controles para learner list, links, attempts, answers, result visibility y analytics sin exponer tokens ni estados editables indebidos | Acceso estudiante sin cuenta mantiene integridad y seguridad |
+| R06 | Dashboards/exports/readiness usan datos read-only/provenance, filtros controlados, ledgers y estados operacionales con fuente y freshness visible | Evidencia de negocio operable sin cifras ambiguas ni inputs libres donde hay ledger |
+
+## i18n
+
+| Release | Incremento i18n requerido | Valor funcional |
+|---|---|---|
+| R01 | Locale efectivo, scaffold i18n web, safe messages/catalog labels para intake/draft y `outputLocale` para assessment generation/regeneration | Primer flujo IA usable en idioma de usuario sin contaminar codigo/logs |
+| R02 | Rubric/grading/feedback con UI localizada y feedback student-facing en locale solicitado | Primera entrega pedagogica no mezcla idioma de interfaz, feedback y evidencia tecnica |
+| R03 | Reportes, gaps, recovery y exports user-facing localizados, con evidencia tecnica estable en ingles | Impacto docente legible en el idioma de trabajo |
+| R04 | Question bank y question generation con `outputLocale`, catalogos curriculares localizados y validators de idioma | Closed authoring produce preguntas revisables en el idioma correcto |
+| R05 | Student links, attempts, resultados e item analytics con locale de estudiante/docente | Acceso sin cuenta funciona para audiencias con idioma distinto |
+| R06 | Operator/evidence UI localizable y exports publicables localizados; telemetria/audit tecnico en ingles | Paquete de evidencia entendible sin perder auditabilidad tecnica |
 
 ## Priorizacion
 
@@ -210,6 +257,8 @@ La secuencia prioriza:
 | Historias NOT READY | Ejecutar enriquecimiento antes de atomizar cada release. |
 | Operator sin acceso definido | Incluir US-PROPUESTA-01 en R06. |
 | Cost model Gemini-only | Resolver D-04 y registrar provider/model dinamico. |
+| UI basada en inputs libres | Aplicar UI Design/Data Semantics antes de wireframe/mockup y crear catalogos/API/residuales para datos maestros o restringidos. |
+| i18n tratado como solo labels de UI | Aplicar i18n strategy a Web-API-Agents, safe errors, catalogos, GenAI output, exports, reports y tests; mantener logs/telemetria en ingles. |
 
 ## Metricas y evidencias
 
@@ -230,6 +279,11 @@ Ejecutar **R01 — Assessment Creation + Evidence Backbone** usando `docs/master
 
 | Fecha | Cambio | Motivo | Elementos afectados | Decision asociada |
 |---|---|---|---|---|
+| 2026-07-21 | Incorporacion de i18n por release funcional | Alinear UI, API, agents, GenAI output y evidencia user-facing con locale explicito sin traducir codigo/logs/telemetria | Resumen, estado documental, decisiones, tabla transversal | D-I18N-01..D-I18N-10 |
+| 2026-07-21 | Incorporacion de API I/O y sync/async contract | Alinear UI con `api/` para datos de lectura/escritura y completion model de flujos asincronos | Resumen, estado documental, decisiones | D-UI-01..D-UI-08, D-API-01..D-API-10 |
+| 2026-07-21 | Incorporacion de UI Design/Data Semantics | Alinear implementaciones web con Design System, fuentes de verdad, restricciones y datos maestros | Resumen, estado documental, decisiones, tabla transversal | D-UI-01..D-UI-08 |
+| 2026-07-21 | Incorporacion de UI Action Reachability | Asegurar que funcionalidades web nazcan desde acciones visibles y que R01 conecte `/dashboard` con `/assessments/new` | Resumen, API-Agent Orchestration, Testing & Quality Gates | D-API-01..D-API-10, D-TEST-01..D-TEST-09 |
+| 2026-07-21 | Incorporacion de Testing & Quality Gates | Alinear el Master Plan con testing por release funcional desde `docs/.prompting/master-plan-testing-strategy/` | Resumen, estado documental, Testing & Quality Gates | D-TEST-01..D-TEST-09 |
 | 2026-07-21 | Aplicacion de fit review del planning plugin | Reconciliar D-01 como decision resuelta, apuntar R01 al release bridge y dejar claro el gate de evidencia por ambiente | Resumen, decisiones, camino critico, siguiente accion | D-01, D-04, D-06 |
 | 2026-07-21 | Incorporacion de Observability & Telemetry | Alinear el Master Plan con observabilidad por release funcional desde `docs/.prompting/master-plan-observabilioty-and-telemetry/` | Resumen, estado documental, Observability & Telemetry | D-OBS-01..D-OBS-08 |
 | 2026-07-21 | Incorporacion de topologia de seguridad multiambiente | Alinear `demo` GCP y `beta` Vercel-Render-Neon con un contrato comun de seguridad y mecanismos distintos | Resumen, estado documental, Security & Authorization | D-SEC-01..D-SEC-08 |

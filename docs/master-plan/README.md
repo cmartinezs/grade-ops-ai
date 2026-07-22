@@ -17,6 +17,9 @@ Incluye:
 - estrategia API-Agent Orchestration;
 - estrategia transversal de seguridad;
 - estrategia transversal de observabilidad y telemetria;
+- estrategia transversal de testing y quality gates;
+- estrategia transversal de UI Design System y semantica de datos;
+- estrategia transversal de i18n;
 - estrategia ejecutiva de releases;
 - resumen ejecutivo;
 - documentos detallados de releases R01-R06;
@@ -43,6 +46,9 @@ Incluye:
 - `API-Agent Orchestration` es una capacidad transversal: se incorpora en las releases funcionales como reglas de API, dominio, agents y web, no como una release tecnica separada.
 - `Security & Authorization` es una capacidad transversal: se implementa por release funcional con controles de `api/`, `agents/`, `web/`, `infra/` y topologia multiambiente, no como una release tecnica separada.
 - `Observability & Telemetry` es una capacidad transversal: se implementa por release funcional con trazas, logs, metricas, eventos canonicos, evidencia durable y adaptadores multiambiente, no como una release tecnica separada.
+- `Testing & Quality Gates` es una capacidad transversal: se implementa por release funcional con unit/component, acceptance, contract, Compose, smoke, Sonar y JMeter segun impacto, no como una release tecnica separada.
+- `UI Design/Data Semantics` es una capacidad transversal: toda implementacion de `web/` debe partir de un diseno basado en `web/design-system/`, clasificar la naturaleza de cada dato, alinear lectura/escritura con `api/`, definir sync/async por accion y usar controles coherentes con fuentes de verdad, restricciones, enums y datos maestros.
+- `i18n` es una capacidad transversal: codigo fuente, contratos tecnicos, logs y telemetria permanecen en ingles; toda superficie user-facing debe usar locale explicito, traducciones, catalog labels, errores seguros y salidas GenAI alineadas al idioma del usuario.
 - Los documentos de analisis son fuente de contexto; los archivos de release R01-R06 son la fuente operativa por release.
 
 ## Orden de lectura
@@ -56,9 +62,12 @@ Incluye:
 7. [Estrategia API-Agent Orchestration](analysis/api-agent-orchestration-strategy.md)
 8. [Estrategia transversal de seguridad](analysis/security-strategy.md)
 9. [Estrategia transversal de observabilidad y telemetria](analysis/observability-strategy.md)
-10. [Estrategia de releases](analysis/release-strategy.md)
-11. [Master Plan Ejecutivo](master-plan-executive.md)
-12. [Reporte de validacion](validation-report.md)
+10. [Estrategia transversal de testing y quality gates](analysis/testing-strategy.md)
+11. [Estrategia UI Design System y semantica de datos](analysis/ui-design-data-strategy.md)
+12. [Estrategia transversal de i18n](analysis/i18n-strategy.md)
+13. [Estrategia de releases](analysis/release-strategy.md)
+14. [Master Plan Ejecutivo](master-plan-executive.md)
+15. [Reporte de validacion](validation-report.md)
 
 ## Tabla de releases
 
@@ -80,6 +89,9 @@ Incluye:
 - [Estrategia API-Agent Orchestration](analysis/api-agent-orchestration-strategy.md)
 - [Estrategia transversal de seguridad](analysis/security-strategy.md)
 - [Estrategia transversal de observabilidad y telemetria](analysis/observability-strategy.md)
+- [Estrategia transversal de testing y quality gates](analysis/testing-strategy.md)
+- [Estrategia UI Design System y semantica de datos](analysis/ui-design-data-strategy.md)
+- [Estrategia transversal de i18n](analysis/i18n-strategy.md)
 - [Resumen ejecutivo](master-plan-executive.md)
 - [Reporte de validacion](validation-report.md)
 - [Especificacion maestra](../.prompting/master-plan-prompts/master-plan-specification.md)
@@ -113,11 +125,20 @@ Incluye:
 - Toda release que toque endpoints, rutas, agentes, prompts, providers, secrets, uploads, signed links, exports o datos sensibles debe aplicar la estrategia transversal de seguridad y registrar pruebas negativas.
 - Toda release que afecte despliegue, auth, service-to-service, CORS, secrets, DB, storage o frontend config debe declarar si aplica a `demo`, `beta` o ambos, y probar que no mezcla identidades, datos ni secretos entre ambientes.
 - Toda release que toque journeys criticos, endpoints, agentes, asincronia, providers, dashboards, exports o evidencia debe aplicar la estrategia transversal de observabilidad y registrar trazas, metricas, eventos canonicos y pruebas de redaccion/cardinalidad.
+- Toda release que toque `web/`, `api/`, `agents`, `.github/`, `infra/`, contratos, schemas, migrations, testkit, performance o despliegue debe aplicar la estrategia transversal de testing y declarar gates de PR, beta y demo segun impacto.
+- Toda funcionalidad web debe ser alcanzable desde una accion visible de la UI. No se acepta cerrar una historia si la unica forma de llegar a la pantalla o flujo es escribir la URL directa; la US, tasks UI y pruebas unitarias/acceptance/e2e deben declarar y probar el entry point.
+- Toda implementacion de UI debe tener diseno previo desde el Design System antes de wireframes/mockups, y una matriz de campos que clasifique dato libre, restringido, enum, catalogo maestro, numero, booleano, fecha, read-only o generated editable. Todos los datos de lectura/escritura deben estar alineados con `api/`; si falta endpoint/read model/catalogo/mutation, se debe crear scope `api/`/DB/infra o residual bloqueante. Toda accion debe declarar sync/async y, si es async, su completion model: polling, SSE, WebSocket, webhook server-to-server, push/notification u otro mecanismo explicito.
+- Toda release con texto visible, catalogos, errores seguros, emails, reports, exports o contenido GenAI debe aplicar la estrategia i18n. El codigo fuente, field names, enum/error/event/metric/span codes, logs y telemetria siguen en ingles; `web` no hardcodea copy user-facing; `api` resuelve locale y fallback; `agents` recibe `outputLocale`/`contentLocale` cuando genere contenido visible; pruebas verifican traducciones, fallback, contratos de locale y que observabilidad no se localiza.
 
 ## Historial de cambios
 
 | Fecha | Cambio | Motivo | Elementos afectados | Decision asociada |
 |---|---|---|---|---|
+| 2026-07-21 | Incorporacion de i18n por release funcional | Exigir locale explicito para superficies user-facing y mantener codigo/telemetria en ingles | README, analysis/i18n-strategy.md, R01-R06, tasks UI/API/Agents | D-I18N-01..D-I18N-10 |
+| 2026-07-21 | Incorporacion de UI Design/Data Semantics | Exigir diseno DS previo, matriz de campos y tratamiento de datos maestros/restringidos en toda implementacion web | README, analysis/ui-design-data-strategy.md, R01, US/tasks UI | D-UI-01..D-UI-08 |
+| 2026-07-21 | Incorporacion de API I/O y sync/async contract | Exigir que datos de pantalla esten alineados con `api/` y que async tenga completion model explicito | README, API-Agent, testing, R01, tasks UI | D-UI-01..D-UI-08, D-API-01..D-API-10 |
+| 2026-07-21 | Incorporacion de UI Action Reachability | Exigir que toda funcionalidad web sea accesible desde botones, enlaces, menus o acciones visibles y no solo por URL directa | README, API-Agent, testing, R01, US/tasks UI | D-API-01..D-API-10, D-TEST-01..D-TEST-09 |
+| 2026-07-21 | Incorporacion de Testing & Quality Gates | Hacer obligatorios los gates de testing por release funcional, incluyendo unit/component, acceptance, contract, Compose, smoke, Sonar y JMeter | README, analysis/testing-strategy.md, releases | D-TEST-01..D-TEST-09 |
 | 2026-07-21 | Incorporacion de Observability & Telemetry | Hacer obligatorios los controles de observabilidad por release funcional, sin crear release tecnica transversal | README, analysis/observability-strategy.md, releases | D-OBS-01..D-OBS-08 |
 | 2026-07-21 | Incorporacion de topologia de seguridad multiambiente | Separar el contrato comun de seguridad de los mecanismos concretos de `demo` y `beta` | README, analysis/security-strategy.md, releases | D-SEC-01..D-SEC-08 |
 | 2026-07-21 | Incorporacion de Security & Authorization | Hacer obligatorios los controles de seguridad por release funcional, sin crear release tecnica transversal | README, analysis/security-strategy.md, releases | D-SEC-01..D-SEC-08 |

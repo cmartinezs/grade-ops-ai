@@ -15,6 +15,7 @@ As a teacher, I want an assessment draft generated from my brief so I can start 
 - [ ] Output is editable.
 - [ ] Agent execution is logged.
 - [ ] Model and cost estimate are stored.
+- [ ] Generated draft uses the requested `outputLocale` for user-facing text while technical contracts/logs stay in English.
 
 ---
 
@@ -27,7 +28,9 @@ As a teacher, I want an assessment draft generated from my brief so I can start 
 - [ ] Agent output is validated against the expected structured-output schema before being persisted or shown to the teacher.
 - [ ] Draft is persisted in `api/` and retrievable after a page refresh.
 - [ ] Draft is rendered in an editable UI in `web/`, allowing the teacher to modify any field before proceeding to rubric generation.
+- [ ] `api/` passes explicit `outputLocale`/`contentLocale` to `agents/` for generated user-facing draft text; the locale is persisted with the generated artifact or operation.
 - [ ] Every agent execution produces an `AgentExecutionLog` record capturing model name, cost estimate, status, and timestamps.
+- [ ] Logs, traces, metrics, error codes and AgentExecutionLog technical fields remain in English and store locale only as controlled attributes.
 - [ ] Agent invocation happens server-side only — the Gemini API key is never exposed to the frontend.
 
 ## Technical Notes
@@ -38,6 +41,7 @@ As a teacher, I want an assessment draft generated from my brief so I can start 
 - `agents/`: Assessment Agent follows the fixed pipeline pattern (validate command → load data → build envelope → call Gemini → validate structured output → log execution → return result). Prompt lives as a versioned `.st` template in `agents/src/main/resources/prompts/`, never inlined in Java.
 - `api/`: Builds `AssessmentCommand` from the persisted brief, calls `agents/` via the `agentclient` module (no other module imports Spring AI directly). Persists the returned draft and the `AgentExecutionLog`.
 - `web/`: Editable draft form (title, context, instructions, objectives, deliverables, constraints); draft remains mutable until the teacher proceeds to rubric generation.
+- `web`/`api`/`agents`: Apply `docs/master-plan/analysis/i18n-strategy.md`. Source code and DTO fields are English; generated title/context/instructions/objectives/deliverables/constraints should be in `outputLocale`; locale mismatch should produce a structured warning.
 
 ## Dependencies
 

@@ -81,6 +81,9 @@ A decision record should explain:
 | [`2026-07-20-api-agent-orchestration.md`](2026-07-20-api-agent-orchestration.md) | `api/` is the public intermediary between `web/` and `agents/`; endpoint tasks require API-Agent orchestration and Richardson REST maturity checks | Accepted |
 | [`2026-07-21-security-authorization-by-release.md`](2026-07-21-security-authorization-by-release.md) | Security and authorization are implemented inside each functional release, not as a separate technical release | Accepted |
 | [`2026-07-21-observability-telemetry-by-release.md`](2026-07-21-observability-telemetry-by-release.md) | Observability and telemetry are implemented inside each functional release, not as a separate technical release | Accepted |
+| [`2026-07-21-testing-quality-by-release.md`](2026-07-21-testing-quality-by-release.md) | Testing and quality gates are implemented inside each functional release, not as a separate technical release | Accepted |
+| [`2026-07-21-ui-design-data-semantics.md`](2026-07-21-ui-design-data-semantics.md) | UI work starts from the Design System, field data semantics, API I/O alignment and explicit sync/async contracts | Accepted |
+| [`2026-07-21-i18n-by-release.md`](2026-07-21-i18n-by-release.md) | i18n is implemented inside each functional release while source code, technical contracts, logs and telemetry remain in English | Accepted |
 
 ## Current Template
 
