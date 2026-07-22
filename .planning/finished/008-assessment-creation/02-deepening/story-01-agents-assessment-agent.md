@@ -1,6 +1,6 @@
 # 🔍 DEEPENING: Story 01 — agents-assessment-agent-coordination
 
-> **Status:** IN PROGRESS
+> **Status:** DONE
 > [← 01-expansion.md](../01-expansion.md) | [← planning/README.md](../../README.md)
 
 ---
@@ -21,15 +21,15 @@ The full implementation detail (contract, prompt, pipeline, tasks, Done Criteria
 |---|-----------|--------|
 | 1 | `agents/.planning/001-assessment-creation` reaches EXPANSION/DEEPENING with a defined `AssessmentCommand`/`AssessmentResult` contract | ✅ DONE (2026-07-09) — amended 2026-07-10, `AssessmentCommand` gained a `previousDraft` field; see Inconsistencies Found #2 |
 | 2 | Child planning's Story 01 (`assessment-agent`) reaches DONE — internal endpoint is live and testable | ✅ DONE (2026-07-12) — `agents/.planning/active/001-assessment-creation/02-deepening/story-01-assessment-agent.md` Status: DONE, all 5 tasks DONE, all Done Criteria checked. One residual carried forward on the child's side (live-Gemini success path unproven, see Inconsistencies Found #3 below), not blocking. |
-| 3 | Contract shape confirmed stable enough for `api/.planning/003-assessment-creation` to integration-test against it | TODO — `api/.planning/active/003-assessment-creation` is still status EXPANSION, story-01 `assessment-creation-persistence` still TODO; no `agentclient` integration attempted yet, so endpoint reachability from `api/` is unverified |
+| 3 | Contract shape confirmed stable enough for `api/.planning/003-assessment-creation` to integration-test against it | ✅ DONE (2026-07-22) — `api/.planning/finished/003-assessment-creation` reached DONE 2026-07-14 (11/11 tasks, PR #44 merged), and real `api/`↔`agents/` network reachability (not just code-level integration) was independently proven by this planning's Story 04 (DONE) via a real docker-compose run and Render `beta` post-deploy smoke check, neither relying on mocks |
 
 ---
 
 ## Done Criteria
 
 - [x] `agents/.planning/active/001-assessment-creation` reports its story `assessment-agent` as DONE. (2026-07-12)
-- [ ] The internal agent endpoint is reachable from `api/` in the target environment. — blocked on `api/`'s child planning starting story-01 (currently TODO).
-- [ ] This coordination story's status here is updated to DONE only after the child planning confirms completion — do not mark this DONE independently.
+- [x] The internal agent endpoint is reachable from `api/` in the target environment. (2026-07-22) — proven by Story 04's real docker-compose run and Render `beta` post-deploy smoke check, neither relying on mocks.
+- [x] This coordination story's status here is updated to DONE only after the child planning confirms completion — do not mark this DONE independently. (2026-07-22 — child planning `agents/.planning/active/001-assessment-creation` story-01 confirmed DONE 2026-07-12; this checkpoint closed once `api/`↔`agents/` reachability was independently proven by Story 04.)
 
 ---
 

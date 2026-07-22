@@ -84,6 +84,7 @@ A decision record should explain:
 | [`2026-07-21-testing-quality-by-release.md`](2026-07-21-testing-quality-by-release.md) | Testing and quality gates are implemented inside each functional release, not as a separate technical release | Accepted |
 | [`2026-07-21-ui-design-data-semantics.md`](2026-07-21-ui-design-data-semantics.md) | UI work starts from the Design System, field data semantics, API I/O alignment and explicit sync/async contracts | Accepted |
 | [`2026-07-21-i18n-by-release.md`](2026-07-21-i18n-by-release.md) | i18n is implemented inside each functional release while source code, technical contracts, logs and telemetry remain in English | Accepted |
+| [`2026-07-22-master-plan-entry-decision.md`](2026-07-22-master-plan-entry-decision.md) | Pre-master-plan cleanup closes `008-assessment-creation` and `web/001-assessment-creation` — GO, no blocking conditions (initial CONDITIONAL GO condition retracted after verifying it was already fixed) | Accepted |
 
 ## Current Template
 

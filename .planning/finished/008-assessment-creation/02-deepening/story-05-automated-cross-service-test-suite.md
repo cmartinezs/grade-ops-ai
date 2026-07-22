@@ -1,6 +1,7 @@
 # 🔍 DEEPENING: Story 05 — automated-cross-service-test-suite
 
-> **Status:** TODO
+> **Status:** SKIPPED
+> **Skipped reason:** Never atomized — no `02-deepening/story-05-automated-cross-service-test-suite/` task folder was ever created, despite the task table below linking to 4 files that don't exist on disk. Story 04 already proves the critical cross-service reachability gap this story was seeded from (real docker-compose run + Render `beta` post-deploy smoke, neither relying on mocks). A durable, re-runnable cross-service Playwright suite (this story's actual goal) remains valuable but is deferred as Master Plan input — `docs/master-plan/analysis/testing-strategy.md` already covers this ground — rather than kept as open debt of planning 008. (2026-07-22)
 > [← 01-expansion.md](../01-expansion.md) | [← planning/README.md](../../README.md)
 
 ---
@@ -37,22 +38,26 @@ Browser, HTTP and direct service tests must cover i18n where the flow exposes us
 
 ## Tasks
 
+*Never atomized — no task files exist under `story-05-automated-cross-service-test-suite/`. Kept as plain text (not links) for scope reference by the Master Plan follow-up, not as an open task list.*
+
 | # | Task | Workflow | Status | Output |
 |---|------|----------|--------|--------|
-| 1 | [Scaffold root-level Playwright e2e project](story-05-automated-cross-service-test-suite/task-01-scaffold-playwright-project.md) | GENERATE-DOCUMENT | TODO | Root-level `e2e/` project (Playwright Test) configured to run against the docker-compose stack — one tool for both direct HTTP calls and real browser automation |
-| 2 | [Direct HTTP tests against agents/ and api/](story-05-automated-cross-service-test-suite/task-02-direct-http-tests-agents-api.md) | GENERATE-DOCUMENT | TODO | First direct-HTTP regression case (brief→generate flow) hitting `agents/` and `api/`'s real endpoints, bypassing any UI, run against the compose stack |
-| 3 | [Browser-driven web UI test](story-05-automated-cross-service-test-suite/task-03-browser-driven-web-ui-test.md) | GENERATE-DOCUMENT | TODO | Playwright browser test exercising the real `web/` UI end-to-end from visible UI actions, semantic DS controls, API I/O evidence, sync/async completion and i18n; assessment creation extension must start dashboard -> "Nueva evaluacion" -> `/assessments/new` |
-| 4 | [Wire e2e suite into CI](story-05-automated-cross-service-test-suite/task-04-wire-e2e-suite-into-ci.md) | GENERATE-DOCUMENT | TODO | GitHub Actions workflow running the e2e suite automatically on PRs touching `agents/`, `api/`, `web/`, or `compose.yml` |
+| 1 | Scaffold root-level Playwright e2e project | GENERATE-DOCUMENT | SKIPPED | Root-level `e2e/` project (Playwright Test) configured to run against the docker-compose stack — one tool for both direct HTTP calls and real browser automation |
+| 2 | Direct HTTP tests against agents/ and api/ | GENERATE-DOCUMENT | SKIPPED | First direct-HTTP regression case (brief→generate flow) hitting `agents/` and `api/`'s real endpoints, bypassing any UI, run against the compose stack |
+| 3 | Browser-driven web UI test | GENERATE-DOCUMENT | SKIPPED | Playwright browser test exercising the real `web/` UI end-to-end from visible UI actions, semantic DS controls, API I/O evidence, sync/async completion and i18n; assessment creation extension must start dashboard -> "Nueva evaluacion" -> `/assessments/new` |
+| 4 | Wire e2e suite into CI | GENERATE-DOCUMENT | SKIPPED | GitHub Actions workflow running the e2e suite automatically on PRs touching `agents/`, `api/`, `web/`, or `compose.yml` |
 
 ---
 
 ## Test Suite
 
-- [ ] Story-level test suite is generated or refreshed with `/plan-test-suite`.
+- [ ] ~~Story-level test suite is generated or refreshed with `/plan-test-suite`.~~ N/A — story SKIPPED before atomization.
 
 ---
 
 ## Done Criteria
+
+*Not pursued — story SKIPPED before atomization. Kept as scope reference for the Master Plan follow-up.*
 
 - [ ] Root-level e2e test project runs locally against the docker-compose stack with a single command
 - [ ] At least one direct HTTP test each for agents/ and api/ passes against real running services, not mocks
@@ -63,6 +68,16 @@ Browser, HTTP and direct service tests must cover i18n where the flow exposes us
 - [ ] Browser, HTTP and service test pattern documents i18n: locale/fallback, translation keys or labels, safe errors/catalog labels, `outputLocale`, and logs/telemetry in English
 - [ ] CI runs the suite automatically on relevant PRs
 - [ ] TRACEABILITY.md updated with new terms from this story
+
+---
+
+## Residuals
+
+*Tasks or issues deferred to a future planning.*
+
+| # | Description | Deferred To | Status |
+|---|-------------|------------|--------|
+| 1 | Durable, re-runnable cross-service Playwright suite (HTTP + browser, wired into CI) as originally scoped by this story. | Master Plan (`docs/master-plan/analysis/testing-strategy.md` already covers this ground) | Open |
 
 ---
 
