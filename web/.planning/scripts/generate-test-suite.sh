@@ -505,6 +505,20 @@ $maven_acceptance
 
 ---
 
+## Execution Evidence Required
+
+For every applicable generated, detected, or manually supplied gate, record the full execution evidence in the task file or a linked Markdown artifact before using it as proof.
+
+| Type | Source | Command | Parameters / profile / env | Environment | Config / scripts | Output log / report | Result |
+|------|--------|---------|----------------------------|-------------|------------------|---------------------|--------|
+| unit | generated / detected / manual | Exact command that ran | Test selector, profile, env vars | Local, CI, container, Testcontainers, or other runtime | package script, pom/profile, compose file, config file, helper script | Concise output excerpt, report path, CI URL, or log artifact | pass/fail/skipped + reason |
+| integration | generated / detected / manual | Exact command that ran | Test selector, profile, env vars, ports | Real adapters, DB, queues, HTTP fakes, files, generated clients | Testcontainers, Docker Compose, fixture scripts, config files | Concise output excerpt, report path, CI URL, or log artifact | pass/fail/skipped + reason |
+| acceptance/e2e | generated / detected / manual | Exact command that ran | Acceptance profile, browser/device, endpoint, env vars | Isolated artifact boot, browser runner, Docker Compose, Testcontainers, local fakes | Failsafe/Cucumber/Playwright config, WireMock/MockServer, env files | Concise output excerpt, report path, CI URL, or log artifact | pass/fail/skipped + reason |
+| smoke | generated / detected / manual | Exact command or check that ran | Runtime profile, URL/port, env vars | Local app/service/worker plus required dependencies | .planning/SMOKE-TESTS.md, start script, compose file | Startup/check log, response excerpt, report path, or CI URL | pass/fail/skipped + reason |
+| static/style/architecture/security/mutation | generated / detected / manual | Exact command or checklist used | Rule set, profile, threshold, env vars | Local or CI | Linter/typechecker/scanner/config/guide file | Concise output excerpt, report path, CI URL, or reviewed artifact | pass/fail/skipped + reason |
+
+---
+
 ## Gaps To Fill Manually
 
 - [ ] Confirm commands are correct for this repository and adjust placeholders.
@@ -512,6 +526,7 @@ $maven_acceptance
 - [ ] Complete the acceptance dependency inventory: every internal module, database, broker, HTTP service, storage dependency, credential, port, seed dataset, readiness check, and teardown action must have a concrete acceptance strategy.
 - [ ] Link code-style or architecture guide files that govern this scope.
 - [ ] Decide which optional gates are required for this task/story based on risk.
+- [ ] Record execution evidence metadata for each applicable generated, detected, or manual test gate: type, command, parameters, environment, configuration/scripts, output log or report, and result.
 EOF
 
   rm -rf "$tmpdir"

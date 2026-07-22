@@ -191,6 +191,7 @@ function ResetPasswordForm() {
                   label="Correo electrónico"
                   htmlFor="email"
                   helper="Ingresa el correo con el que te registraste. Lo usamos para verificar que el enlace te corresponde."
+                  error={errors.email?.message}
                 >
                   <Input
                     id="email"
@@ -206,6 +207,7 @@ function ResetPasswordForm() {
                   label="Nueva contraseña"
                   htmlFor="password"
                   helper="Elige una contraseña de al menos 6 caracteres."
+                  error={errors.password?.message}
                   style={{ marginTop: 14 }}
                 >
                   <Input
@@ -223,6 +225,7 @@ function ResetPasswordForm() {
                   label="Confirmar contraseña"
                   htmlFor="confirmPassword"
                   helper="Ingresa la misma contraseña nuevamente."
+                  error={errors.confirmPassword?.message}
                   style={{ marginTop: 14 }}
                 >
                   <Input
@@ -303,7 +306,7 @@ function ResetPasswordForm() {
               letterSpacing: "-0.01em",
             }}
           >
-            "Corrijo una prueba de 32 alumnos en lo que antes me tomaba una tarde entera."
+            &quot;Corrijo una prueba de 32 alumnos en lo que antes me tomaba una tarde entera.&quot;
           </p>
           <div style={{ fontSize: "var(--text-md)", lineHeight: 1.5 }}>
             <div style={{ fontWeight: 700 }}>Rodrigo Salinas</div>

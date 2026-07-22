@@ -1,0 +1,30 @@
+# Local Docker smoke-test profile — real Postgres, real Spring Security filter chain,
+# Firebase Auth mocked via emulator (see smoke/README.md). Never used in demo/beta/production.
+firebase:
+  credentials-path: smoke/fake-service-account.json
+
+app:
+  cors:
+    allowed-origins: http://localhost:3000
+  internal:
+    secret: smoke-test-internal-secret
+  auth:
+    reset-code-retention-days: 1
+
+spring:
+  docker:
+    compose:
+      enabled: false
+  mail:
+    host: sandbox.smtp.mailtrap.io
+    port: 587
+    username: ${SMTP_USERNAME:}
+    password: ${SMTP_PASSWORD:}
+
+gradeops:
+  web:
+    base-url: http://localhost:3000
+  email:
+    from-address: noreply@gradeops.local
+    from-name: GradeOps AI (smoke)
+    support-email: dev@gradeops.local

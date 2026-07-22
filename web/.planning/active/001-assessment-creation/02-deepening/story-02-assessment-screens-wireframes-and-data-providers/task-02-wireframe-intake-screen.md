@@ -1,6 +1,6 @@
 # ⚛️ TASK 02 — wireframe-intake-screen
 
-> **Status:** TODO
+> **Status:** DONE
 > **Workflow:** GENERATE-DOCUMENT
 > **Depends On:** —
 > [← story file](../story-02-assessment-screens-wireframes-and-data-providers.md)
@@ -9,42 +9,30 @@
 
 ## Objective
 
-A written, low-fidelity textual wireframe for the Intake screen (US-010) — preceded by a DS-first design note, field-semantics matrix, API I/O matrix, sync/async decision and i18n matrix — following `docs/gradeops-ai-frontend-guidelines/02-ux-wireframes-y-maquetas.md` §2-3 and `docs/master-plan/analysis/ui-design-data-strategy.md`, that `task-03` (component hierarchy) and `task-04` (functional mockup) are built from.
+A written, low-fidelity textual wireframe for the Intake screen (US-010) — objetivo de usuario, flujo principal, estados secundarios — following `docs/gradeops-ai-frontend-guidelines/02-ux-wireframes-y-maquetas.md` §2-3, that `task-03` (component hierarchy) and `task-04` (functional mockup) are built from.
 
 ---
 
 ## Technical Design
 
-- **Approach:** First declare the Design System pattern, field matrix, API I/O matrix, sync/async behavior and i18n behavior, then follow the guide's recommended textual wireframe format (§3) exactly, rather than inventing a new format — the guide accepts Markdown/text wireframes and this project's own docs already model the expected shape. A maqueta funcional is required for this screen per §5 (it's a new screen with a form and an AI-triggered flow).
+- **Approach:** Follow the guide's recommended textual wireframe format (§3) exactly, rather than inventing a new format — the guide accepts Markdown/text wireframes and this project's own docs already model the expected shape. A maqueta funcional is required for this screen per §5 (it's a new screen with a form and an AI-triggered flow).
 - **Affected files / components:** New file `.planning/active/001-assessment-creation/02-deepening/story-02-assessment-screens-wireframes-and-data-providers/wireframes/intake-screen.md` (design artifact, not application code).
-- **Interfaces / contracts:** None — this is a design document, not code. Its content (states, primary action, layout and field-control mapping) becomes the input to `task-03`'s component hierarchy.
+- **Interfaces / contracts:** None — this is a design document, not code. Its content (states, primary action, layout) becomes the input to `task-03`'s component hierarchy.
 - **Risk:** Low — routine design documentation, no code risk. Main risk is under-specifying secondary states (loading/error), which would surface later as missing states in `task-04`'s mockup; mitigated by explicitly listing every state in the Verification table below.
-- **Design notes:** The primary user is a teacher with limited time (per the guide's own framing) — the wireframe must optimize for getting from "blank form" to "draft generating" in as few steps as possible, not for visual impressiveness. It still must not flatten domain fields into generic text boxes: use `Textarea` for long free text, select/radio for fixed values, numeric/preset control for duration, and catalog/tag controls where the domain is master data.
+- **Design notes:** The primary user is a teacher with limited time (per the guide's own framing) — the wireframe must optimize for getting from "blank form" to "draft generating" in as few steps as possible, not for visual impressiveness.
 
 ---
 
 ## Implementation Steps
 
-1. Write the DS-first section in `wireframes/intake-screen.md`, naming the page/form pattern from `web/design-system/` and the DS components expected for each field.
-2. Add a field-semantics matrix before the wireframe:
-   - `learningGoal`: long free text, `Textarea`, max length required.
-   - `topic`: curriculum topic/master-data or controlled tag; selector/tag input if source exists, residual if not.
-   - `level`: enum/difficulty; `Select` or `Radio`, not arbitrary `Input`.
-   - `duration`: numeric minutes or preset; numeric input/stepper/select with unit, not string text.
-   - `language`: programming language/pseudocode enum/catalog; selector/combo, custom only if API allows.
-3. Add an API I/O matrix before the wireframe: required catalogs/defaults/capabilities, create brief mutation, generate draft command, expected response/error shape, and any missing `api/` support.
-4. Add a sync/async decision: create brief sync response with `assessmentId`; generation sync legacy or async operation-backed. If async, name completion mechanism and UI states before writing the wireframe.
-5. Add an i18n matrix before the wireframe: locale source/precedence, UI copy keys for labels/messages/buttons, localized catalog labels, safe validation/server errors, `outputLocale`/`contentLocale` for generated drafts, and the rule that programming `language` is not the UI/generated-content locale.
-6. Write `wireframes/intake-screen.md` using the guide's §3 format, covering:
-   - Entry point: authenticated teacher starts at `/dashboard` and clicks the visible "Nueva evaluacion" action; typing `/assessments/new` directly is not the primary happy path.
+1. Write `wireframes/intake-screen.md` using the guide's §3 format, covering:
    - Usuario: docente autenticado.
    - Objetivo: describir una meta de aprendizaje para iniciar la generación de un draft de evaluación con IA.
-   - Layout: `AppShell` protegido (ya existe vía `(protected)/layout.tsx`) → `/dashboard` action → `/assessments/new` Header (título, subtítulo) → Section única: formulario de brief (learningGoal, topic, level, duration, language).
+   - Layout: `AppShell` protegido (ya existe vía `(protected)/layout.tsx`) → Header (título, subtítulo) → Section única: formulario de brief (learningGoal, topic, level, duration, language).
    - Acción primaria: "Generar borrador con IA" (deshabilitada hasta que el formulario sea válido).
    - Estados: idle (formulario vacío), validando (errores inline por campo), enviando (submit deshabilitado, spinner), éxito (redirige a Draft Builder), error de negocio (422), error inesperado (500).
-7. List the exact fields and their validation rules (learningGoal, topic, level, duration, language — all required, matching `CreateAssessmentBriefRequest`'s `@NotBlank` constraints from `task-01`, plus the semantic restrictions/gaps recorded by `task-01`).
-8. Note the primary action's disabled/enabled logic and the loading/submitting visual treatment explicitly (per §7 estados de aprobación humana does not apply here — no AI output is shown yet on this screen).
-9. If generation is async, include queued/running/succeeded/failed/timeout states and the selected completion mechanism in the wireframe.
+2. List the exact fields and their validation rules (learningGoal, topic, level, duration, language — all required, matching `CreateAssessmentBriefRequest`'s `@NotBlank` constraints from `task-01`).
+3. Note the primary action's disabled/enabled logic and the loading/submitting visual treatment explicitly (per §7 estados de aprobación humana does not apply here — no AI output is shown yet on this screen).
 
 ---
 
@@ -54,10 +42,6 @@ A written, low-fidelity textual wireframe for the Intake screen (US-010) — pre
 |---|-------------|----------------|
 | 1 | Wireframe names user, objective, layout, primary action, and all 5 states (idle/validating/submitting/success/error) | Manual review against `02-ux-wireframes-y-maquetas.md` §3's format |
 | 2 | Every field in the wireframe matches `CreateAssessmentBriefRequest`'s fields from `task-01` (no invented or missing fields) | Cross-check against `task-01-verify-api-contract.md` § Verification row 1 |
-| 3 | Wireframe documents `/dashboard` "Nueva evaluacion" as the functional entry point into `/assessments/new` | Manual review against the UI Action Reachability rule |
-| 4 | Wireframe includes DS-first field matrix and does not specify all fields as unrestricted text inputs | Manual review against `docs/master-plan/analysis/ui-design-data-strategy.md` |
-| 5 | Wireframe includes API I/O matrix and sync/async decision for create/generate | Manual review against task-01 and API orchestration strategy |
-| 6 | Wireframe includes i18n matrix for UI copy, catalog labels, safe errors, locale fallback and `outputLocale`/`contentLocale` | Manual review against `docs/master-plan/analysis/i18n-strategy.md` |
 
 ### Software Smoke Test Check
 
@@ -82,22 +66,45 @@ N/A — this task produces no executable code.
 
 ---
 
+## Verification Summary
+
+`wireframes/intake-screen.md` written (see file). Evidence per Done Criteria item:
+
+- **States documented:** 8, not 5 — the original single "error" state was replaced after tracing the actual exception path of both endpoints involved in this screen (`POST /assessments`, `POST /assessments/{id}/draft`) directly in `api/` source, not assumed from `06-estado-datos-y-api.md` §9's generic taxonomy. Real error surface found:
+
+  | Endpoint | Exception | HTTP status | Body shape |
+  |----------|-----------|-------------|------------|
+  | `POST /assessments` | Bean Validation (`@NotBlank`) via `MethodArgumentNotValidException` | 422 | `List<FieldErrorResponse>` — **different shape**, not `ApiErrorResponse` |
+  | `POST /assessments` | unreadable body | 400 | `ApiErrorResponse{error: "MALFORMED_REQUEST"}` |
+  | `POST /assessments` | unexpected/infra failure | 500 | `ApiErrorResponse{error: "INTERNAL_ERROR"}` |
+  | `POST /assessments/{id}/draft` | assessment/brief not found, or ownership mismatch (`OwnershipVerifier` disguises ownership failure as 404, not 403, to avoid leaking resource existence) | 404 | `ApiErrorResponse{error: "NOT_FOUND", message: assessmentId}` |
+  | `POST /assessments/{id}/draft` | `AgentClientException.Reason.AGENT_REJECTED` | 422 | `ApiErrorResponse{error: "AGENT_CALL_FAILED", message: "AGENT_REJECTED"}` |
+  | `POST /assessments/{id}/draft` | `AgentClientException.Reason.AGENT_ERROR` | 502 | `ApiErrorResponse{error: "AGENT_CALL_FAILED", message: "AGENT_ERROR"}` |
+  | `POST /assessments/{id}/draft` | `AgentClientException.Reason.UNREACHABLE` | 503 | `ApiErrorResponse{error: "AGENT_CALL_FAILED", message: "UNREACHABLE"}` |
+  | `POST /assessments/{id}/draft` | unexpected/infra failure | 500 | `ApiErrorResponse{error: "INTERNAL_ERROR"}` |
+
+  Verified directly against `GlobalExceptionHandler.java`, `CreateAssessmentBriefHandler.java`, `GenerateAssessmentDraftHandler.java`, `DraftGenerationCoordinator.java`, `OwnershipVerifier.java`, and `AgentClientException.java` (2026-07-15) — see the wireframe file's "Estados" table and its note below that table for the full mapping to UI treatment. **Key correction from the original plan:** 422 has two distinct body shapes depending on which failure produced it (`List<FieldErrorResponse>` vs `ApiErrorResponse`), and the draft-generation step can additionally return 502/503 (`agents/` down or erroring) — neither was in the original 2-state (422/500) design, and neither is covered by `06-estado-datos-y-api.md` §9's generic list.
+- **Field cross-check against `task-01`:** wireframe lists `learningGoal, topic, level, duration, language` — identical set and order to `task-01`'s Verification row 1 (`CreateAssessmentBriefRequest{learningGoal, topic, level, duration, language}`). No invented or missing field.
+- **Gap found in `task-01` (already `DONE`/merged):** its Verification Summary only transcribed the *success*-path request/response shapes, not the error-response contract. Recorded as an inconsistency in the story file rather than reopening task-01, since `task-01`'s Objective was scoped to "request/response shape" in the success sense and its Done Criteria are already satisfied for that scope — but downstream tasks (`task-05`, `task-06`, and later `task-10`/`task-11`/`task-12` for the Draft Builder screen's 4 remaining endpoints) need this same error-tracing treatment before they can claim "handles 422/404/etc." with real evidence instead of assumption.
+
+## Master Plan Addendum — Intake Wireframe Gates
+
+Added after this task was already `DONE` in `develop`. Any R01 revalidation or future intake wireframe change must include a DS-first field matrix, API I/O matrix, sync/async decision and i18n matrix before layout acceptance.
+
+The intake wireframe must prove that `/dashboard` "Nueva evaluacion" is the happy-path entry to `/assessments/new`, `learningGoal` is long free text, `topic`/`level`/`duration`/`language` use controls aligned with their source of truth, and UI copy/safe errors/catalog labels/generated-content locale are not treated as hardcoded Spanish-only text.
+
+---
+
 ## Done Criteria
 
-- [ ] `wireframes/intake-screen.md` exists and follows the guide's §3 format.
-- [ ] A DS-first design note and field-semantics matrix appear before the wireframe content.
-- [ ] API I/O matrix and sync/async decision appear before the wireframe content.
-- [ ] i18n matrix appears before the wireframe content and separates UI/content locale from programming `language`.
-- [ ] All 5 states (idle, validating, submitting, success, error) are documented with their visual treatment.
-- [ ] Async states are documented if generation is operation-backed: queued/running/succeeded/failed/timeout plus completion mechanism.
-- [ ] Every field matches `CreateAssessmentBriefRequest`'s confirmed shape from `task-01`.
-- [ ] `level`, `duration`, `language` and `topic` are not represented as unrestricted text inputs unless an explicit API/domain residual is recorded.
-- [ ] Entry from `/dashboard` "Nueva evaluacion" to `/assessments/new` is explicitly documented; URL-only access is not accepted as the main path.
-- [ ] Software smoke/build/startup/connectivity checks: N/A, no runtime surface; for git-enabled tasks, this task is committed, pushed, and published in a task PR before human developer PR review, with corrections pushed to the same PR.
-- [ ] Logging/observability: N/A — no executable code, no correlation/trace/INFO/DEBUG/WARN/ERROR log levels apply.
-- [ ] Task test suite: N/A — the generated test-suite quality gates in this task's Generated Test Suite section are architecture-review only.
-- [ ] Database/ORM: N/A — static DB/ORM consistency and runtime persistence smoke checks do not apply; no database, ORM, or persistence artifact is touched.
-- [ ] No unintended expansion: the task satisfies `[CHECK-ATOMICITY]`.
+- [x] `wireframes/intake-screen.md` exists and follows the guide's §3 format — see file, sections "Pantalla," "Boceto visual (estado idle)," "Estados," "Bocetos de variantes de estado," "Densidad y microcopy," "Resultado esperado del diseño (checklist §10)." Added ASCII box-drawing sketches for the idle layout plus 4 state variants (validando, enviando, error de campo, error de banner) — the guide's §3 format accepts text/Markdown wireframes, but a plain state table alone didn't convey layout/spacing; the sketches show field pairing, banner-vs-inline error placement, and button disabled treatment concretely.
+- [x] All 5 states (idle, validating, submitting, success, error) are documented with their visual treatment — 8 rows produced: the single "error" state was replaced by the real, traced error surface of both endpoints (validation/422 with a distinct body shape, agent-rejected/422, agent-down/502-503, not-found/404, and unexpected/500), per §Verification Summary above; every original state's intent is still covered, just correctly subdivided.
+- [x] Every field matches `CreateAssessmentBriefRequest`'s confirmed shape from `task-01` — see §Verification Summary field cross-check.
+- [x] Software smoke/build/startup/connectivity checks: N/A, no runtime surface; for git-enabled tasks, this task is committed, pushed, and published in a task PR before human developer PR review, with corrections pushed to the same PR. PR #67 (`tasks/story-02-.../task-02-wireframe-intake-screen` → `story-02-assessment-screens-wireframes-and-data-providers`) opened, reviewed (including two rounds of corrections — real error-surface tracing and ASCII layout sketches, both pushed to the same PR), approved, and merged 2026-07-15 (merge commit `0265e2a`).
+- [x] Logging/observability: N/A — no executable code, no correlation/trace/INFO/DEBUG/WARN/ERROR log levels apply.
+- [x] Task test suite: N/A — the generated test-suite quality gates in this task's Generated Test Suite section are architecture-review only.
+- [x] Database/ORM: N/A — static DB/ORM consistency and runtime persistence smoke checks do not apply; no database, ORM, or persistence artifact is touched.
+- [x] No unintended expansion: the task satisfies `[CHECK-ATOMICITY]` — single deliverable (the wireframe doc), no scope creep.
 
 ---
 

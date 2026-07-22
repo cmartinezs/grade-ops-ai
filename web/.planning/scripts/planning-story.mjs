@@ -565,8 +565,17 @@ function renderStoryFile(number, title, area, dependencies, tasks, done) {
 function insertExpansionRow(text, row) {
   const lines = text.split('\n');
   const rowText = `| ${row.number} | ${row.story} | ${row.area} | ${row.dependsOn || '—'} | ${row.risk || 'M'} | ${row.external || '—'} | TODO |`;
+  const headingIndex = lines.findIndex((line) => /^##\s+Story Summary\s*$/i.test(line.trim()));
+  if (headingIndex < 0) fail('Could not locate Story Summary section in 01-expansion.md.');
+  let sectionEnd = lines.length;
+  for (let i = headingIndex + 1; i < lines.length; i += 1) {
+    if (/^##\s+/.test(lines[i].trim())) {
+      sectionEnd = i;
+      break;
+    }
+  }
   let insertAt = -1;
-  for (let i = lines.length - 1; i >= 0; i -= 1) {
+  for (let i = sectionEnd - 1; i > headingIndex; i -= 1) {
     const cells = lines[i].split('|').map((cell) => cell.trim());
     if (/^\d+$/.test(cells[1] || '')) {
       insertAt = i + 1;
@@ -848,7 +857,7 @@ function dependencyIds(taskText) {
 
 function taskBranchName(branches, taskFile, taskId) {
   const base = taskFile ? path.basename(taskFile, '.md') : taskId;
-  return `${branches.storyBranch}/${base}`;
+  return `${branches.storyBranch}--${base}`;
 }
 
 function storyExecutionContext(planningId, storyIdArg) {

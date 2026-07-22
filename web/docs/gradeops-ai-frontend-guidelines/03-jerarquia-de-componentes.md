@@ -149,6 +149,27 @@ Un `MicroComponent` es una unidad mínima y repetible:
 
 Los microcomponentes compartidos deben vivir en el Design System cuando su uso sea transversal.
 
+## 8.1 Inputs base parametrizables vs. inputs especializados derivados
+
+Un `Input` (u otro campo base como `Textarea`) es un `MicroComponent` cuando queda **parametrizable** vía atributos HTML nativos u opciones explícitas: `required`, `minLength`, `maxLength`, `pattern`. No hace falta un componente nuevo por cada formulario si el campo es genérico y solo necesita estas reglas — el Design System ya resuelve esto pasando props nativas al elemento (ver `src/components/ds/Input.tsx`, que extiende `React.InputHTMLAttributes` y reenvía `...props`).
+
+Cuando una validación específica se repite en más de un formulario — un email, un teléfono, un código con formato fijo — no repetir esa regex/copy inline en cada pantalla. Extraer un `MiniComponent` derivado que envuelva el input base fijando su `type`/`pattern`/mensaje de error, siguiendo el mismo criterio de extracción del §7 (se usa en más de un lugar, tiene props relevantes, su validación merece test propio):
+
+```tsx
+// EmailInput.tsx — MiniComponent derivado de Input (MicroComponent base)
+interface EmailInputProps extends Omit<InputProps, "type"> {}
+
+export default function EmailInput(props: EmailInputProps) {
+  return <Input type="email" inputMode="email" {...props} />;
+}
+```
+
+Ejemplo real detectado en este repo (2026-07-15): `src/app/login/page.tsx` y `src/app/register/page.tsx` repiten el mismo par `type="email"` + `z.string().email(...)` de forma inline, sin componente compartido — candidato a extraer como `EmailInput` la próxima vez que se toque alguno de esos dos formularios, en vez de copiar la validación una tercera vez.
+
+No crear el `MiniComponent` especializado por anticipado si un campo nuevo es genérico (solo `required`, sin formato fijo) — en ese caso el `Input`/`Textarea` base ya alcanza y agregar un wrapper sería una abstracción prematura.
+
+> **Alcance de este §8.1:** decide si un *campo individual* necesita un `MiniComponent` derivado. La decisión de arquitectura más amplia — que todo formulario del proyecto reutilice primitivas únicas del Design System (`Form`, `Field`, `Input`, `Textarea`, `Select`, `Checkbox`, `DynamicForm`) en vez de recomponer campos por pantalla — es un `PDR` (`001-assessment-creation/pdr-001-design-system-form-primitives.md`), no parte de esta guía.
+
 ## 9. Regla de componente con hook propio
 
 Todo componente no trivial debe tener hook propio.

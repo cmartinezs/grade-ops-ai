@@ -81,7 +81,11 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
         config.setAllowedOrigins(List.of(allowedOrigins.split(",")));
-        config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        // PATCH is required for AssessmentController.updateDraft() (@PatchMapping) — its absence
+        // here made Spring's CorsFilter reject every draft-edit save with a 403 "Invalid CORS
+        // request" whenever an Origin header was present (i.e. every real browser call, direct
+        // or proxied), confirmed live via task-13's end-to-end walkthrough.
+        config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("Authorization", "Content-Type", "X-Internal-Secret"));
         config.setAllowCredentials(true);
         config.setMaxAge(3600L);

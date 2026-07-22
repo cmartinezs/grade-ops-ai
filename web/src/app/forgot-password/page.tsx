@@ -22,7 +22,6 @@ export default function ForgotPasswordPage() {
   const {
     register,
     handleSubmit,
-    setError,
     formState: { errors, isSubmitting },
   } = useForm<ForgotFields>({ resolver: zodResolver(forgotSchema) });
 
@@ -73,6 +72,7 @@ export default function ForgotPasswordPage() {
                   label="Correo electrónico"
                   htmlFor="email"
                   helper="Ingresa el correo con el que te registraste en GradeOps AI. Te enviaremos un enlace para restablecer tu contraseña."
+                  error={errors.email?.message}
                 >
                   <Input
                     id="email"
@@ -126,7 +126,7 @@ export default function ForgotPasswordPage() {
         <div style={{ maxWidth: 420, color: "#fff" }}>
           <LucideIcon name="graduation-cap" size={40} color="rgba(255,255,255,0.9)" />
           <p style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: "var(--text-2xl)", lineHeight: 1.3, margin: "22px 0 20px", letterSpacing: "-0.01em" }}>
-            "Corrijo una prueba de 32 alumnos en lo que antes me tomaba una tarde entera."
+            &quot;Corrijo una prueba de 32 alumnos en lo que antes me tomaba una tarde entera.&quot;
           </p>
           <div style={{ fontSize: "var(--text-md)", lineHeight: 1.5 }}>
             <div style={{ fontWeight: 700 }}>Rodrigo Salinas</div>

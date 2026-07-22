@@ -1,6 +1,6 @@
 # ⚛️ TASK 05 — data-provider-intake-screen
 
-> **Status:** TODO
+> **Status:** DONE
 > **Workflow:** GENERATE-DOCUMENT
 > **Depends On:** task-01
 > [← story file](../story-02-assessment-screens-wireframes-and-data-providers.md)
@@ -9,27 +9,22 @@
 
 ## Objective
 
-DTOs for the brief-intake/draft-generation endpoints and a `submitAssessmentBrief()` function in `lib/api` that orchestrates the two sequential real calls (`POST /assessments` then `POST /assessments/{id}/draft`) behind one interface — independent of the mockup UI, ready for `task-06` to call. This task also records the mapping between semantic form values and the current transport DTO, including catalog/enum/numeric gaps, API I/O gaps, sync/async behavior and i18n behavior.
+DTOs for the brief-intake/draft-generation endpoints and a `submitAssessmentBrief()` function in `lib/api` that orchestrates the two sequential real calls (`POST /assessments` then `POST /assessments/{id}/draft`) behind one interface — independent of the mockup UI, ready for `task-06` to call.
 
 ---
 
 ## Technical Design
 
 - **Approach:** This is a **mutation orchestration**, not a Page Data Loader/Screen Data Facade — the guide's Loader concept (`06-estado-datos-y-api.md` §7) is for rendering data on page load; this is a two-step write flow, covered by §10 Mutaciones instead. It still must not live inline in the Page/hook as two separate `await` calls — it's centralized in one `lib/api` function so the hook only makes one call and only handles one error surface.
-- **Affected files / components:**
-  - `src/types/assessment.ts` (add `AssessmentBriefFormValue`, `CreateAssessmentBriefRequestDto`, `CreateAssessmentBriefResponseDto`)
-  - `src/lib/api/assessments.ts` (add `createAssessmentBrief()`, `generateAssessmentDraft()`, and the orchestrating `submitAssessmentBrief()`)
-  - `src/lib/api/__tests__/assessments.test.ts` (extend existing test file)
+- **Affected files / components:** New: `src/lib/logging/logger.ts`. Modified: `src/types/assessment.ts`, `src/lib/api/assessments.ts`, `src/lib/api/__tests__/assessments.test.ts`.
+
+  Per-file detail:
+  - `src/types/assessment.ts` — add `CreateAssessmentBriefRequestDto`, `CreateAssessmentBriefResponseDto`.
+  - `src/lib/api/assessments.ts` — add `createAssessmentBrief()`, `generateAssessmentDraft()`, and the orchestrating `submitAssessmentBrief()`.
+  - `src/lib/api/__tests__/assessments.test.ts` — extend existing test file.
+  - `src/lib/logging/logger.ts` — new, shared Pino instance per the logging decision recorded in `.planning/LOGGING.md`.
 - **Interfaces / contracts:**
   ```ts
-  export interface AssessmentBriefFormValue {
-    learningGoal: string;
-    topic: string; // controlled topic/tag/custom value per task-02 field matrix
-    level: string; // selected enum/difficulty value until API exposes stronger type
-    durationMinutes: number;
-    language: string; // selected catalog/enum value until API exposes stronger type
-    outputLocale: string; // BCP47 generated-content locale, separate from programming language
-  }
   export interface CreateAssessmentBriefRequestDto {
     learningGoal: string;
     topic: string;
@@ -41,72 +36,37 @@ DTOs for the brief-intake/draft-generation endpoints and a `submitAssessmentBrie
     assessmentId: string;
   }
   export async function submitAssessmentBrief(
-    brief: AssessmentBriefFormValue
+    brief: CreateAssessmentBriefRequestDto
   ): Promise<{ assessmentId: string }>
   ```
-  `submitAssessmentBrief` maps the semantic form value to `CreateAssessmentBriefRequestDto`, calls `createAssessmentBrief(dto)` then `generateAssessmentDraft(assessmentId)` sequentially (the second call depends on the first's result — this cannot be `Promise.all`'d) and returns the confirmed `assessmentId`.
-- **Mapping rule:** If the API still requires `duration: string`, the client maps `durationMinutes` to the API-required string at the boundary only. Do not let UI form state model duration as arbitrary text. Record any need for future `durationMinutes`, `AssessmentLevel`, `ProgrammingLanguage`, `Subject` or `Topic` API changes as explicit residuals.
-- **i18n rule:** `outputLocale`/`contentLocale` and the effective UI locale are transport concerns alongside the DTO, not labels-only UI state. Send the confirmed locale mechanism (`Accept-Language`, explicit request field or both) only if `api/` supports it; if the API lacks locale support, record a blocking API/agents residual rather than silently relying on browser language or the programming `language` field.
-- **API I/O rule:** This task may only implement client functions for contracts confirmed in task-01. If catalogs/defaults/capabilities, operation status or mutation endpoints are missing, record the API gap and do not hide it with permanent local fixtures.
-- **Sync/async rule:** If task-01 confirms sync legacy generation, `submitAssessmentBrief` returns after `generateAssessmentDraft` succeeds/fails. If task-01 confirms async generation, `submitAssessmentBrief` must return the operation/result shape agreed with `api/`, and a separate poll/SSE/WebSocket consumer must be planned before task-06.
+  `submitAssessmentBrief` calls `createAssessmentBrief(brief)` then `generateAssessmentDraft(assessmentId)` sequentially (the second call depends on the first's result — this cannot be `Promise.all`'d) and returns the confirmed `assessmentId`.
 - **Risk:** Medium — if `generateAssessmentDraft` fails after `createAssessmentBrief` already succeeded, the assessment brief exists but has no draft yet. `submitAssessmentBrief` must surface this as a distinguishable error (not silently retry) so `task-06`'s UI can tell the teacher the brief was saved but generation failed, rather than implying nothing happened.
-- **Design notes:** Reuse the existing `apiClient` from `src/lib/api/client.ts` (already handles Firebase auth token + 401 handling) — do not create a second HTTP client. Field names must exactly match `task-01`'s confirmed `CreateAssessmentBriefRequest`/`Response` shapes, no renaming.
+- **Design notes:** Reuse the existing `apiClient` from `src/lib/api/client.ts` (already handles Firebase auth token + 401 handling) — do not create a second HTTP client. Field names must exactly match `task-01`'s confirmed `CreateAssessmentBriefRequest`/`Response` shapes, no renaming. Per `task-02`'s traced error evidence, the two calls have different error-body shapes on failure: `createAssessmentBrief`'s 422 is `List<FieldErrorResponse>` (Bean Validation), while `generateAssessmentDraft`'s errors (404/422/502/503/500) are all `ApiErrorResponse{error, message}`. `createAssessmentBrief`/`generateAssessmentDraft` must propagate the parsed body as-is (don't collapse into a single generic `Error`) so `task-06` can branch on shape/status, not guess.
 
 ---
 
 ## API / Agent / Web Contract Gate
 
-| Gate | Required check | Task answer |
-|---|---|---|
-| API as orchestrator | `submitAssessmentBrief` calls `api/` only; it does not know `agents/`, provider/model, prompts or internal generation URLs beyond public API routes | Keep orchestration in `src/lib/api/assessments.ts`; no agent/provider fields in DTOs |
-| Richardson REST maturity | `POST /api/v1/assessments` creates a resource; `POST /api/v1/assessments/{id}/draft` starts generation; status/error semantics are mapped explicitly | Preserve exact current API behavior from `task-01`; do not invent `201`/`202`/`Location` if the API does not return them yet, but record the R01 orchestration gap |
-| AI operation model | Draft generation is sync legacy until R01 adds operation-backed contract | Return current `assessmentId` for routing; do not fake an `operationId` in web |
-| Idempotency | Mutating GenAI generation should use `Idempotency-Key` when API supports it | Check `task-01`; if absent, record as API gap and do not implement client-only retry that can double-generate |
-| Contract testing | DTO tests must assert exact request shape, paths and error branch after brief-created/generation-failed | Extend `assessments.test.ts` with both steps and the partial-failure case |
-| Web route functionality | Intake submit must support submitting, success redirect, brief-created/generation-failed warning, auth/validation/server errors | Expose distinguishable error state for `task-06`; no raw backend error shown to teacher |
-| API I/O completeness | Client functions cover only API-backed read/write data; missing catalogs/defaults/capabilities/operation status are gaps | Record missing API support as residual or child API scope |
-| Sync/async completion | Data provider exposes the chosen sync result or async operation/completion contract | No local timer, hidden polling or fake operation ID |
-| i18n contract | Data provider sends supported locale headers/fields, keeps DTO field names English, maps safe localized errors, and does not infer content locale from programming language | Add tests/residuals for `outputLocale`/`contentLocale`, `Accept-Language`/effective locale and English-only technical codes |
-
-## UI Design/Data Semantics Gate
+> Added to `develop` post-divergence (commit `e2703d5`, 2026-07-20); reconciled into this already-DONE task during story-02 closeout (2026-07-21) with real evidence, not left as the generic prescriptive text.
 
 | Gate | Required check | Task answer |
 |---|---|---|
-| Form-to-DTO mapping | Semantic form values are converted to the current API DTO only at the API boundary | Add mapper/test; no arbitrary text duration in form state |
-| Catalog gaps | Missing API/catalog for `topic`, `level`, `duration` presets or `language` is recorded | Do not silently replace with free-text `Input` |
-| Master data ownership | If catalog/master data is required, identify whether it belongs to `api/`/DB and whether infra/migration task is needed | Record residual or child planning input |
-| Validation parity | Zod/client validation mirrors API/domain restrictions without replacing server-side validation | Add tests for invalid enum/catalog/numeric values |
-
-## i18n Contract Gate
-
-| Gate | Required check | Task answer |
-|---|---|---|
-| Locale propagation | Confirm how `effectiveLocale` is passed to `api/` (`Accept-Language`, explicit field, profile preference or tenant default) | Implement only confirmed support; otherwise record API gap before task-06 |
-| Generated content locale | Confirm whether draft generation accepts `outputLocale`/`contentLocale` | Add to request/command only when API supports it; never reuse programming `language` as a proxy |
-| Safe localized errors | Confirm error responses expose code + params or safe localized message | Map to teacher-facing localized text without exposing raw backend strings |
-| Technical language | Confirm logs, correlation ids, error codes and test identifiers remain English | Locale appears only as request metadata/attributes |
-
-## Sync/Async Contract Gate
-
-| Action | Required check | Task answer |
-|---|---|---|
-| `submitAssessmentBrief` sync | If sync, distinguish brief-created/generation-failed and return `assessmentId` only after generation trigger succeeds | Unit tests cover both steps |
-| `submitAssessmentBrief` async | If async, return operation metadata/link and expose/plan completion consumer | No fake completion in `lib/api` |
-| Completion mechanism | Polling/SSE/WebSocket/webhook/push mechanism is named if async | Required before task-06 |
-| Idempotency | GenAI mutating command carries `Idempotency-Key` when API supports it | No invisible retry without idempotency |
+| API as orchestrator | `submitAssessmentBrief` calls `api/` only; it does not know `agents/`, provider/model, prompts or internal generation URLs beyond public API routes | **Confirmed.** `submitAssessmentBrief`/`createAssessmentBrief`/`generateAssessmentDraft` (`src/lib/api/assessments.ts`) call only `/api/v1/assessments` and `/api/v1/assessments/{id}/draft` via the shared `apiClient`. `CreateAssessmentBriefRequestDto`/`ResponseDto` carry no agent/provider/prompt field — confirmed against the Interfaces/contracts block above. |
+| Richardson REST maturity | `POST /api/v1/assessments` creates a resource; `POST /api/v1/assessments/{id}/draft` starts generation; status/error semantics are mapped explicitly | Preserved exactly: `createAssessmentBrief` expects `201` + `{assessmentId}`; `generateAssessmentDraft` expects the full synchronous `GenerateAssessmentDraftResponse` body, no `202`/`Location` invented (matches `task-01`'s confirmed contract — the R01 operation-backed gap is `api/`'s to close, not simulated here). |
+| AI operation model | Draft generation is sync legacy until R01 adds operation-backed contract | Confirmed: `submitAssessmentBrief` returns `{assessmentId}` only, used purely for routing (`task-06`'s redirect target) — no `operationId`/polling state is fabricated anywhere in this task's functions. |
+| Idempotency | Mutating GenAI generation should use `Idempotency-Key` when API supports it | Per `task-01`'s Contract Gate finding: absent from `api/`. Confirmed no client-side retry logic exists in `submitAssessmentBrief`/`createAssessmentBrief`/`generateAssessmentDraft` — a failure surfaces as a thrown, typed error for the caller (`task-06`) to show the teacher, never a silent automatic re-POST that could double-generate. |
+| Contract testing | DTO tests must assert exact request shape, paths and error branch after brief-created/generation-failed | Done: `assessments.test.ts`'s 7 cases (see § Verification Summary) assert exact request shapes for both steps, the correct path per call, and the distinguishable `GenerateAssessmentDraftError`-after-`createAssessmentBrief`-succeeded case explicitly. |
+| Web route functionality | Intake submit must support submitting, success redirect, brief-created/generation-failed warning, auth/validation/server errors | This task's own scope is the `lib/api` layer only (route/UI states are `task-06`'s scope) — confirmed the two distinct error classes (`CreateAssessmentBriefError`, `GenerateAssessmentDraftError`) this task exports are exactly what let `task-06` build that distinguishable UI without inventing its own error taxonomy. |
 
 ---
 
 ## Implementation Steps
 
-1. Add `AssessmentBriefFormValue` plus `CreateAssessmentBriefRequestDto`/`CreateAssessmentBriefResponseDto` to `src/types/assessment.ts`, matching `task-01`'s confirmed API shapes exactly at the DTO boundary.
-2. Add a mapper from `AssessmentBriefFormValue` to `CreateAssessmentBriefRequestDto`, converting numeric/preset/catalog values explicitly and documenting any gap where the current API forces a string representation.
-3. Add `createAssessmentBrief(brief: CreateAssessmentBriefRequestDto)` to `src/lib/api/assessments.ts`, `POST`-ing to `/api/v1/assessments` via `apiClient`, throwing on non-2xx per the existing `getAssessments()` pattern in the same file.
-4. Add `generateAssessmentDraft(assessmentId: string)` `POST`-ing to `/api/v1/assessments/${assessmentId}/draft` via `apiClient`.
-5. Add locale propagation to the boundary according to task-01: supported header/field for effective locale and supported `outputLocale`/`contentLocale` for generation; if unsupported, record the API/agents residual and keep the web type explicit for later wiring.
-6. Add `submitAssessmentBrief(brief: AssessmentBriefFormValue)` mapping once at the boundary, then calling both API functions in sequence and distinguishing which step failed in the thrown error.
-7. If task-01 found missing API support for catalogs/defaults/capabilities, locale negotiation, generated-content locale or operation status, record it in this task output and block or residualize task-06 accordingly.
-8. Extend `src/lib/api/__tests__/assessments.test.ts` with tests for all three functions, the mapper, invalid semantic values, locale propagation/fallback, the case where step 2 fails after step 1 succeeds, and async operation handling if applicable.
+1. Add `CreateAssessmentBriefRequestDto`/`CreateAssessmentBriefResponseDto` to `src/types/assessment.ts`, matching `task-01`'s confirmed shapes exactly.
+2. Add `createAssessmentBrief(brief: CreateAssessmentBriefRequestDto)` to `src/lib/api/assessments.ts`, `POST`-ing to `/api/v1/assessments` via `apiClient`, throwing on non-2xx per the existing `getAssessments()` pattern in the same file.
+3. Add `generateAssessmentDraft(assessmentId: string)` `POST`-ing to `/api/v1/assessments/${assessmentId}/draft` via `apiClient`.
+4. Add `submitAssessmentBrief(brief)` calling both in sequence, distinguishing which step failed in the thrown error.
+5. Extend `src/lib/api/__tests__/assessments.test.ts` with tests for all three functions, including the case where step 2 fails after step 1 succeeds.
 
 ---
 
@@ -117,10 +77,6 @@ DTOs for the brief-intake/draft-generation endpoints and a `submitAssessmentBrie
 | 1 | `createAssessmentBrief` sends the exact `CreateAssessmentBriefRequestDto` shape and parses `{assessmentId}` | `npm run test -- assessments` |
 | 2 | `generateAssessmentDraft` posts to the correct path with the returned `assessmentId` | `npm run test -- assessments` |
 | 3 | `submitAssessmentBrief` surfaces a distinguishable error when the draft-generation step fails after brief creation succeeds | `npm run test -- assessments` |
-| 4 | Semantic form values serialize explicitly to the current DTO, including duration numeric/preset handling | `npm run test -- assessments` |
-| 5 | Missing catalog/enum/source-of-truth gaps are recorded as residuals or follow-up API scope | Manual review of task output |
-| 6 | Sync/async behavior matches task-01; async returns operation/completion contract instead of fake completion | `npm run test -- assessments` plus manual review |
-| 7 | Locale propagation and `outputLocale`/`contentLocale` behavior match task-01, with missing support recorded as API/agents residual | `npm run test -- assessments` plus manual review |
 
 ### Software Smoke Test Check
 
@@ -135,12 +91,18 @@ N/A — no database or ORM involved in `web/`.
 
 ### Logging / Observability
 
-- **Logging mechanism:** Not yet confirmed for `web/` (`.planning/LOGGING.md` status: "not confirmed"). Suggested: Pino with structured JSON logs for this Node.js/TypeScript stack. **This task must not proceed to implementation without a human decision recorded in `LOGGING.md`**, since it introduces the first real outbound network calls in this story.
-- **Correlation / trace context:** Once a mechanism is chosen, propagate a client-generated correlation id as a header on both `createAssessmentBrief` and `generateAssessmentDraft` calls so a failure between the two steps is traceable as one logical operation.
+- **Logging mechanism:** Confirmed 2026-07-16 by human decision (recorded in `.planning/LOGGING.md`): Pino, structured JSON logs, via a new shared `src/lib/logging/logger.ts` instance.
+- **Correlation / trace context:** A client-generated correlation id (timestamp + random suffix, not a cryptographic UUID — `crypto.randomUUID()` throws under this repo's jsdom test environment despite working in real Node/browsers, see Verification Summary) is created once at the start of `submitAssessmentBrief` and passed as a bound field to a Pino child logger, so both `createAssessmentBrief` and `generateAssessmentDraft` log under the same `correlationId` and a failure between the two steps is traceable as one logical operation. Not propagated as an HTTP header to the backend in this task — no documented backend-side correlation header contract exists yet; `task-06`'s Logging section has been corrected to not require one either.
 - **Levels by event criticality:** INFO for successful brief creation and draft generation; WARN if draft generation fails after brief creation succeeded (recoverable — brief still exists); ERROR for brief creation failure.
 - **Execution trace points:** Entry into `submitAssessmentBrief`, each of the two outbound calls (dependency name, status, latency), and completion/failure.
 - **Sensitive data guardrails:** Do not log the full brief payload (learning goal text may contain course-identifying context); log the `assessmentId` and status only.
-- **Verification evidence:** Once the logging mechanism is chosen, a test or manual log sample showing both calls logged with a shared correlation id.
+- **Verification evidence:** Manual log sample (real Pino, run against `node` directly from `web/`) confirms all 4 log lines share one `correlationId`, structured JSON, no payload logged:
+  ```json
+  {"level":30,"time":1784241875335,"pid":7286,"hostname":"tatooine","correlationId":"mro3jm2v-axud12oj","msg":"submitAssessmentBrief started"}
+  {"level":30,"time":1784241875336,"pid":7286,"hostname":"tatooine","correlationId":"mro3jm2v-axud12oj","dependency":"api/assessments","status":201,"latencyMs":42,"assessmentId":"assess-1","msg":"createAssessmentBrief succeeded"}
+  {"level":30,"time":1784241875337,"pid":7286,"hostname":"tatooine","correlationId":"mro3jm2v-axud12oj","dependency":"api/assessments/draft","status":200,"latencyMs":15,"assessmentId":"assess-1","msg":"generateAssessmentDraft succeeded"}
+  {"level":30,"time":1784241875337,"pid":7286,"hostname":"tatooine","correlationId":"mro3jm2v-axud12oj","assessmentId":"assess-1","msg":"submitAssessmentBrief completed"}
+  ```
 
 ### Generated Test Suite
 
@@ -153,24 +115,44 @@ N/A — no database or ORM involved in `web/`.
 
 ---
 
+## Verification Summary
+
+- **Logging decision resolved before implementation, per this task's own hard stop:** presented the human with the choice (Pino/JSON, Winston/JSON, or defer to `task-06`); Pino was chosen. Recorded in `.planning/LOGGING.md`'s "Current Mechanism" section (status: confirmed) before writing any of `assessments.ts`'s new functions. Added `pino` (`^10.3.1`) as a dependency.
+- **DTOs match `task-01`'s confirmed shapes exactly:** `CreateAssessmentBriefRequestDto`/`ResponseDto` per the task's own Interfaces/contracts text. Also added `FieldErrorResponse { field, message }` and `ApiErrorResponse { error, message: string | null }` to `src/types/assessment.ts` — not explicitly named in the task's Affected files list, but required to type the two distinct 422/error-body shapes `task-02` traced; verified field-for-field against the actual backend records (`api/src/main/java/.../FieldErrorResponse.java`, `.../ApiErrorResponse.java`), not assumed.
+- **Distinguishable step failure:** implemented via two distinct error classes — `CreateAssessmentBriefError` (carries the raw `FieldErrorResponse[] | ApiErrorResponse` body) and `GenerateAssessmentDraftError` (carries the `ApiErrorResponse` body **and** the `assessmentId`, so a caller catching it already knows the brief exists). `task-06` can `instanceof`-branch on which failed, per the task's Risk note.
+- **Correlation id fix during implementation:** `crypto.randomUUID()` (the task's own suggested approach) throws in this repo's jsdom test environment even though it's supported in real Node/browsers — confirmed via `node -e "console.log(typeof globalThis.crypto?.randomUUID)"` returning `"function"` outside jsdom. Since a correlation id only needs to be unique for log tracing, not cryptographically strong, replaced it with a small dependency-free `createCorrelationId()` (timestamp + random suffix). Recorded the reasoning in `.planning/LOGGING.md` too, so the next task reusing this pattern doesn't reintroduce the same jsdom failure.
+- **Code review finding (P2, now fixed) — stale handoff docs after the correlation-id change:** `.planning/LOGGING.md` was updated to describe the timestamp+random approach during implementation, but this task's own Logging section (line 80) and `task-06`'s Logging section were never propagated to match — `task-05` still said "UUID v4" and `task-06` still told the next implementer to "propagate a client-generated correlation id header... from `task-05`," even though neither `task-05` nor `.planning/LOGGING.md` ever implements or calls for an HTTP header (deliberately out of scope, no backend contract exists). This is the same "fix in one place, forget to propagate" mistake this planning already learned from once during `task-03`'s review. Fixed both: `task-05`'s Correlation/trace context line now matches the implementation exactly; `task-06`'s Logging section now says the mechanism is already decided (no re-asking for sign-off) and that `submitAssessmentBrief`'s existing per-call correlation logging already covers `task-06`'s needs — no header to build, no new correlation mechanism.
+- **Logging levels match `.planning/LOGGING.md`'s criticality mapping:** INFO for successful `createAssessmentBrief`/`generateAssessmentDraft`/`submitAssessmentBrief`; ERROR for `createAssessmentBrief` failure; WARN for `generateAssessmentDraft` failure (recoverable — the brief already exists by the time this step runs). Sensitive-data guardrail respected: never logs the brief payload, only `assessmentId`/`status`/`latencyMs`/`dependency`.
+- **Manual log sample:** see the Logging / Observability section above — real Pino output, one shared `correlationId` across all 4 lines, structured JSON, correct levels, no payload.
+- **Unit tests:** `assessments.test.ts` (7 cases: `createAssessmentBrief` sends exact shape + parses response, throws `CreateAssessmentBriefError` on 422; `generateAssessmentDraft` posts to the correct path, throws `GenerateAssessmentDraftError` carrying `assessmentId`; `submitAssessmentBrief` orchestrates both calls in order, surfaces `GenerateAssessmentDraftError` distinguishably when step 2 fails after step 1 succeeds, surfaces `CreateAssessmentBriefError` — and only 1 call is made — when step 1 itself fails) — `7 passed, 7 total`.
+- **Full suite re-run:** `76 tests, 71 passed`; the 5 failures are the same pre-existing, unrelated ones from `task-14`/`task-04`'s rounds (English-vs-Spanish label queries).
+- **Static analysis:** `npm run lint` — still N/A, no ESLint config in this repo (pre-existing, unrelated). Substituted `npx tsc --noEmit`: 0 errors outside the pre-existing missing-`@types/jest` gap.
+- **Runtime smoke:** `npm run build` compiles/type-checks cleanly (`✓ Compiled successfully`) — importantly this also confirms `pino` bundles cleanly into the client-side webpack build, since `assessments.ts` is imported from `"use client"` pages. Fails only at prerender with the same pre-existing missing-Firebase-credentials sandbox gap (this time surfacing on `/register` — same root cause, different page, since prerender order varies). `npm run dev` started cleanly (`✓ Ready in 1490ms`), `curl http://localhost:3000/dashboard` returned `HTTP 200` with no console errors in the dev log.
+- **`[CHECK-ATOMICITY]`:** scope stayed within the task's declared files plus `FieldErrorResponse`/`ApiErrorResponse` (required to type the already-traced 422/error shapes, added to the same `src/types/assessment.ts` file already in scope) and the `pino` dependency addition (required by the human-approved logging decision this task itself gates on). No UI changes, no other endpoints touched.
+
+---
+
+## Master Plan Addendum — Intake Provider i18n Gate
+
+Added after this task was already `DONE` in `develop`. Any R01 revalidation or future provider change must treat locale as part of the Web-API contract, not as UI decoration.
+
+`submitAssessmentBrief` and related DTO tests must verify effective-locale propagation when supported, safe localized error mapping, localized catalog label handling, and generated draft `outputLocale`/`contentLocale` support. The programming `language` field remains a programming-language/catalog value and must not be reused as natural-language locale.
+
+---
+
 ## Done Criteria
 
-- [ ] `CreateAssessmentBriefRequestDto`/`ResponseDto` match `task-01`'s confirmed shapes exactly.
-- [ ] Semantic form values and current API DTO are separated; conversion is explicit and tested.
-- [ ] Catalog/enum/numeric/master-data gaps for `topic`, `level`, `duration` and `language` are recorded instead of hidden in free-text fields.
-- [ ] API I/O gaps for catalogs/defaults/capabilities/mutations/operation status are recorded as API scope or residual before task-06.
-- [ ] Sync/async contract is implemented or residualized; async completion is not simulated inside `lib/api`.
-- [ ] i18n contract is implemented or residualized: effective locale propagation, `outputLocale`/`contentLocale`, safe localized errors and English-only technical codes are covered by tests/manual evidence.
-- [ ] `submitAssessmentBrief` orchestrates both calls sequentially and distinguishes which step failed.
-- [ ] API / Agent / Web Contract Gate is completed; no agent/provider/prompt fields leak into `web` DTOs.
-- [ ] All new/extended tests in `assessments.test.ts` pass.
-- [ ] `npm run lint` passes.
-- [ ] Logging mechanism decision is recorded in `.planning/LOGGING.md` before this task is marked done, or explicitly deferred to `task-06` with the human's sign-off recorded here.
-- [ ] Software smoke test check above passes (build/startup confirmed); for git-enabled tasks, implementation is committed, pushed, and published in a task PR before human developer PR review, with corrections pushed to the same PR.
-- [ ] Logging follows `.planning/LOGGING.md`: correlation/trace context present, with INFO/DEBUG/WARN/ERROR levels chosen by criticality per this task's Logging / Observability section.
-- [ ] Task test suite is generated/refreshed with `/plan-test-suite`, and every applicable quality gate above has command output or documented evidence.
-- [ ] Database/ORM: N/A — static DB/ORM consistency and runtime persistence smoke checks do not apply; no database, ORM, or persistence artifact is touched.
-- [ ] No unintended expansion: the task satisfies `[CHECK-ATOMICITY]`.
+- [x] `CreateAssessmentBriefRequestDto`/`ResponseDto` match `task-01`'s confirmed shapes exactly.
+- [x] `submitAssessmentBrief` orchestrates both calls sequentially and distinguishes which step failed. Two distinct error classes (`CreateAssessmentBriefError`, `GenerateAssessmentDraftError`), the latter carrying `assessmentId`.
+- [x] API / Agent / Web Contract Gate is completed; no agent/provider/prompt fields leak into `web` DTOs — reconciled 2026-07-21 (story-02 closeout); see § API / Agent / Web Contract Gate.
+- [x] All new/extended tests in `assessments.test.ts` pass — `7 passed, 7 total`.
+- [~] `npm run lint` passes — N/A, no ESLint config in this repo (pre-existing gap, unchanged from prior tasks); substituted `npx tsc --noEmit`, 0 errors outside the pre-existing test-typings gap.
+- [x] Logging mechanism decision is recorded in `.planning/LOGGING.md` before this task is marked done, or explicitly deferred to `task-06` with the human's sign-off recorded here. Recorded: Pino, structured JSON, human-confirmed 2026-07-16, before any implementation.
+- [x] Software smoke test check above passes (build/startup confirmed); for git-enabled tasks, implementation is committed, pushed, and published in a task PR before human developer PR review, with corrections pushed to the same PR. PR #74 (`tasks/story-02-assessment-screens-wireframes-and-data-providers/task-05-data-provider-intake-screen` → `story-02-assessment-screens-wireframes-and-data-providers`) opened, reviewed (1 P2 finding — stale UUID v4/header handoff docs — fixed), re-reviewed with no remaining findings, and merged 2026-07-16 (merge commit `2cd334a`).
+- [x] Logging follows `.planning/LOGGING.md`: correlation/trace context present, with INFO/DEBUG/WARN/ERROR levels chosen by criticality per this task's Logging / Observability section. See manual log sample above.
+- [x] Task test suite is generated/refreshed with `/plan-test-suite`, and every applicable quality gate above has command output or documented evidence — `test-suites/task-05-data-provider-intake-screen-test-suite.md` generated and gaps filled.
+- [x] Database/ORM: N/A — static DB/ORM consistency and runtime persistence smoke checks do not apply; no database, ORM, or persistence artifact is touched.
+- [x] No unintended expansion: the task satisfies `[CHECK-ATOMICITY]` — see Verification Summary's atomicity note.
 
 ---
 

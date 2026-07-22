@@ -42,7 +42,8 @@ Term and concept traceability for this planning. For global consolidated view, s
 
 | ID | Decision | Rationale | Affects | Date |
 |----|----------|-----------|---------|------|
-| — | *None yet* | — | — | — |
+| PDR-001 | DS form primitives: `Form`/`Field`/`Input`/`Textarea`/`Select`/`Checkbox`, plus a separate declarative `DynamicForm` for simple linear forms — `Field` centralizes label/required/error/hint; not all forms must go through `DynamicForm`. | Prevents per-screen form duplication (already found twice: login/register's duplicated email validation, and `Field.tsx`/`Input.tsx` splitting label/error inconsistently) before more screens (Intake, Draft Builder, future rubric/question screens) repeat it. | WB | 2026-07-15 |
+| PDR-002 | Real end-to-end verification for `web/`↔`api/` seams uses a Firebase Auth Emulator (`api/compose.smoke.yml`) + `@playwright/test`, not mocks: a reusable `authenticatedPage`/`teacher` fixture pair (`web/e2e/fixtures/auth.ts`) programmatically creates+verifies a teacher and logs in via the real UI; `web/scripts/e2e-test.sh` boots the whole stack, runs the suite, and tears down. | Jest-mocked tests never exercise the browser↔proxy↔CORS↔auth-whitelist seam — task-13's manual walkthrough found 3 real bugs there (rewrite dropping `/api`, `EmailVerifiedFilter`'s whitelist matching the wrong path, CORS missing `PATCH`) that no prior test caught. task-15 made that verification deterministic and reusable instead of a one-off manual pass, so future authenticated screens get the same coverage for free. | WB | 2026-07-21 |
 
 ---
 
