@@ -46,10 +46,11 @@ npm run test         # Jest tests
 ```
 
 ### Agents (`agents/` — Spring Boot / Maven)
+Spring AI starters are only declared under the `demo`/`beta` Maven profiles (`agents/pom.xml`) — every command below requires `-Pdemo` or `-Pbeta`, or it fails to compile.
 ```bash
-./mvnw spring-boot:run
-./mvnw test
-./mvnw test -Dtest=ClassName#methodName
+./mvnw spring-boot:run -Pdemo
+./mvnw test -Pdemo
+./mvnw test -Pdemo -Dtest=ClassName#methodName
 ```
 
 ### Infrastructure (`infra/` — Terraform)

@@ -32,7 +32,7 @@ jobs:
           cache-dependency-path: agents/pom.xml
 
       - name: Run tests
-        run: ./mvnw test
+        run: ./mvnw test -Pdemo
         working-directory: agents/
 
       - name: Authenticate to Google Cloud
@@ -49,7 +49,7 @@ jobs:
       - name: Build container image
         if: github.event_name == 'push'
         run: |
-          ./mvnw spring-boot:build-image \
+          ./mvnw spring-boot:build-image -Pdemo \
             -Dspring-boot.build-image.imageName=us-central1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/grade-ops-ai/grade-ops-ai-agents:${{ github.sha }}
         working-directory: agents/
 
