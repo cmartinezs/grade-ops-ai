@@ -1,3 +1,5 @@
+<a id="top"></a>
+
 # Quality gates UI/UX
 
 ## Gate 0 — Gobierno preparado
@@ -66,3 +68,7 @@
 Una excepción requiere riesgo documentado, responsable, fecha límite, mitigación y aprobación explícita. No se permiten excepciones silenciosas.
 
 La falta de feedback externo no constituye por sí sola una excepción ni un bloqueo. Debe registrarse como `External evidence pending` con la hipótesis y el riesgo correspondiente.
+
+---
+
+[← Índice del workflow](README.md) · [Siguiente: Prompts operativos →](10-prompts-operativos.md) · [↑ Volver al inicio](#top)

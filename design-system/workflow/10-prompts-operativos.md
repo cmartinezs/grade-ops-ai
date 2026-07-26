@@ -1,3 +1,5 @@
+<a id="top"></a>
+
 # Prompts operativos
 
 ## Google Stitch — direcciones visuales
@@ -96,3 +98,7 @@ Durante la integración:
 No amplíes el alcance funcional. Registra cualquier desviación necesaria.
 Finaliza ejecutando las verificaciones del repositorio y reportando resultados.
 ```
+
+---
+
+[← Índice del workflow](README.md) · [Siguiente: Volver al índice →](README.md) · [↑ Volver al inicio](#top)

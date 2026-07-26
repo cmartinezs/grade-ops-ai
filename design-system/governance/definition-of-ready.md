@@ -1,3 +1,5 @@
+<a id="top"></a>
+
 # Definition of Ready UI/UX
 
 ## Propósito
@@ -41,3 +43,7 @@ El responsable de la etapa registra en su documento:
 - decisión `Ready` o `Not ready`.
 
 Un criterio incumplido solo puede tratarse como excepción mediante el proceso definido en [`roles-and-authority.md`](roles-and-authority.md).
+
+---
+
+[← Índice de gobierno](README.md) · [Siguiente: Volver al índice →](README.md) · [↑ Volver al inicio](#top)

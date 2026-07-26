@@ -1,3 +1,5 @@
+<a id="top"></a>
+
 # Validación con usuarios
 
 ## Objetivo
@@ -50,3 +52,7 @@ Realizar pruebas moderadas con cinco a ocho participantes por segmento prioritar
 ## Criterio de salida
 
 No existen hallazgos críticos o altos abiertos en los flujos incluidos en la entrega. Las hipótesis tienen resultado documentado.
+
+---
+
+[← Índice del workflow](README.md) · [Siguiente: Implementación inicial →](07-implementacion-v0.md) · [↑ Volver al inicio](#top)

@@ -1,3 +1,5 @@
+<a id="top"></a>
+
 # Principios y gobierno UI/UX
 
 ## Objetivo
@@ -150,3 +152,7 @@ La etapa 01 se considera completa cuando:
 - no se han anticipado decisiones visuales.
 
 El inicio de la etapa 02 se rige por [`definition-of-ready.md`](../governance/definition-of-ready.md).
+
+---
+
+[← Índice del workflow](README.md) · [Siguiente: Descubrimiento UX →](02-descubrimiento-ux.md) · [↑ Volver al inicio](#top)

@@ -1,3 +1,5 @@
+<a id="top"></a>
+
 # ADR UI/UX: Título
 
 - **Status:** Proposed
@@ -69,3 +71,7 @@ Fecha, métrica, nueva evidencia o cambio de alcance que obliga a reconsiderar l
 ## Referencias
 
 - Historia, Figma, investigación, ADR técnico, contrato, código o prueba.
+
+---
+
+[← Índice de decisiones](README.md) · [Siguiente: Data Model Impact Ledger →](data-model-impact-ledger.md) · [↑ Volver al inicio](#top)

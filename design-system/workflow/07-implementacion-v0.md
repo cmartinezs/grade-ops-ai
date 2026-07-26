@@ -1,3 +1,5 @@
+<a id="top"></a>
+
 # Implementación inicial con v0
 
 ## Objetivo
@@ -48,3 +50,7 @@ Generar por flujo vertical pequeño, no la aplicación completa. Priorizar:
 ## Criterio de salida
 
 La implementación reproduce comportamiento y jerarquía, reutiliza el design system y puede integrarse sin reescribir su estructura.
+
+---
+
+[← Índice del workflow](README.md) · [Siguiente: Integración y endurecimiento →](08-integracion-produccion.md) · [↑ Volver al inicio](#top)

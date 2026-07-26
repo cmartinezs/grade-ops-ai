@@ -1,3 +1,5 @@
+<a id="top"></a>
+
 # Data Model Impact Ledger
 
 ## Propósito
@@ -47,3 +49,7 @@ Antes de que una release implemente una capacidad registrada:
 3. crear o actualizar el ADR técnico cuando aplique;
 4. enlazar contratos, migraciones, eventos y pruebas;
 5. cambiar la entrada a `Resolved` o documentar un `Deferred` explícito.
+
+---
+
+[← Índice de decisiones](README.md) · [Siguiente: Volver al índice →](README.md) · [↑ Volver al inicio](#top)

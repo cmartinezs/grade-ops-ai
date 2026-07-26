@@ -1,3 +1,5 @@
+<a id="top"></a>
+
 # GradeOps AI Design System
 
 Esta carpeta es el espacio raíz de contenido para el Design System de GradeOps AI.
@@ -66,6 +68,7 @@ Crea carpetas solo cuando haya contenido real que agregar. No agregues archivos 
 
 ## Reglas De Trabajo
 
+- Aplicar las reglas transversales de documentación y navegación definidas en [`../RULES.md`](../RULES.md).
 - Mantener la interfaz en español para docentes de Chile.
 - Mantener identificadores, contratos, estructuras y elementos técnicos en inglés.
 - Localizar todo contenido dirigido al usuario según idioma, región y contexto institucional.
@@ -84,3 +87,7 @@ Crea carpetas solo cuando haya contenido real que agregar. No agregues archivos 
 - [`../docs/99-decisions/2026-06-21-web-design-system.md`](../docs/99-decisions/2026-06-21-web-design-system.md)
 - [`../docs/99-decisions/2026-07-21-ui-design-data-semantics.md`](../docs/99-decisions/2026-07-21-ui-design-data-semantics.md)
 - [`../web/design-system`](../web/design-system)
+
+---
+
+[← README del repositorio](../README.md) · [Siguiente: Gobierno UI/UX →](governance/README.md) · [↑ Volver al inicio](#top)

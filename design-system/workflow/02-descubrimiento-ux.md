@@ -1,3 +1,5 @@
+<a id="top"></a>
+
 # Descubrimiento UX
 
 ## Objetivo
@@ -53,3 +55,7 @@ La solución será aceptable si [métrica o evidencia].
 ## Criterio de salida
 
 Existe una definición priorizada de usuarios, tareas, problemas, riesgos y métricas. No se avanza con necesidades formuladas únicamente como listas de funcionalidades.
+
+---
+
+[← Índice del workflow](README.md) · [Siguiente: Arquitectura de información y flujos →](03-arquitectura-informacion-flujos.md) · [↑ Volver al inicio](#top)

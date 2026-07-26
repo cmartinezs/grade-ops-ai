@@ -1,3 +1,5 @@
+<a id="top"></a>
+
 # Arquitectura de información y flujos
 
 ## Objetivo
@@ -54,3 +56,7 @@ Convertir las tareas priorizadas en una estructura comprensible, eficiente y ver
 ## Criterio de salida
 
 Los flujos críticos pueden completarse en wireframes, incluyen estados no ideales y usan terminología consistente con el dominio.
+
+---
+
+[← Índice del workflow](README.md) · [Siguiente: Exploración visual →](04-exploracion-visual-stitch.md) · [↑ Volver al inicio](#top)

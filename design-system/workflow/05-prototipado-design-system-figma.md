@@ -1,3 +1,5 @@
+<a id="top"></a>
+
 # Prototipado y design system en Figma
 
 ## Objetivo
@@ -66,3 +68,7 @@ Cada pantalla debe indicar:
 ## Criterio de salida
 
 El prototipo cubre flujos críticos, componentes, estados y comportamiento responsive sin decisiones esenciales pendientes para desarrollo.
+
+---
+
+[← Índice del workflow](README.md) · [Siguiente: Validación con usuarios →](06-validacion-con-usuarios.md) · [↑ Volver al inicio](#top)

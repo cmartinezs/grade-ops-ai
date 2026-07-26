@@ -1,3 +1,5 @@
+<a id="top"></a>
+
 # Exploración visual con Google Stitch
 
 ## Objetivo
@@ -52,3 +54,7 @@ No se aceptan variantes que solo cambien colores, tipografía o decoración.
 ## Criterio de salida
 
 Existe una dirección seleccionada por criterios explícitos. La decisión no depende únicamente de preferencia estética.
+
+---
+
+[← Índice del workflow](README.md) · [Siguiente: Prototipado y design system →](05-prototipado-design-system-figma.md) · [↑ Volver al inicio](#top)

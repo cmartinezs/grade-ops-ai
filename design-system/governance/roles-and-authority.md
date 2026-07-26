@@ -1,3 +1,5 @@
+<a id="top"></a>
+
 # Roles y autoridad UI/UX
 
 ## Objetivo
@@ -49,3 +51,7 @@ Ninguna decisión generada o implementada por IA se considera aprobada sin revis
 - mitigación;
 - responsable;
 - fecha límite o condición de revisión.
+
+---
+
+[← Índice de gobierno](README.md) · [Siguiente: Definition of Ready →](definition-of-ready.md) · [↑ Volver al inicio](#top)

@@ -1,3 +1,5 @@
+<a id="top"></a>
+
 # Integración y endurecimiento
 
 ## Objetivo
@@ -40,3 +42,7 @@ Adaptar el código generado al repositorio real, su arquitectura, seguridad, obs
 ## Criterio de salida
 
 La funcionalidad cumple diseño, criterios de aceptación, arquitectura y quality gates; no depende de código provisional ni decisiones implícitas de la herramienta generadora.
+
+---
+
+[← Índice del workflow](README.md) · [Siguiente: Quality gates →](09-quality-gates.md) · [↑ Volver al inicio](#top)
