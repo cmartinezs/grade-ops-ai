@@ -1,3 +1,5 @@
+<a id="top"></a>
+
 ```
  ██████╗ ██████╗  █████╗ ██████╗ ███████╗ ██████╗ ██████╗ ███████╗    █████╗ ██╗
 ██╔════╝ ██╔══██╗██╔══██╗██╔══██╗██╔════╝██╔═══██╗██╔══██╗██╔════╝   ██╔══██╗██║
@@ -46,6 +48,7 @@ This is a **monorepo**. Each subdirectory is a self-contained component of the p
 | [`agents/`](agents/) | Agent runtime | Spring Boot 4 · Java 21 · Spring AI · Vertex AI Gemini | [agents/README.md](agents/README.md) |
 | [`infra/`](infra/) | Cloud infrastructure | Terraform · Google Cloud Run · Cloud SQL · Secret Manager | [infra/README.md](infra/README.md) |
 | [`docs/`](docs/) | Product and architecture documentation | Markdown | [docs/README.md](docs/README.md) |
+| [`design-system/`](design-system/) | UI/UX governance and design workflow | Markdown · Figma workflow · WCAG 2.2 AA | [design-system/README.md](design-system/README.md) |
 
 ---
 
@@ -156,3 +159,9 @@ Each component reads its configuration from `application-local.yml` (Java) or `.
 ## Documentation
 
 Full product, architecture, and agent documentation lives in [`docs/`](docs/). Start with [`docs/README.md`](docs/README.md) for an index of all sections.
+
+Repository-wide contribution and folder-documentation requirements live in [`RULES.md`](RULES.md).
+
+---
+
+[← Repositorio](.) · [Siguiente: Reglas del repositorio →](RULES.md) · [↑ Volver al inicio](#top)
