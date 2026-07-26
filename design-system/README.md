@@ -20,6 +20,8 @@ Antes de implementar una pantalla, este espacio debe ayudar a responder:
 | Ruta | Propósito |
 |------|-----------|
 | [`workflow/`](workflow/) | Flujo profesional UI/UX: descubrimiento, arquitectura, Stitch, Figma, validación, v0, integración y quality gates |
+| [`governance/`](governance/) | Autoridad, responsabilidades y condiciones para iniciar una etapa |
+| [`decisions/`](decisions/) | Decisiones UI/UX y registro de impactos potenciales en la plataforma |
 
 ## Relación Con `web/design-system`
 
@@ -51,6 +53,8 @@ Cuando una decisión de diseño se vuelva ejecutable en la app web, actualiza am
 | Carpeta | Propósito |
 |---------|-----------|
 | `workflow/` | Proceso trazable de diseño, validación e implementación |
+| `governance/` | Autoridad, quality gates y condiciones de avance |
+| `decisions/` | ADR UI/UX e impactos sobre dominio, datos, API y seguridad |
 | `foundations/` | Marca, color, tipografía, espaciado, movimiento, iconografía y accesibilidad |
 | `patterns/` | Patrones de interacción reutilizables y estados de workflow |
 | `components/` | Especificaciones de comportamiento antes de implementación TSX |
@@ -63,6 +67,8 @@ Crea carpetas solo cuando haya contenido real que agregar. No agregues archivos 
 ## Reglas De Trabajo
 
 - Mantener la interfaz en español para docentes de Chile.
+- Mantener identificadores, contratos, estructuras y elementos técnicos en inglés.
+- Localizar todo contenido dirigido al usuario según idioma, región y contexto institucional.
 - Tratar al docente como operador en control de un workflow de evaluación, no como receptor pasivo de salidas de IA.
 - Diseñar primero el flujo y la semántica de datos; luego la interfaz visual.
 - Hacer visibles aprobación, evidencia, costo, modelo, ejecución, error y reintento cuando la IA afecte notas, feedback o contenido visible para estudiantes.

@@ -33,3 +33,7 @@ Definir un proceso trazable para diseñar, validar e implementar interfaces cent
 ## Regla de uso
 
 Ninguna etapa comienza sin cumplir el criterio de salida de la anterior. Los hallazgos que cambien tareas, navegación o jerarquía informativa regresan a UX; los ajustes exclusivamente visuales regresan al sistema de diseño.
+
+El feedback de docentes externos es evidencia consultiva deseable, pero no un requisito para avanzar. Cuando no exista, la decisión debe registrar la validación interna, la hipótesis pendiente y el riesgo aceptado.
+
+La etapa 02 solo puede comenzar cuando se cumpla el [`Gate 0`](09-quality-gates.md#gate-0--gobierno-preparado) y su [`Definition of Ready`](../governance/definition-of-ready.md).
