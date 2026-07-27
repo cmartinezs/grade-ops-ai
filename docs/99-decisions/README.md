@@ -69,7 +69,7 @@ A decision record should explain:
 | [`2026-06-10-assessment-snapshot-on-publish.md`](2026-06-10-assessment-snapshot-on-publish.md) | Questions, options, answer key, and scoring policy are frozen at publication | Accepted |
 | [`2026-06-10-deterministic-grading-for-closed.md`](2026-06-10-deterministic-grading-for-closed.md) | Closed assessment grading is deterministic; no AI in the scoring calculation | Accepted |
 | [`2026-06-10-student-access-via-secure-link.md`](2026-06-10-student-access-via-secure-link.md) | Students access assessments and results via signed email links; no account required | Accepted |
-| [`2026-06-10-curriculum-taxonomy.md`](2026-06-10-curriculum-taxonomy.md) | Layered curriculum taxonomy: P0 string tagging, P1 relational Subject/CurriculumNode/LearningObjective model | Accepted |
+| [`2026-06-10-curriculum-taxonomy.md`](2026-06-10-curriculum-taxonomy.md) | Historical P0 string/P1 relational curriculum sequencing | Superseded |
 | [`2026-06-10-technology-stack.md`](2026-06-10-technology-stack.md) | Next.js for web, Spring Boot + Java 21 for API and agents, Spring AI for the agent runtime | Accepted |
 | [`2026-06-10-agent-runtime-separation.md`](2026-06-10-agent-runtime-separation.md) | `grade-ops-ai-agents` is a separate service; agents do not live inside the API | Accepted |
 | [`2026-06-12-firebase-authentication.md`](2026-06-12-firebase-authentication.md) | Firebase Authentication as identity provider; ID token validation in `api/`; operator internal endpoint; pre-verified email for provisioned accounts; refresh-token revocation on sign-out | Accepted |
@@ -87,6 +87,8 @@ A decision record should explain:
 | [`2026-07-22-master-plan-entry-decision.md`](2026-07-22-master-plan-entry-decision.md) | Pre-master-plan cleanup closes `008-assessment-creation` and `web/001-assessment-creation` — GO, no blocking conditions (initial CONDITIONAL GO condition retracted after verifying it was already fixed) | Accepted |
 | [`2026-07-27-credit-based-pricing.md`](2026-07-27-credit-based-pricing.md) | Credits meter heterogeneous AI-assisted workflows while submissions remain an operational/value metric | Accepted |
 | [`2026-07-27-policy-based-model-routing.md`](2026-07-27-policy-based-model-routing.md) | `agents/` selects provider/model through deterministic policy, authorized budgets and audited overrides | Accepted |
+
+| [`2026-07-27-assessment-operations-product-redesign.md`](2026-07-27-assessment-operations-product-redesign.md) | Transversal assessment operations, independent lifecycles, explicit publication/republication, appeals, and curriculum-first analytics | Accepted |
 
 ## Current Template
 
