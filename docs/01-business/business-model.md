@@ -15,7 +15,7 @@ This document defines the business model for early market validation. The canoni
 | Initial market | Programming educators, tutors, bootcamps, and small academies |
 | Category | Education & Human Potential |
 | Core promise | Run the next programming assessment cycle with AI agents and evidence |
-| Pricing model | Bounded by assessments and graded submissions |
+| Pricing model | Workflow credits with bounded P90 technical budgets |
 | Human role | Teacher reviews and approves important outputs |
 | AI role | Agents execute repetitive workflow steps and produce structured evidence |
 | Evidence policy | Usage, cost, revenue, testimonials, and agent logs are first-class outputs |
@@ -66,11 +66,11 @@ Examples:
 
 | Segment | Pain | Buying Trigger | Best Offer |
 | --- | --- | --- | --- |
-| Independent programming teacher | Time spent grading and writing feedback | Upcoming assessment with many submissions | Pilot Pack |
-| Tutor with several students | Need to give feedback faster and look professional | Growing student base | Teacher Lite / Teacher Pro |
-| Small academy | Need consistent grading and reporting across cohorts | New cohort starts or quality issue appears | Cohort Pro |
-| Bootcamp instructor | Fast feedback cycle and student risk visibility | Sprint project, module exam, capstone milestone | Pilot Pack / Cohort Pro |
-| Program manager | Evidence of learning progress and instructor consistency | Reporting pressure or student retention risk | Cohort Pro / custom pilot |
+| Independent programming teacher | Time spent grading and writing feedback | Upcoming assessment with many submissions | Initial / Pro |
+| Tutor with several students | Need to give feedback faster and look professional | Growing student base | Initial / Pro |
+| Small academy | Need consistent grading and reporting across cohorts | New cohort starts or quality issue appears | Institutional pilot |
+| Bootcamp instructor | Fast feedback cycle and student risk visibility | Sprint project, module exam, capstone milestone | Pro / Department |
+| Program manager | Evidence of learning progress and instructor consistency | Reporting pressure or student retention risk | Department / Institution |
 
 ## Open And Closed Business Value
 
@@ -122,8 +122,9 @@ I want to deliver better assessment operations without hiring more staff or manu
 
 ### Initial Validation Offer
 
-> **Pilot Pack — US$99 one-time**  
-> We operate 3 real programming assessments with AI agents, up to 150 graded submissions or Closed attempts, onboarding, feedback/analytics outputs, teacher report, and evidence dashboard.
+> **Institutional Pilot — CLP $199,000/month**
+>
+> Up to five teachers share 4,000 workflow credits with guided onboarding, evaluation/feedback workflows, reporting, budget controls, and evidence capture.
 
 This is the primary early revenue vehicle because it is easier to sell than a self-serve subscription before the product has full polish.
 
@@ -131,29 +132,29 @@ This is the primary early revenue vehicle because it is easier to sell than a se
 
 After pilot validation, customers can move into bounded monthly plans:
 
-| Plan | Target Customer | Included Usage |
+| Plan | Target Customer | Included Capacity |
 | --- | --- | --- |
-| Teacher Lite | Tutor or solo educator testing the workflow | 3 assessments / 90 graded submissions |
-| Teacher Pro | Active programming educator | 10 assessments / 300 graded submissions |
-| Cohort Pro | Small academy or bootcamp | 30 assessments / 1,000 graded submissions |
+| Initial | Tutor or occasional solo educator | 250 credits |
+| Pro | Active programming educator | 750 credits |
+| Intensive | High-volume educator | 2,500 credits |
 
-The business should never sell unlimited AI grading. The commercial unit is assessment operations plus graded-submission volume.
+The business should never sell unlimited AI grading. The commercial unit is a versioned credit quote for a workflow result; submissions and assessments remain value and operational metrics.
 
 ## Revenue Model
 
 | Revenue Stream | Timing | Notes |
 | --- | --- | --- |
-| Pilot Pack | One-time | Best for immediate MVP validation |
-| Monthly subscription | Recurring | Bounded by assessments and submissions |
-| Overuse fees | Usage-based | Additional graded submissions, reports, or premium review |
-| Guided onboarding | One-time or bundled | Useful for small academies and bootcamps |
-| Cohort setup | One-time or premium tier | Applies when several instructors/courses are involved |
+| B2C subscription | Recurring | Monthly credit allocation with capped rollover |
+| Credit top-up | Usage-based | Additional workflow capacity at a higher per-credit price |
+| Institutional platform plan | Recurring/contracted | Platform fee plus shared credits, controls, reporting, and support |
+| Guided onboarding | One-time or bundled | Useful for institutions, academies, and bootcamps |
+| Integration/customization | One-time or contracted | Data import, training, SSO, retention, or workflow adaptation |
 
 ## Unit Economics
 
-The primary planning unit is:
+The primary commercial planning unit is:
 
-> 1 assessment = one Open assessment with rubric and up to 30 submissions, or one Closed assessment with approved questions, frozen answer key, and up to 30 attempts.
+> 1 GradeOps credit = USD 0.01 of P90 technical budget, with every workflow quoted through a versioned credit catalog.
 
 The business must track:
 
@@ -161,6 +162,8 @@ The business must track:
 - cost per assessment;
 - cost per graded submission;
 - cost per Closed attempt;
+- credits quoted, reserved, charged, released, expired, and refunded;
+- normalized cost and contribution per credit;
 - cost per active teacher;
 - cost per customer;
 - revenue per customer;
@@ -178,7 +181,7 @@ Every pilot should produce business evidence, not only product feedback.
 | Customer identity and role | Proves real market contact |
 | Pain severity | Shows whether the problem is worth paying for |
 | Current workflow | Reveals switching friction |
-| Payment or commitment | Proves willingness to pay |
+| Payment, deposit, or budget-owner commitment | Proves willingness to pay |
 | Assessment processed | Proves product usage |
 | Submissions or attempts processed | Proves volume and operational value |
 | Question bank and answer-key snapshot | Proves Closed assessment control and deterministic grading |

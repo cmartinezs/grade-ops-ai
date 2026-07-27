@@ -1,10 +1,13 @@
 # Price by Graded Submission
 
-- Status: Accepted
+- Status: Superseded
 - Date: 2026-06-08
 - Decision owner: Business / Founder
+- Superseded by: [`2026-07-27-credit-based-pricing.md`](2026-07-27-credit-based-pricing.md)
 
 ## Context
+
+> Historical decision. Graded submissions remain a product and cost metric, but credits are now the commercial metering unit.
 
 GradeOps AI needs a pricing model that aligns with the value delivered to educators and can be validated early with real or near-real usage.
 

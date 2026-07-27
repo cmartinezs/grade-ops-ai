@@ -81,16 +81,16 @@ The first sellable offer is a paid pilot, not a broad subscription platform:
 
 > We operate your next 3 programming assessments with AI agents: assessment design, rubric, grading assistance, personalized feedback, learning-gap report, and teacher approval.
 
-Recommended validation offer:
+Recommended validation offers:
 
 | Offer | Price | Includes |
 | --- | ---: | --- |
-| Pilot Pack | US$99 one-time | 3 real assessments, up to 150 graded submissions, onboarding, feedback, and teacher report. |
-| Teacher Lite | US$12/month | 3 assessments and 90 graded submissions. |
-| Teacher Pro | US$29/month | 10 assessments and 300 graded submissions. |
-| Cohort Pro | US$79/month | 30 assessments and 1,000 graded submissions. |
+| Initial | CLP $8,990/month | 250 workflow credits. |
+| Pro | CLP $24,990/month | 750 workflow credits. |
+| Intensive | CLP $69,990/month | 2,500 workflow credits. |
+| Institutional Pilot | CLP $199,000/month | Up to 5 teachers, 4,000 shared credits, onboarding, controls, and reporting. |
 
-The product should never be sold as unlimited AI grading. The commercial unit is graded submissions plus assessment operations.
+The product should never be sold as unlimited AI grading. Each workflow receives a visible credit quote before execution; submissions remain a value metric, not the universal billing unit.
 
 ## Objections And Responses
 

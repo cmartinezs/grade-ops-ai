@@ -6,11 +6,14 @@
 
 ## Story
 
-As an operator, I want to track assessment and submission usage so plans remain bounded.
+As an operator, I want to track credit balances and workflow reservations alongside assessments and submissions so plans remain economically bounded and auditable.
 
 ## Acceptance Criteria
 
 - Account tracks number of assessments.
 - Account tracks graded submissions.
-- Usage can be compared to plan limit.
+- Account tracks granted, reserved, debited, released, expired, refunded, and adjusted credits.
+- Credit mutations are immutable, idempotent, and linked to the workflow quote.
+- Available balance can be compared to the quoted operation before execution.
+- Provider or GradeOps failures release the reservation instead of charging the customer.
 - Overuse can be reported even if not billed automatically.

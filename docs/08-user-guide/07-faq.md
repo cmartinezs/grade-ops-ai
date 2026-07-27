@@ -76,7 +76,7 @@ If a student submitted a format not on this list (e.g., a `.pdf` or a `.zip`), c
 
 ### How many students can I grade per assessment?
 
-The number of students per assessment is not technically limited per assessment, but it is constrained by your plan's **graded submissions** limit. Each student submission analyzed by the Grading Agent counts as one graded submission toward your plan. Check your evidence dashboard to see your current usage.
+The number of students is not represented as a universal per-assessment billing limit. Each AI-assisted workflow shows a credit quote before it runs, and your available credit balance determines whether it can proceed. Submission counts remain visible as usage/value evidence, while standard, complex, multimodal, and feedback-only workflows can consume different credit amounts. Check the usage dashboard for available, reserved, and consumed credits.
 
 ---
 

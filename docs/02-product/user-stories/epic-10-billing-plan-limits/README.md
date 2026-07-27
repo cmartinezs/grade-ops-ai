@@ -2,13 +2,13 @@
 
 ## Narrative
 
-**As an** operator,  
-**I want** to track how many assessments and graded submissions each account has consumed against their plan, and link payment or commitment evidence to customer records,  
+**As an** operator,
+**I want** to track workflow credits alongside assessments and graded submissions, and link payment or commitment evidence to customer records,
 **so that** pricing is enforced, unit economics are measurable, and business validation is auditable from day one.
 
 ## Goal
 
-Establish the metering and business evidence layer. In MVP, the goal is tracking and reporting, not automated billing. Plans are bounded by assessments and graded submissions; exceeding limits is reported even if not automatically blocked.
+Establish the metering and business evidence layer. In MVP, the goal is a correct credit ledger, workflow quoting/reservation, and reporting rather than full automated invoicing. Plans are bounded by credit balances; assessments and graded submissions remain operational metrics.
 
 ## Stories
 
@@ -20,8 +20,9 @@ Establish the metering and business evidence layer. In MVP, the goal is tracking
 ## Scope
 
 **In scope**
-- Per-account tracking of assessments created and graded submissions consumed
-- Comparison of actual usage against plan limits
+- Per-account credit ledger plus assessment/submission metrics
+- Versioned workflow quotes and reserve/confirm/release lifecycle
+- Comparison of available credits against the quoted operation
 - Operator-visible overuse reporting
 - Linking payment evidence (paid / commitment / manual) to customer records (P1)
 - Related-party flag on revenue events for transparent traction reporting (P1)
@@ -29,12 +30,13 @@ Establish the metering and business evidence layer. In MVP, the goal is tracking
 **Out of scope**
 - Automated payment processing or invoice generation
 - Self-serve plan upgrades by teachers (operator-managed in MVP)
-- Metering of individual agent runs for billing purposes (agent costs are tracked in Epic 09 for evidence, not for direct customer billing in MVP)
+- Charging individual internal model calls or retries directly to the customer
 
 ## Epic Acceptance Criteria
 
-- Each account tracks the number of assessments created and graded submissions consumed.
-- Usage figures are comparable to the plan limits associated with the account.
+- Each account tracks credit balance, reservations, confirmed debits, releases, expirations/refunds, assessments created, and graded submissions processed.
+- The quoted workflow is comparable to available credits before execution.
+- Failed GradeOps/provider workflows release reserved credits.
 - Overuse is visible to the operator even if not automatically blocked.
 - (P1) A customer/pilot record can store an evidence link (URL or reference) for payment or commitment.
 - (P1) Revenue events can be marked as paid / commitment / manual and carry a related-party flag.
@@ -45,12 +47,12 @@ Establish the metering and business evidence layer. In MVP, the goal is tracking
 | Epic | Reason |
 |------|--------|
 | Epic 01 — Teacher Onboarding | Account/organization model is required for usage attribution |
-| Epic 04 — Submission Intake | `UsageEvent` at analysis time feeds the graded submission count |
+| Epic 04 — Submission Intake | `UsageEvent` records the submission metric and links it to workflow/credit events |
 | Epic 09 — Evidence and Metrics | Agent cost data informs unit economics alongside plan limit data |
 
 ## Definition of Done
 
 - US-090 passes all acceptance criteria.
-- Usage counters are updated transactionally when a graded submission is analyzed.
-- Plan limit comparison is queryable without running a full scan of all events.
+- Submission metrics and credit-ledger transactions are updated/reconciled transactionally around the workflow lifecycle.
+- Available balance and active reservations are queryable without scanning the full event ledger.
 - (P1) Revenue event and related-party flag are persisted and visible in the evidence dashboard.
