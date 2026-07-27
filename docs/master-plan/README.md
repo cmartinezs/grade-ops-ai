@@ -1,5 +1,9 @@
 # Master Plan — GradeOps AI
 
+> [!IMPORTANT]
+> This master plan predates the accepted 2026-07-27 product redesign. Treat its release sequence as a baseline to be reconciled—not current scope authority—until the code-alignment review and migration plan are complete. See [Assessment Operations Product Redesign](../99-decisions/2026-07-27-assessment-operations-product-redesign.md).
+
+
 ## Proposito
 
 Este Master Plan transforma la documentacion, decisiones, user stories y estado real de GradeOps AI en una secuencia de releases incrementales, demostrables y orientadas a valor.
