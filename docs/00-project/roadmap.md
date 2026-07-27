@@ -1,5 +1,9 @@
 # Roadmap
 
+> [!IMPORTANT]
+> This roadmap is a historical pre-redesign execution baseline. Its programming-only scope, deferred structured curriculum, dates, and release order are not current product authority. Replan it after the code-alignment review using [the accepted assessment-operations redesign](../99-decisions/2026-07-27-assessment-operations-product-redesign.md).
+
+
 GradeOps AI is being built as a focused MVP and a real business experiment. The roadmap prioritizes evidence over feature volume.
 
 Current planning date: **June 8, 2026**.
