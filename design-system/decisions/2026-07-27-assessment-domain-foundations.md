@@ -185,7 +185,8 @@ al menos estas dimensiones:
 
 | Ciclo | Estados conceptuales iniciales |
 |---|---|
-| Plantilla | `DRAFT`, `PUBLISHED`, `DEPRECATED`, `ARCHIVED` |
+| Identidad de plantilla | `ACTIVE`, `ARCHIVED` |
+| Versión de plantilla | `DRAFT`, `CURRENT`, `SUPERSEDED`, `DEPRECATED`, `DISCARDED` |
 | Preparación | `DRAFT`, `READY`, `SCHEDULED`, `PUBLISHED` |
 | Aplicación | `NOT_STARTED`, `OPEN`, `PAUSED`, `CLOSED`, `CANCELLED` |
 | Revisión por entrega o participante | `PENDING`, `IN_REVIEW`, `NEEDS_REVISION`, `REVIEWED`, `APPROVED` |
@@ -362,8 +363,8 @@ Revisar la decisión si:
 
 Quedan para el siguiente bloque:
 
-- catálogo completo de transiciones de plantilla, preparación, aplicación,
-  revisión y publicación de resultados;
+- catálogo completo de transiciones de preparación, aplicación, revisión y
+  publicación de resultados;
 - límites finales de aggregates y consistencia;
 - participantes, grupos, intentos, entregas y evidencias;
 - process managers o sagas;
@@ -373,9 +374,10 @@ Quedan para el siguiente bloque:
 
 - [`02-descubrimiento-ux.md`](../workflow/02-descubrimiento-ux.md)
 - [`01-principios-y-gobierno.md`](../workflow/01-principios-y-gobierno.md)
+- [`2026-07-27-assessment-template-lifecycle-governance.md`](2026-07-27-assessment-template-lifecycle-governance.md)
 - [`data-model-impact-ledger.md`](data-model-impact-ledger.md)
 - [`2026-07-21-ui-design-data-semantics.md`](../../docs/99-decisions/2026-07-21-ui-design-data-semantics.md)
 
 ---
 
-[← Índice de decisiones](README.md) · [Siguiente: Data Model Impact Ledger →](data-model-impact-ledger.md) · [↑ Volver al inicio](#top)
+[← Índice de decisiones](README.md) · [Siguiente: Ciclo y gobierno de plantillas →](2026-07-27-assessment-template-lifecycle-governance.md) · [↑ Volver al inicio](#top)
