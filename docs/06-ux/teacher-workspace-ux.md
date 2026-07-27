@@ -1,182 +1,114 @@
 # Teacher Workspace UX
 
-This document describes the interaction model and design intent for the teacher workspace in GradeOps AI. It is not a pixel-level spec — it establishes what the interface must communicate and how teacher decisions are structured.
-
----
+The teacher workspace is an assessment-operations console. It must make academic state, pending decisions, evidence, versions, and consequences clear.
 
 ## Core Interaction Model
 
-The teacher workspace is built around a **review-and-approve loop**, not a creation tool.
+AI produces proposals; the teacher reviews evidence and decides. Every AI-assisted surface shows:
 
-Teachers rarely start from nothing. In most workflows, AI agents produce a draft and the teacher responds to it: approve, edit, reject, or regenerate. The UI must make this response primary — not an afterthought.
+- proposed content or judgment;
+- evidence and uncertainty;
+- provider, model, prompt/version and timestamp;
+- affected criterion/objective/result version;
+- available teacher actions;
+- effect of each action on approval and publication.
 
-Every AI-generated output must show:
-
-1. What the agent produced (the suggestion).
-2. What the teacher can do with it (approve / edit / reject / regenerate).
-3. Evidence of how it was produced (agent name, provider, model, prompt version, status, timestamp).
-
-This is a product-level constraint, not a styling preference.
-
----
+Editing is a first-class action. Rejecting or regenerating is normal workflow, not failure.
 
 ## Dashboard
 
-**Intent:** Give the teacher a quick operational picture of all assessments in flight.
+The dashboard answers:
 
-The dashboard should answer, at a glance:
+- What requires my decision now?
+- Which assessment lifecycle is blocked?
+- Which results are approved but unpublished?
+- Which corrections await republication?
+- Which appeals lack a valid deadline?
+- Which curriculum objectives are at risk?
 
-- What assessments are active?
-- What is waiting for my approval?
-- Which assessments have agent runs in progress?
+Do not use one badge such as “approved” to summarize unrelated lifecycles. Show a concise operation summary plus the exact pending action.
 
-**Priority elements:**
-- Assessment list sorted by activity (most recent action first).
-- Status badge per assessment (draft, rubric pending, grading in progress, pending review, approved, reported).
-- Count of pending approval items per assessment.
-- Quick link to the active approval queue.
+## Assessment Design
 
-**Avoid:** Long lists without context, hidden state, or approval queues buried under navigation.
+The teacher selects academic context, curriculum scope, modality, template, constraints, availability, evidence expectations, rubric/scoring policy, and result visibility. Programming language is an optional domain field, not a universal requirement.
 
-## Shared Workflow States
+Open, closed, and mixed components share one preparation workspace while retaining their specific controls.
 
-Teacher-facing screens should use the same state vocabulary wherever possible:
+Before publication, show a snapshot review containing:
 
-| State | Use It When |
-| --- | --- |
-| `draft` | Teacher-created input exists but is incomplete or not yet generated. |
-| `generated` | An agent produced a draft or suggestion. |
-| `needs_review` | The teacher must approve, edit, reject, or regenerate before the workflow can continue. |
-| `approved` | The teacher accepted the output or deterministic result. |
-| `published` | The output/result is visible to students, exported, or included in the final report. |
-| `blocked` | Required input, validation, policy, or dependency is missing. |
-| `error` | An agent call, persistence action, or deterministic operation failed. |
+- student-facing instructions and components;
+- rubric and evidence expectations;
+- question/option/answer-key snapshot where applicable;
+- scoring and grade policy;
+- curriculum alignment;
+- access and timing policy;
+- version and validation warnings.
 
-`approved` and `published` are different. Approval records teacher intent; publication makes the result available outside the review surface.
+## Evaluation and Criterion Review
 
----
+Each criterion review shows student evidence, AI proposal, uncertainty, teacher decision, and downstream impact. Closed items show deterministic explanation and route only exceptions for judgment.
 
-## Assessment Creation (Open Mode)
+Bulk actions are available only when policy allows and must disclose scope and warnings. Material edits visibly invalidate dependent approvals.
 
-**Intent:** The teacher defines what they want to evaluate. Agents do the rest.
+The final-approval screen separates:
 
-The intake form should feel like a professional brief, not a search box. The teacher provides:
+1. criterion/evidence completion;
+2. derived score and grade;
+3. achievement level;
+4. feedback;
+5. final approval.
 
-- Learning goal (free text, primary field).
-- Programming topic and language.
-- Target level (intro, intermediate, advanced).
-- Expected duration.
-- Approximate number of students.
-- Constraints (allowed resources, prohibited, special notes).
-- Existing instructions (optional upload or paste).
+Approval never implies publication.
 
-The form should not ask for too much. The teacher's brief becomes the agent's context. Fewer fields with good defaults are better than many fields that produce confusion.
+## Publication and Correction
 
-**After submission:** A loading state communicates that the Assessment Agent is running, not that the server is slow. Show the agent name.
+Publication is an explicit confirmation that shows the version, changes, affected students, visibility, notifications, and appeal deadline.
 
----
+When a teacher starts a review of a published result:
 
-## AI Output Review Screens
+- the current official version remains visible;
+- the student sees a neutral notice;
+- the correction is a new draft version;
+- comparison highlights score, grade, achievement, criteria, evidence, and feedback changes.
 
-Every AI output review screen (rubric, grading suggestion, feedback draft) follows the same structure:
+After approval, the correction is labeled `ApprovedPendingRepublication`. The teacher must explicitly republish. Discarding the correction removes the notice without changing the official result.
 
-```
-[Agent badge: agent name + model + timestamp + status]
+If the academic calendar cannot produce a valid deadline, the UI explains that appeal remains open pending configuration. It must never imply a deadline that the system cannot validate.
 
-[Generated output — readable, not raw JSON]
+## Curriculum Coverage
 
-[Edit field — inline or side-by-side]
+The landing view is unit -> topic -> objective. Separate visual encodings represent:
 
-[Action buttons: Approve | Edit | Reject | Regenerate]
+- planned;
+- taught;
+- assessed;
+- demonstrated achievement;
+- evidence sufficiency;
+- open pedagogical action.
 
-[Notes field — optional teacher comment]
-```
+Never show one synthetic “coverage” score that hides these dimensions. “No evidence” and “low achievement” must look and read differently.
 
-**Key UX rules for these screens:**
-- Approve is not the only visible option. Edit must be easy.
-- Reject or Regenerate must not feel like admitting failure — they are legitimate workflow steps.
-- After approval, the output must clearly change state (visual lock, different styling) so the teacher knows it is finalized.
-- Uncertainty flags from the agent should be visible, not hidden. If the Grading Agent flagged a submission as `low_confidence_score`, the teacher should see that before approving.
+AI recommendations are presented as proposals with accept, edit, reject, and defer actions. Adopted actions remain attributable to the teacher.
 
----
+## Audit and Trust
 
-## Submission Upload
+Audit is understandable product evidence, not a raw debug console. Teachers can trace:
 
-**Intent:** Teacher loads student answers for grading.
+- who did what and when;
+- which version and policy applied;
+- what AI contributed;
+- what the teacher changed;
+- why approval was invalidated;
+- which version became official;
+- how a deadline was calculated.
 
-For the MVP, the teacher is the upload actor. Students do not upload in open mode.
+## Accessibility and Privacy
 
-Options:
-- Paste text per student (single textarea + student identifier).
-- Upload file per student.
-- Bulk import if feasible.
-
-The student identifier field is controlled by the teacher — it can be a name, a code, a number, or a pseudonym. The product does not enforce a specific format.
-
-After upload, each submission appears in the grading queue with status `received`.
-
----
-
-## Grading Review Queue
-
-**Intent:** Teacher reviews AI grading suggestions, one submission at a time or as a list.
-
-Each row/card should show:
-- Student identifier.
-- Suggested score (X / total).
-- Summary of per-criteria scores.
-- One or two key flags (if uncertainty flags exist).
-- Quick approve button.
-- Edit link (opens full review).
-
-The teacher should be able to bulk-approve low-risk submissions and spend more time on flagged ones. The UI should support this — flagged submissions should be visually distinct.
-
----
-
-## Agent Log Viewer
-
-**Intent:** Make AI operations visible and demo-ready.
-
-The agent log viewer is evidence, not a debug console.
-
-Each log entry should show:
-- Agent name and type.
-- Assessment and student (if applicable).
-- Timestamp.
-- Provider and model used.
-- Prompt/template version.
-- Token estimate and cost estimate.
-- Status (succeeded / failed / requires review).
-- Teacher approval state (pending / approved / edited / rejected).
-- Brief input summary and output summary.
-- Estimated minutes saved.
-
-**Filters:** By assessment, by agent, by date, by status, by approval state.
-
-The agent log viewer must be presentable in the 3-minute demo. It is the most important proof of AI-native operation.
-
----
-
-## Evidence Dashboard
-
-**Intent:** Show that the product is running a real business operation, not only generating text.
-
-For the validation demo, this screen must show:
-
-- Total assessments run.
-- Total graded submissions.
-- Total feedback outputs generated.
-- Total agent runs (with breakdown by type).
-- Total estimated cost.
-- Total estimated teacher time saved.
-- Approval rate (% approved / edited / rejected).
-
-And ideally:
-- Active pilots count.
-- Revenue summary (if available).
-- Most recent agent activity timeline.
-
-This screen is the closing slide of the demo. It must look credible.
+- State is not communicated by color alone.
+- Critical actions include plain-language consequences.
+- Notifications and token URLs expose no sensitive academic data.
+- Date/time surfaces show the academic timezone.
+- Version comparison and evidence review remain keyboard accessible.
 
 <!-- nav -->
 
