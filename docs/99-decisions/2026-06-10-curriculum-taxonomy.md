@@ -1,49 +1,41 @@
-# Curriculum Taxonomy for Questions and Assessments
+# Structured Curriculum and Coverage Analytics
 
-- Status: Accepted
+- Status: Superseded
 - Date: 2026-06-10
+- Superseded on: 2026-07-27
 - Decision owner: Product
+- Superseded by: [Assessment Operations Product Redesign](2026-07-27-assessment-operations-product-redesign.md)
 
-## Context
+## Historical context
 
-GRADE, the prior product, organized educational content around a simple three-level hierarchy: `Subject > Unit > Topic`. This structure was sufficient for filtering questions and composing assessments within a known domain.
+The original decision introduced two layers: string tags at P0 and a relational curriculum model at P1. That was appropriate for the earlier programming-focused MVP, but it conflicts with the approved curriculum-first analytics and transversal assessment model.
 
-GradeOps AI uses AI agents to generate questions and compose assessments. Without a curriculum anchor, the Question Generation Agent lacks scope boundaries: it may generate questions that are off-level, off-topic, or misaligned with the teacher's declared learning objectives. The Assessment Assembly Agent cannot guarantee coverage of specific learning outcomes unless questions carry curriculum metadata.
+## Current decision
 
-The integration analysis (`.raw/16-chat.md`) identified the need for a layered curriculum taxonomy that works at two levels:
+This record is retained for history. Its P0/P1 sequencing is no longer normative.
 
-1. A simple string-based model sufficient for the MVP and independent teachers.
-2. A structured, versionable model that supports institutional use, national curricula, and multi-country expansion.
+Structured, versioned curriculum is now part of the product and MVP foundation:
 
-## Decision
+```text
+Course -> Unit -> Topic -> Learning Objective -> Indicator or expected competency
+```
 
-GradeOps AI adopts a **two-layer curriculum taxonomy**:
+Assessments and rubric criteria align to one or more learning objectives with explicit strength, purpose, expected cognitive depth, and provenance. AI may propose alignments; the teacher confirms or edits them.
 
-**P0 — String-based tagging:** Questions and assessments carry `subject_area` (string), `topic_tags_json` (JSON array), and `learning_outcome` (string). These are sufficient for filtering, AI generation scoping, and basic reporting. No relational curriculum entities are required at P0.
+GradeOps distinguishes:
 
-**P1 — Structured taxonomy:** A relational curriculum model is introduced with entities `Subject`, `CurriculumNode`, `LearningObjective`, and optionally `CurriculumProvider`, `CurriculumFramework`, `CurriculumVersion`, and `EducationLevel`. This model supports national curricula (e.g., Chilean Currículum Nacional), institutional programs, and AI-generated curriculum structures.
+- planned curriculum;
+- curriculum declared as taught;
+- curriculum actually assessed;
+- demonstrated learning;
+- detected gaps and adopted pedagogical actions.
 
-At all times, the P0 string fields are backward-compatible with the P1 model: the transition adds relational IDs as foreign keys without removing the string fields immediately.
-
-## Rationale
-
-- A fully relational curriculum model at P0 adds development complexity without delivering first-MVP value.
-- String-based tagging still allows the Question Generation Agent to scope generation accurately when the teacher provides subject and topic labels.
-- The P1 model matches the long-term direction of AI-native assessment operations: AI must know exactly which learning objectives it is targeting to produce reliable question batches and coverage reports.
-- GRADE demonstrated that simple Subject > Topic structure is enough to get started; GradeOps AI needs to extend this model rather than copy it as-is, since AI generation requires richer metadata.
-- Designing the P1 model now (even if not built) prevents a schema migration that breaks the P0 model later.
+String fields such as subject, topic, or learning-outcome text may remain during migration for compatibility and display. They are not the target source of truth and cannot support the approved analytical model by themselves.
 
 ## Consequences
 
-- Questions must carry at minimum `subject_area` and `learning_outcome` to transition from `draft` to `active` state in the bank.
-- The Question Generation Agent receives subject, topic, and learning outcome as inputs; it also suggests these values for questions it generates.
-- The Assessment Assembly Agent uses declared subject and outcome scope to filter eligible bank questions; mismatches trigger alerts.
-- Curriculum-based reports (performance by topic, by learning outcome) are enabled at P0 using string aggregation; richer reports require the P1 structured model.
-- The `CurriculumProvider` / `CurriculumFramework` architecture must be designed to avoid hardcoding any country's curriculum into the core model; each country is a separate provider.
-- The Chile national curriculum pack (`Ministerio de Educación de Chile` as `CurriculumProvider`) is the first concrete P1 implementation target.
-
-<!-- nav -->
-
----
-
-← [Student Access via Secure Link](2026-06-10-student-access-via-secure-link.md) | [↑ inicio](#curriculum-taxonomy-for-questions-and-assessments) | [README](README.md) | [Technology Stack →](2026-06-10-technology-stack.md)
+- Reports must not conflate content mentioned, taught, assessed, and achieved.
+- Historical analysis retains the curriculum version and alignment rules used at the time.
+- Missing evidence is `insufficient evidence`, not low achievement.
+- Country or institution curriculum packs remain adapters/providers; the core model is not hardcoded to one jurisdiction.
+- Migration from existing string tags requires reconciliation rather than destructive replacement.
