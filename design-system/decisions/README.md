@@ -33,6 +33,10 @@ El orden de lectura y navegación es:
 | [`ADR-UIUX-template.md`](ADR-UIUX-template.md) | Plantilla para registrar contexto, evidencia, alternativas, decisión, consecuencias, validación y revisión. |
 | [`2026-07-27-assessment-domain-foundations.md`](2026-07-27-assessment-domain-foundations.md) | Decisión aceptada sobre ciclo evaluativo transversal, perfiles multidimensionales, plantillas versionadas, estados independientes y semántica DDD de transiciones. |
 | [`2026-07-27-assessment-template-lifecycle-governance.md`](2026-07-27-assessment-template-lifecycle-governance.md) | Decisión aceptada sobre ciclo de identidad y versiones, publicación, propiedad, visibilidad, uso, clonación, autorización y gobernanza de plantillas. |
+| [`2026-07-27-transparent-grading-policy.md`](2026-07-27-transparent-grading-policy.md) | Decisión aceptada sobre políticas de calificación deterministas, versionadas, simulables, explicables y corregibles mediante análisis de impacto. |
+| [`2026-07-27-academic-period-section-enrollment.md`](2026-07-27-academic-period-section-enrollment.md) | Decisión aceptada sobre periodos, identidad de secciones, matrículas temporales, elegibilidad histórica, cierre y correcciones. |
+| [`2026-07-27-assessment-exceptions-effective-results.md`](2026-07-27-assessment-exceptions-effective-results.md) | Decisión aceptada sobre recuperativas, ausencias, atrasos, intentos, pendientes, rectificaciones y selección de resultados efectivos. |
+| [`business-rule-catalog.md`](business-rule-catalog.md) | Catálogo versionable de reglas e invariantes aceptados, preparado para trazabilidad con historias, implementación, pruebas y evidencia. |
 | [`data-model-impact-ledger.md`](data-model-impact-ledger.md) | Registro de capacidades UI/UX con impacto potencial en dominio, datos, contratos, seguridad, agentes o migraciones. |
 
 ## Relación con arquitectura

@@ -508,4 +508,4 @@ Revisar esta decisión si:
 
 ---
 
-[← Fundamentos del dominio](2026-07-27-assessment-domain-foundations.md) · [Siguiente: Data Model Impact Ledger →](data-model-impact-ledger.md) · [↑ Volver al inicio](#top)
+[← Fundamentos del dominio](2026-07-27-assessment-domain-foundations.md) · [Siguiente: Política de calificación →](2026-07-27-transparent-grading-policy.md) · [↑ Volver al inicio](#top)
