@@ -31,6 +31,7 @@ El orden de lectura y navegación es:
 | Archivo | Resumen |
 |---|---|
 | [`ADR-UIUX-template.md`](ADR-UIUX-template.md) | Plantilla para registrar contexto, evidencia, alternativas, decisión, consecuencias, validación y revisión. |
+| [`2026-07-27-assessment-domain-foundations.md`](2026-07-27-assessment-domain-foundations.md) | Decisión aceptada sobre ciclo evaluativo transversal, perfiles multidimensionales, plantillas versionadas, estados independientes y semántica DDD de transiciones. |
 | [`data-model-impact-ledger.md`](data-model-impact-ledger.md) | Registro de capacidades UI/UX con impacto potencial en dominio, datos, contratos, seguridad, agentes o migraciones. |
 
 ## Relación con arquitectura
