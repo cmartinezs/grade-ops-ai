@@ -62,7 +62,7 @@ A decision record should explain:
 | File | Topic | Status |
 | --- | --- | --- |
 | [`2026-06-08-use-gradeops-ai-name.md`](2026-06-08-use-gradeops-ai-name.md) | Product is named GradeOps AI; "Ops" signals workflow platform, not a quiz tool | Accepted |
-| [`2026-06-08-price-by-graded-submissions.md`](2026-06-08-price-by-graded-submissions.md) | Primary billing unit is the graded submission; aligns cost with value delivered | Accepted |
+| [`2026-06-08-price-by-graded-submissions.md`](2026-06-08-price-by-graded-submissions.md) | Historical primary billing unit was the graded submission | Superseded |
 | [`2026-06-08-mermaid-diagram-standard.md`](2026-06-08-mermaid-diagram-standard.md) | Mermaid is the default diagram format; PlantUML only when Mermaid is insufficient | Accepted |
 | [`2026-06-10-closed-assessment-mode.md`](2026-06-10-closed-assessment-mode.md) | Adding closed (objective/alternatives) assessment mode alongside open mode | Accepted |
 | [`2026-06-10-ai-native-question-bank.md`](2026-06-10-ai-native-question-bank.md) | Question bank is AI-generated and teacher-curated, not manually authored | Accepted |
@@ -75,7 +75,7 @@ A decision record should explain:
 | [`2026-06-12-firebase-authentication.md`](2026-06-12-firebase-authentication.md) | Firebase Authentication as identity provider; ID token validation in `api/`; operator internal endpoint; pre-verified email for provisioned accounts; refresh-token revocation on sign-out | Accepted |
 | [`2026-06-21-form-validation-react-hook-form-zod.md`](2026-06-21-form-validation-react-hook-form-zod.md) | Web forms use React Hook Form with Zod validation | Accepted |
 | [`2026-06-21-web-design-system.md`](2026-06-21-web-design-system.md) | Web UI follows the documented design system and token set | Accepted |
-| [`2026-07-20-agent-provider-model-policy.md`](2026-07-20-agent-provider-model-policy.md) | Agent runtime records provider/model and supports current Gemini + Groq adapters; Groq is current default, Gemini remains supported for Google Cloud-oriented environments | Accepted |
+| [`2026-07-20-agent-provider-model-policy.md`](2026-07-20-agent-provider-model-policy.md) | Historical provider/model-aware runtime policy with command-level selection | Superseded |
 | [`2026-07-20-environment-roles.md`](2026-07-20-environment-roles.md) | `beta` is product-evidence environment; `demo` is the Google Cloud target with Gemini-capable provider path | Accepted |
 | [`2026-07-20-archive-event-specific-constraints.md`](2026-07-20-archive-event-specific-constraints.md) | Event-specific constraints are historical only and must not govern active product/docs scope | Accepted |
 | [`2026-07-20-api-agent-orchestration.md`](2026-07-20-api-agent-orchestration.md) | `api/` is the public intermediary between `web/` and `agents/`; endpoint tasks require API-Agent orchestration and Richardson REST maturity checks | Accepted |
@@ -85,6 +85,8 @@ A decision record should explain:
 | [`2026-07-21-ui-design-data-semantics.md`](2026-07-21-ui-design-data-semantics.md) | UI work starts from the Design System, field data semantics, API I/O alignment and explicit sync/async contracts | Accepted |
 | [`2026-07-21-i18n-by-release.md`](2026-07-21-i18n-by-release.md) | i18n is implemented inside each functional release while source code, technical contracts, logs and telemetry remain in English | Accepted |
 | [`2026-07-22-master-plan-entry-decision.md`](2026-07-22-master-plan-entry-decision.md) | Pre-master-plan cleanup closes `008-assessment-creation` and `web/001-assessment-creation` — GO, no blocking conditions (initial CONDITIONAL GO condition retracted after verifying it was already fixed) | Accepted |
+| [`2026-07-27-credit-based-pricing.md`](2026-07-27-credit-based-pricing.md) | Credits meter heterogeneous AI-assisted workflows while submissions remain an operational/value metric | Accepted |
+| [`2026-07-27-policy-based-model-routing.md`](2026-07-27-policy-based-model-routing.md) | `agents/` selects provider/model through deterministic policy, authorized budgets and audited overrides | Accepted |
 
 ## Current Template
 

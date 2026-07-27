@@ -80,7 +80,7 @@ The teacher is the final pedagogical authority — agents assist, they do not re
 ## Strategic constraints
 
 - MVP is scoped to programming assessments only; do not expand scope to full LMS functionality.
-- Agent runtime is provider/model-aware. Gemini remains the Google Cloud-oriented path; Groq is the current default provider for beta/iteration per [`99-decisions/2026-07-20-agent-provider-model-policy.md`](99-decisions/2026-07-20-agent-provider-model-policy.md).
+- Agent runtime is provider/model-aware. Normal callers request capabilities and authorized budgets; a deterministic Model Router inside `agents/` selects an allowlisted route per [`99-decisions/2026-07-27-policy-based-model-routing.md`](99-decisions/2026-07-27-policy-based-model-routing.md).
 - `beta` and `demo` have distinct environment roles per [`99-decisions/2026-07-20-environment-roles.md`](99-decisions/2026-07-20-environment-roles.md). Do not claim Google Cloud deployment without deployment evidence.
 - Event-specific constraints are archived and historical per [`99-decisions/2026-07-20-archive-event-specific-constraints.md`](99-decisions/2026-07-20-archive-event-specific-constraints.md).
 - Evidence-first: the project is designed to collect proof (interviews, pilot commitments, real assessment runs, testimonials) from day one. Success is measured by evidence, not feature volume.

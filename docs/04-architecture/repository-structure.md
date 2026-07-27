@@ -152,7 +152,7 @@ grade-ops-ai-api/
 | `report` | Teacher report assembly and export |
 | `questionbank` | Question item generation, distractor/ambiguity review states, curation, bank composition |
 | `learner` | LearnerRef records, invitation tokens, closed assessment attempts, result publication |
-| `billing` | Plan entitlement, graded submission counters, Stripe webhook handling |
+| `billing` | Plan entitlement, workflow quotes, credit ledger/reservations, usage metrics, payment webhooks |
 | `audit` | Approval events, user action history, AgentExecutionLog persistence |
 | `agentclient` | HTTP client calls to the agent service; maps agent DTOs to API domain |
 | `shared` | Common base entities, error codes, pagination, validation utilities |
@@ -163,7 +163,7 @@ The `agentclient` module is the only one that knows the agent service exists. Al
 
 ## `grade-ops-ai-agents`
 
-Agent runtime. Spring Boot 4 + Java 21 + Spring AI + Vertex AI Gemini. Owns all agent implementations, prompts, structured output contracts, and execution logs.
+Agent runtime. Spring Boot 4 + Java 21 + Spring AI provider adapters. Owns agent implementations, prompts, structured output contracts, deterministic Model Router policy, workflow budget enforcement, and resolved execution metadata.
 
 ```text
 grade-ops-ai-agents/

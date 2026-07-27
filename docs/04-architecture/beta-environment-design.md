@@ -89,7 +89,7 @@ Spring AI's `ChatClient` is the port. No custom interface is needed — Spring A
 | Vertex AI / Google GenAI Gemini | `demo`, supported in `beta` when configured | Spring AI Google GenAI / Vertex-compatible model support |
 | OpenAI-compatible Groq | `beta`, current default provider | Spring AI OpenAI-compatible model support with custom `base-url` |
 
-> **Decision update (2026-07-20):** `docs/99-decisions/2026-07-20-agent-provider-model-policy.md` formalizes the current policy: Groq is the current default provider for the implemented Assessment Agent slice, while Gemini remains supported for Google Cloud-oriented deployments.
+> **Decision update (2026-07-27):** [`Policy-Based Provider And Model Routing`](../99-decisions/2026-07-27-policy-based-model-routing.md) keeps Groq and Gemini as implemented adapters but moves normal selection to deterministic capability/budget/privacy policy inside `agents/`.
 
 The model name is never hardcoded. Both providers are wired via `agents/src/main/resources/application-beta.yml`, keyed off environment variables so the model can change without a code change:
 
@@ -111,7 +111,7 @@ spring:
           model: ${GRADEOPS_GROQ_MODEL}
 ```
 
-Both providers can be configured in the same profile. `app.agents.llm.default-provider` selects which one handles a request that does not explicitly name a provider; there is no Maven-starter swap required to change providers.
+Both providers can be configured in the same profile. During migration, `app.agents.llm.default-provider` remains the compatibility fallback for commands that omit a provider. In the target contract it becomes a final preference/fallback input after mandatory privacy, capability, budget, tenant, and provider-health rules.
 
 ---
 

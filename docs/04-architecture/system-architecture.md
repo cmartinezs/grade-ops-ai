@@ -43,9 +43,9 @@ flowchart LR
     API --> Storage[(Object Storage)]
     API --> AgentRuntime[Agent Runtime]
 
-    AgentRuntime --> Provider[Provider / Model Gateway]
-    Provider --> Gemini[Gemini / Vertex AI]
-    Provider --> Groq[Groq / OpenAI-compatible]
+    AgentRuntime --> Router[Policy-based Model Router]
+    Router --> Gemini[Gemini / Vertex AI]
+    Router --> Groq[Groq / OpenAI-compatible]
     AgentRuntime --> EvidencePayload[Execution Payload]
     EvidencePayload --> API
 
@@ -65,7 +65,7 @@ flowchart LR
 | Backend API | Auth, workflow state, business rules, REST API, billing, audit | Spring Boot 4 + Java 21 + PostgreSQL (`grade-ops-ai-api`). |
 | Workflow Orchestrator | Coordinates assessment lifecycle and agent handoffs | Module inside `grade-ops-ai-api`. |
 | Agent Runtime | Executes agent calls, validates structured outputs, returns execution payloads | Spring Boot 4 + Java 21 + Spring AI (`grade-ops-ai-agents`). |
-| Provider / Model Gateway | Selects provider/model, calls Gemini or Groq through Spring AI adapters, records provider/model metadata | Current Assessment Agent slice supports `gemini` and `groq`; future providers require a decision record. |
+| Policy-based Model Router | Selects an allowlisted provider/model from capability, privacy, budget, tenant, health, quality, cost and latency constraints | Current Assessment Agent selector is the migration baseline; normal callers stop selecting exact routes. |
 | Primary DB | Stores users, assessments, rubrics, submissions, feedback, reports, logs | Cloud SQL PostgreSQL. |
 | Object Storage | Stores uploaded files, exports, report artifacts | Cloud Storage. |
 | Infrastructure | Cloud Run services, secrets, networking, CI/CD | Terraform + GitHub Actions (`grade-ops-ai-infra`). |
@@ -124,7 +124,7 @@ Every agent call should follow the same execution wrapper:
 1. Validate command.
 2. Load required domain data.
 3. Build agent input envelope.
-4. Call provider/model through the runtime gateway.
+4. Resolve an allowlisted provider/model through deterministic routing policy and the authorized workflow budget.
 5. Validate structured output.
 6. Build execution payload with provider, model, tokens, cost, latency, status and error metadata.
 7. Return structured result and execution payload to the API.
@@ -137,7 +137,7 @@ The agent runtime can generate assessment drafts, rubrics, grading suggestions, 
 
 It must not finalize scores, send feedback to students, silently change approved rubrics, hide failed or uncertain outputs, store secrets in prompts, or bypass workflow state rules.
 
-The API remains the authority for domain state, approval, billing, persistence and publication. The agent runtime receives commands, uses only allowed tools/providers, validates structured output and returns results plus execution metadata.
+The API remains the authority for domain state, approval, credit quoting/reservation, persistence and publication. It decides whether the operation may run and supplies the maximum budget. The agent runtime receives capability-oriented commands, selects only allowed tools/providers through its Model Router, enforces token/call/retry/cost/time limits, validates structured output and returns results plus execution metadata.
 
 ## Agent Runtime Evolution
 
@@ -151,10 +151,10 @@ It is a real GenAI execution path, but it is not yet a generic headless runtime.
 
 | Stage | First consumer | Runtime increment |
 |---|---|---|
-| R01 | Assessment Agent | Provider/model policy, normalized errors, costs, logs, idempotency and compatibility with the existing endpoint. |
+| R01 | Assessment Agent | Preserve compatibility while adding normalized errors, resolved-route evidence, costs, logs and idempotency. |
 | R02 | Rubric, Grading, Feedback | `AgentDefinition`, lightweight registry, common gateway and reusable contracts/validators. |
 | R03 | Learning Gap, Recovery, Teacher Report | Typed handoffs and read-only aggregate tools. |
-| R04 | Closed authoring agents | Controlled tool loop with `AgentAction`, tool registry/executor, policy engine and budget manager. |
+| R04 | Closed authoring agents | Controlled tool loop with `AgentAction`, tool registry/executor, policy engine, Model Router and budget manager. |
 | R05 | Item Analytics / student attempts | Persistent or async `AgentRun`/`AgentStep` only if volume or latency requires it. |
 | R06 | Ops Agent / dashboard | Agent health, provider/model comparison, cost warnings, budget alerts and readiness signals. |
 

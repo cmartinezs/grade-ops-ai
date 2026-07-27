@@ -79,7 +79,7 @@ No agent should silently create final grades, final feedback, or student-facing 
 
 | Topic | Source |
 | --- | --- |
-| Provider/model policy | [`../99-decisions/2026-07-20-agent-provider-model-policy.md`](../99-decisions/2026-07-20-agent-provider-model-policy.md) |
+| Provider/model routing policy | [`../99-decisions/2026-07-27-policy-based-model-routing.md`](../99-decisions/2026-07-27-policy-based-model-routing.md) |
 | Agent service separation | [`../99-decisions/2026-06-10-agent-runtime-separation.md`](../99-decisions/2026-06-10-agent-runtime-separation.md) |
 | Evidence schema | [`../05-evidence/agent-logs.md`](../05-evidence/agent-logs.md) |
 | Open/Closed workflows | [`../02-product/workflows.md`](../02-product/workflows.md) |

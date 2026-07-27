@@ -36,7 +36,8 @@ As an operator, I want token and cost estimates per agent run so unit economics 
 
 - **Area:** `api/`, `agents/`, `infra/`
 - `agents/`: returns token usage/cost metadata available from Gemini/Groq adapters plus normalized missing-data warnings.
-- `api/`: owns provider/model policy, cost event persistence, aggregation, idempotency and revenue/cost dashboard queries.
+- `api/`: owns workflow authorization/budget, credit quote/ledger, cost-event persistence, aggregation, idempotency and revenue/cost dashboard queries.
+- `agents/`: owns deterministic provider/model routing, fallback, budget enforcement and resolved-route evidence.
 - `infra/`: environment-specific provider credentials, quotas and telemetry must not change the cost-event schema.
 - Costs are evidence, not pricing narrative. R06 can aggregate and export them, but D-07 controls customer-facing pricing language.
 

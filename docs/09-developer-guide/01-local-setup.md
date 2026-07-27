@@ -179,7 +179,7 @@ For real provider calls, configure the relevant server-side keys before starting
 | `GRADEOPS_GEMINI_API_KEY` | Gemini API-key path for beta/local-like runs |
 | `GRADEOPS_GEMINI_MODEL` | Gemini model selection |
 
-The default provider in `agents/src/main/resources/application.yml` is `groq`, but `AssessmentCommand.provider` can override it when supported by the caller.
+The current compatibility default in `agents/src/main/resources/application.yml` is `groq`. `AssessmentCommand.provider` may still exist for internal tests/migration, but normal product callers must not select it. The target Model Router resolves provider/model from capability, privacy, tenant, health, and authorized-budget policy; exact overrides are permission-gated and audited.
 
 ---
 

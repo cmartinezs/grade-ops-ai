@@ -473,7 +473,7 @@ The current assessment creation slice is implemented under `/api/v1`.
 
 The API calls `agents/` through `agentclient`; the frontend never calls the agents service directly. `api/` persists the assessment, draft version and `AgentExecutionLog` derived from the execution payload returned by `agents/`.
 
-Current Assessment Agent provider/model selection is internal to the agent command/runtime policy. The API must not expose provider secrets or import Spring AI directly.
+Current Assessment Agent provider/model fields are a compatibility detail while routing evolves. Normal API operations must send workflow capability, data classification, tenant policy context, and an authorized budget; they must not expose exact provider/model selection to web callers. `agents/` returns the resolved route as execution metadata. Provider/model override remains internal, permission-gated, and audited.
 
 ---
 

@@ -10,7 +10,7 @@ GradeOps AI uses specialized agents to operate the assessment workflow for progr
 | Teacher authority | Agents suggest; teachers approve high-impact outputs. |
 | AI-native operation | Agent runs must be visible, logged, and demo-ready. |
 | Business evidence | Logs support usage, cost, revenue, customer proof, and product validation. |
-| Pricing by assessments/submissions | Agents must track assessment and submission-level cost/usage. |
+| Credit-based workflow pricing | Agents report actual workflow cost and resolved route; API owns quotes and credit ledger. |
 
 ## Current Implementation Status
 
@@ -20,6 +20,7 @@ The documentation describes the intended 13-agent catalog. The current verified 
 | --- | --- | --- |
 | Assessment Agent | Implemented vertical slice | `agents/` exposes `POST /internal/agents/assessment`; API calls it through `agentclient`; output includes structured result and execution payload. |
 | Provider adapters | Implemented for Assessment Agent | `gemini` and `groq` adapters exist; Groq is the current default provider, Gemini remains supported for Google Cloud-oriented environments. |
+| Policy-based Model Router | Planned evolution | Current selector/default remains implemented; deterministic capability/budget/privacy routing replaces normal command-level selection incrementally. |
 | Generic runtime | Planned incrementally | `AgentDefinition`, registry, shared gateway, tool loop, `AgentRun`/`AgentStep`, async/cancel/resume are not baseline capabilities yet. |
 | Other 12 agents | Contracted / planned | Their files define required behavior; implementation should follow the release sequence in the Master Plan. |
 
@@ -234,21 +235,23 @@ flowchart TD
 
 | Agent | Default policy | Notes |
 | --- | --- | --- |
-| Assessment Agent | Provider/model policy; current default `groq`, Gemini supported | Quality and structure matter; command-level provider override may be used when available. |
-| Rubric Agent | Flash-class | Needs consistency and calibration. |
-| Grading Agent | Flash-Lite-class for bulk; Flash fallback | Highest-volume step. |
-| Feedback Agent | Flash-Lite-class by default; Flash fallback | Student-facing quality matters. |
-| Learning Gap Agent | Flash-class or Flash-Lite depending volume | Aggregation and interpretation. |
-| Recovery Agent | Flash-class | Pedagogical usefulness matters. |
-| Teacher Report Agent | Flash-class | Summary quality matters. |
+| Assessment Agent | Balanced quality/cost profile | Current selector is a migration baseline; normal requests should provide capability and budget, not provider/model. |
+| Rubric Agent | Balanced quality profile | Needs consistency and calibration. |
+| Grading Agent | Economical bulk profile with allowlisted escalation | Highest-volume step. |
+| Feedback Agent | Economical profile with quality fallback | Student-facing quality matters. |
+| Learning Gap Agent | Volume-sensitive analysis profile | Aggregation and interpretation. |
+| Recovery Agent | Balanced pedagogical profile | Pedagogical usefulness matters. |
+| Teacher Report Agent | Balanced narrative profile | Summary quality matters. |
 | Ops Agent | Deterministic code first; LLM only for summaries | Avoid unnecessary model spend. |
-| Question Generation Agent | Flash-class | Content quality and pedagogical correctness matter. |
-| Distractor Quality Agent | Flash-Lite-class | Structured evaluation; high volume per batch. |
-| Ambiguity Review Agent | Flash-class | Interpretation quality matters. |
-| Assessment Assembly Agent | Flash-Lite-class | Selection and optimization; deterministic rules preferred. |
-| Item Analytics Agent | Flash-class | Interpretation and narrative require quality. |
+| Question Generation Agent | Balanced content profile | Content quality and pedagogical correctness matter. |
+| Distractor Quality Agent | Economical structured-analysis profile | High volume per batch. |
+| Ambiguity Review Agent | Balanced reasoning profile | Interpretation quality matters. |
+| Assessment Assembly Agent | Deterministic rules first | Model assistance only inside budget when needed. |
+| Item Analytics Agent | Balanced analysis profile | Interpretation and narrative require quality. |
 
-Logs must record the actual `provider` and `model`. Do not infer Gemini-only usage from "Flash-class" labels; those labels are cost/quality tiers, not provider names.
+The Model Router evaluates legal/privacy policy, required capabilities, authorized budget, tenant policy, provider health, expected quality, cost/latency, preference, and allowlisted fallback in that order. It is deterministic by default and must not call an LLM merely to route an ordinary execution.
+
+Every workflow enforces token, call, tool, retry, cost, timeout, and idempotency limits. Exact provider/model overrides are internal, permission-gated, and audited. Logs always record the resolved `provider` and `model`.
 
 ## Quality Rules
 

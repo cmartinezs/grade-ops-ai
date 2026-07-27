@@ -14,6 +14,8 @@ The API must support the MVP assessment lifecycle, agent orchestration, teacher 
 6. Separate internal evidence APIs from teacher-facing APIs.
 7. Make every mutation auditable.
 8. Support demo and pilot use before enterprise completeness.
+9. Authorize a workflow and budget without exposing provider/model selection to normal callers.
+10. Quote, reserve, confirm, and release credits idempotently around billable workflows.
 
 ## API Style
 
@@ -39,7 +41,7 @@ In this API, `/submissions` means **student submissions**: answers, code, files,
 
 It does not imply student accounts or a student portal.
 
-A submission becomes a **graded submission** for pricing/usage when it is analyzed by the grading/feedback workflow.
+A submission becomes an **analyzed submission** product metric when the grading/feedback workflow runs. The associated workflow receives a versioned credit quote; submission count does not imply a fixed credit charge.
 
 ## Resource Overview
 
@@ -57,7 +59,8 @@ A submission becomes a **graded submission** for pricing/usage when it is analyz
 | `/teacher-reports` | Assessment reports. |
 | `/agent-runs` | Agent execution logs. |
 | `/evidence` | Business/demo evidence. |
-| `/usage` | Plan and usage metrics. |
+| `/usage` | Assessment/submission metrics plus credit balances and ledger. |
+| `/workflow-quotes` | Versioned credit quote for an authorized operation. |
 
 ## Common Response Envelope
 

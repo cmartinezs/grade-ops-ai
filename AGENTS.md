@@ -75,7 +75,7 @@ Browser → Web (Next.js) → API (Spring Boot) → Agents (Spring Boot / Spring
 
 - **Web** handles teacher workspace, student access (secure token links, no login), and dashboards.
 - **API** owns all domain logic, workflow state machine, persistence, and billing. It calls the agent service via the `agentclient` module — no other module imports Spring AI.
-- **Agents** expose a REST API internally (service-to-service OIDC auth, not public). Each agent follows a fixed pattern: validate command → load data → build envelope → call Gemini → validate structured output → log execution → return result.
+- **Agents** expose a REST API internally (service-to-service OIDC auth, not public). Each agent follows a fixed pattern: validate capability/budget command → load data → build envelope → resolve an allowlisted provider/model through deterministic policy → validate structured output → log execution → return result.
 - **Prompts** are versioned file-based templates in `agents/src/main/resources/prompts/` (StringTemplate `.st` files). Never inline prompts in Java code.
 - **Infra** provisions Cloud Run, Cloud SQL, Cloud Storage, Secret Manager, Artifact Registry, and IAM via Terraform. The `demo` environment is the primary Google Cloud target for product validation and production-like deployment.
 

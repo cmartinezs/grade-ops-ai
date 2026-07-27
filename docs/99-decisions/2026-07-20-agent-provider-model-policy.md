@@ -1,10 +1,13 @@
 # Agent Provider And Model Policy
 
-- Status: Accepted
+- Status: Superseded
 - Date: 2026-07-20
 - Decision owner: Architecture / Founder
+- Superseded by: [`2026-07-27-policy-based-model-routing.md`](2026-07-27-policy-based-model-routing.md)
 
 ## Context
+
+> Historical decision. Provider/model-aware execution remains valid, but normal requests now delegate exact selection to a policy-based Model Router.
 
 The original technology stack decision selected Spring AI with Gemini / Vertex AI as the target agent runtime. Gemini remains the Google Cloud-oriented target, but the implemented `agents/` service now supports more than one model provider.
 
