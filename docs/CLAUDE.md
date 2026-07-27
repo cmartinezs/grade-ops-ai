@@ -1,86 +1,73 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+Guidance for AI coding agents working in `docs/`.
 
-## What this repository is
+## Product Authority
 
-This folder is the canonical documentation area for GradeOps AI inside a workspace that also contains application code (`api/`, `agents/`, `web/`, and `infra/`). Do not add application code under `docs/`.
+GradeOps AI is a transversal AI-native assessment-operations platform. Programming is an initial validation wedge and specialization, not a core-domain restriction.
 
-GradeOps AI is being built as a focused MVP and a real business experiment. The product is an AI-operated workflow that lets educators run assessment cycles — from learning goal through grading, feedback, gap detection, and teacher reports — using a pipeline of AI agents.
+Read before product or architecture work:
 
-The product supports two assessment modes: **Open** (practical code/text submissions, rubric-based, AI grading suggestion) and **Closed** (objective questions with alternatives, AI-native question bank, deterministic grading). Both modes share the same operational infrastructure, teacher approval model, and evidence layer.
+1. [Assessment Operations Product Redesign](99-decisions/2026-07-27-assessment-operations-product-redesign.md)
+2. [MVP Scope](02-product/mvp-scope.md)
+3. [Product Workflows](02-product/workflows.md)
+4. [Target Conceptual Data Model](04-architecture/data-model.md)
+5. [Screen Inventory](06-ux/screen-inventory.md)
 
-## Folder structure
+If older source, master-plan, raw, generated, or archived material conflicts with an accepted decision, the accepted decision wins and the conflicting source must be reconciled explicitly.
+
+## Repository Boundary
+
+`docs/` contains canonical and derived documentation. Application code lives in `api/`, `agents/`, `web/`, and `infra/`. Do not add application code under `docs/`.
+
+## Product Invariants
+
+- Open, closed and mixed assessments share a transversal model.
+- Preparation, application, participation, evaluation, criterion review, approval, publication, correction, appeal and analysis have independent lifecycles.
+- Approval is not publication.
+- Publication freezes the applicable snapshot.
+- Corrections create new versions and require explicit republication.
+- Historical official results are immutable.
+- Teacher-initiated review is distinct from formal student appeal.
+- AI output is a proposal unless an approved deterministic policy applies.
+- Closed scoring is deterministic against the published answer-key/scoring snapshot.
+- Curriculum is structured and versioned.
+- Planned, taught, assessed, demonstrated and action layers are distinct.
+- Missing evidence is not low achievement.
+- Authorization is actor/action/resource/relationship/policy based.
+- Student-sensitive data does not appear in notification subjects, previews, or URLs.
+
+## Documentation Structure
 
 | Folder | Purpose |
 | --- | --- |
-| `00-project/` | Vision, pitch, problem statement, solution, roadmap, and cost model |
-| `01-business/` | Business model, pricing, go-to-market, customer discovery, revenue evidence |
-| `02-product/` | Personas, MVP scope, user stories, workflows, and product metrics |
-| `03-ai-agents/` | Agent roles, responsibilities, boundaries, prompt contracts, execution logs |
-| `04-architecture/` | System design, data model, API design, security, deployment, Google Cloud assumptions |
-| `05-evidence/` | Templates for proof of demand, usage, revenue, outcomes, and demo evidence |
-| `06-ux/` | Screen inventory, interaction model, and UX design intent for teacher workspace and student access |
-| `08-user-guide/` | Teacher-facing workflow guide and availability notes |
-| `09-developer-guide/` | Local setup, API, DB, agent, web, testing, and deployment guidance |
-| `10-best-practices/` | Spring Boot and GradeOps implementation checklists |
-| `archive/2026-event/` | Historical event materials, no longer active product constraints |
-| `99-decisions/` | Durable architecture, product, business, and scope decision records |
-| `master-plan/` | Derived executive plan and release sequencing; coordinate with source docs |
-| `source-docs-refresh/` | Audit trail for documentation refresh and remaining drift |
-| `.raw/` | Historical conversation notes and reasoning history — not canonical, not edited directly |
-| `.all-by-category/` | Consolidated Markdown files per category for NotebookLM upload — generated from canonical sources, not edited directly |
+| `00-project/` | Vision, problem, solution and roadmap |
+| `01-business/` | Business model, pricing, discovery and evidence |
+| `02-product/` | Personas, scope, curriculum and workflows |
+| `03-ai-agents/` | Agent roles, contracts, runtime and boundaries |
+| `04-architecture/` | System, target model, API, security and deployment |
+| `05-evidence/` | Demand, usage, cost and operational proof |
+| `06-ux/` | Lifecycle-aware teacher and student UX |
+| `08-user-guide/` | User workflows and availability |
+| `09-developer-guide/` | Setup, services, tests and deployment |
+| `10-best-practices/` | Quality guidance |
+| `99-decisions/` | Durable authority |
+| `master-plan/` | Derived release sequencing |
+| `.raw/`, `archive/` | Historical context only |
+| `.all-by-category/` | Generated; never edit directly |
 
-## Writing conventions
+## Working Rules
 
-- **Language**: Preserve the language of the file you are editing until a canonical language policy is accepted. A language-normalization pass is pending; do not mix languages inside a file more than necessary.
-- **Diagrams**: Mermaid by default. Use PlantUML only when Mermaid is insufficient. ASCII diagrams are a last fallback only.
-- **Positioning**: Always frame GradeOps AI as an AI-native assessment operations business, not a quiz generator, chatbot, or LMS add-on.
-- **Focus**: Prioritize business viability, customer evidence, agent operations, and product validation.
+- Preserve a file's language until a language-normalization decision exists.
+- Use Mermaid for diagrams when a diagram is actually useful.
+- Separate current implementation facts from target design.
+- Do not claim a target capability is implemented without code/test evidence.
+- Existing code must be classified as reusable, adaptable, incompatible, absent, or obsolete before migration planning.
+- Prefer incremental migration over an unexamined rewrite.
+- Record durable cross-cutting decisions in `99-decisions/`.
+- Update thematic source documents before regenerating master-plan or category consolidations.
+- Keep AI provider/model/prompt/version, cost, uncertainty and human decision provenance auditable.
 
-## Key content rules
+## Current Implementation Reminder
 
-**Canonical vs. historical**: The thematic folders (`00-project/` through `99-decisions/`) are the source of truth. `.raw/` is historical context only. If `.raw/` conflicts with a thematic document, the thematic document wins. Promote stronger decisions from `.raw/` into the correct thematic folder or a new decision record.
-
-**Decision records**: Use `99-decisions/adr-template.md` for any durable decision. Name files `YYYY-MM-DD-short-title.md`. Decision records belong in `99-decisions/` when the choice affects multiple documents, implementation direction, business strategy, architecture, or scope.
-
-**`.all-by-category/` files**: These are generated consolidations. Edit the original category documents, then regenerate these files. Do not edit `.all-by-category/` files directly.
-
-**Master Plan**: `master-plan/` is derived planning output. Use it for release sequencing and traceability, but update source documentation in the thematic folders when durable facts change.
-
-**Archive**: `archive/2026-event/` is historical. It must not impose active product, pricing, deployment, or evidence requirements unless a durable decision is promoted into active docs or `99-decisions/`.
-
-## Agent pipeline (core concept)
-
-Thirteen agents form the assessment operations workflow across two modes.
-
-### Open assessment agents
-
-1. **Assessment Agent** — generates the activity from a teacher's learning goal
-2. **Rubric Agent** — creates and validates grading criteria
-3. **Grading Agent** — analyzes submissions against the rubric
-4. **Feedback Agent** — drafts personalized student feedback
-5. **Learning Gap Agent** — identifies recurring issues across submissions
-6. **Recovery Agent** — suggests reinforcement activities
-7. **Teacher Report Agent** — prepares the final class report
-8. **Ops Evidence Agent** — records usage, costs, outcomes, and agent logs
-
-### Closed assessment agents
-
-9. **Question Generation Agent** — generates objective questions (TF/SC/MC) with alternatives, answer key, difficulty, and learning outcome
-10. **Distractor Quality Agent** — evaluates and flags weak or biased incorrect alternatives
-11. **Ambiguity Review Agent** — detects interpretation problems and double-valid answers
-12. **Assessment Assembly Agent** — composes a balanced assessment from approved bank questions
-13. **Item Analytics Agent** — analyzes post-assessment item performance, difficulty, and outcome coverage
-
-Each agent execution should produce structured evidence: timestamp, user, assessment, agent name, input/output summaries, provider, model, status, teacher approval state, estimated time saved, cost estimate, and prompt/template version.
-
-The teacher is the final pedagogical authority — agents assist, they do not replace teacher judgment. For closed assessments, grading is always deterministic; AI agents generate and analyze, never score.
-
-## Strategic constraints
-
-- MVP is scoped to programming assessments only; do not expand scope to full LMS functionality.
-- Agent runtime is provider/model-aware. Normal callers request capabilities and authorized budgets; a deterministic Model Router inside `agents/` selects an allowlisted route per [`99-decisions/2026-07-27-policy-based-model-routing.md`](99-decisions/2026-07-27-policy-based-model-routing.md).
-- `beta` and `demo` have distinct environment roles per [`99-decisions/2026-07-20-environment-roles.md`](99-decisions/2026-07-20-environment-roles.md). Do not claim Google Cloud deployment without deployment evidence.
-- Event-specific constraints are archived and historical per [`99-decisions/2026-07-20-archive-event-specific-constraints.md`](99-decisions/2026-07-20-archive-event-specific-constraints.md).
-- Evidence-first: the project is designed to collect proof (interviews, pilot commitments, real assessment runs, testimonials) from day one. Success is measured by evidence, not feature volume.
+The verified baseline includes an assessment-generation vertical slice and Gemini/Groq provider adapters. The broader runtime, lifecycle model, curriculum foundation and remaining agents are target capabilities unless code evidence proves otherwise.
