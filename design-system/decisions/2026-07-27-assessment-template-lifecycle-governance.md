@@ -98,6 +98,15 @@ stateDiagram-v2
 `CURRENT` expresa recomendación para operaciones nuevas. No invalida ni oculta
 la validez histórica de versiones anteriores.
 
+| Origen | Comando | Guardas principales | Destino | Evento |
+|---|---|---|---|---|
+| Inexistente | `StartAssessmentTemplateRevision` | Plantilla `ACTIVE`, origen elegible y sin otro borrador activo | `DRAFT` | `AssessmentTemplateRevisionStarted` |
+| `DRAFT` | `PublishAssessmentTemplateVersion` | Contenido completo, consistente y actor autorizado | `CURRENT` | `AssessmentTemplateVersionPublished` |
+| `DRAFT` | `DiscardAssessmentTemplateDraft` | Actor autorizado y motivo obligatorio | `DISCARDED` | `AssessmentTemplateDraftDiscarded` |
+| `CURRENT` | `PublishNewCurrentVersion` | Nueva versión publicada atómicamente | `SUPERSEDED` | `AssessmentTemplateVersionSuperseded` |
+| `CURRENT`, `SUPERSEDED` | `DeprecateAssessmentTemplateVersion` | Motivo y reemplazo recomendado cuando exista | `DEPRECATED` | `AssessmentTemplateVersionDeprecated` |
+| `SUPERSEDED`, `DEPRECATED` | `RestoreTemplateVersionAsCurrent` | Compatibilidad vigente, motivo y autorización | `CURRENT` | `AssessmentTemplateVersionRestoredAsCurrent` |
+
 ## Catálogo de transiciones
 
 ### Crear una plantilla
@@ -302,6 +311,12 @@ política anterior, emite `AssessmentTemplateVisibilityChanged` e invalida los
 índices o cachés de descubrimiento necesarios. No modifica versiones ni
 evaluaciones existentes.
 
+| Origen | Intención | Destino permitido | Restricción principal |
+|---|---|---|---|
+| `PRIVATE` | Ampliar descubrimiento | `SCOPED`, `PUBLIC` | Propietario y contenido compatibles |
+| `SCOPED` | Restringir o ampliar | `PRIVATE`, `PUBLIC` | Alcance válido y actor autorizado |
+| `PUBLIC` | Restringir descubrimiento | `SCOPED`, `PRIVATE` | No invalida usos ni evaluaciones anteriores |
+
 ## Capacidades
 
 La autorización se expresa mediante capacidades específicas, no mediante roles
@@ -330,6 +345,13 @@ identidad y capacidad; el aggregate protege invariantes.
 ## Usar, personalizar y clonar
 
 Son operaciones distintas.
+
+| Operación | Crea plantilla | Crea evaluación | Conserva procedencia | Sincroniza con origen |
+|---|---:|---:|---:|---:|
+| Usar | No | Sí | Sí, versión exacta | No |
+| Personalizar evaluación | No | Modifica solo el borrador creado | Sí, más diferencias | No |
+| Clonar plantilla | Sí, con identidad nueva | No | Sí, como lineage | No |
+| Adoptar versión posterior | No | Revisa una evaluación futura o borrador elegible | Sí, ambas versiones | Solo mediante acción explícita |
 
 ### Usar
 

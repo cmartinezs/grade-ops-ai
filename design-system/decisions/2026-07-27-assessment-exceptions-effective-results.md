@@ -76,6 +76,31 @@ La evidencia justificativa puede ser sensible. Su visibilidad se controlará por
 rol y propósito; la vista académica no necesita exponer detalles médicos o
 personales.
 
+```mermaid
+stateDiagram-v2
+    [*] --> REQUESTED: RequestAcademicException
+    REQUESTED --> UNDER_REVIEW: StartExceptionReview
+    REQUESTED --> CANCELLED: CancelExceptionRequest
+    UNDER_REVIEW --> APPROVED: ApproveAcademicException
+    UNDER_REVIEW --> REJECTED: RejectAcademicException
+    UNDER_REVIEW --> MORE_EVIDENCE_REQUIRED: RequestAdditionalEvidence
+    MORE_EVIDENCE_REQUIRED --> UNDER_REVIEW: SubmitAdditionalEvidence
+    APPROVED --> APPLIED: ApplyAcademicException
+    APPROVED --> REVOKED: RevokeAcademicException
+```
+
+| Origen | Comando | Guardas principales | Destino | Evento |
+|---|---|---|---|---|
+| Inexistente | `RequestAcademicException` | Matrícula y evaluación válidas; motivo informado | `REQUESTED` | `AcademicExceptionRequested` |
+| `REQUESTED` | `StartExceptionReview` | Revisor autorizado y caso completo | `UNDER_REVIEW` | `AcademicExceptionReviewStarted` |
+| `REQUESTED` | `CancelExceptionRequest` | Solicitante autorizado y sin decisión | `CANCELLED` | `AcademicExceptionRequestCancelled` |
+| `UNDER_REVIEW` | `RequestAdditionalEvidence` | Faltante identificado sin exponer datos sensibles | `MORE_EVIDENCE_REQUIRED` | `AdditionalExceptionEvidenceRequested` |
+| `MORE_EVIDENCE_REQUIRED` | `SubmitAdditionalEvidence` | Evidencia admitida y vigente | `UNDER_REVIEW` | `AdditionalExceptionEvidenceSubmitted` |
+| `UNDER_REVIEW` | `ApproveAcademicException` | Autoridad, política y alcance válidos | `APPROVED` | `AcademicExceptionApproved` |
+| `UNDER_REVIEW` | `RejectAcademicException` | Motivo obligatorio | `REJECTED` | `AcademicExceptionRejected` |
+| `APPROVED` | `ApplyAcademicException` | Revisión aprobada todavía aplicable | `APPLIED` | `AcademicExceptionApplied` |
+| `APPROVED` | `RevokeAcademicException` | Causa justificada y evaluación de impacto | `REVOKED` | `AcademicExceptionRevoked` |
+
 ### Intentos y recuperativas
 
 Cada `AssessmentAttempt` conserva tipo, número, evidencia, estado y revisión
@@ -106,6 +131,36 @@ efectivo y debe haberse publicado antes del intento.
 
 Recuperar un componente no recalcula componentes no afectados.
 
+```mermaid
+stateDiagram-v2
+    [*] --> AVAILABLE: CreateAssessmentAttempt
+    AVAILABLE --> IN_PROGRESS: StartAssessmentAttempt
+    IN_PROGRESS --> SUBMITTED: SubmitAssessmentAttempt
+    IN_PROGRESS --> EXPIRED: AttemptWindowExpired
+    SUBMITTED --> UNDER_REVIEW: StartAttemptReview
+    UNDER_REVIEW --> GRADED: GradeAssessmentAttempt
+    UNDER_REVIEW --> NEEDS_RESUBMISSION: RequestResubmission
+    NEEDS_RESUBMISSION --> IN_PROGRESS: ReopenAssessmentAttempt
+    GRADED --> VOIDED: VoidAssessmentAttempt
+```
+
+| Estado | Significado | Puede aportar resultado |
+|---|---|---:|
+| `AVAILABLE` | Intento autorizado todavía no iniciado | No |
+| `IN_PROGRESS` | Ventana o sesión activa | No |
+| `SUBMITTED` | Evidencia recibida e inmutable por revisión | No |
+| `UNDER_REVIEW` | Valoración en curso | No |
+| `NEEDS_RESUBMISSION` | Se habilitó corregir o completar evidencia | No |
+| `GRADED` | Existe una revisión calificada candidata | Sí |
+| `EXPIRED` | La ventana terminó sin entrega válida | No |
+| `VOIDED` | El intento fue invalidado con motivo | No |
+
+| Regla de selección | Resultado efectivo |
+|---|---|
+| `LATEST_ATTEMPT` | Último intento elegible después de ajustes y topes |
+| `BEST_RESULT` | Mayor resultado elegible después de ajustes y topes |
+| `REPLACE_IF_HIGHER` | Recuperativa solo sustituye al ordinario si lo mejora |
+
 ### Ausencia como participación
 
 Una ausencia no es una nota:
@@ -123,14 +178,28 @@ NOT_APPLICABLE
 
 La secuencia será:
 
-```text
-ausencia registrada
-→ plazo de justificación
-→ revisión
-→ decisión
-→ consecuencia académica
-→ eventual recuperativa
+```mermaid
+stateDiagram-v2
+    [*] --> EXPECTED: IncludeParticipant
+    EXPECTED --> PRESENT: RecordPresence
+    EXPECTED --> ABSENT_PENDING_REVIEW: RecordAbsence
+    ABSENT_PENDING_REVIEW --> ABSENT_JUSTIFIED: AcceptAbsenceJustification
+    ABSENT_PENDING_REVIEW --> ABSENT_UNJUSTIFIED: RejectOrExpireJustification
+    ABSENT_PENDING_REVIEW --> EXCUSED: ExcuseParticipation
+    EXPECTED --> NOT_ELIGIBLE: RevokeEligibility
+    EXPECTED --> NOT_APPLICABLE: ResolveAsNotApplicable
 ```
+
+| Estado | Tratamiento |
+|---|---|
+| `EXPECTED` | Participación esperada; todavía no existe hecho de asistencia |
+| `PRESENT` | Existe participación o entrega válida |
+| `ABSENT_PENDING_REVIEW` | Ausencia registrada dentro del flujo de justificación |
+| `ABSENT_JUSTIFIED` | Ausencia aceptada; la política decide la consecuencia |
+| `ABSENT_UNJUSTIFIED` | Ausencia no justificada; la política decide la consecuencia |
+| `EXCUSED` | No se exige participación en esa administración |
+| `NOT_ELIGIBLE` | La persona no podía participar |
+| `NOT_APPLICABLE` | La administración no forma parte de sus obligaciones |
 
 Una consecuencia como nota mínima, cero, pérdida de recuperación o fallo de un
 requisito crítico solo se aplica cuando una política publicada la establece.
@@ -150,13 +219,24 @@ authorizedExtensionUntil
 La política declara ventana, base de penalización, tramos, máximo, piso,
 rechazo y zona horaria. La etapa matemática es explícita:
 
-```text
-puntaje de rúbrica
-→ penalización
-→ puntaje efectivo
-→ conversión de escala
-→ calificación del intento
+```mermaid
+flowchart TD
+    S["Puntaje de rúbrica"] --> W{"Ventana aplicable"}
+    W -->|En plazo o gracia| E["Puntaje efectivo"]
+    W -->|Atrasada aceptable| P["Aplicar penalización"]
+    W -->|Fuera de aceptación| R["Rechazar o resolver excepción"]
+    P --> E
+    E --> C["Conversión de escala"]
+    C --> G["Calificación del intento"]
 ```
+
+| Marca temporal | Propósito | Precedencia |
+|---|---|---:|
+| `authorizedExtensionUntil` | Extensión individual o grupal autorizada | 1 |
+| `gracePeriodUntil` | Tolerancia general sin penalización | 2 |
+| `dueAt` | Fecha objetivo de entrega | 3 |
+| `acceptedUntil` | Límite absoluto ordinario de recepción | 4 |
+| `submittedAt` | Hecho observado de entrega | Se compara con la fecha aplicable |
 
 Una extensión individual sustituye la fecha aplicable solo para la persona o
 equipo autorizado.
@@ -182,6 +262,22 @@ silenciosamente notas disponibles.
 Cada operación conserva autorización, motivo, alcance y revisiones. Una
 rectificación publicada crea una publicación nueva y notifica a los afectados.
 
+```mermaid
+flowchart TD
+    C{"Operación solicitada"} -->|Misma evidencia| R["Recalificación"]
+    C -->|Evidencia nueva o incompleta| O["Reapertura"]
+    C -->|Publicación incorrecta| X["Rectificación"]
+    R --> V["Nueva revisión de valoración"]
+    O --> A["Intento nuevo o reanudado"]
+    X --> P["Nueva revisión publicada"]
+```
+
+| Operación | Autoridad mínima | Efecto permitido | Efecto prohibido |
+|---|---|---|---|
+| Recalificación | Docente o revisor autorizado | Nueva revisión sobre la misma evidencia | Reemplazar o borrar la revisión anterior |
+| Reapertura | Autoridad académica según política | Habilitar un intento nuevo o reanudar uno existente | Cambiar la regla general para todos |
+| Rectificación | Autoridad de publicación | Crear una publicación corregida y notificar | Editar en sitio una publicación histórica |
+
 ### Cierre incompleto
 
 Cerrar una sección no equivale a finalizar cada matrícula. Una persona puede
@@ -192,18 +288,25 @@ Cada caso tendrá requisitos pendientes, responsable, plazo, acciones permitidas
 y consecuencia si no se resuelve. No se convertirán pendientes en cero para
 forzar el cierre ni se reabrirá toda la sección por un caso individual.
 
+| Estado de finalización | Qué falta | Condición de salida |
+|---|---|---|
+| `INCOMPLETE` | Evidencia o requisito obligatorio | Completar, eximir o resolver administrativamente |
+| `PENDING_RECOVERY` | Intento recuperativo autorizado | Calificar o expirar según política |
+| `PENDING_APPEAL` | Decisión sobre apelación | Resolver y aplicar la decisión |
+| `PENDING_ADMINISTRATIVE_DECISION` | Resolución no académica | Registrar decisión autorizada y efecto |
+
 ### Orden de cálculo y explicación
 
-```text
-evidencia
-→ valoración
-→ resultado bruto
-→ ajustes del intento
-→ conversión y topes
-→ selección entre intentos
-→ resultado efectivo
-→ reemplazo o descarte
-→ política de calificación final
+```mermaid
+flowchart TD
+    E["Evidencia"] --> V["Valoración"]
+    V --> B["Resultado bruto"]
+    B --> A["Ajustes del intento"]
+    A --> C["Conversión y topes"]
+    C --> S["Selección entre intentos"]
+    S --> R["Resultado efectivo"]
+    R --> D["Reemplazo o descarte"]
+    D --> F["Política de calificación final"]
 ```
 
 La explicación utiliza la misma traza:

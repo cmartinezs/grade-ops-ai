@@ -91,6 +91,16 @@ versionadas y reservar puntos explícitos para especializaciones.
 - Mantiene programación como primer dominio sin convertirla en restricción.
 - Exige gobierno de catálogos, compatibilidad y versiones.
 
+| Criterio | Vertical de programación | Tipos rígidos | Configuración genérica | Núcleo + extensiones |
+|---|---:|---:|---:|---:|
+| Velocidad inicial | Alta | Media | Media | Media |
+| Evaluaciones mixtas | Baja | Baja | Alta | Alta |
+| Invariantes verificables | Media | Alta | Baja | Alta |
+| Evolución multidisciplinar | Baja | Media | Alta | Alta |
+| Contratos y migraciones | Media | Alta | Baja | Alta |
+| Complejidad accidental futura | Alta | Alta | Alta | Media |
+| Decisión | Descartada | Descartada | Descartada | Adoptada |
+
 ## Decisión
 
 Se adopta la opción D.
@@ -195,6 +205,94 @@ al menos estas dimensiones:
 Los estados agregados se derivarán de los registros reales cuando sea posible.
 Publicar una evaluación, cerrar su aplicación, completar una revisión y publicar
 resultados son operaciones diferentes.
+
+| Dimensión | Aggregate o registro propietario | Pregunta que responde |
+|---|---|---|
+| Identidad de plantilla | `AssessmentTemplate` | ¿La plantilla sigue operativa? |
+| Versión de plantilla | `AssessmentTemplateVersion` | ¿Qué definición es editable, vigente o histórica? |
+| Preparación | `Assessment` | ¿La definición concreta puede aplicarse? |
+| Aplicación | `AssessmentAdministration` | ¿La ventana o sesión admite participación? |
+| Revisión | `AssessmentReview` | ¿La evidencia ya fue valorada y aprobada? |
+| Publicación | `ResultPublication` | ¿Qué revisión de resultado puede ver cada audiencia? |
+
+#### Preparación de la evaluación
+
+```mermaid
+stateDiagram-v2
+    [*] --> DRAFT: CreateAssessment
+    DRAFT --> READY: MarkAssessmentReady
+    READY --> DRAFT: ReopenAssessmentDraft
+    READY --> SCHEDULED: ScheduleAssessment
+    SCHEDULED --> READY: UnscheduleAssessment
+    READY --> PUBLISHED: PublishAssessment
+    SCHEDULED --> PUBLISHED: PublishScheduledAssessment
+```
+
+Publicar congela la definición académica aplicada. Volver a `DRAFT` solo es
+posible antes de publicar; después se utiliza una revisión explícita.
+
+#### Aplicación
+
+```mermaid
+stateDiagram-v2
+    [*] --> NOT_STARTED: CreateAssessmentAdministration
+    NOT_STARTED --> OPEN: OpenAssessmentAdministration
+    OPEN --> PAUSED: PauseAssessmentAdministration
+    PAUSED --> OPEN: ResumeAssessmentAdministration
+    OPEN --> CLOSED: CloseAssessmentAdministration
+    PAUSED --> CLOSED: CloseAssessmentAdministration
+    NOT_STARTED --> CANCELLED: CancelAssessmentAdministration
+    OPEN --> CANCELLED: CancelAssessmentAdministration
+    PAUSED --> CANCELLED: CancelAssessmentAdministration
+```
+
+Pausar conserva participantes, intentos y evidencia. Cancelar exige motivo y
+resolución explícita del impacto; cerrar no publica resultados.
+
+#### Revisión de evidencia
+
+```mermaid
+stateDiagram-v2
+    [*] --> PENDING: QueueAssessmentReview
+    PENDING --> IN_REVIEW: StartAssessmentReview
+    IN_REVIEW --> NEEDS_REVISION: RequestReviewRevision
+    NEEDS_REVISION --> IN_REVIEW: ResumeAssessmentReview
+    IN_REVIEW --> REVIEWED: CompleteAssessmentReview
+    REVIEWED --> IN_REVIEW: ReopenAssessmentReview
+    REVIEWED --> APPROVED: ApproveAssessmentReview
+```
+
+`REVIEWED` significa que la valoración terminó; `APPROVED` representa una
+decisión humana autorizada. Una salida de IA no avanza por sí sola a
+`APPROVED`.
+
+#### Publicación de resultados
+
+```mermaid
+stateDiagram-v2
+    [*] --> UNPUBLISHED: CreateResultPublication
+    UNPUBLISHED --> PARTIALLY_PUBLISHED: PublishSelectedResults
+    UNPUBLISHED --> PUBLISHED: PublishAllEligibleResults
+    PARTIALLY_PUBLISHED --> PUBLISHED: PublishRemainingResults
+    PARTIALLY_PUBLISHED --> CORRECTED: PublishResultCorrection
+    PUBLISHED --> CORRECTED: PublishResultCorrection
+    CORRECTED --> CORRECTED: PublishAnotherCorrection
+```
+
+`CORRECTED` conserva todas las publicaciones anteriores. La publicación parcial
+no se deriva de un conteo informal: registra audiencia, alcance y revisiones
+exactas publicadas.
+
+| Transición sensible | Guarda mínima | Evento conceptual |
+|---|---|---|
+| `DRAFT → READY` | Perfil, evidencias y valoración compatibles | `AssessmentMarkedReady` |
+| `READY/SCHEDULED → PUBLISHED` | Definición validada, actor autorizado y snapshot creado | `AssessmentPublished` |
+| `NOT_STARTED/PAUSED → OPEN` | Ventana válida y administración no cancelada | `AssessmentAdministrationOpened` |
+| `OPEN/PAUSED → CLOSED` | Actor o disparador autorizado; intentos preservados | `AssessmentAdministrationClosed` |
+| `IN_REVIEW → REVIEWED` | Valoración completa y traza disponible | `AssessmentReviewCompleted` |
+| `REVIEWED → APPROVED` | Confirmación humana y permisos | `AssessmentReviewApproved` |
+| `UNPUBLISHED → PUBLISHED` | Resultados elegibles y aprobados | `AssessmentResultsPublished` |
+| `PUBLISHED → CORRECTED` | Motivo, autorización, impacto y nueva revisión | `AssessmentResultCorrectionPublished` |
 
 ### Congelamiento y correcciones
 

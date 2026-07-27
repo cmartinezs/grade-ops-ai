@@ -19,6 +19,25 @@ Normal API-to-agent commands request a **workflow capability and execution const
 
 `api/` decides whether an operation may execute and supplies the authorized budget. `agents/` owns technical execution. A deterministic **Model Router** inside `agents/` selects the provider/model combination that satisfies the policy.
 
+| Component | Responsibility |
+| --- | --- |
+| `web/` | Request a product operation and display its quoted credit cost and status. |
+| `api/` | Authorize the operation, quote/reserve credits, set constraints, and own workflow state. |
+| `agents/` | Execute the workflow within the authorized envelope. |
+| Model Router | Resolve an allowlisted provider/model using deterministic policy and telemetry. |
+| GenAI adapters | Translate the common request into provider-specific protocols and normalize output. |
+
+```mermaid
+flowchart TD
+    W["Web: request operation"] --> A["API: authorize and reserve credits"]
+    A --> R["Agent runtime"]
+    R --> M["Model Router"]
+    M --> P["Resolved provider and model"]
+    P --> R
+    R --> A
+    A --> W
+```
+
 Normal command inputs include:
 
 - workflow and execution profile;
@@ -33,17 +52,17 @@ Normal command inputs include:
 
 Routing precedence is:
 
-```text
-legal/privacy restrictions
-→ required capabilities
-→ authorized budget
-→ tenant policy
-→ provider health and availability
-→ expected quality
-→ cost and latency
-→ configured preference
-→ allowlisted fallback
-```
+| Priority | Criterion | Nature |
+| ---: | --- | --- |
+| 1 | Legal, privacy, and data-residency restrictions | Mandatory |
+| 2 | Required capabilities | Mandatory |
+| 3 | Authorized workflow budget | Mandatory |
+| 4 | Tenant policy | Mandatory or contractual |
+| 5 | Provider health and availability | Operational |
+| 6 | Expected quality | Optimization |
+| 7 | Cost and latency | Optimization |
+| 8 | Configured preference | Soft preference |
+| 9 | Allowlisted fallback | Controlled recovery |
 
 The Model Router is rule- and telemetry-driven by default. It must not call an LLM merely to choose another LLM for ordinary executions.
 
@@ -56,6 +75,13 @@ Exact provider/model selection remains available only as an internal, optional r
 - tenants with a contractually required provider.
 
 Overrides require an explicit authorization such as `AI_ROUTING_OVERRIDE` and must be audited with actor, reason, requested route, resolved route, and outcome.
+
+| Concept | Meaning | May violate mandatory policy |
+| --- | --- | ---: |
+| Preference | Route to use when all higher-priority conditions remain satisfied | No |
+| Policy | Required cost, capability, privacy, residency, or tenant constraint | Not applicable |
+| Override | Exact route requested for an authorized internal purpose | No |
+| Fallback | Pre-authorized alternative compatible with the same envelope | No |
 
 ## Runtime Budget Boundary
 

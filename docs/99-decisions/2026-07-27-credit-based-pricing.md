@@ -58,6 +58,32 @@ The commercial rules are:
 - Never offer unlimited GenAI processing.
 - Keep provider, model, tokens, cost, and submission counts as operational metrics without exposing them as the primary commercial unit.
 
+```mermaid
+stateDiagram-v2
+    [*] --> QUOTED: QuoteWorkflowCredits
+    QUOTED --> RESERVED: AcceptQuoteAndReserveCredits
+    QUOTED --> EXPIRED: CreditQuoteExpired
+    RESERVED --> EXECUTING: StartAuthorizedWorkflow
+    EXECUTING --> VALIDATING_RESULT: WorkflowCompleted
+    EXECUTING --> RELEASED: WorkflowFailed
+    VALIDATING_RESULT --> DEBITED: ConfirmUsableResult
+    VALIDATING_RESULT --> RELEASED: RejectUnusableResult
+```
+
+| Origen | Operación | Guarda principal | Destino | Movimiento de ledger |
+|---|---|---|---|---|
+| Inexistente | Cotizar | Catálogo vigente y características observables | `QUOTED` | Ninguno |
+| `QUOTED` | Aceptar y reservar | Saldo suficiente, cotización vigente e idempotency key | `RESERVED` | `RESERVATION` |
+| `QUOTED` | Expirar | Vigencia agotada | `EXPIRED` | Ninguno |
+| `RESERVED` | Ejecutar | Presupuesto autorizado y reserva activa | `EXECUTING` | Ninguno |
+| `EXECUTING` | Completar técnicamente | Resultado estructurado disponible | `VALIDATING_RESULT` | Ninguno |
+| `VALIDATING_RESULT` | Confirmar consumo | Resultado válido y utilizable | `DEBITED` | `DEBIT` |
+| `EXECUTING`, `VALIDATING_RESULT` | Liberar | Fallo atribuible a GradeOps/proveedor o resultado inutilizable | `RELEASED` | `RELEASE` |
+
+`DEBITED`, `RELEASED` y `EXPIRED` son terminales para una cotización. Un
+reprocesamiento comercialmente nuevo requiere otra cotización; un reintento
+técnico incluido conserva la misma reserva e idempotency key.
+
 ## Initial Plan Hypotheses
 
 These plans are experiments, not final public commitments:

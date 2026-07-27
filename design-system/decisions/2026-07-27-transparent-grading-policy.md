@@ -76,6 +76,28 @@ CalculationExecution
 `GradingPolicyVersion` publicada es inmutable. `CalculationExecution` conserva
 la versión exacta, entradas y pasos que produjeron un resultado.
 
+```mermaid
+stateDiagram-v2
+    [*] --> DRAFT: StartGradingPolicyRevision
+    DRAFT --> VALIDATED: ValidateGradingPolicyVersion
+    DRAFT --> DISCARDED: DiscardGradingPolicyDraft
+    VALIDATED --> DRAFT: ChangeValidatedPolicy
+    VALIDATED --> PUBLISHED: PublishGradingPolicyVersion
+    PUBLISHED --> SUPERSEDED: PublishReplacementPolicyVersion
+    PUBLISHED --> DEPRECATED: DeprecateGradingPolicyVersion
+    SUPERSEDED --> DEPRECATED: DeprecateGradingPolicyVersion
+```
+
+| Origen | Comando | Guardas principales | Destino | Evento |
+|---|---|---|---|---|
+| Inexistente o publicada | `StartGradingPolicyRevision` | Actor autorizado y versión de origen válida | `DRAFT` | `GradingPolicyRevisionStarted` |
+| `DRAFT` | `ValidateGradingPolicyVersion` | Grafo acíclico, entradas completas y casos de prueba válidos | `VALIDATED` | `GradingPolicyVersionValidated` |
+| `VALIDATED` | `ChangeValidatedPolicy` | Actor autorizado; cualquier cambio invalida la validación | `DRAFT` | `GradingPolicyValidationInvalidated` |
+| `VALIDATED` | `PublishGradingPolicyVersion` | Vista previa aprobada y vigencia definida | `PUBLISHED` | `GradingPolicyVersionPublished` |
+| `PUBLISHED` | `PublishReplacementPolicyVersion` | Reemplazo validado y análisis de impacto | `SUPERSEDED` | `GradingPolicyVersionSuperseded` |
+| `PUBLISHED`, `SUPERSEDED` | `DeprecateGradingPolicyVersion` | Motivo y reemplazo recomendado cuando exista | `DEPRECATED` | `GradingPolicyVersionDeprecated` |
+| `DRAFT` | `DiscardGradingPolicyDraft` | Motivo obligatorio | `DISCARDED` | `GradingPolicyDraftDiscarded` |
+
 ### Bloques configurables iniciales
 
 El MVP utilizará un catálogo gobernado:
@@ -96,21 +118,34 @@ Las operaciones tendrán esquema, tipos de entrada y salida, restricciones,
 semántica de errores y versión. No se admitirán código arbitrario ni expresiones
 sin contrato.
 
+| Bloque | Responsabilidad |
+|---|---|
+| `WeightedAverage` | Combinar entradas mediante ponderaciones validadas |
+| `ScaleConversion` | Convertir puntaje a una escala publicada |
+| `ThresholdDecision` | Resolver una decisión binaria por umbral |
+| `MinimumRequirement` | Exigir un mínimo independiente del promedio |
+| `BonusAdjustment` | Aplicar bonificación con límites explícitos |
+| `ReplacementRule` | Sustituir o descartar un resultado según política |
+| `CapValue` | Aplicar un tope máximo o mínimo |
+| `RoundValue` | Redondear en una etapa declarada |
+| `ConditionalBranch` | Elegir una ruta determinista mediante condición tipada |
+
 ### Orden explícito
 
 El grafo de cálculo declarará el orden real. Como referencia:
 
-```text
-resultados efectivos de evaluaciones
-→ reglas de reemplazo o descarte
-→ nota de presentación
-→ bonificaciones
-→ requisitos mínimos
-→ decisión de examen
-→ resultado de examen
-→ nota final
-→ decisión de aprobación
-→ redondeo y publicación
+```mermaid
+flowchart TD
+    E["Resultados efectivos"] --> R["Reemplazo o descarte"]
+    R --> P["Nota de presentación"]
+    P --> B["Bonificaciones"]
+    B --> M["Requisitos mínimos"]
+    M --> D{"Decisión de examen"}
+    D -->|Exento| F["Nota final"]
+    D -->|Rinde| X["Resultado de examen"]
+    X --> F
+    F --> A["Decisión de aprobación"]
+    A --> O["Redondeo y publicación"]
 ```
 
 El orden podrá variar según la política, pero nunca quedará implícito. Redondear
@@ -135,6 +170,31 @@ versión; no recalcula resultados históricos silenciosamente.
 
 La simulación utilizará el mismo motor determinista, pero sus resultados se
 marcarán como hipotéticos y no podrán publicarse como calificación oficial.
+
+| Modo | Entradas | Persistencia | Puede publicarse | Uso |
+|---|---|---|---:|---|
+| `VALIDATION` | Casos de prueba de la política | Evidencia de validación | No | Verificar el grafo antes de publicar |
+| `SIMULATION` | Datos reales o hipotéticos identificados | Traza separada y no oficial | No | Previsualizar impacto |
+| `OFFICIAL` | Revisiones efectivas y política publicada | Ejecución auditable | Sí, con autorización | Producir resultado académico |
+| `RECALCULATION_PREVIEW` | Entradas afectadas y versión propuesta | Análisis de impacto | No | Evaluar una corrección |
+
+```mermaid
+stateDiagram-v2
+    [*] --> REQUESTED: RequestCalculation
+    REQUESTED --> VALIDATING_INPUTS: ValidateCalculationInputs
+    VALIDATING_INPUTS --> RUNNING: AcceptCalculationInputs
+    VALIDATING_INPUTS --> REJECTED: RejectCalculationInputs
+    RUNNING --> SUCCEEDED: CompleteCalculation
+    RUNNING --> FAILED: FailCalculation
+    SUCCEEDED --> APPROVED: ApproveOfficialCalculation
+    SUCCEEDED --> DISCARDED: DiscardNonOfficialCalculation
+    APPROVED --> PUBLISHED: PublishCalculationResult
+    PUBLISHED --> SUPERSEDED: PublishCorrectedResult
+```
+
+`APPROVED`, `PUBLISHED` y `SUPERSEDED` solo aplican a ejecuciones `OFFICIAL`.
+Una ejecución de validación, simulación o análisis de impacto termina en
+`SUCCEEDED` o `DISCARDED` y nunca avanza mediante el comando de publicación.
 
 La explicación se construirá desde `intermediateSteps`, no desde un segundo
 algoritmo ni desde una inferencia generativa. La IA podrá traducir o mejorar
@@ -164,6 +224,16 @@ Corregir una política publicada requiere:
 7. notificar el cambio y conservar ambas versiones.
 
 Una excepción individual no modifica la política general.
+
+| Paso | Artefacto de salida | Modifica resultados vigentes |
+|---:|---|---:|
+| 1. Crear reemplazo | Nueva `GradingPolicyVersion` en borrador | No |
+| 2. Documentar y autorizar | Motivo, actor y alcance | No |
+| 3. Simular impacto | `RECALCULATION_PREVIEW` | No |
+| 4. Identificar afectados | Conjunto reproducible de participantes | No |
+| 5. Aprobar aplicación | Decisión humana auditable | No |
+| 6. Recalcular | Nuevas revisiones de resultado | Sí, sin sobrescribir |
+| 7. Publicar y notificar | Nueva revisión publicada | Sí, conserva historial |
 
 ## Invariantes
 
