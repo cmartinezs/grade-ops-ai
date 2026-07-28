@@ -6,9 +6,20 @@
 
 Twelve tasks, executed in this order. Reproduced from [08 — Implementation Sequence](../../../../docs/implementation-plans/assessment-authoring-operation-foundation/08-implementation-sequence.md), scoped to `api/`'s ownership per [04 — Task Distribution](../../../../docs/implementation-packets/assessment-authoring-operation-foundation/04-task-distribution.md). If this file and the plan's own 08-implementation-sequence.md ever disagree, the plan wins.
 
+**This is still the single authoritative task definition for all 12 tasks below** — IDs, objectives, dependencies, commit boundaries, acceptance criteria, and accepted risks are unchanged here. Execution is split across four sequential, recoverable sessions on the same branch (`feat/assessment-authoring-operation-foundation-api`); each task below is tagged with its owning session. See [CLAUDE-IMPLEMENTATION-PROMPT.md](CLAUDE-IMPLEMENTATION-PROMPT.md) for why, and use the session-specific prompt (not this file directly) to execute.
+
+| Session | Tasks | Prompt | Handoff |
+|---|---|---|---|
+| A1 — Schema and Inert Domain | 01, 02, 03, 04, 05 | [CLAUDE-API-A1-PROMPT.md](CLAUDE-API-A1-PROMPT.md) | [API-A1-HANDOFF.md](API-A1-HANDOFF.md) |
+| A2 — Idempotency and Durable Coordinator | 06, 07B | [CLAUDE-API-A2-PROMPT.md](CLAUDE-API-A2-PROMPT.md) | [API-A2-HANDOFF.md](API-A2-HANDOFF.md) |
+| A3 — Authoring Mutations and Public API | 08, 09, 10 | [CLAUDE-API-A3-PROMPT.md](CLAUDE-API-A3-PROMPT.md) | [API-A3-HANDOFF.md](API-A3-HANDOFF.md) |
+| A4 — Backfill, Cleanup and Final Handoff | 12, 13 | [CLAUDE-API-A4-PROMPT.md](CLAUDE-API-A4-PROMPT.md) | [API-A4-HANDOFF.md](API-A4-HANDOFF.md) + consolidated [HANDOFF.md](HANDOFF.md) |
+
 ---
 
 ### Task 01 — Schema: durable AI operation tables
+
+**Session:** [A1](CLAUDE-API-A1-PROMPT.md)
 
 - **Objective:** Add `ai_operations` and `agent_attempts` tables, additive, unused by any application code yet.
 - **Files:** `api/src/main/resources/db/migration/V13__add_agent_attempts_and_ai_operations.sql`
@@ -22,6 +33,8 @@ Twelve tasks, executed in this order. Reproduced from [08 — Implementation Seq
 
 ### Task 02 — Schema: assessment revisions and current-revision pointer
 
+**Session:** [A1](CLAUDE-API-A1-PROMPT.md)
+
 - **Objective:** Add `assessment_revisions` table and `assessments.current_revision_id`/`lock_version` columns.
 - **Files:** `api/src/main/resources/db/migration/V14__add_assessment_revisions.sql`, `V15__add_assessment_current_revision.sql`
 - **Dependencies:** Task 01 (FK to `agent_attempts`)
@@ -33,6 +46,8 @@ Twelve tasks, executed in this order. Reproduced from [08 — Implementation Seq
 - **Commit boundary:** `feat(api): add assessment_revisions schema and current-revision pointer`
 
 ### Task 03 — Schema: idempotency records
+
+**Session:** [A1](CLAUDE-API-A1-PROMPT.md)
 
 - **Objective:** Add `idempotency_records` table.
 - **Files:** `api/src/main/resources/db/migration/V16__add_idempotency_records.sql`
@@ -46,6 +61,8 @@ Twelve tasks, executed in this order. Reproduced from [08 — Implementation Seq
 
 ### Task 04 — Domain: `AssessmentRevision` aggregate + persistence
 
+**Session:** [A1](CLAUDE-API-A1-PROMPT.md)
+
 - **Objective:** Introduce `AssessmentRevision` domain class, JPA entity, repository port + adapter — parallel to `AssessmentDraft`, not yet wired into any use case.
 - **Files:** `.../assessment/domain/model/AssessmentRevision.java`, `RevisionOrigin.java`; `.../application/port/out/AssessmentRevisionRepositoryPort.java`; `.../infrastructure/adapter/out/persistence/AssessmentRevisionJpaEntity.java`, `AssessmentRevisionPersistenceAdapter.java`
 - **Dependencies:** Task 02
@@ -57,6 +74,8 @@ Twelve tasks, executed in this order. Reproduced from [08 — Implementation Seq
 - **Commit boundary:** `feat(api): add AssessmentRevision aggregate and persistence`
 
 ### Task 05 — Domain: `AiOperation`/`AgentAttempt` aggregates + persistence
+
+**Session:** [A1](CLAUDE-API-A1-PROMPT.md)
 
 - **Objective:** Introduce both new aggregates, ports, and adapters — not yet wired into any use case.
 - **Files:** `.../domain/model/AiOperation.java`, `AiOperationType.java`, `AiOperationStatus.java`, `AgentAttempt.java`, `AgentAttemptStatus.java`; ports + adapters mirroring Task 04's pattern.
@@ -70,6 +89,8 @@ Twelve tasks, executed in this order. Reproduced from [08 — Implementation Seq
 
 ### Task 06 — Application: idempotency guard service
 
+**Session:** [A2](CLAUDE-API-A2-PROMPT.md)
+
 - **Objective:** A reusable, generic idempotency-check/record service usable by any command handler.
 - **Files:** `.../application/security/IdempotencyGuard.java` (or `.../shared/application/idempotency/`), `.../port/out/IdempotencyRepositoryPort.java`, adapter.
 - **Dependencies:** Task 03
@@ -81,6 +102,8 @@ Twelve tasks, executed in this order. Reproduced from [08 — Implementation Seq
 - **Commit boundary:** `feat(api): add reusable idempotency guard service`
 
 ### Task 07B — Application: rewrite the generation coordinator (the pivot task)
+
+**Session:** [A2](CLAUDE-API-A2-PROMPT.md)
 
 **Depends on Task 07A landing in `agents/` first** (see [root packet § Task 07 split](../../../../docs/implementation-packets/assessment-authoring-operation-foundation/04-task-distribution.md#task-07-split)) — you need to know the exact field name/shape for the resolved provider before writing deserialization code. If Session B (Agents) has not finished when you reach this task, read `agents/src/main/java/.../assessment/application/dto/` **read-only** to verify the current response shape yourself rather than blocking indefinitely; record which path you took in `HANDOFF.md`.
 
@@ -96,6 +119,8 @@ Twelve tasks, executed in this order. Reproduced from [08 — Implementation Seq
 
 ### Task 08 — Application: human edit creates a revision
 
+**Session:** [A3](CLAUDE-API-A3-PROMPT.md)
+
 - **Objective:** Replace `UpdateAssessmentDraftHandler`'s in-place edit with `CreateHumanRevisionHandler`, CAS-protected.
 - **Files:** Delete `UpdateAssessmentDraftCommand`/`UpdateAssessmentDraftUseCase`/`UpdateAssessmentDraftHandler`; add `CreateHumanRevisionCommand`/`CreateHumanRevisionUseCase`/`CreateHumanRevisionHandler`.
 - **Dependencies:** Task 04
@@ -108,6 +133,8 @@ Twelve tasks, executed in this order. Reproduced from [08 — Implementation Seq
 
 ### Task 09 — Application: regenerate requires expected revision
 
+**Session:** [A3](CLAUDE-API-A3-PROMPT.md)
+
 - **Objective:** Update `RegenerateAssessmentDraftHandler` to require `expectedRevisionId`, persist `adjustmentNotes` as `reason`, and route through the Task 07B coordinator.
 - **Files:** `RegenerateAssessmentDraftCommand.java`, `RegenerateAssessmentDraftHandler.java`, `RegenerateAssessmentDraftRequest.java`
 - **Dependencies:** Tasks 04, 07B
@@ -119,6 +146,8 @@ Twelve tasks, executed in this order. Reproduced from [08 — Implementation Seq
 - **Commit boundary:** `feat(api): regenerate requires expectedRevisionId and persists adjustment reason`
 
 ### Task 10 — Application + API: retry and generation-status
+
+**Session:** [A3](CLAUDE-API-A3-PROMPT.md)
 
 - **Objective:** New `RetryGenerationHandler` + `GetGenerationStatusHandler`, wired to new controller endpoints.
 - **Files:** New use cases; `AssessmentController.java` gains `POST .../draft/retry`, `GET .../generation-status`; `PATCH .../draft` **removed**; `POST .../revisions` added (wraps Task 08's handler).
@@ -134,6 +163,8 @@ Twelve tasks, executed in this order. Reproduced from [08 — Implementation Seq
 
 ### Task 12 — Database: legacy data backfill
 
+**Session:** [A4](CLAUDE-API-A4-PROMPT.md)
+
 - **Objective:** Execute the honest legacy migration.
 - **Files:** `api/src/main/resources/db/migration/V17__backfill_legacy_authoring_data.sql`
 - **Dependencies:** Tasks 01–10 complete
@@ -145,6 +176,8 @@ Twelve tasks, executed in this order. Reproduced from [08 — Implementation Seq
 - **Commit boundary:** `feat(api): backfill legacy assessment_drafts/agent_execution_logs into revision/operation model`
 
 ### Task 13 — Cleanup: delete dead legacy code paths
+
+**Session:** [A4](CLAUDE-API-A4-PROMPT.md)
 
 - **Objective:** Remove `AssessmentDraft`, `AgentExecutionLog` domain classes, their adapters, and any `DraftGenerationCoordinator` remnants.
 - **Files:** grep for remaining references across `api/src/main/java` and `api/src/test/java`; remove.
