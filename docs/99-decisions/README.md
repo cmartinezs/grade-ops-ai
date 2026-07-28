@@ -89,6 +89,10 @@ A decision record should explain:
 | [`2026-07-27-policy-based-model-routing.md`](2026-07-27-policy-based-model-routing.md) | `agents/` selects provider/model through deterministic policy, authorized budgets and audited overrides | Accepted |
 
 | [`2026-07-27-assessment-operations-product-redesign.md`](2026-07-27-assessment-operations-product-redesign.md) | Transversal assessment operations, independent lifecycles, explicit publication/republication, appeals, and curriculum-first analytics | Accepted |
+| [`2026-07-28-assessment-authoring-model.md`](2026-07-28-assessment-authoring-model.md) | `Assessment` identity vs. `AssessmentBrief` intent vs. immutable `AssessmentRevision`; provenance, current-revision pointer, frozen `AssessmentStatus` | Accepted |
+| [`2026-07-28-authoring-operation-contract.md`](2026-07-28-authoring-operation-contract.md) | Durable, recoverable, idempotent create/generate/retry/resume/regenerate/human-edit contract for `Assessment Authoring Operation Foundation` | Accepted |
+| [`2026-07-28-idempotency-and-concurrency-strategy.md`](2026-07-28-idempotency-and-concurrency-strategy.md) | Idempotency key scope/storage/retention; optimistic locking + `expectedRevisionId` CAS for authoring mutations | Accepted |
+| [`2026-07-28-durable-ai-operation-model.md`](2026-07-28-durable-ai-operation-model.md) | `AiOperation`/`AgentAttempt`: durable evidence before external dispatch, retry/attempt relationship, typed failure provenance | Accepted |
 
 ## Current Template
 
