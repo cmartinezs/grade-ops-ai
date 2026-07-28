@@ -104,4 +104,61 @@ class AssessmentAuthoringSchemaMigrationTest {
                 "VALUES (?, ?, ?, ?, ?, ?)",
                 id, assessmentId, operationType, "uid-1", "key-" + id, status);
     }
+
+    @Test
+    void shouldApplyV14AndV15MigrationsCleanlyAfterV13() {
+        Integer assessmentRevisionsTableCount = jdbcTemplate.queryForObject(
+                "SELECT COUNT(*) FROM information_schema.tables WHERE table_name = 'assessment_revisions'", Integer.class);
+        Integer currentRevisionColumnCount = jdbcTemplate.queryForObject(
+                "SELECT COUNT(*) FROM information_schema.columns WHERE table_name = 'assessments' AND column_name = 'current_revision_id'",
+                Integer.class);
+        Integer lockVersionColumnCount = jdbcTemplate.queryForObject(
+                "SELECT COUNT(*) FROM information_schema.columns WHERE table_name = 'assessments' AND column_name = 'lock_version'",
+                Integer.class);
+
+        assertThat(assessmentRevisionsTableCount).isEqualTo(1);
+        assertThat(currentRevisionColumnCount).isEqualTo(1);
+        assertThat(lockVersionColumnCount).isEqualTo(1);
+    }
+
+    @Test
+    void shouldSetLockVersionZeroAndCurrentRevisionIdNullForExistingAssessments() {
+        Integer lockVersion = jdbcTemplate.queryForObject(
+                "SELECT lock_version FROM assessments WHERE id = ?", Integer.class, assessmentId);
+        UUID currentRevisionId = jdbcTemplate.queryForObject(
+                "SELECT current_revision_id FROM assessments WHERE id = ?", UUID.class, assessmentId);
+
+        assertThat(lockVersion).isZero();
+        assertThat(currentRevisionId).isNull();
+    }
+
+    @Test
+    void shouldRejectDuplicateVersionNumberForSameAssessment() {
+        insertAssessmentRevision(UUID.randomUUID(), assessmentId, 1, null);
+
+        assertThatThrownBy(() -> insertAssessmentRevision(UUID.randomUUID(), assessmentId, 1, null))
+                .isInstanceOf(DataIntegrityViolationException.class);
+    }
+
+    @Test
+    void shouldEnforceSelfReferentialForeignKeyOnPreviousRevisionId() {
+        assertThatThrownBy(() -> insertAssessmentRevision(UUID.randomUUID(), assessmentId, 2, UUID.randomUUID()))
+                .isInstanceOf(DataIntegrityViolationException.class);
+    }
+
+    @Test
+    void shouldAllowPreviousRevisionIdReferencingARealPriorRevision() {
+        UUID v1Id = UUID.randomUUID();
+        insertAssessmentRevision(v1Id, assessmentId, 1, null);
+
+        insertAssessmentRevision(UUID.randomUUID(), assessmentId, 2, v1Id);
+    }
+
+    void insertAssessmentRevision(UUID id, UUID assessmentId, int versionNumber, UUID previousRevisionId) {
+        jdbcTemplate.update(
+                "INSERT INTO assessment_revisions " +
+                "(id, assessment_id, version_number, previous_revision_id, origin, actor_id, title, context, instructions, objectives, deliverables, constraints) " +
+                "VALUES (?, ?, ?, ?, 'AI_GENERATED', 'uid-1', 'title', 'context', 'instructions', '[]'::jsonb, '[]'::jsonb, '[]'::jsonb)",
+                id, assessmentId, versionNumber, previousRevisionId);
+    }
 }
