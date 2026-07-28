@@ -57,6 +57,7 @@ The repository contains an existing vertical slice and historical programming-fo
 - [Developer guide](09-developer-guide/README.md) — setup, services, tests and deployment.
 - [Best practices](10-best-practices/README.md) — implementation quality guidance.
 - [Decisions](99-decisions/README.md) — durable product and architecture authority.
+- [Implementation plans](implementation-plans/README.md) — task-by-task technical plans for a specific decision-backed cut, e.g. [Assessment Authoring Operation Foundation](implementation-plans/assessment-authoring-operation-foundation/README.md).
 - [Master plan](master-plan/README.md) — derived sequencing; must be regenerated after alignment review.
 - [Archive](archive/2026-event/README.md) — historical event constraints only.
 

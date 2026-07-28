@@ -52,6 +52,7 @@ If older source, master-plan, raw, generated, or archived material conflicts wit
 | `09-developer-guide/` | Setup, services, tests and deployment |
 | `10-best-practices/` | Quality guidance |
 | `99-decisions/` | Durable authority |
+| `implementation-plans/` | Task-by-task technical plans for one decision-backed cut of work |
 | `master-plan/` | Derived release sequencing |
 | `.raw/`, `archive/` | Historical context only |
 | `.all-by-category/` | Generated; never edit directly |
