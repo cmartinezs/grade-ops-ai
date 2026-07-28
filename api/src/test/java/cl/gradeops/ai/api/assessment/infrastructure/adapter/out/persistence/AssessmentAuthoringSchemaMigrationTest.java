@@ -161,4 +161,35 @@ class AssessmentAuthoringSchemaMigrationTest {
                 "VALUES (?, ?, ?, ?, 'AI_GENERATED', 'uid-1', 'title', 'context', 'instructions', '[]'::jsonb, '[]'::jsonb, '[]'::jsonb)",
                 id, assessmentId, versionNumber, previousRevisionId);
     }
+
+    @Test
+    void shouldApplyV16MigrationCleanlyAfterV15() {
+        Integer idempotencyRecordsTableCount = jdbcTemplate.queryForObject(
+                "SELECT COUNT(*) FROM information_schema.tables WHERE table_name = 'idempotency_records'", Integer.class);
+
+        assertThat(idempotencyRecordsTableCount).isEqualTo(1);
+    }
+
+    @Test
+    void shouldRejectDuplicateIdempotencyRecordForSameScopeTeacherOperationAndKey() {
+        insertTeacherScopedIdempotencyRecord(UUID.randomUUID(), "uid-1", "CREATE_ASSESSMENT", "key-1");
+
+        assertThatThrownBy(() -> insertTeacherScopedIdempotencyRecord(UUID.randomUUID(), "uid-1", "CREATE_ASSESSMENT", "key-1"))
+                .isInstanceOf(DataIntegrityViolationException.class);
+    }
+
+    @Test
+    void shouldAllowSameIdempotencyKeyForDifferentOperationTypes() {
+        insertTeacherScopedIdempotencyRecord(UUID.randomUUID(), "uid-1", "CREATE_ASSESSMENT", "key-1");
+
+        insertTeacherScopedIdempotencyRecord(UUID.randomUUID(), "uid-1", "CREATE_INITIAL_REVISION", "key-1");
+    }
+
+    void insertTeacherScopedIdempotencyRecord(UUID id, String teacherUid, String operationType, String idempotencyKey) {
+        jdbcTemplate.update(
+                "INSERT INTO idempotency_records " +
+                "(id, scope_type, teacher_uid, operation_type, idempotency_key, request_payload_hash, expires_at) " +
+                "VALUES (?, 'TEACHER', ?, ?, ?, 'hash', now() + interval '24 hours')",
+                id, teacherUid, operationType, idempotencyKey);
+    }
 }
