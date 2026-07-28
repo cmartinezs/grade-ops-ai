@@ -17,7 +17,7 @@ Sessions A (API), B (Agents), and C (Web) have each independently executed their
 1. The four [2026-07-28 ADRs](../../99-decisions/README.md#active-decision-records)
 2. [Assessment Authoring Operation Foundation plan](../../implementation-plans/assessment-authoring-operation-foundation/README.md) — especially [10 — Acceptance Criteria](../../implementation-plans/assessment-authoring-operation-foundation/10-acceptance-criteria.md)
 3. This root packet: [01](01-workspace-responsibility-matrix.md), [06](06-acceptance-criteria-ownership.md), [07](07-integration-and-final-verification.md)
-4. `API-HANDOFF.md`, `AGENTS-HANDOFF.md`, `WEB-HANDOFF.md` (see below)
+4. `API-A1-HANDOFF.md`, `API-A2-HANDOFF.md`, `API-A3-HANDOFF.md`, `API-A4-HANDOFF.md`, and the consolidated `API-HANDOFF.md` (four intermediate + one final, all in `api/docs/implementation-packets/assessment-authoring-operation-foundation/` — see [09 — Session Handoff Protocol § API sub-session handoffs](09-session-handoff-protocol.md#api-sub-session-handoffs)), plus `AGENTS-HANDOFF.md`, `WEB-HANDOFF.md` (see below)
 
 ## Preflight
 
@@ -29,7 +29,7 @@ git ls-remote origin feat/assessment-authoring-operation-foundation-agents
 git ls-remote origin feat/assessment-authoring-operation-foundation-web
 ```
 
-Confirm all three subrepo branches exist on `origin` and each has a `*-HANDOFF.md` as its last commit. If any is missing or its handoff is incomplete (a required section absent, not merely "None."), stop — you cannot integrate a session that hasn't reported its own completion.
+Confirm all three subrepo branches exist on `origin`. Agents' and Web's branches each have a `*-HANDOFF.md` as their last commit. API's branch has its **consolidated** `HANDOFF.md` (functioning as `API-HANDOFF.md`) and `API-A4-HANDOFF.md` as its last commit, plus `API-A1-HANDOFF.md`, `API-A2-HANDOFF.md`, `API-A3-HANDOFF.md` each committed earlier at their respective sub-session boundaries — check `git log --oneline origin/feat/assessment-authoring-operation-foundation-api` for all four intermediate handoff commits, not just the final one. If any handoff (intermediate or final, any workspace) is missing or incomplete (a required section absent, not merely "None."), stop — you cannot integrate a session that hasn't reported its own completion. Then walk the [API sub-session continuity check](07-integration-and-final-verification.md#api-sub-session-continuity-check) in full before treating API's branch as ready.
 
 ```bash
 git switch feat/assessment-authoring-operation-foundation   # the integration branch, already exists per Sessions A/B/C's preflight
@@ -48,7 +48,7 @@ Order matters only in that Agents' Task 07A output (the `provider` field name/sh
 
 ## Verify each handoff's claims, don't just trust them
 
-For each of `API-HANDOFF.md`, `AGENTS-HANDOFF.md`, `WEB-HANDOFF.md`: re-run the test command it claims passed, on the merged integration branch, yourself. A handoff that says "289/300 tests pass" is a claim to verify, not a fact to record.
+For the consolidated API `HANDOFF.md`, `AGENTS-HANDOFF.md`, and `WEB-HANDOFF.md`: re-run the test command each claims passed, on the merged integration branch, yourself. A handoff that says "289/300 tests pass" is a claim to verify, not a fact to record. For API specifically, also spot-check the consolidated `HANDOFF.md`'s summary against the four intermediate handoffs it claims to summarize (`API-A1-HANDOFF.md` through `API-A4-HANDOFF.md`) — the commit list, task list, and migration list in the consolidated document must actually match what the four intermediate ones recorded, not silently diverge.
 
 ## Cross-workspace verification
 

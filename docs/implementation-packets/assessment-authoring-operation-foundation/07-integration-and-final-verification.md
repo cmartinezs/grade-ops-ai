@@ -40,6 +40,20 @@ cd web && npm ci && npm run lint && npm run test && npm run build
 
 All 25 rows in [06 — Acceptance Criteria Ownership](06-acceptance-criteria-ownership.md) must read `PASS`, backed by a named, passing test Session D has personally re-run — not a workspace's self-report accepted at face value. `NOT_IMPLEMENTED` on any row blocks the functional PR.
 
+## API sub-session continuity check
+
+API is not one implementation but four sequential sub-sessions (A1–A4) on one branch — see [09 — Session Handoff Protocol § API sub-session handoffs](09-session-handoff-protocol.md#api-sub-session-handoffs). Session D treats A1–A4 as **one API delivery**, not four independent implementations, and confirms this explicitly rather than only reading the final consolidated `HANDOFF.md`'s summary at face value:
+
+- Continuity of commits: A2's recorded starting commit matches A1's recorded final HEAD, and so on through A4 — no gap, no commit from a session that isn't A1–A4.
+- Same branch throughout: all four sub-sessions' commits are on `feat/assessment-authoring-operation-foundation-api`, never a `-a1`/`-a2`/`-a3`/`-a4` suffixed branch.
+- Tests green at every stage: re-run `./mvnw -f api/pom.xml clean test` is not enough on its own — spot-check that the *sequence* of test counts recorded in `API-A1-HANDOFF.md` through `API-A4-HANDOFF.md` is monotonically consistent with tasks actually added, not just that the final number is green.
+- Task 07A genuinely consumed in A2: confirm `API-A2-HANDOFF.md`'s "Dependency consumed from Agents" section names a real path (handoff-fixture or documented read-only fallback), not silently skipped.
+- Endpoint contract delivered to Web: confirm `API-A3-HANDOFF.md` contains the concrete request/response contract artifact, and that Web's own handoff references having verified against it (not only against its own mock).
+- Backfill (Task 12) ran only after the pivot (Task 07B) and the full mutation surface (Tasks 08–10) were proven — confirm via the commit order, not just the task list.
+- Legacy cleanup (Task 13) ran only after backfill (Task 12) — same check.
+
+If any of the above fails, the API delivery as a whole is not ready for integration — this is a blocker on the consolidated `HANDOFF.md`, not a request to re-run one sub-session in isolation.
+
 ## Alignment check table
 
 This check was run **during this coordination session**, against the drafted content of every root and local packet, before the first commit — not deferred entirely to Session D. Session D must re-run it after all three workspace branches land, because implementation frequently drifts from a plan in ways a documentation-only pass cannot catch (e.g., a real field name chosen during coding that differs from the one specified here).
@@ -57,8 +71,10 @@ This check was run **during this coordination session**, against the drafted con
 | Circular dependencies | 07B waits on 07A | 07A has no dependency | 11 waits on 10 (final verification only, not session start) | No cycle — see [05 — Execution Order](05-execution-order.md#session-start-vs-task-completion-gates) for the start-vs-completion distinction that prevents a false cycle reading | none needed |
 | Endpoint naming between API and Web packets | defines endpoints in [03](03-cross-workspace-api-contracts.md#api--web-public-contract) | n/a | must reference the same table, not redefine endpoints | Aligned — Web's local packet links to and reproduces this exact table | none needed |
 | Scope creep into out-of-plan areas | none introduced | none introduced | none introduced | Aligned — every local packet's "Out of scope" section matches [README § Scope](../../implementation-plans/assessment-authoring-operation-foundation/README.md#scope) verbatim | none needed |
+| API A1–A4 split preserves ownership | 12 tasks re-tagged with a Session marker in `TASKS.md`, IDs/objectives/dependencies/commit boundaries/acceptance criteria byte-identical to before | n/a | n/a | Aligned — verified by diff: only a one-line session-link annotation was inserted per task heading and one intro paragraph/table added; no task body text changed | none needed |
+| API A1–A4 acceptance-criteria ownership | still 22 primary + 3 supporting, same rows as [06](06-acceptance-criteria-ownership.md) | n/a | n/a | Aligned — the A1-A4 split is an execution-sequencing change only; [06 — Acceptance Criteria Ownership](06-acceptance-criteria-ownership.md) required zero edits | none needed |
 
-No critical contradiction remains open. Two corrections were made (status taxonomy, failure-code taxonomy), both resolved in favor of the ADRs — the higher-authority source — before any local packet was written, so no local packet ever referenced the rejected generic sketches.
+No critical contradiction remains open. Two corrections were made (status taxonomy, failure-code taxonomy), both resolved in favor of the ADRs — the higher-authority source — before any local packet was written, so no local packet ever referenced the rejected generic sketches. When API's execution was later split into four recoverable sub-sessions (A1–A4), a further pass confirmed zero change to task/criteria ownership — see the two rows above.
 
 ---
 

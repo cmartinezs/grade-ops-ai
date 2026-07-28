@@ -39,12 +39,12 @@ If a document below appears to contradict either, the ADR/plan wins — treat th
 
 | Workspace | Path | Session |
 |---|---|---|
-| API | [`api/docs/implementation-packets/assessment-authoring-operation-foundation/`](../../../api/docs/implementation-packets/assessment-authoring-operation-foundation/README.md) | Session A |
+| API | [`api/docs/implementation-packets/assessment-authoring-operation-foundation/`](../../../api/docs/implementation-packets/assessment-authoring-operation-foundation/README.md) | Session A — split into four sequential sub-sessions **A1–A4**, one branch, each with its own self-contained prompt (`CLAUDE-API-A{1,2,3,4}-PROMPT.md`) and handoff — see that packet's README |
 | Agents | [`agents/docs/implementation-packets/assessment-authoring-operation-foundation/`](../../../agents/docs/implementation-packets/assessment-authoring-operation-foundation/README.md) | Session B |
 | Web | [`web/docs/implementation-packets/assessment-authoring-operation-foundation/`](../../../web/docs/implementation-packets/assessment-authoring-operation-foundation/README.md) | Session C |
 | Infra | Not created — see [08 — Risk and Decision Ledger § Infrastructure](08-risk-and-decision-ledger.md#infrastructure) | N/A |
 
-Each local packet's `CLAUDE-IMPLEMENTATION-PROMPT.md` is a complete, standalone prompt — a session opening only `api/`, `agents/`, or `web/` can execute it without reading this root package or the original conversation that produced it.
+Each local packet's `CLAUDE-IMPLEMENTATION-PROMPT.md` is a complete, standalone prompt — a session opening only `api/`, `agents/`, or `web/` can execute it without reading this root package or the original conversation that produced it. **Exception:** API's `CLAUDE-IMPLEMENTATION-PROMPT.md` is now an orchestrator/index pointing to the four A1–A4 prompts, since holding all 12 API tasks in one session's context would reintroduce the load this whole packet set exists to avoid — see [00 — Coordination Overview § Session A is four sub-sessions, not one](00-coordination-overview.md#session-a-is-four-sub-sessions-not-one).
 
 ## Governing sources
 
