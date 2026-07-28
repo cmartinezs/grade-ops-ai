@@ -8,7 +8,7 @@ Record commercial proof, even if early revenue is small. Revenue evidence must s
 | --- | --- | --- |
 | `revenue_event_id` | Yes | Stable unique ID. |
 | `customer_id` | Yes | Must match user/pilot evidence. |
-| `offer` | Yes | Free, Pilot Pack, Teacher Lite, Teacher Pro, Cohort Pro, overuse, onboarding, or custom pilot. |
+| `offer` | Yes | Initial, Pro, Intensive, Institutional Pilot, Department, Institution, top-up, onboarding, or custom contract. |
 | `status` | Yes | `proposed`, `committed`, `paid`, `refunded`, `cancelled`, or `written_off`. |
 | `amount_original` | Yes | Original currency amount. |
 | `currency` | Yes | ISO currency code. |

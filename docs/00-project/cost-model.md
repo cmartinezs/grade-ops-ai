@@ -1,260 +1,316 @@
 # Cost Model
 
-GradeOps AI must be priced and operated as a measurable business, not as a free AI demo.
+GradeOps AI must operate as a measurable business whose agent autonomy is economically bounded.
 
-The business depends on real revenue, real users, AI-native operations, and measurable viability. That means the product must track unit economics from the first MVP: token usage, model routing, cloud runtime, payment fees, revenue, marketing spend, and related-party revenue.
+The product tracks actual runtime consumption by workflow, provider/model, tenant, and customer. Customer pricing is expressed in GradeOps credits, while actual provider spend, cloud spend, cash cost, free-tier coverage, and founder economics remain separate ledgers.
 
 ## Canonical Cost Principles
 
-- Do not assume Google Cloud or Gemini usage is free.
-- Use credits and free tiers to reduce short-term cash burn, not to define pricing.
-- Price by usage volume, especially graded submissions.
-- Never sell unlimited AI corrections.
-- Separate product operating costs from personal AI development tooling.
-- Track cost per agent run, assessment, graded submission, active teacher, and customer.
-- Report marketing and customer acquisition spend separately, even if it is zero.
-- Keep cash cost, allocated tooling cost, credits, and related-party revenue separated.
+- Do not treat cloud credits or free tiers as zero economic cost.
+- Do not tie commercial pricing directly to one provider or model.
+- Budget workflows at P90; measure both P50 and P90 from real telemetry.
+- Track cost per attempt, workflow, assessment, submission, teacher, tenant, and customer.
+- Price heterogeneous workflows in credits rather than pretending all submissions cost the same.
+- Never sell unlimited GenAI processing.
+- Separate product runtime, development tooling, founder labor, marketing, payment fees, and tax.
+- Enforce a maximum technical budget before every workflow starts.
+- Record failed and retried provider calls even when the customer is not charged.
 
-## Required Business Reporting
+Canonical decisions:
 
-GradeOps AI should be ready to report:
+- [`Credit-Based Pricing And Workflow Metering`](../99-decisions/2026-07-27-credit-based-pricing.md)
+- [`Policy-Based Provider And Model Routing`](../99-decisions/2026-07-27-policy-based-model-routing.md)
 
-| Reporting Item | GradeOps AI Interpretation |
-| --- | --- |
-| Total Revenue | Arms-length third-party revenue earned during the validation period, in USD. |
-| Revenue by Month | Revenue broken out for May, June, July, and August 2026. |
-| Total Costs | Product and development costs incurred during the validation period, excluding marketing and customer acquisition spend. |
-| Marketing and Customer Acquisition Spend | Paid acquisition, ads, outreach tools, campaign spend, or `US$0` if no paid spend was used. |
-| Related-Party Revenue | Revenue from team members, family, related entities, or pre-existing customer relationships, reported separately. |
-| Product Evidence | Agent execution logs, API usage records, dashboards, screenshots, and production evidence. |
+## Cost Layers
 
-Sources to recheck:
+| Layer | Examples | Treatment |
+| --- | --- | --- |
+| Variable workflow cost | LLM tokens, OCR/vision, paid retries, external tools | Attribute to workflow and tenant |
+| Shared product runtime | Cloud Run, PostgreSQL, storage, logging, email | Allocate by measurable driver where practical |
+| Payment and commercial | Processor fees, invoicing, support, onboarding | Include in contribution and offer margin |
+| Founder/company fixed cost | Founder labor, hardware, subscriptions, administration | Include in economic burn and break-even |
+| Acquisition | Ads, outreach tools, events, commissions | Report separately as CAC/marketing |
+| Credits/free tiers | Provider promotional or cloud allowance | Reduce cash paid, not normalized economic cost |
 
-- Gemini API pricing: <https://ai.google.dev/gemini-api/docs/pricing>
-- Cloud Run pricing: <https://cloud.google.com/run/pricing>
-- Firestore pricing: <https://cloud.google.com/firestore/pricing>
-- Cloud Storage pricing: <https://cloud.google.com/storage/pricing>
+## Runtime Cost Evidence
+
+Every billable or potentially billable execution should record:
+
+```text
+estimatedCost
+actualCost
+inputTokens
+outputTokens
+cachedTokens
+retryCost
+provider
+model
+workflow
+tenant
+creditQuote
+creditCharge
+pricingVersion
+```
+
+The system must distinguish:
+
+- estimated versus actual/reconciled provider cost;
+- technical runtime cost versus customer credit charge;
+- normalized economic cost versus cash paid;
+- successful customer-billable workflow versus failed paid provider attempts;
+- provider promotional coverage versus genuine zero-cost work.
+
+## Workflow Budget Contract
+
+Every agent workflow must enforce:
+
+```text
+maxInputTokens
+maxOutputTokens
+maxModelCalls
+maxToolCalls
+maxRetries
+maxWorkflowCostUsd
+modelRoutingPolicy
+fallbackPolicy
+timeout
+idempotencyKey
+```
+
+No agent may decide to continue iterating beyond this budget. `api/` authorizes the operation and budget; the Model Router in `agents/` selects an allowlisted provider/model inside those constraints.
+
+## Workflow Cost Hypotheses
+
+These are `ESTIMATED` planning inputs for `Credit Model v0.1`, not observed facts:
+
+| Workflow | P50 | P90 | Credit quote |
+| --- | ---: | ---: | ---: |
+| Import/structure rubric | USD 0.005 | USD 0.01 | 1 |
+| Analyze instructions | USD 0.01 | USD 0.02 | 2 |
+| Generate/improve rubric | USD 0.015 | USD 0.03 | 3 |
+| OCR/vision up to 10 pages | USD 0.015 | USD 0.04 | 4 |
+| Standard evaluation with feedback | USD 0.04 | USD 0.08 | 8 |
+| Complex/multi-file evaluation | USD 0.08 | USD 0.16 | 16 |
+| Feedback-only regeneration | USD 0.01 | USD 0.03 | 3 |
+| Section summary | USD 0.03 | USD 0.08 | 8 |
+
+One credit initially reserves USD 0.01 of P90 technical budget. The workflow catalog must be versioned and recalibrated using beta data.
+
+## Model Routing Economics
+
+Provider/model selection is not part of the ordinary public request. The Model Router evaluates:
+
+```text
+privacy/legal constraints
+→ required capability
+→ authorized budget
+→ tenant policy
+→ provider health
+→ quality target
+→ cost and latency
+→ preference and fallback
+```
+
+Operational routing rules:
+
+- Use economical models for high-volume, bounded work.
+- Reserve premium models for objectively complex or quality-critical cases.
+- Prefer provider batch pricing when latency is not user-critical.
+- Never switch to a more expensive route above the authorized workflow budget.
+- Record the resolved provider/model and all paid attempts.
+- Treat fallback as part of the original quote only while it remains inside the budget.
+- Do not use an additional LLM call solely to route ordinary executions.
+
+Provider/model names and prices change. The pricing registry must be centralized, versioned, and verified against official primary sources before production commitments.
+
+## Credit Economics
+
+Working planning assumptions:
+
+```text
+USD/CLP reference:                946.14
+Exchange-rate buffer:             5%
+Buffered USD/CLP:                 993.45
+P90 reserve per credit:           USD 0.01
+Reserved cost per credit:         approximately CLP 9.93
+Subscription selling range:       CLP 30-40 per credit
+Absolute preliminary floor:       CLP 25 per credit
+Top-up target:                    CLP 38-45 per credit
+B2B committed-volume target:      CLP 25-35 per credit plus platform fee
+```
+
+| Selling price/credit | P90 reserve | Technical margin before shared costs |
+| ---: | ---: | ---: |
+| CLP $25 | CLP $9.93 | 60.3% |
+| CLP $30 | CLP $9.93 | 66.9% |
+| CLP $35 | CLP $9.93 | 71.6% |
+| CLP $40 | CLP $9.93 | 75.2% |
+| CLP $45 | CLP $9.93 | 77.9% |
+
+This is not company gross margin. It excludes shared cloud, payment processing, support, tax, acquisition, compliance, development, and profit.
+
+## Initial B2C Contribution Model
+
+Assuming full credit use, CLP $9.93 reserve per credit, and 4% payment processing:
+
+| Plan | Price | Credits | Technical reserve | Preliminary contribution |
+| --- | ---: | ---: | ---: | ---: |
+| Initial | CLP $8,990 | 250 | CLP $2,483 | CLP $6,147 |
+| Pro | CLP $24,990 | 750 | CLP $7,448 | CLP $16,542 |
+| Intensive | CLP $69,990 | 2,500 | CLP $24,825 | CLP $42,365 |
+
+The Intensive plan has the narrowest preliminary margin and must not be discounted without observed cost and conversion data.
+
+## Founder Economic Burn
+
+Current fixed-cost assumptions:
+
+| Component | Target-income basis | Market-income basis |
+| --- | ---: | ---: |
+| Founder labor | CLP $2,380,952 | CLP $2,476,190 |
+| Development tools | CLP $33,251 | CLP $33,251 |
+| Hardware allocation | CLP $31,500 | CLP $31,500 |
+| **Fixed subtotal** | **CLP $2,445,703** | **CLP $2,540,941** |
+
+Including initial production/runtime scenarios:
+
+| Scenario | Approximate monthly economic burn |
+| --- | ---: |
+| P50, target-income basis | CLP $2.78M |
+| P50, market-income basis | CLP $2.87M |
+| P90, target-income basis | CLP $3.16M |
+| P90, market-income basis | CLP $3.25M |
+
+Initial business targets:
+
+```text
+Minimum sustainability MRR: CLP 4.3M-5.0M
+Healthy initial MRR:        CLP 5.5M-6.5M
+```
+
+The healthy range supports variability, administration, support, and limited reinvestment. It does not finance a complete team.
+
+## Break-Even Hypothesis
+
+With a B2C mix of 25% Initial, 60% Pro, and 15% Intensive:
+
+```text
+Blended ARPU:                         approximately CLP 27,740
+Blended contribution after reserve:  approximately CLP 17,818
+Economic fixed cost/platform range:  CLP 2.7M-3.0M
+Break-even:                          approximately 150-170 paid-teacher equivalents
+```
+
+Indicative MRR equivalents:
+
+| MRR | Paid-teacher equivalents at blended ARPU |
+| ---: | ---: |
+| CLP $4.3M | 155 |
+| CLP $5.5M | 198 |
+| CLP $6.5M | 234 |
+
+Institutional contracts can reduce customer count but add onboarding, support, compliance, and sales-cycle cost.
+
+## Cloud Strategy And Portability
+
+Current operating strategy:
+
+- Use free tiers for development and controlled beta, while recording normalized cost.
+- Use paid, privacy-appropriate GenAI for real student data.
+- Use GCP as the first production cloud.
+- Use Cloudflare initially for complementary security, distribution, and compatible storage where justified.
+- Do not operate multicloud before a measurable economic, legal, customer, or resilience requirement exists.
+
+Preserve portability through:
+
+- OCI containers;
+- standard PostgreSQL;
+- S3-compatible storage interfaces where practical;
+- OpenTelemetry;
+- externalized configuration;
+- Terraform or equivalent infrastructure as code;
+- provider/model abstraction;
+- portable job/event contracts;
+- exportable backups;
+- no unnecessary domain logic inside proprietary functions.
+
+Reevaluate AWS when one or more explicit triggers appear:
+
+- monthly cloud spend above approximately USD 2,000-5,000;
+- a material B2B contract requires AWS;
+- economically significant credits or a 20-30% advantage;
+- residency/region requirements;
+- dedicated platform/DevOps staffing;
+- a non-Google GenAI provider becomes strategically dominant;
+- contractual multicloud disaster recovery.
 
 ## Product Operating Costs
 
-These costs affect unit economics and should be tracked as product runtime or product operations.
-
-| Cost Area | Track As | Notes |
-| --- | --- | --- |
-| Gemini API / Vertex AI | AI API usage | Track model, input tokens, output tokens, retries, and estimated cost. |
-| Cloud Run | Hosting/backend execution | Good default for API and agent workers. |
-| Firestore or Cloud SQL | Database | Store users, assessments, submissions, rubrics, reports, and logs. |
-| Cloud Storage | File storage | Store uploaded code files, exports, and artifacts. |
-| Cloud Logging / Monitoring | Observability | Keep technical logs; store agent business logs in DB too. |
-| Email provider | Product communication | Transactional notifications and pilot communication. |
-| Payment processor | Payment fees | Stripe, PayPal, MercadoPago, Flow, Transbank, or equivalent. |
-| Domain | Product/domain cost | Small but should be reported. |
-| Contractors | Contractor fees | Only if used. |
-
-## AI Development Tooling
-
-Personal subscriptions can accelerate development but should not be used as runtime infrastructure.
-
-| Tool | Correct Use | Reporting Treatment |
-| --- | --- | --- |
-| Google AI Pro | Ideation, prototyping, AI Studio, Antigravity, development support. | Pre-existing AI development tooling; note any credits used. |
-| Claude Code Pro | Implementation, refactor, debugging, architecture. | Allocated AI development tooling if counted. |
-| ChatGPT Plus / Codex | Product design, code review, docs, coding support. | Allocated AI development tooling if counted. |
-| GitHub Copilot Pro teacher benefit | IDE productivity. | Free verified teacher benefit, `US$0` cash cost if applicable. |
-| OpenCode + free models | Low-cost local/CLI coding support. | Free/open tooling, `US$0` cash cost. |
-
-Runtime rule:
-
-> Personal AI subscriptions accelerate construction; the deployed product must use traceable API/cloud billing.
-
-Do not run production grading through personal ChatGPT, Claude, Gemini web, or AI Studio sessions. The production path must use provider-backed APIs from the deployed backend and log each agent execution.
-
-## Unit Of Business
-
-Primary unit:
-
-> 1 assessment = activity + rubric + grading assistance for 30 submissions + personalized feedback + teacher report.
-
-Estimated token budget per 30-student assessment:
-
-| Operation | Estimated Input Tokens | Estimated Output Tokens |
-| --- | ---: | ---: |
-| Create activity + rubric | 15,000 | 8,000 |
-| Validate rubric | 10,000 | 2,000 |
-| Grade 30 submissions | 480,000 | 150,000 |
-| Final teacher report | 40,000 | 8,000 |
-| **Total** | **545,000** | **168,000** |
-
-## Current Model Cost Assumptions
-
-Model names and prices change. Verify against official pricing before deployment and customer-facing commitments.
-
-Working assumptions as of this revision:
-
-| Model Policy | Example Model | Input / 1M Tokens | Output / 1M Tokens | Use |
-| --- | --- | ---: | ---: | --- |
-| Low-cost bulk | Gemini 3.1 Flash-Lite | US$0.25 | US$1.50 | bulk grading, simple feedback, high-volume tasks |
-| Balanced | Gemini 3 Flash Preview | US$0.50 | US$3.00 | assessment generation, rubric, reports |
-| Premium fallback | Gemini 3.1 Pro Preview | US$2.00 | US$12.00 | rare complex review only |
-
-Estimated AI cost for one 30-submission assessment:
-
-| Routing Scenario | Base AI Cost | With 25% Retry/Overhead Buffer | Interpretation |
-| --- | ---: | ---: | --- |
-| All Flash-Lite-class | US$0.39 | US$0.49 | Cheapest acceptable path for high volume. |
-| All Flash-class | US$0.78 | US$0.97 | Good planning baseline. |
-| All premium fallback | US$3.11 | US$3.88 | Should never be the default path. |
-
-Working planning range:
-
-- with efficient routing, a 30-student assessment should usually cost about **US$0.50-US$1.20** in AI usage;
-- premium fallbacks should be rare and explicitly logged;
-- budget extra for retries, long submissions, logs, failed calls, and manual review support.
-
-## Model Routing Policy
-
-Use cheaper models for high-volume tasks and stronger models where quality matters most.
-
-| Workload | Default Model Policy | Rationale |
-| --- | --- | --- |
-| Assessment generation | Flash-class model | Quality matters; moderate volume. |
-| Rubric generation | Flash-class model | Needs consistent structure and pedagogy. |
-| Rubric validation | Flash-class model | Needs reasoning and calibration. |
-| Bulk grading | Flash-Lite-class model | Highest volume; cost control matters. |
-| Individual feedback | Flash-Lite by default; Flash fallback | High volume with occasional quality escalation. |
-| Teacher report | Flash-class model | Lower volume; quality matters. |
-| Complex cases | Premium fallback only | Avoid premium models for default volume. |
-
-## Initial Pricing
-
-Pricing should reflect teacher value and usage volume, not only API cost.
-
-| Plan | Price | Included Usage | Purpose |
-| --- | ---: | --- | --- |
-| Free | US$0 | 1 assessment / 30 submissions | Controlled demo and lead capture. |
-| Teacher Lite | US$12/month | 3 assessments / 90 submissions | Entry-level paid plan. |
-| Teacher Pro | US$29/month | 10 assessments / 300 submissions | Main individual teacher plan. |
-| Cohort Pro | US$79/month | 30 assessments / 1,000 submissions | Bootcamps, tutors, and small academies. |
-| Pilot Pack | US$99 one-time | 3 real assessments / up to 150 submissions / onboarding | Best early revenue and validation offer. |
-
-For Chile/LatAm testing:
-
-| Plan | Suggested CLP Price |
-| --- | ---: |
-| Teacher Lite | $9.990 CLP/month |
-| Teacher Pro | $19.990-$24.990 CLP/month |
-| Cohort Pro | $59.990-$79.990 CLP/month |
-| Pilot Pack | $39.990-$79.990 CLP one-time |
-
-## Margin Logic
-
-Gross margin should be evaluated per plan using this formula:
-
-```text
-Gross margin = (Revenue - AI runtime - cloud runtime - storage/logging - payment fees - support allocation) / Revenue
-```
-
-Minimum planning targets:
-
-| Offer | Target Gross Margin |
-| --- | ---: |
-| Free | Negative or break-even, but capped hard |
-| Teacher Lite | 70%+ |
-| Teacher Pro | 75%+ |
-| Cohort Pro | 70%+ |
-| Pilot Pack | 60%+ after onboarding/support time |
-
-The Pilot Pack can have lower margin because it generates customer evidence, testimonials, and revenue proof during MVP validation.
-
-## Overuse Policy
-
-Do not sell unlimited AI corrections.
-
-Recommended overuse pricing:
-
-| Extra Usage | Suggested Price |
-| --- | ---: |
-| Additional graded submission | US$0.08 |
-| Additional assessment without submissions | US$0.50 |
-| Additional assessment with up to 30 submissions | US$3.00 |
-| Additional advanced report | US$1.00 |
-| Premium model review | US$0.20-US$0.50 per submission |
-
-## Cost Dashboard Requirements
-
-The MVP should include an internal dashboard that tracks:
-
-- input tokens by agent;
-- output tokens by agent;
-- model used by agent;
-- estimated cost per agent execution;
-- retries and failed calls;
-- cost per assessment;
-- cost per graded submission;
-- cost per teacher;
-- revenue by customer;
-- revenue by month;
-- marketing spend;
-- payment fees;
-- costs covered by credits;
-- cash costs actually paid;
-- related-party revenue separated from arms-length revenue.
-
-## Revenue And Cost Ledger Schema
-
-Minimum fields for business evidence:
-
-### `RevenueEvent`
-
-| Field | Purpose |
+| Cost area | Required tracking |
 | --- | --- |
-| `event_id` | Unique event identifier. |
-| `customer_id` | Customer or pilot account. |
-| `date` | Revenue date. |
-| `month` | May, June, July, or August 2026. |
-| `amount_usd` | Amount converted to USD. |
-| `amount_original` | Amount in original currency. |
-| `currency` | CLP, USD, etc. |
-| `source` | Stripe, bank transfer, manual invoice, commitment. |
-| `offer` | Pilot Pack, Teacher Lite, Teacher Pro, Cohort Pro. |
-| `related_party` | `true` or `false`. |
-| `evidence_link` | Screenshot/export/invoice reference. |
+| GenAI providers | Provider, model, tokens, cache, retries, batch, estimate, reconciled cost |
+| Compute | Service, environment, request/CPU/memory allocation |
+| PostgreSQL | Instance/storage/backups and tenant allocation when practical |
+| Object storage | Bytes, operations, egress, retention |
+| Logging/monitoring | Ingestion, retention, alerting, evidence storage |
+| Email | Transactional sends and provider charges |
+| Payments | Processor fee, tax/withholding where known |
+| Support/onboarding | Founder/staff time by customer or offer |
+| Security/compliance | Scanning, audit, legal, data-processing obligations |
+
+Personal ChatGPT, Claude, Gemini web, or developer subscriptions may accelerate construction but must never become the untraceable production execution path.
+
+## Ledger Requirements
 
 ### `CostEvent`
 
 | Field | Purpose |
 | --- | --- |
-| `event_id` | Unique event identifier. |
-| `date` | Cost date. |
-| `category` | Gemini API, Cloud Run, storage, payment fee, tooling, marketing. |
-| `amount_usd` | Amount in USD. |
-| `cash_cost` | Whether cash was actually paid. |
-| `covered_by_credit` | Whether free tier/credit covered it. |
-| `customer_id` | Optional attribution. |
-| `assessment_id` | Optional attribution. |
-| `evidence_link` | Billing screenshot/export/reference. |
+| `event_id` | Immutable identifier |
+| `occurred_at` | Cost timestamp |
+| `tenant_id` / `customer_id` | Attribution |
+| `workflow_id` / `attempt_id` | Execution attribution |
+| `provider` / `model` | Resolved route |
+| `category` | Inference, compute, storage, payment, support, tooling, marketing |
+| `estimated_amount_usd` | Pre/realtime estimate |
+| `actual_amount_usd` | Reconciled amount when available |
+| `cash_cost_usd` | Amount actually paid |
+| `covered_by_credit_usd` | Promotional/free-tier coverage |
+| `pricing_version` | Provider price registry version |
+| `evidence_link` | Invoice, export, or billing reference |
 
-## Initial Operating Budget
+### Credit Ledger
 
-For the MVP validation period, budget conservatively:
+| Event | Purpose |
+| --- | --- |
+| `GRANT` | Subscription, purchase, promotion, or adjustment |
+| `RESERVE` | Hold quoted credits before workflow |
+| `DEBIT` | Confirm consumption after usable result |
+| `RELEASE` | Return reservation after failure/cancellation |
+| `EXPIRE` | Apply explicit validity rules |
+| `REFUND` | Reverse a confirmed debit with reason |
+| `ADJUST` | Audited operator correction |
 
-| Scenario | Expected Monthly Runtime Cost |
-| --- | ---: |
-| Controlled MVP | US$26-US$175 |
-| Recommended planning buffer | US$150-US$250 |
-| Serious pilot | US$165-US$695 |
+Credit events must be immutable, idempotent, and reconcilable to workflow and revenue evidence.
 
-Recommended cash reserve for validation:
+## Validation Gates
 
-> US$500-US$1,000, excluding the value of founder time.
+Before final pricing:
+
+- collect at least 100-300 representative workflow executions;
+- calculate P50/P75/P90 cost by workflow and complexity class;
+- compare quoted credits with actual normalized cost;
+- measure fallback, retry, cache, output-repair, and failure rates;
+- reconcile provider dashboards/invoices with internal `CostEvent` totals;
+- simulate full utilization, partial utilization, rollover, and semester peaks;
+- validate customer willingness to pay with paid offers;
+- revise credit catalog or routing before cutting prices.
 
 ## Final Rule
 
-Charge for value and usage volume, not for how cheaply the MVP was built.
+GradeOps AI should always be able to answer:
 
-GradeOps AI should be able to say:
-
-> We know what every assessment, correction, agent run, and customer costs. This is a measurable AI-operated business, not a demo.
+> What did this workflow cost technically, why did it consume this many credits, which provider/model executed it, and what margin remains after the full service cost?
 
 <!-- nav -->
 

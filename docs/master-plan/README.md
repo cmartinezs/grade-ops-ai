@@ -1,5 +1,9 @@
 # Master Plan — GradeOps AI
 
+> [!IMPORTANT]
+> This master plan predates the accepted 2026-07-27 product redesign. Treat its release sequence as a baseline to be reconciled—not current scope authority—until the code-alignment review and migration plan are complete. See [Assessment Operations Product Redesign](../99-decisions/2026-07-27-assessment-operations-product-redesign.md).
+
+
 ## Proposito
 
 Este Master Plan transforma la documentacion, decisiones, user stories y estado real de GradeOps AI en una secuencia de releases incrementales, demostrables y orientadas a valor.
@@ -84,6 +88,7 @@ Incluye:
 
 ## Enlaces relativos
 
+- [Assessment Authoring Operation Foundation — implementation plan](../implementation-plans/assessment-authoring-operation-foundation/README.md) (technical foundation cut informed by the code-alignment review referenced above; precedes reconciliation of R01)
 - [Estrategia de releases](analysis/release-strategy.md)
 - [Estrategia transversal de Agent Runtime](analysis/agent-runtime-strategy.md)
 - [Estrategia API-Agent Orchestration](analysis/api-agent-orchestration-strategy.md)
@@ -134,6 +139,7 @@ Incluye:
 
 | Fecha | Cambio | Motivo | Elementos afectados | Decision asociada |
 |---|---|---|---|---|
+| 2026-07-28 | Enlace a implementation plan de Assessment Authoring Operation Foundation | Cerrar la revisión de alineamiento de código referenciada en el banner de este README (Research 01/02) con un Decision Pack y plan técnico ejecutable; no se crea archivo de release ni se modifica R01-R06 | README (este enlace únicamente) | `2026-07-28-assessment-authoring-model.md`, `2026-07-28-authoring-operation-contract.md`, `2026-07-28-idempotency-and-concurrency-strategy.md`, `2026-07-28-durable-ai-operation-model.md` |
 | 2026-07-21 | Incorporacion de i18n por release funcional | Exigir locale explicito para superficies user-facing y mantener codigo/telemetria en ingles | README, analysis/i18n-strategy.md, R01-R06, tasks UI/API/Agents | D-I18N-01..D-I18N-10 |
 | 2026-07-21 | Incorporacion de UI Design/Data Semantics | Exigir diseno DS previo, matriz de campos y tratamiento de datos maestros/restringidos en toda implementacion web | README, analysis/ui-design-data-strategy.md, R01, US/tasks UI | D-UI-01..D-UI-08 |
 | 2026-07-21 | Incorporacion de API I/O y sync/async contract | Exigir que datos de pantalla esten alineados con `api/` y que async tenga completion model explicito | README, API-Agent, testing, R01, tasks UI | D-UI-01..D-UI-08, D-API-01..D-API-10 |

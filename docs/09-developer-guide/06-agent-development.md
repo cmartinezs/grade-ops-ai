@@ -116,12 +116,12 @@ New agents should copy the same boundary style: command/result records in applic
 When adding a new agent, start from the current Assessment Agent shape rather than from a standalone service skeleton:
 
 1. Create `{Agent}Command`, `{Agent}Result` and any nested result records in the agent application package.
-2. Add an application orchestrator that validates the command, builds the envelope, calls a provider/tool port, validates output, and builds an execution payload.
+2. Add an application orchestrator that validates the capability-oriented command and workflow budget, builds the envelope, resolves an allowlisted route through the Model Router, calls a provider/tool port, validates output, and builds an execution payload.
 3. Add provider/tool ports under `application/port/out`.
 4. Add infrastructure adapters behind those ports.
 5. Add an internal controller only if the API needs a synchronous endpoint for that agent.
 6. Return result + execution payload to `api`; do not persist domain entities in `agents`.
-7. Add tests for command validation, provider selection, output validation, failure payloads, and prompt rendering.
+7. Add tests for command/budget validation, routing precedence, forbidden override, fallback limits, output validation, failure payloads, and prompt rendering.
 
 Extract shared abstractions only when the second or third agent creates real duplication.
 
@@ -159,7 +159,7 @@ app:
       default-provider: groq
 ```
 
-Provider defaults are a policy decision, not a code constant. See `docs/99-decisions/2026-07-20-agent-provider-model-policy.md`.
+Provider defaults are compatibility preferences, not the normal routing contract. See [`Policy-Based Provider And Model Routing`](../99-decisions/2026-07-27-policy-based-model-routing.md).
 
 Provider-specific clients are wired explicitly:
 
@@ -274,7 +274,7 @@ GRADEOPS_GROQ_BASE_URL=https://api.groq.com/openai/v1
 GRADEOPS_GROQ_MODEL=llama-3.3-70b-versatile
 ```
 
-The provider default comes from `app.agents.llm.default-provider`. A command may override provider/model when the contract supports it.
+`app.agents.llm.default-provider` is the current compatibility fallback and a future routing preference. Normal commands request capabilities and provide an authorized budget; they do not choose an exact provider/model. Exact overrides are restricted to internal development, benchmarking, incident replay, controlled experiments, or contractually constrained tenants and must be permission-gated and audited.
 
 To start the agents service locally:
 

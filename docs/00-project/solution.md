@@ -1,342 +1,73 @@
 # Solution
 
-GradeOps AI is an AI-operated assessment workflow for programming education.
+GradeOps AI is a transversal assessment-operations platform with AI assistance and explicit human academic control.
 
-It helps educators run Open and Closed assessment cycles through controlled agent workflows, from learning goal and question design through grading, feedback, analytics, and teacher reports.
+## Operating Model
 
-## Core Approach
-
-- One workflow from assessment setup to reporting.
-- Specialized agents for repetitive assessment operations.
-- Teacher approval on important outputs.
-- Structured evidence capture from day one.
-- Auditable logs for AI actions, cost, usage, and decisions.
-- A focused MVP covering practical Open assessments and objective Closed assessments.
-
-## MVP Workflows
-
-### Open Assessment
-
-1. Teacher defines what they want to evaluate.
-2. Assessment Agent generates the activity.
-3. Rubric Agent creates and validates criteria.
-4. Students submit answers or code.
-5. Grading Agent analyzes submissions against the rubric.
-6. Feedback Agent drafts personalized feedback.
-7. Learning Gap Agent identifies recurring issues.
-8. Recovery Agent suggests reinforcement activities.
-9. Teacher reviews and approves.
-10. Teacher Report Agent prepares the final report.
-11. Ops Evidence Agent records usage, costs, outcomes, and agent logs.
-
-### Closed Assessment
-
-1. Teacher defines curriculum scope, learning outcomes, difficulty, and question mix.
-2. Question Generation Agent drafts TF/SC/MC questions.
-3. Distractor Quality Agent and Ambiguity Review Agent flag weak or ambiguous items.
-4. Teacher reviews, edits, and approves the question bank.
-5. Assessment Assembly Agent composes a closed assessment from approved questions.
-6. Publishing freezes an answer-key snapshot before students respond.
-7. Students access the assessment through signed token links, without student login.
-8. Attempts are graded deterministically against the frozen answer key.
-9. Item Analytics Agent reports item performance, annulment candidates, and cohort signals.
-10. Ops Evidence Agent records usage, costs, attempts, approvals, and agent logs.
-
-## MVP Scope Matrix
-
-| Area | Must Build For MVP | Demo Support | Later | Do Not Build Now |
-| --- | --- | --- | --- | --- |
-| Open assessment creation | Learning goal input, generated practical activity | Example templates | Assessment template library | Full curriculum design |
-| Rubric | Structured rubric with weights | Rubric validation notes | Rubric library | Institutional rubric governance |
-| Submissions | Text/code paste and file upload | Seed sample submissions | Git repo integration | OCR-first workflow |
-| Grading assistance | Suggested score and evidence per criterion | Uncertainty flags | Automated tests/sandboxes | Fully autonomous final grades |
-| Feedback | Individual feedback draft | Teacher edit/approve | Student portal history | Chat tutor |
-| Learning gaps | Cohort summary | Common mistake clustering | Longitudinal analytics | Predictive student profiling |
-| Recovery | Suggested activity | Exportable recommendation | Recovery plan library | Adaptive course engine |
-| Reporting | Teacher report | Dashboard screenshots | Multi-cohort analytics | Executive BI suite |
-| Closed question bank | Approved TF/SC/MC questions with curriculum tags | Seeded question examples | Large reusable banks | Full LMS item authoring suite |
-| Closed assessment assembly | Frozen answer-key snapshot | Sample closed assessment | Advanced randomization | Proctoring platform |
-| Student access | Signed assessment/result links | Seed learner list | Full student portal | Student account system |
-| Item analytics | Basic item performance and annulment signal | Demo cohort attempts | Longitudinal item analysis | Psychometric research suite |
-| Evidence | Agent logs, API usage, cost estimate | Product validation dashboard | Audit export | Complex compliance workflows |
-| Payments | Manual or Stripe evidence | Pilot Pack checkout | Full billing portal | Marketplace |
-
-## Agent Responsibilities
-
-| Agent | Responsibility | Output |
-| --- | --- | --- |
-| Assessment Agent | Generate assessment activities from a learning goal. | Activity brief, instructions, expected evidence. |
-| Rubric Agent | Create and validate grading criteria. | Rubric, criteria weights, consistency notes. |
-| Grading Agent | Analyze submissions against the rubric. | Suggested score, rubric evidence, uncertainty flags. |
-| Feedback Agent | Draft student-facing feedback. | Personalized feedback and improvement advice. |
-| Learning Gap Agent | Detect repeated misconceptions. | Gap summary and affected students/cohorts. |
-| Recovery Agent | Suggest reinforcement work. | Recovery activities tied to specific gaps. |
-| Teacher Report Agent | Summarize the assessment run. | Teacher-facing report and next-step recommendations. |
-| Question Generation Agent | Generate objective questions from approved scope. | TF/SC/MC questions, answer keys, rationales, metadata. |
-| Distractor Quality Agent | Review distractor plausibility and option quality. | Distractor issues and improvement suggestions. |
-| Ambiguity Review Agent | Detect ambiguous wording, multiple correct answers, or weak stems. | Ambiguity flags and revision notes. |
-| Assessment Assembly Agent | Compose closed assessments from approved bank items. | Assessment form and frozen answer-key snapshot. |
-| Item Analytics Agent | Analyze closed assessment attempts. | Item difficulty, distractor behavior, annulment candidates, cohort signals. |
-| Ops Evidence Agent | Capture operational proof. | Logs, cost estimates, usage events, time-saved evidence. |
-
-## Agent Choreography
-
-```mermaid
-flowchart TD
-  A[Learning goal]
-  B[Assessment Agent]
-  C[Rubric Agent]
-  D[Teacher review checkpoint]
-  E[Submission intake]
-  F[Grading Agent]
-  G[Feedback Agent]
-  H[Learning Gap Agent]
-  I[Recovery Agent]
-  J[Teacher approval checkpoint]
-  K[Teacher Report Agent]
-  L[Ops Evidence Agent]
-  M[Question Generation Agent]
-  N[Distractor Quality Agent]
-  O[Ambiguity Review Agent]
-  P[Question bank approval]
-  Q[Assessment Assembly Agent]
-  R[Frozen answer-key snapshot]
-  S[Signed token access]
-  T[Deterministic grading]
-  U[Item Analytics Agent]
-
-  A --> B --> C --> D --> E --> F --> G --> H --> I --> J --> K --> L
-  A --> M --> N --> O --> P --> Q --> R --> S --> T --> U --> K --> L
+```text
+Academic + curriculum context
+  -> versioned open/closed/mixed assessment
+  -> publication snapshot
+  -> participation and evidence
+  -> deterministic scoring / AI proposals
+  -> criterion review
+  -> final approval
+  -> explicit publication
+  -> correction/republication/appeal
+  -> curriculum coverage and pedagogical action
 ```
 
-The product should show this choreography visually in demos. Evaluators should understand that AI is operating the workflow, not only answering prompts.
+Each stage keeps its own lifecycle and audit trail.
 
-## Human Control Model
+## What AI Does
 
-The product must be explicit about authority:
+AI may draft assessments, rubrics, items, alignments and feedback; analyze open evidence; detect ambiguity, uncertainty and patterns; summarize approved results; and propose pedagogical actions.
 
-- agents suggest;
-- teachers review;
-- teachers approve;
-- approved outputs can be delivered to students;
-- rejected or edited outputs remain part of the audit trail;
-- uncertain agent outputs are flagged instead of hidden;
-- final grades and final feedback are attributed to teacher approval, not autonomous AI authority.
+AI does not silently publish grades, overwrite teacher work, reinterpret history, or close an appeal.
 
-This avoids the most dangerous misinterpretation: that GradeOps AI replaces teacher judgment.
+## What the System Does Deterministically
 
-## Approval States
+- authorization and policy enforcement;
+- version and snapshot management;
+- closed-answer scoring;
+- derived calculations under approved policy;
+- approval invalidation;
+- publication and official-version selection;
+- deadline calculation from versioned academic calendars;
+- audit and notification delivery.
 
-| State | Meaning |
-| --- | --- |
-| `drafted_by_agent` | Agent generated an output but no teacher has reviewed it yet. |
-| `needs_review` | Output is ready for teacher validation. |
-| `approved` | Teacher accepted the output. |
-| `edited_by_teacher` | Teacher changed the output before approval. |
-| `rejected` | Teacher rejected the output. |
-| `blocked_uncertain` | Output is too uncertain or incomplete to recommend. |
-| `published` | Approved output has been delivered or exported. |
+## What the Teacher Decides
 
-## Evidence Model
+- curriculum and assessment intent;
+- acceptance/edit/rejection of AI proposals;
+- criterion evidence and judgments;
+- exception resolution;
+- final-result approval;
+- publication and republication;
+- adoption of pedagogical actions.
 
-Each agent execution should record:
+## Core Capabilities
 
-- timestamp;
-- teacher or account;
-- assessment;
-- submission when applicable;
-- attempt when applicable;
-- agent name;
-- agent version;
-- provider used;
-- model used;
-- prompt or template version;
-- input token estimate;
-- output token estimate;
-- input summary;
-- structured output summary;
-- status;
-- uncertainty score or flags;
-- teacher approval state;
-- estimated cost;
-- estimated time saved;
-- final action taken;
-- whether the output was edited, approved, rejected, or published.
+- academic periods, courses, sections, assignments and learner relationships;
+- structured unit/topic/objective curriculum;
+- reusable versioned templates;
+- open, closed and mixed assessments;
+- secure-link or authenticated participation according to policy;
+- deterministic closed scoring and evidence-aware open evaluation;
+- explicit approval, publication, correction, republication and appeal;
+- curriculum-first analysis of planned, taught, assessed and demonstrated learning;
+- AI/runtime, cost, usage and decision evidence.
 
-This evidence is not only observability. It is part of the business narrative for pilots, sales, and product validation.
+## Initial Delivery Constraint
 
-## Minimal Data Model
+The target is implemented incrementally from the existing system. The next step is a code-alignment review and migration plan, not a blind rewrite. Programming remains an initial validation specialization and can be the first end-to-end reference flow.
 
-| Entity | Purpose |
-| --- | --- |
-| `TeacherAccount` | Owner of assessments and billing/customer evidence. |
-| `Customer` | Person or organization paying or piloting. |
-| `Assessment` | Learning goal, generated activity, state, due date, and metadata. |
-| `Rubric` | Criteria, weights, levels, validation notes, and version. |
-| `Submission` | Student answer/code/file reference and processing state. |
-| `GradingSuggestion` | Suggested score, criterion evidence, uncertainty, and rationale. |
-| `FeedbackDraft` | Student-facing feedback with approval state. |
-| `LearningGapReport` | Cohort-level gaps and affected submissions. |
-| `RecoveryActivity` | Suggested reinforcement activity tied to gaps. |
-| `TeacherReport` | Summary report for teacher/customer. |
-| `Question` | Closed-assessment item with type, prompt, options, answer key, rationale, and metadata. |
-| `QuestionBank` | Approved pool of reusable objective questions. |
-| `AssessmentSnapshot` | Immutable closed assessment form and answer key used for deterministic grading. |
-| `AssessmentInvitation` | Signed student access token, expiry, and learner mapping. |
-| `LearnerRef` | Minimal student reference, not a login account. |
-| `AssessmentAttempt` | Closed assessment responses, score, timestamps, and grading state. |
-| `ItemAnalytics` | Per-question attempt statistics and quality signals. |
-| `AgentExecutionLog` | Operational evidence for agent decisions, tokens, costs, and status. |
-| `UsageEvent` | Product action used for activation, volume, plan limits, and traction metrics. |
-| `RevenueEvent` | Payment, commitment, related-party flag, customer source. |
-| `CostEvent` | AI/API/cloud/payment/marketing cost event. |
+## Success Test
 
-## Cost Evidence Model
-
-Each assessment run should calculate:
-
-- input tokens by agent;
-- output tokens by agent;
-- provider and model used by agent;
-- model policy selected for the workload;
-- estimated cost per agent execution;
-- retries and failed calls;
-- cost per assessment;
-- cost per graded submission;
-- cost per closed attempt;
-- cost per active teacher;
-- cost per question generation batch;
-- cost per assessment assembly and item analytics run;
-- revenue attached to the customer or pilot;
-- whether the revenue is arms-length or related-party.
-
-This prevents a weak interpretation of the product as a demo. GradeOps AI should prove it understands its unit economics.
-
-## Technical Direction
-
-The MVP should use a simple, defensible architecture:
-
-- frontend for teacher workflow and dashboard;
-- backend API for orchestration and persistence;
-- provider-backed LLM calls through the agent runtime;
-- a production-like deployment path with auditable cloud/API usage;
-- structured storage for assessments, submissions, rubrics, feedback, and logs;
-- operational dashboard for usage, agent runs, cost, and evidence.
-
-Current implementation direction:
-
-| Layer | Preferred Direction | Notes |
-| --- | --- | --- |
-| Frontend | Next.js + TypeScript | Teacher workspace, signed student access, dashboards, and review flows. |
-| Backend | Spring Boot + Java | Domain state machine, persistence, billing, approvals, and service orchestration. |
-| Agent runtime | Spring Boot + Spring AI | Internal REST service for file-based prompts and provider-backed structured calls. |
-| Runtime | Cloud Run | Containerized web, API, and agent services. |
-| AI | Provider adapters for Gemini and OpenAI-compatible APIs | Select provider by environment, workload, and evidence needs. |
-| Data | Cloud SQL PostgreSQL | Relational consistency for assessments, approvals, attempts, billing, and evidence. |
-| Storage | Cloud Storage | Student files, exports, report artifacts. |
-| Logs | Cloud Logging plus DB business logs | Technical logs and business evidence should not be mixed only in stdout. |
-| Auth | Teacher auth plus signed student links | No student login in MVP. |
-| Payments | Stripe or manual payment evidence | Stripe ideal, manual evidence acceptable for pilot validation. |
-
-Personal AI subscriptions can be used for development acceleration, but not as the production grading runtime. The deployed product must use traceable API/cloud billing and save agent execution evidence.
-
-## Model Routing Direction
-
-Use model routing to control cost:
-
-| Workload | Model Policy |
-| --- | --- |
-| Assessment generation | Flash-class model. |
-| Rubric generation and validation | Flash-class model. |
-| Bulk grading | Flash-Lite-class model by default. |
-| Individual feedback | Flash-Lite by default, Flash fallback for difficult cases. |
-| Teacher reports | Flash-class model. |
-| Question generation | Flash-class model with structured output validation. |
-| Distractor and ambiguity review | Flash-class model with strict quality flags. |
-| Closed assessment assembly | Deterministic selection first; model assistance only for recommendations. |
-| Closed grading | Deterministic answer-key evaluation, no LLM scoring. |
-| Item analytics | Deterministic analytics first; model assistance only for narrative summary. |
-| Premium review | Stronger fallback model only when needed. |
-
-Model names and pricing change. The cost model must be verified against official pricing before deployment and before customer-facing commitments.
-
-## Security, Privacy, And Trust
-
-Minimum MVP rules:
-
-- Do not require unnecessary student personal data.
-- Use pseudonymous student identifiers when possible.
-- Store uploaded files only when needed for the assessment run.
-- Do not expose one teacher's submissions or reports to another teacher.
-- Log agent inputs and outputs carefully; avoid storing secrets or sensitive unrelated data.
-- Make teacher approval visible in the UI.
-- Preserve a clear audit trail of AI suggestions and human edits.
-- Be transparent that AI output is assistive and must be reviewed.
-
-## Non-Functional Requirements
-
-| Requirement | MVP Target |
-| --- | --- |
-| Traceability | 100% of agent runs have logs. |
-| Cost tracking | Every assessment estimates AI cost and graded-submission cost. |
-| Reliability | Failed agent calls are retried or marked as failed with reason. |
-| Latency | Teacher-facing operations should show progress states instead of blocking silently. |
-| Auditability | Teacher approval and edits are retained. |
-| Exportability | Teacher report can be exported or shared as evidence. |
-| Demo readiness | Product can demonstrate one Open or Closed vertical slice with evidence in under three minutes. |
-
-## Value Proposition
-
-### For Teachers
-
-- Reduce grading and feedback workload.
-- Improve feedback consistency.
-- Detect learning gaps earlier.
-- Keep control over evaluation decisions.
-- Prepare reports faster.
-
-### For Students
-
-- Receive faster feedback.
-- Understand mistakes more clearly.
-- Get targeted recovery activities.
-- Benefit from more consistent assessment criteria.
-
-### For Small Education Providers
-
-- Operate like a larger academic team without hiring more staff.
-- Standardize assessment quality across cohorts.
-- Produce clearer evidence of learning outcomes.
-- Reduce operational bottlenecks.
-- Create a repeatable assessment workflow.
-
-## Strategic Differentiator
-
-GradeOps AI is not a generic quiz generator or a chatbot wrapper.
-
-It is an AI-native assessment operations platform where agents run meaningful workflow steps and teachers retain final pedagogical authority.
-
-## Product Validation Relevance
-
-GradeOps AI is designed to produce the evidence needed for a credible AI venture:
-
-- real users;
-- real assessment runs;
-- usage events;
-- agent logs;
-- teacher approvals;
-- time saved;
-- customer feedback;
-- payment evidence;
-- cost tracking;
-- demo-ready operational dashboard.
-
-## Core Principle
-
-> AI operates the repetitive workflow. Teachers retain judgment, standards, and final approval.
+A successful slice proves one real assessment end to end and can reproduce the curriculum, assessment, rubric, answer-key, scoring, calendar, evidence, human decisions, AI contributions, official result versions, deadlines, and pedagogical analysis that produced the outcome.
 
 <!-- nav -->
 
 ---
 
-← [Problem](problem.md) | [↑ inicio](#solution) | [README](README.md) | [Cost Model →](cost-model.md)
+← [Problem](problem.md) | [↑ inicio](#solution) | [README](README.md)

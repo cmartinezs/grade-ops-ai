@@ -54,5 +54,5 @@ Business evidence is a product output. Every pilot should produce usage, revenue
 
 | Decision | Business Impact |
 | --- | --- |
-| [`Price By Graded Submissions`](../99-decisions/2026-06-08-price-by-graded-submissions.md) | Plans and usage limits are bounded by assessments and graded submissions/Closed attempts. |
+| [`Credit-Based Pricing`](../99-decisions/2026-07-27-credit-based-pricing.md) | Plans meter heterogeneous workflows in credits; submission counts remain product/value metrics. |
 | [`Archive Event-Specific Constraints`](../99-decisions/2026-07-20-archive-event-specific-constraints.md) | Archived event pricing or pitch variants are historical only; active pricing lives in [`pricing.md`](pricing.md). |

@@ -14,7 +14,7 @@ Capture product activity that supports traction claims, activation analysis, cos
 | `mode` | When applicable | `open`, `closed`, or `mixed`. |
 | `event_type` | Yes | Assessment created, rubric approved, submission analyzed, feedback approved, question generated, snapshot frozen, invitation sent, attempt submitted, report exported, etc. |
 | `quantity` | Yes | Count associated with the event. |
-| `plan` | When known | Free, Pilot Pack, Teacher Lite, Teacher Pro, Cohort Pro. |
+| `plan` | When known | Trial, Initial, Pro, Intensive, Institutional Pilot, Department, Institution, or custom contract. |
 | `source` | Yes | Product, import, manual admin, integration, or seed/demo. |
 | `release_area` | Yes | R01-R06 evidence mapping. |
 | `related_cost_event_id` | When available | Links usage to cost. |

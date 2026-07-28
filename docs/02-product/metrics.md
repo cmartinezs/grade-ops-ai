@@ -15,7 +15,7 @@ Why:
 - it requires teacher approval;
 - it creates student value;
 - it connects directly to workload reduction;
-- it can support pricing by graded submissions.
+- it supports workflow value measurement while credit events capture commercial usage.
 
 ## Metric Groups
 
@@ -82,6 +82,10 @@ Do not optimize for 100% blind approval. The product should encourage meaningful
 | Cost per agent run | Estimated cost per run | Required |
 | Cost per assessment | AI/cloud cost per assessment | Required |
 | Cost per graded submission | Cost per submission analyzed | Required |
+| Cost per workflow | P50/P90 normalized cost by workflow and complexity | Required |
+| Credit quote accuracy | Quoted technical reserve compared with actual normalized cost | Required |
+| Credit reservation outcome | Reserved credits confirmed, released, refunded, or expired | Required |
+| Contribution per credit | Selling value minus technical reserve and allocated variable cost | Required |
 | Premium fallback rate | Premium model runs / total runs | Keep low and explicit |
 
 ## Student Value Metrics

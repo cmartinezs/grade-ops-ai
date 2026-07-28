@@ -23,7 +23,7 @@ This folder should be treated as the canonical strategic foundation for the prod
 | MVP boundary | Assessment creation, rubric, submission intake, grading assistance, feedback, learning gaps, teacher report, agent logs |
 | Human role | Teachers retain pedagogical authority and final approval |
 | AI role | Agents execute repetitive workflow steps and produce structured evidence |
-| Pricing model | Bounded by assessments and graded submissions; no unlimited AI grading |
+| Pricing model | Versioned workflow credits backed by P90 technical budgets; no unlimited AI processing |
 | Runtime policy | Production grading must use traceable API/cloud billing, not personal AI subscriptions |
 | Evidence policy | Usage, agent logs, cost, revenue, testimonials, and customer evidence are first-class product outputs |
 

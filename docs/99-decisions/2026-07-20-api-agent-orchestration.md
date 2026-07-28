@@ -56,7 +56,7 @@ Every task that defines or changes endpoints, agent contracts, or `web` API rout
 - [`docs/.prompting/master-plan-api-agent-orchestration/README.md`](../.prompting/master-plan-api-agent-orchestration/README.md)
 - [`docs/master-plan/analysis/api-agent-orchestration-strategy.md`](../master-plan/analysis/api-agent-orchestration-strategy.md)
 - [`2026-06-10-agent-runtime-separation.md`](2026-06-10-agent-runtime-separation.md)
-- [`2026-07-20-agent-provider-model-policy.md`](2026-07-20-agent-provider-model-policy.md)
+- [`2026-07-27-policy-based-model-routing.md`](2026-07-27-policy-based-model-routing.md)
 
 <!-- nav -->
 

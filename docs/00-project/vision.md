@@ -1,136 +1,65 @@
 # Vision
 
-GradeOps AI helps programming educators run practical assessment workflows with AI agents while preserving teacher control.
+GradeOps AI becomes the AI-native operating layer for trustworthy assessment workflows across disciplines, serving independent teachers and institutions without becoming a full LMS.
 
 ## North Star
 
-Become the AI-native operating layer for assessment workflows in small and mid-sized education environments.
-
-GradeOps AI should not compete as another LMS, quiz generator, or student chatbot. It should own the operational layer around assessment: creation, rubricing, grading assistance, feedback, learning-gap detection, recovery planning, reporting, evidence, and operational analytics.
+Enable teachers to run real assessments from curriculum planning through pedagogical action while preserving human authority, student rights, evidence, version history, and auditability.
 
 ## Strategic Thesis
 
-Programming educators do not only need help creating tests. They need help operating the assessment cycle repeatedly and consistently:
+Assessment is an operation, not a document. It includes academic context, design, participation, evidence, scoring, review, publication, correction, appeal, analysis, and intervention. GradeOps coordinates these lifecycles and uses AI where it reduces repetitive work without transferring academic authority to the model.
 
-1. define what to evaluate;
-2. design the activity;
-3. create or validate the rubric;
-4. receive student submissions;
-5. analyze answers or code;
-6. draft scores and feedback;
-7. detect learning gaps;
-8. suggest recovery actions;
-9. prepare the teacher report;
-10. preserve evidence of what happened.
+## Market Entry and Product Boundary
 
-GradeOps AI turns that cycle into a controlled AI-assisted operation. Agents execute repetitive workflow steps; teachers retain judgment, standards, and final approval.
+Programming education remains a strong initial wedge because its evidence is rich and grading work is expensive. It is a go-to-market specialization, not a core-domain restriction.
 
-## Initial Wedge
+The product is not:
 
-The first market is programming education:
+- a full LMS or school-management suite;
+- a generic quiz generator;
+- an autonomous grading authority;
+- a student chatbot;
+- an opaque analytics dashboard.
 
-- independent programming teachers;
-- tutors;
-- bootcamps;
-- small academies;
-- cohort-based training teams;
-- technical instructors who grade practical code submissions.
+## Long-Term Ownership
 
-This wedge is intentionally narrow. Programming assessments are frequent, time-consuming to review, and rich enough to show clear value through code analysis, rubric-based judgment, feedback, and targeted recovery recommendations.
-
-## Ideal Customer Profile
-
-The first ideal customer is not a university procurement department. It is a teacher or small education operator who can say yes quickly.
-
-| Segment | Pain | Buying Trigger | Why It Fits MVP |
-| --- | --- | --- | --- |
-| Independent programming teacher | Too much grading and feedback work | Upcoming evaluation or cohort | Fast decision, direct pain |
-| Tutor or mentor | Needs structured feedback without admin overhead | Paid students or small group | Values time savings and professionalism |
-| Bootcamp instructor | Many similar submissions to review | Cohort assessment week | High volume, repeatable workflow |
-| Small academy owner | Wants consistency across instructors | Scaling classes without hiring | Business buyer, clear ROI |
-| Corporate technical trainer | Needs reports and evidence | Training program assessment | Strong reporting need |
-
-## Long-Term Goal
-
-The expansion path is not to become a full LMS. The expansion path is to become the assessment-operations layer that can connect to LMSs, classrooms, bootcamps, academies, and internal training programs.
-
-Long-term ownership areas:
-
-- assessment operations;
-- rubric governance;
-- grading assistance;
-- feedback quality;
-- learning-gap intelligence;
-- recovery planning;
-- evidence and auditability;
-- operational analytics for education teams.
+- assessment templates and versioned preparation;
+- rubric and item governance;
+- participation and submission operations;
+- deterministic and AI-assisted evaluation;
+- criterion/evidence review;
+- result approval, publication, correction and appeal;
+- curriculum coverage and learning evidence;
+- pedagogical-action support;
+- audit, cost and AI-operation evidence;
+- integrations with LMS and institutional systems.
 
 ## Strategic Moat
 
-GradeOps AI should build advantage through domain workflow, not only model access.
-
-| Moat | Explanation |
+| Moat | Why it compounds |
 | --- | --- |
-| Workflow depth | The product understands the assessment operation end to end, not only prompt generation. |
-| Evidence layer | Every agent run, approval, edit, cost, and outcome becomes auditable business evidence. |
-| Teacher trust | Human approval and uncertainty flags reduce resistance to AI grading. |
-| Programming wedge | Code-based assessment gives a concrete, repeatable, high-friction use case. |
-| Unit economics discipline | Pricing is tied to assessments and graded submissions, not vague unlimited AI usage. |
-| Reusable assessment memory | Rubrics, common mistakes, feedback patterns, and recovery activities improve future runs. |
-
-## What Success Looks Like
-
-### Teacher Outcomes
-
-- Teachers recover measurable hours from repetitive assessment work.
-- Teachers approve AI outputs instead of building every artifact from scratch.
-- Feedback quality becomes more consistent across cohorts.
-- Learning gaps are detected earlier.
-- Reports are generated faster and with clearer evidence.
-
-### Student Outcomes
-
-- Students receive faster feedback.
-- Students understand mistakes more clearly.
-- Students receive targeted recovery activities.
-- Students benefit from more consistent assessment criteria.
-
-### Business Outcomes
-
-- The business collects clear evidence of usage, value, revenue, willingness to pay, and repeat intent.
-- Unit economics are measured per assessment, graded submission, teacher, and customer.
-- AI agent operations are logged, auditable, and reviewable.
-- Small education providers can operate with more academic capacity without immediately hiring more staff.
+| Workflow depth | Independent lifecycle and policy modeling is harder to copy than prompting |
+| Evidence graph | Criteria, objectives, evidence, versions and decisions become reusable institutional memory |
+| Teacher trust | Explicit authority, explainability and reversibility support adoption |
+| Curriculum intelligence | Planned/taught/assessed/demonstrated separation produces actionable insight |
+| Auditability | Human and AI contributions remain attributable |
+| Operational economics | Credits, usage and provider cost are measurable per workflow |
 
 ## Non-Negotiables
 
-- Teachers approve important outputs before they affect students.
-- Agents do not silently assign final grades without human review.
-- Agent decisions are logged.
-- The product tracks usage, cost, time saved, revenue, and business value.
-- Product runtime costs are tracked separately from personal AI development tooling.
-- Pricing is bounded by assessments and graded submissions.
-- Unlimited AI grading is not part of the model.
-- The MVP stays focused on programming assessments.
-- The MVP is positioned as a business operation, not only a software demo.
-- Public claims must be supported by source evidence or customer evidence.
+- AI proposals do not silently become official academic decisions.
+- Approval and publication remain separate.
+- Published history is immutable; corrections use new versions.
+- Student appeal and teacher-initiated review are distinct.
+- Missing evidence is not low achievement.
+- Curriculum, policy, calendar and result versions are reproducible.
+- Programming-specific behavior is implemented as specialization, not hardcoded platform semantics.
+- Public claims require product or customer evidence.
 
-## Explicit Boundaries
+## Success
 
-GradeOps AI should not become during MVP validation:
-
-- a complete LMS;
-- a broad school-management platform;
-- an OCR-first product;
-- a mobile-first product;
-- a generic AI tutor;
-- a multi-subject assessment suite;
-- a fully autonomous grading authority;
-- an institutional procurement-heavy system.
-
-## Strategic Principle
-
-> AI operates the repetitive workflow. Teachers retain judgment, standards, and final approval.
+Teachers recover time, publish faster feedback, make better-supported interventions, and can explain every result. Students receive consistent criteria, traceable corrections, and usable appeal windows. Institutions gain auditability without forcing all teaching practices into one rigid flow. The business proves recurring value and sustainable unit economics.
 
 <!-- nav -->
 

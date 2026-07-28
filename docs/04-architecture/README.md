@@ -125,6 +125,6 @@ Everything else is secondary until the first real pilot works end to end.
 | --- | --- |
 | [`Technology Stack`](../99-decisions/2026-06-10-technology-stack.md) | Next.js, Spring Boot, Java 21, Spring AI, PostgreSQL. |
 | [`Agent Runtime Separation`](../99-decisions/2026-06-10-agent-runtime-separation.md) | Agents run outside API; API owns domain/persistence. |
-| [`Agent Provider And Model Policy`](../99-decisions/2026-07-20-agent-provider-model-policy.md) | Runtime records provider/model and supports current Gemini/Groq adapters. |
+| [`Policy-Based Provider And Model Routing`](../99-decisions/2026-07-27-policy-based-model-routing.md) | `agents/` selects an allowlisted route from capabilities, privacy, budget, tenant policy, health, quality and cost. |
 | [`Environment Roles`](../99-decisions/2026-07-20-environment-roles.md) | `beta` and `demo` have distinct evidence/deployment responsibilities. |
 | [`Firebase Authentication`](../99-decisions/2026-06-12-firebase-authentication.md) | Teacher identity and Firebase token validation boundary. |

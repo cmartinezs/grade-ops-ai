@@ -73,7 +73,7 @@ Vertex AI Gemini starter:
 </dependency>
 ```
 
-Configured through Spring AI provider adapters. Gemini / Vertex AI remains the Google Cloud-oriented path. The current implementation also includes a Groq OpenAI-compatible adapter and provider selector; see [`2026-07-20-agent-provider-model-policy.md`](2026-07-20-agent-provider-model-policy.md).
+Configured through Spring AI provider adapters. Gemini / Vertex AI remains the Google Cloud-oriented path. The current implementation also includes a Groq OpenAI-compatible adapter; exact runtime selection evolves through [`2026-07-27-policy-based-model-routing.md`](2026-07-27-policy-based-model-routing.md).
 
 **`grade-ops-ai-infra` — Terraform + GitHub Actions**
 

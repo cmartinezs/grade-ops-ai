@@ -74,4 +74,4 @@ Fecha, métrica, nueva evidencia o cambio de alcance que obliga a reconsiderar l
 
 ---
 
-[← Índice de decisiones](README.md) · [Siguiente: Data Model Impact Ledger →](data-model-impact-ledger.md) · [↑ Volver al inicio](#top)
+[← Índice de decisiones](README.md) · [Siguiente: Fundamentos del dominio evaluativo →](2026-07-27-assessment-domain-foundations.md) · [↑ Volver al inicio](#top)
