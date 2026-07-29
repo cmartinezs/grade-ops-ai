@@ -6,7 +6,7 @@ import {
 import {
   GetAssessmentDraftError,
   GetAssessmentDraftVersionsError,
-  UpdateAssessmentDraftError,
+  CreateAssessmentRevisionError,
   RegenerateAssessmentDraftError,
 } from "@/lib/api/assessments";
 
@@ -34,7 +34,7 @@ describe("isDraftNotFoundError", () => {
 
 describe("translateSaveError", () => {
   it("maps a field-validation (array body) error to per-field messages", () => {
-    const error = new UpdateAssessmentDraftError(
+    const error = new CreateAssessmentRevisionError(
       422,
       [{ field: "context", message: "must not be blank if provided" }],
       "a1"
@@ -46,7 +46,7 @@ describe("translateSaveError", () => {
   });
 
   it("maps a no-prior-draft (APPLICATION_ERROR) error to the defensive message", () => {
-    const error = new UpdateAssessmentDraftError(422, { error: "APPLICATION_ERROR", message: "No draft exists yet" }, "a1");
+    const error = new CreateAssessmentRevisionError(422, { error: "APPLICATION_ERROR", message: "No draft exists yet" }, "a1");
     expect(translateSaveError(error)).toEqual({
       fieldErrors: null,
       serverError: "Aún no se ha generado un borrador para esta evaluación.",
@@ -54,7 +54,7 @@ describe("translateSaveError", () => {
   });
 
   it("maps a generic 500 to the generic retry message", () => {
-    const error = new UpdateAssessmentDraftError(500, { error: "INTERNAL_ERROR", message: null }, "a1");
+    const error = new CreateAssessmentRevisionError(500, { error: "INTERNAL_ERROR", message: null }, "a1");
     expect(translateSaveError(error)).toEqual({
       fieldErrors: null,
       serverError: "Ocurrió un error inesperado. Intenta de nuevo.",

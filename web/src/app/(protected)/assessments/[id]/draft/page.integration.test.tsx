@@ -1,18 +1,15 @@
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { ShellProvider } from "@/components/shell/ShellContext";
-import { useShellConfig } from "@/components/shell/ShellContext";
-import { useAssessmentDraftBuilderPage } from "@/features/assessment-creation/hooks/useAssessmentDraftBuilderPage";
-import DraftEditorSection from "@/features/assessment-creation/components/DraftEditorSection";
-import RegenerateSection from "@/features/assessment-creation/components/RegenerateSection";
-import VersionHistorySection from "@/features/assessment-creation/components/VersionHistorySection";
+import { DraftBuilderPageTestWrapper } from "@/features/assessment-creation/testUtils/DraftBuilderPageTestWrapper";
 import * as assessmentsApi from "@/lib/api/assessments";
 import {
   GetAssessmentDraftError,
-  UpdateAssessmentDraftError,
+  GetGenerationStatusError,
+  CreateAssessmentRevisionError,
   RegenerateAssessmentDraftError,
 } from "@/lib/api/assessments";
-import type { AssessmentDraftDto } from "@/types/assessment";
+import type { AssessmentDraftDto, GenerationStatusDto } from "@/types/assessment";
 
 // Mock AuthGuard to simulate an authenticated user
 jest.mock("@/components/auth/AuthGuard", () => {
@@ -42,16 +39,19 @@ jest.mock("next/navigation", () => ({
 }));
 
 // Real network boundary (apiClient) is mocked, not the page hook — this exercises the real
-// loadAssessmentDraftBuilderPage + updateAssessmentDraft/regenerateAssessmentDraft call path,
-// per task-12's objective of removing task-09's fake in-hook dataset entirely.
+// loadAssessmentDraftBuilderPage + createAssessmentRevision/regenerateAssessmentDraft/
+// getGenerationStatus/retryAssessmentDraftGeneration/generateAssessmentDraft call paths.
 // A factory (not plain jest.mock(path)) is required here: auto-mocking would also replace the
-// exported error classes (GetAssessmentDraftError, UpdateAssessmentDraftError, ...), losing the
-// constructor-assigned status/body/assessmentId properties these tests construct and assert on.
+// exported error classes, losing the constructor-assigned status/body/assessmentId properties
+// these tests construct and assert on.
 jest.mock("@/lib/api/assessments", () => ({
   ...jest.requireActual("@/lib/api/assessments"),
   getAssessmentDraft: jest.fn(),
   getAssessmentDraftVersions: jest.fn(),
-  updateAssessmentDraft: jest.fn(),
+  getGenerationStatus: jest.fn(),
+  retryAssessmentDraftGeneration: jest.fn(),
+  generateAssessmentDraft: jest.fn(),
+  createAssessmentRevision: jest.fn(),
   regenerateAssessmentDraft: jest.fn(),
 }));
 jest.mock("@/lib/logging/logger", () => ({
@@ -60,56 +60,11 @@ jest.mock("@/lib/logging/logger", () => ({
 
 const mockGetAssessmentDraft = assessmentsApi.getAssessmentDraft as jest.Mock;
 const mockGetAssessmentDraftVersions = assessmentsApi.getAssessmentDraftVersions as jest.Mock;
-const mockUpdateAssessmentDraft = assessmentsApi.updateAssessmentDraft as jest.Mock;
+const mockGetGenerationStatus = assessmentsApi.getGenerationStatus as jest.Mock;
+const mockRetryAssessmentDraftGeneration = assessmentsApi.retryAssessmentDraftGeneration as jest.Mock;
+const mockGenerateAssessmentDraft = assessmentsApi.generateAssessmentDraft as jest.Mock;
+const mockCreateAssessmentRevision = assessmentsApi.createAssessmentRevision as jest.Mock;
 const mockRegenerateAssessmentDraft = assessmentsApi.regenerateAssessmentDraft as jest.Mock;
-
-/**
- * Test wrapper that simulates what DraftBuilderPage does.
- * This allows us to test the page logic (hook + components) without importing a "use client" page.
- */
-function DraftBuilderPageTestWrapper({ assessmentId }: { assessmentId: string }) {
-  useShellConfig({
-    title: "Draft de la evaluación",
-    subtitle: "Revisa, edita y regenera el borrador generado por IA",
-  });
-
-  const page = useAssessmentDraftBuilderPage(assessmentId);
-
-  if (page.status === "loading") {
-    return <p role="status">Cargando…</p>;
-  }
-
-  if (page.status === "not-found") {
-    return <p role="alert">No encontramos esta evaluación.</p>;
-  }
-
-  if (page.status === "error") {
-    return <p role="alert">{page.error}</p>;
-  }
-
-  const { data } = page;
-
-  return (
-    <div style={{ maxWidth: "var(--content-max)", display: "flex", flexDirection: "column", gap: 32 }}>
-      <DraftEditorSection
-        draft={data.draft}
-        aiDisclosureLabel={data.aiDisclosureLabel}
-        isReadOnly={data.isViewingHistoricalVersion}
-        isSaving={data.isSaving}
-        fieldErrors={data.saveFieldErrors}
-        serverError={data.saveServerError}
-        onSave={data.onSave}
-      />
-      <RegenerateSection
-        isRegenerating={data.isRegenerating}
-        fieldError={data.regenerateFieldError}
-        agentError={data.regenerateAgentError}
-        onRegenerate={data.onRegenerate}
-      />
-      <VersionHistorySection versions={data.versions} selectedVersion={data.selectedVersion} onViewVersion={data.onViewVersion} />
-    </div>
-  );
-}
 
 const LONG_INSTRUCTIONS =
   "Implementa una función recursiva que calcule el n-ésimo número de la secuencia de Fibonacci. " +
@@ -131,9 +86,13 @@ function buildFakeVersions(): AssessmentDraftDto[] {
       deliverables: ["Archivo .py con la función implementada"],
       constraints: ["No usar librerías externas"],
       versionNumber: 1,
+      origin: "AI_GENERATED",
+      actorId: null,
+      reason: null,
+      previousRevisionId: null,
     },
     {
-      draftId: "draft-1",
+      draftId: "draft-2",
       title: "Recursividad: Fibonacci (revisado)",
       context: "Evaluación práctica sobre recursividad para el curso de Estructuras de Datos.",
       instructions: "Implementa una función recursiva para calcular Fibonacci, manejando casos base.",
@@ -141,9 +100,13 @@ function buildFakeVersions(): AssessmentDraftDto[] {
       deliverables: ["Archivo .py con la función implementada"],
       constraints: ["No usar librerías externas"],
       versionNumber: 2,
+      origin: "AI_GENERATED",
+      actorId: null,
+      reason: null,
+      previousRevisionId: "draft-1",
     },
     {
-      draftId: "draft-1",
+      draftId: "draft-3",
       title: "Recursividad: Fibonacci con casos de prueba",
       context: "Evaluación práctica sobre recursividad para el curso de Estructuras de Datos.",
       instructions: "Implementa una función recursiva para calcular Fibonacci y agrega casos de prueba.",
@@ -151,9 +114,13 @@ function buildFakeVersions(): AssessmentDraftDto[] {
       deliverables: ["Archivo .py con la función implementada", "Casos de prueba"],
       constraints: ["No usar librerías externas"],
       versionNumber: 3,
+      origin: "AI_GENERATED",
+      actorId: null,
+      reason: null,
+      previousRevisionId: "draft-2",
     },
     {
-      draftId: "draft-1",
+      draftId: "draft-4",
       title: "Recursividad: Fibonacci con análisis de complejidad",
       context: "Evaluación práctica sobre recursividad para el curso de Estructuras de Datos.",
       instructions: LONG_INSTRUCTIONS,
@@ -166,6 +133,10 @@ function buildFakeVersions(): AssessmentDraftDto[] {
       deliverables: ["Archivo .py con la función implementada", "Casos de prueba", "Comentario con análisis de tiempo"],
       constraints: ["No usar librerías externas", "Documentar el tiempo de ejecución observado"],
       versionNumber: 4,
+      origin: "AI_GENERATED",
+      actorId: null,
+      reason: null,
+      previousRevisionId: "draft-3",
     },
   ];
 }
@@ -224,11 +195,20 @@ describe("DraftBuilderPage (integration)", () => {
     expect(instructionsField.value).toMatch(/costo computacional/);
   });
 
-  it("successful save calls updateAssessmentDraft and refetches, reflecting the updated draft", async () => {
+  it("shows 'Generado por IA' provenance for the AI-generated current draft", async () => {
+    renderPage();
+
+    await screen.findByLabelText(/^Título/);
+    expect(screen.getByText(/Generado por IA/)).toBeInTheDocument();
+  });
+
+  it("successful save calls createAssessmentRevision with the current revision's id as expectedRevisionId, refetches, and shows human-edited provenance", async () => {
     const user = userEvent.setup();
-    mockUpdateAssessmentDraft.mockImplementation(async (_id: string, changes: Partial<AssessmentDraftDto>) => {
-      versions = versions.map((v) => (v.versionNumber === currentDraft().versionNumber ? { ...v, ...changes } : v));
-      return currentDraft();
+    mockCreateAssessmentRevision.mockImplementation(async (_id: string, changes: Partial<AssessmentDraftDto>, expectedRevisionId: string) => {
+      expect(expectedRevisionId).toBe(currentDraft().draftId);
+      const updated: AssessmentDraftDto = { ...currentDraft(), ...changes, origin: "HUMAN_EDITED", actorId: "teacher-1", reason: null };
+      versions = versions.map((v) => (v.versionNumber === currentDraft().versionNumber ? updated : v));
+      return updated;
     });
     renderPage();
 
@@ -239,25 +219,34 @@ describe("DraftBuilderPage (integration)", () => {
     const saveButton = screen.getByRole("button", { name: /guardar cambios/i });
     await user.click(saveButton);
 
-    await waitFor(() => expect(mockUpdateAssessmentDraft).toHaveBeenCalledWith(testAssessmentId, expect.objectContaining({ title: "Nuevo Título" })));
+    await waitFor(() => expect(mockCreateAssessmentRevision).toHaveBeenCalledWith(testAssessmentId, expect.objectContaining({ title: "Nuevo Título" }), "draft-4"));
     // Refetch after success — getAssessmentDraft/getAssessmentDraftVersions called again beyond the initial mount call
     await waitFor(() => expect(mockGetAssessmentDraft).toHaveBeenCalledTimes(2));
     expect(mockGetAssessmentDraftVersions).toHaveBeenCalledTimes(2);
     await waitFor(() => expect(screen.getByLabelText(/^Título/)).toHaveValue("Nuevo Título"));
+    const editorSection = screen.getByText("Editor de draft").closest("section");
+    expect(editorSection?.textContent).toMatch(/Editado por teacher-1/);
   });
 
-  it("successful regenerate calls regenerateAssessmentDraft, refetches, and shows the new version as current", async () => {
+  it("successful regenerate calls regenerateAssessmentDraft with expectedRevisionId and a client-generated idempotency key, refetches, and shows the new version as current", async () => {
     const user = userEvent.setup();
-    mockRegenerateAssessmentDraft.mockImplementation(async (_id: string, adjustmentNotes: string) => {
-      const current = currentDraft();
-      const regenerated: AssessmentDraftDto = {
-        ...current,
-        versionNumber: current.versionNumber + 1,
-        instructions: `${current.instructions}\n\n(${adjustmentNotes})`,
-      };
-      versions = [...versions, regenerated];
-      return regenerated;
-    });
+    mockRegenerateAssessmentDraft.mockImplementation(
+      async (_id: string, adjustmentNotes: string, expectedRevisionId: string, idempotencyKey: string) => {
+        expect(expectedRevisionId).toBe(currentDraft().draftId);
+        expect(typeof idempotencyKey).toBe("string");
+        expect(idempotencyKey.length).toBeGreaterThan(0);
+        const current = currentDraft();
+        const regenerated: AssessmentDraftDto = {
+          ...current,
+          draftId: "draft-5",
+          versionNumber: current.versionNumber + 1,
+          instructions: `${current.instructions}\n\n(${adjustmentNotes})`,
+          previousRevisionId: current.draftId,
+        };
+        versions = [...versions, regenerated];
+        return regenerated;
+      }
+    );
     renderPage();
 
     await screen.findByLabelText(/^Título/);
@@ -266,9 +255,7 @@ describe("DraftBuilderPage (integration)", () => {
     await user.type(notesInput, "Hazlo más simple");
     await user.click(screen.getByRole("button", { name: /regenerar con ia/i }));
 
-    await waitFor(() =>
-      expect(mockRegenerateAssessmentDraft).toHaveBeenCalledWith(testAssessmentId, "Hazlo más simple")
-    );
+    await waitFor(() => expect(mockRegenerateAssessmentDraft).toHaveBeenCalled());
     await waitFor(() => expect(mockGetAssessmentDraft).toHaveBeenCalledTimes(2));
 
     // v5 is now current — the "Historial de versiones" section shows it as the selected/current entry
@@ -329,19 +316,23 @@ describe("DraftBuilderPage (integration)", () => {
     expect(adjustmentNotesInput.value).toContain("Test note");
   });
 
-  it("shows a full-screen not-found state on a 404 during initial load", async () => {
-    mockGetAssessmentDraft.mockRejectedValue(new GetAssessmentDraftError(404, { error: "NOT_FOUND", message: "assess-missing" }, testAssessmentId));
+  it("resolves via generation-status on a 404 load, and shows the full-screen not-found state only when generation-status also reports not found", async () => {
+    mockGetAssessmentDraft.mockRejectedValue(new GetAssessmentDraftError(404, { error: "NOT_FOUND", message: null }, testAssessmentId));
+    mockGetAssessmentDraftVersions.mockRejectedValue(new GetAssessmentDraftError(404, { error: "NOT_FOUND", message: null }, testAssessmentId));
+    mockGetGenerationStatus.mockRejectedValue(new GetGenerationStatusError(404, { error: "NOT_FOUND", message: null }, testAssessmentId));
     renderPage();
 
+    await waitFor(() => expect(mockGetGenerationStatus).toHaveBeenCalledWith(testAssessmentId));
     await waitFor(() => expect(screen.getByRole("alert")).toHaveTextContent(/No encontramos esta evaluación/));
     expect(screen.queryByLabelText(/^Título/)).not.toBeInTheDocument();
   });
 
-  it("shows a generic error message on a 500 during initial load", async () => {
+  it("shows a generic error message on a 500 during initial load, without calling generation-status (not a not-found signal)", async () => {
     mockGetAssessmentDraft.mockRejectedValue(new GetAssessmentDraftError(500, { error: "INTERNAL_ERROR", message: null }, testAssessmentId));
     renderPage();
 
     await waitFor(() => expect(screen.getByRole("alert")).toHaveTextContent(/inesperado/i));
+    expect(mockGetGenerationStatus).not.toHaveBeenCalled();
   });
 
   it("agent-rejected (422) on regenerate shows a banner without clearing the current draft", async () => {
@@ -378,8 +369,8 @@ describe("DraftBuilderPage (integration)", () => {
 
   it("field validation (422) on save shows an inline error under the affected field, editor stays editable", async () => {
     const user = userEvent.setup();
-    mockUpdateAssessmentDraft.mockRejectedValue(
-      new UpdateAssessmentDraftError(422, [{ field: "title", message: "must not be blank if provided" }], testAssessmentId)
+    mockCreateAssessmentRevision.mockRejectedValue(
+      new CreateAssessmentRevisionError(422, [{ field: "title", message: "must not be blank if provided" }], testAssessmentId)
     );
     renderPage();
 
@@ -391,5 +382,92 @@ describe("DraftBuilderPage (integration)", () => {
     // fieldErrors prop — that's an extra render tick after isSaving flips back, so this needs
     // its own waitFor rather than a synchronous assertion right after the isEnabled check.
     await waitFor(() => expect(screen.getByText(/el título no puede estar vacío/i)).toBeInTheDocument());
+  });
+
+  it("a 409 STALE_REVISION on save shows an explicit conflict banner, blocks further edits, and Recargar re-fetches instead of silently resubmitting", async () => {
+    const user = userEvent.setup();
+    mockCreateAssessmentRevision.mockRejectedValue(
+      new CreateAssessmentRevisionError(409, { code: "STALE_REVISION", message: "expectedRevisionId no longer current" }, testAssessmentId)
+    );
+    renderPage();
+
+    await screen.findByLabelText(/^Título/);
+    await user.click(screen.getByRole("button", { name: /guardar cambios/i }));
+
+    await waitFor(() => expect(screen.getByText(/la versión actual cambió mientras editabas/i)).toBeInTheDocument());
+    // Blocked, not hidden — editor and regenerate stay visible but disabled until reload
+    expect(screen.getByLabelText(/^Título/)).toBeDisabled();
+    expect(screen.queryByRole("button", { name: /guardar cambios/i })).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /regenerar con ia/i })).toBeDisabled();
+
+    // Reload discards the in-flight edit and re-fetches — not an automatic silent resubmit
+    mockCreateAssessmentRevision.mockClear();
+    await user.click(screen.getByRole("button", { name: /recargar/i }));
+
+    await waitFor(() => expect(mockGetAssessmentDraft).toHaveBeenCalledTimes(2));
+    await waitFor(() => expect(screen.queryByText(/la versión actual cambió mientras editabas/i)).not.toBeInTheDocument());
+    expect(screen.getByLabelText(/^Título/)).not.toBeDisabled();
+    expect(mockCreateAssessmentRevision).not.toHaveBeenCalled();
+  });
+
+  describe("resume-on-load states (LOCAL-CONTRACTS.md § Recovery after refresh)", () => {
+    beforeEach(() => {
+      mockGetAssessmentDraft.mockRejectedValue(new GetAssessmentDraftError(404, { error: "NOT_FOUND", message: null }, testAssessmentId));
+      mockGetAssessmentDraftVersions.mockRejectedValue(new GetAssessmentDraftError(404, { error: "NOT_FOUND", message: null }, testAssessmentId));
+    });
+
+    function generationStatus(overrides: Partial<GenerationStatusDto>): GenerationStatusDto {
+      return { operationType: "GENERATE_INITIAL_REVISION", status: "NOT_STARTED", retryable: false, currentRevisionId: null, ...overrides };
+    }
+
+    it("NOT_STARTED shows a Generate action; clicking it calls generateAssessmentDraft with a fresh idempotency key and reloads", async () => {
+      const user = userEvent.setup();
+      mockGetGenerationStatus.mockResolvedValue(generationStatus({ status: "NOT_STARTED" }));
+      mockGenerateAssessmentDraft.mockImplementation(async () => {
+        mockGetAssessmentDraft.mockResolvedValue(currentDraft());
+        mockGetAssessmentDraftVersions.mockResolvedValue(versions);
+        return { outcome: "revision-created", revision: currentDraft() };
+      });
+      renderPage();
+
+      await waitFor(() => expect(screen.getByText(/aún no se ha generado un borrador/i)).toBeInTheDocument());
+      await user.click(screen.getByRole("button", { name: /generar borrador/i }));
+
+      await waitFor(() => expect(mockGenerateAssessmentDraft).toHaveBeenCalledWith(testAssessmentId, expect.any(String)));
+      await waitFor(() => expect(screen.getByLabelText(/^Título/)).toBeInTheDocument());
+    });
+
+    it("IN_PROGRESS shows a pending state with no retry action, to avoid double-dispatch", async () => {
+      mockGetGenerationStatus.mockResolvedValue(generationStatus({ status: "IN_PROGRESS" }));
+      renderPage();
+
+      await waitFor(() => expect(screen.getByText(/generando el borrador/i)).toBeInTheDocument());
+      expect(screen.queryByRole("button", { name: /reintentar/i })).not.toBeInTheDocument();
+    });
+
+    it("FAILED_RETRYABLE shows a Retry action; clicking it calls retryAssessmentDraftGeneration with no key/body and reloads", async () => {
+      const user = userEvent.setup();
+      mockGetGenerationStatus.mockResolvedValue(generationStatus({ status: "FAILED_RETRYABLE", failureCode: "AGENT_UNAVAILABLE", retryable: true }));
+      mockRetryAssessmentDraftGeneration.mockImplementation(async () => {
+        mockGetAssessmentDraft.mockResolvedValue(currentDraft());
+        mockGetAssessmentDraftVersions.mockResolvedValue(versions);
+        return { id: "op-1", status: "IN_PROGRESS" };
+      });
+      renderPage();
+
+      await waitFor(() => expect(screen.getByRole("alert")).toHaveTextContent(/no pudimos generar el borrador/i));
+      await user.click(screen.getByRole("button", { name: /^reintentar$/i }));
+
+      expect(mockRetryAssessmentDraftGeneration).toHaveBeenCalledWith(testAssessmentId);
+      await waitFor(() => expect(screen.getByLabelText(/^Título/)).toBeInTheDocument());
+    });
+
+    it("INDETERMINATE shows a cautionary retry-anyway action, distinct copy from FAILED_RETRYABLE", async () => {
+      mockGetGenerationStatus.mockResolvedValue(generationStatus({ status: "INDETERMINATE" }));
+      renderPage();
+
+      await waitFor(() => expect(screen.getByRole("alert")).toHaveTextContent(/no pudimos confirmar el estado de la generación/i));
+      expect(screen.getByRole("button", { name: /reintentar de todas formas/i })).toBeInTheDocument();
+    });
   });
 });

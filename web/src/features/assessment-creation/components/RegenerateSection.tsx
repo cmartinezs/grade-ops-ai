@@ -8,10 +8,13 @@ interface RegenerateSectionProps {
   fieldError: string | null;
   agentError: string | null;
   onRegenerate: (adjustmentNotes: string) => void;
+  // Blocks regeneration while a stale-revision conflict is showing (LOCAL-CONTRACTS.md §
+  // Conflict handling) — see the shared conflict banner rendered above both sections in page.tsx.
+  disabled?: boolean;
 }
 
-export default function RegenerateSection({ isRegenerating, fieldError, agentError, onRegenerate }: RegenerateSectionProps) {
-  const view = useRegenerateSection({ isRegenerating, fieldError, agentError, onRegenerate });
+export default function RegenerateSection({ isRegenerating, fieldError, agentError, onRegenerate, disabled = false }: RegenerateSectionProps) {
+  const view = useRegenerateSection({ isRegenerating, fieldError, agentError, onRegenerate, disabled });
 
   return (
     <section aria-labelledby="regenerate-title">
@@ -45,7 +48,7 @@ export default function RegenerateSection({ isRegenerating, fieldError, agentErr
           />
         </Field>
 
-        <Button type="submit" variant="primary" loading={isRegenerating} disabled={isRegenerating}>
+        <Button type="submit" variant="primary" loading={isRegenerating} disabled={view.isDisabled}>
           {isRegenerating ? "Regenerando…" : "Regenerar con IA"}
         </Button>
       </form>

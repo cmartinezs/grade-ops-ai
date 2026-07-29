@@ -1,4 +1,4 @@
-import type { AssessmentDraftDto } from "@/types/assessment";
+import type { AssessmentDraftDto, AssessmentRevisionOrigin } from "@/types/assessment";
 
 export interface AssessmentDraftViewModel {
   draftId: string;
@@ -9,6 +9,10 @@ export interface AssessmentDraftViewModel {
   deliverables: string[];
   constraints: string[];
   versionNumber: number;
+  origin: AssessmentRevisionOrigin;
+  actorId: string | null;
+  reason: string | null;
+  previousRevisionId: string | null;
 }
 
 export interface AssessmentDraftVersionViewModel {
@@ -16,6 +20,10 @@ export interface AssessmentDraftVersionViewModel {
   isCurrent: boolean;
   previewLabel: string;
   titlePreview: string;
+  origin: AssessmentRevisionOrigin;
+  actorId: string | null;
+  reason: string | null;
+  previousRevisionId: string | null;
 }
 
 export interface AssessmentDraftBuilderPageData {
@@ -51,6 +59,10 @@ export function toDraftViewModel(dto: AssessmentDraftDto): AssessmentDraftViewMo
     deliverables: dto.deliverables,
     constraints: dto.constraints,
     versionNumber: dto.versionNumber,
+    origin: dto.origin,
+    actorId: dto.actorId,
+    reason: dto.reason,
+    previousRevisionId: dto.previousRevisionId,
   };
 }
 
@@ -69,6 +81,10 @@ export function toAssessmentDraftBuilderPageViewModel(input: {
         isCurrent,
         previewLabel: isCurrent ? `v${version.versionNumber} (actual)` : `v${version.versionNumber}`,
         titlePreview: toTitlePreview(version.title),
+        origin: version.origin,
+        actorId: version.actorId,
+        reason: version.reason,
+        previousRevisionId: version.previousRevisionId,
       };
     });
 

@@ -19,6 +19,10 @@ const sampleDraft: AssessmentDraftDto = {
   deliverables: ["Archivo .py", "Análisis de complejidad"],
   constraints: ["No usar librerías externas"],
   versionNumber: 4,
+  origin: "AI_GENERATED",
+  actorId: null,
+  reason: null,
+  previousRevisionId: "draft-uuid-0",
 };
 
 const sampleVersions: AssessmentDraftDto[] = [

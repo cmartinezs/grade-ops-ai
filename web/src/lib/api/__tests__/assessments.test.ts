@@ -4,14 +4,21 @@ import {
   submitAssessmentBrief,
   getAssessmentDraft,
   getAssessmentDraftVersions,
-  updateAssessmentDraft,
+  getGenerationStatus,
+  retryAssessmentDraftGeneration,
+  createAssessmentRevision,
   regenerateAssessmentDraft,
   isRecoverableDraftMutationStatus,
+  isStaleRevisionConflict,
+  isIdempotencyKeyPayloadMismatch,
+  isAlreadyGeneratedConflict,
   CreateAssessmentBriefError,
   GenerateAssessmentDraftError,
   GetAssessmentDraftError,
   GetAssessmentDraftVersionsError,
-  UpdateAssessmentDraftError,
+  GetGenerationStatusError,
+  RetryAssessmentDraftGenerationError,
+  CreateAssessmentRevisionError,
   RegenerateAssessmentDraftError,
 } from "../assessments";
 import { apiClient } from "../client";
@@ -35,17 +42,18 @@ const brief: CreateAssessmentBriefRequestDto = {
 describe("createAssessmentBrief", () => {
   beforeEach(() => jest.clearAllMocks());
 
-  it("sends the exact CreateAssessmentBriefRequestDto shape to POST /api/v1/assessments and parses {assessmentId}", async () => {
+  it("sends the Idempotency-Key header and the CreateAssessmentBriefRequestDto body to POST /api/v1/assessments", async () => {
     mockApiClient.mockResolvedValue({
       ok: true,
       status: 201,
       json: () => Promise.resolve({ assessmentId: "assess-1" }),
     });
 
-    const result = await createAssessmentBrief(brief);
+    const result = await createAssessmentBrief(brief, "key-1");
 
     expect(mockApiClient).toHaveBeenCalledWith("/api/v1/assessments", {
       method: "POST",
+      headers: { "Idempotency-Key": "key-1" },
       body: JSON.stringify(brief),
     });
     expect(result).toEqual({ assessmentId: "assess-1" });
@@ -59,57 +67,142 @@ describe("createAssessmentBrief", () => {
       json: () => Promise.resolve(fieldErrors),
     });
 
-    await expect(createAssessmentBrief(brief)).rejects.toMatchObject({
+    await expect(createAssessmentBrief(brief, "key-1")).rejects.toMatchObject({
       status: 422,
       body: fieldErrors,
     });
-    await expect(createAssessmentBrief(brief)).rejects.toBeInstanceOf(CreateAssessmentBriefError);
+    await expect(createAssessmentBrief(brief, "key-1")).rejects.toBeInstanceOf(CreateAssessmentBriefError);
+  });
+
+  it("throws CreateAssessmentBriefError with a { code, message } body on 409 IDEMPOTENCY_KEY_PAYLOAD_MISMATCH, detected by isIdempotencyKeyPayloadMismatch", async () => {
+    mockApiClient.mockResolvedValue({
+      ok: false,
+      status: 409,
+      json: () => Promise.resolve({ code: "IDEMPOTENCY_KEY_PAYLOAD_MISMATCH", message: "Same key, different payload" }),
+    });
+
+    let caught: unknown;
+    try {
+      await createAssessmentBrief(brief, "key-1");
+    } catch (err) {
+      caught = err;
+    }
+
+    expect(caught).toBeInstanceOf(CreateAssessmentBriefError);
+    expect(isIdempotencyKeyPayloadMismatch(caught)).toBe(true);
   });
 });
 
 describe("generateAssessmentDraft", () => {
   beforeEach(() => jest.clearAllMocks());
 
-  it("posts to /api/v1/assessments/{assessmentId}/draft with the given assessmentId", async () => {
-    mockApiClient.mockResolvedValue({ ok: true, status: 200, json: () => Promise.resolve({}) });
+  const sampleRevision: AssessmentDraftDto = {
+    draftId: "draft-1",
+    title: "Fibonacci",
+    context: "ctx",
+    instructions: "instr",
+    objectives: ["obj"],
+    deliverables: ["del"],
+    constraints: ["con"],
+    versionNumber: 1,
+    origin: "AI_GENERATED",
+    actorId: null,
+    reason: null,
+    previousRevisionId: null,
+  };
 
-    await generateAssessmentDraft("assess-1");
+  it("posts to /api/v1/assessments/{assessmentId}/draft with the Idempotency-Key header", async () => {
+    mockApiClient.mockResolvedValue({ ok: true, status: 201, json: () => Promise.resolve(sampleRevision) });
 
-    expect(mockApiClient).toHaveBeenCalledWith("/api/v1/assessments/assess-1/draft", { method: "POST" });
+    await generateAssessmentDraft("assess-1", "gen-key-1");
+
+    expect(mockApiClient).toHaveBeenCalledWith("/api/v1/assessments/assess-1/draft", {
+      method: "POST",
+      headers: { "Idempotency-Key": "gen-key-1" },
+    });
   });
 
-  it("throws GenerateAssessmentDraftError carrying the ApiErrorResponse body and assessmentId on failure", async () => {
+  it("returns { outcome: 'revision-created', revision } on 201", async () => {
+    mockApiClient.mockResolvedValue({ ok: true, status: 201, json: () => Promise.resolve(sampleRevision) });
+
+    const result = await generateAssessmentDraft("assess-1", "gen-key-1");
+
+    expect(result).toEqual({ outcome: "revision-created", revision: sampleRevision });
+  });
+
+  it("returns { outcome: 'operation-pending', operation } on 202 without throwing — a durable AiOperation record, not a crash", async () => {
+    const operation = { id: "op-1", status: "FAILED_RETRYABLE", failureCode: "AGENT_UNAVAILABLE" };
+    mockApiClient.mockResolvedValue({ ok: true, status: 202, json: () => Promise.resolve(operation) });
+
+    const result = await generateAssessmentDraft("assess-1", "gen-key-1");
+
+    expect(result).toEqual({ outcome: "operation-pending", operation });
+  });
+
+  it("throws GenerateAssessmentDraftError carrying the body and assessmentId on a genuine non-2xx/202 failure", async () => {
     mockApiClient.mockResolvedValue({
       ok: false,
-      status: 502,
-      json: () => Promise.resolve({ error: "AGENT_CALL_FAILED", message: "AGENT_ERROR" }),
+      status: 409,
+      json: () => Promise.resolve({ code: "ALREADY_GENERATED", message: "A revision already exists" }),
     });
 
-    await expect(generateAssessmentDraft("assess-1")).rejects.toMatchObject({
-      status: 502,
-      body: { error: "AGENT_CALL_FAILED", message: "AGENT_ERROR" },
-      assessmentId: "assess-1",
-    });
-    await expect(generateAssessmentDraft("assess-1")).rejects.toBeInstanceOf(GenerateAssessmentDraftError);
+    let caught: unknown;
+    try {
+      await generateAssessmentDraft("assess-1", "gen-key-1");
+    } catch (err) {
+      caught = err;
+    }
+
+    expect(caught).toBeInstanceOf(GenerateAssessmentDraftError);
+    expect((caught as GenerateAssessmentDraftError).assessmentId).toBe("assess-1");
+    expect(isAlreadyGeneratedConflict(caught)).toBe(true);
   });
 });
 
 describe("submitAssessmentBrief", () => {
   beforeEach(() => jest.clearAllMocks());
 
-  it("calls createAssessmentBrief then generateAssessmentDraft with the returned assessmentId, and returns it", async () => {
+  const keys = { createIdempotencyKey: "create-key", generateIdempotencyKey: "generate-key" };
+
+  it("calls createAssessmentBrief then generateAssessmentDraft with the respective idempotency keys, and returns the assessmentId", async () => {
     mockApiClient
       .mockResolvedValueOnce({ ok: true, status: 201, json: () => Promise.resolve({ assessmentId: "assess-1" }) })
-      .mockResolvedValueOnce({ ok: true, status: 200, json: () => Promise.resolve({}) });
+      .mockResolvedValueOnce({
+        ok: true,
+        status: 201,
+        json: () =>
+          Promise.resolve({
+            draftId: "d1",
+            title: "t",
+            context: "c",
+            instructions: "i",
+            objectives: [],
+            deliverables: [],
+            constraints: [],
+            versionNumber: 1,
+            origin: "AI_GENERATED",
+            actorId: null,
+            reason: null,
+            previousRevisionId: null,
+          }),
+      });
 
-    const result = await submitAssessmentBrief(brief);
+    const result = await submitAssessmentBrief(brief, keys);
 
     expect(result).toEqual({ assessmentId: "assess-1" });
-    expect(mockApiClient).toHaveBeenNthCalledWith(1, "/api/v1/assessments", expect.objectContaining({ method: "POST" }));
-    expect(mockApiClient).toHaveBeenNthCalledWith(2, "/api/v1/assessments/assess-1/draft", { method: "POST" });
+    expect(mockApiClient).toHaveBeenNthCalledWith(
+      1,
+      "/api/v1/assessments",
+      expect.objectContaining({ method: "POST", headers: { "Idempotency-Key": "create-key" } })
+    );
+    expect(mockApiClient).toHaveBeenNthCalledWith(
+      2,
+      "/api/v1/assessments/assess-1/draft",
+      expect.objectContaining({ method: "POST", headers: { "Idempotency-Key": "generate-key" } })
+    );
   });
 
-  it("surfaces a distinguishable GenerateAssessmentDraftError (carrying assessmentId) when draft generation fails after brief creation succeeds", async () => {
+  it("does not throw when generation fails after brief creation succeeds — the assessment remains addressable, generate errors are swallowed", async () => {
     mockApiClient
       .mockResolvedValueOnce({ ok: true, status: 201, json: () => Promise.resolve({ assessmentId: "assess-1" }) })
       .mockResolvedValueOnce({
@@ -118,19 +211,12 @@ describe("submitAssessmentBrief", () => {
         json: () => Promise.resolve({ error: "AGENT_CALL_FAILED", message: "UNREACHABLE" }),
       });
 
-    let caught: unknown;
-    try {
-      await submitAssessmentBrief(brief);
-    } catch (err) {
-      caught = err;
-    }
+    const result = await submitAssessmentBrief(brief, keys);
 
-    expect(caught).toBeInstanceOf(GenerateAssessmentDraftError);
-    expect(caught).not.toBeInstanceOf(CreateAssessmentBriefError);
-    expect((caught as GenerateAssessmentDraftError).assessmentId).toBe("assess-1");
+    expect(result).toEqual({ assessmentId: "assess-1" });
   });
 
-  it("surfaces a CreateAssessmentBriefError (not GenerateAssessmentDraftError) when brief creation itself fails", async () => {
+  it("surfaces a CreateAssessmentBriefError when brief creation itself fails, and never calls generate", async () => {
     mockApiClient.mockResolvedValueOnce({
       ok: false,
       status: 422,
@@ -139,7 +225,7 @@ describe("submitAssessmentBrief", () => {
 
     let caught: unknown;
     try {
-      await submitAssessmentBrief(brief);
+      await submitAssessmentBrief(brief, keys);
     } catch (err) {
       caught = err;
     }
@@ -158,6 +244,10 @@ const sampleDraft: AssessmentDraftDto = {
   deliverables: ["Archivo .py"],
   constraints: ["No usar librerías externas"],
   versionNumber: 1,
+  origin: "AI_GENERATED",
+  actorId: null,
+  reason: null,
+  previousRevisionId: null,
 };
 
 describe("getAssessmentDraft", () => {
@@ -243,128 +333,170 @@ describe("getAssessmentDraftVersions", () => {
   });
 });
 
+describe("getGenerationStatus", () => {
+  beforeEach(() => jest.clearAllMocks());
+
+  it("fetches from GET /api/v1/assessments/{assessmentId}/generation-status and returns the status DTO", async () => {
+    const status = { operationType: "GENERATE_INITIAL_REVISION", status: "FAILED_RETRYABLE", failureCode: "AGENT_UNAVAILABLE", retryable: true };
+    mockApiClient.mockResolvedValue({ ok: true, status: 200, json: () => Promise.resolve(status) });
+
+    const result = await getGenerationStatus("assess-1");
+
+    expect(mockApiClient).toHaveBeenCalledWith("/api/v1/assessments/assess-1/generation-status");
+    expect(result).toEqual(status);
+  });
+
+  it("throws GetGenerationStatusError on failure, carrying status and assessmentId", async () => {
+    mockApiClient.mockResolvedValue({ ok: false, status: 404, json: () => Promise.resolve({ error: "NOT_FOUND", message: null }) });
+
+    await expect(getGenerationStatus("assess-1")).rejects.toBeInstanceOf(GetGenerationStatusError);
+    await expect(getGenerationStatus("assess-1")).rejects.toMatchObject({ status: 404, assessmentId: "assess-1" });
+  });
+});
+
+describe("retryAssessmentDraftGeneration", () => {
+  beforeEach(() => jest.clearAllMocks());
+
+  it("POSTs to /api/v1/assessments/{assessmentId}/draft/retry with no idempotency key and no body", async () => {
+    mockApiClient.mockResolvedValue({ ok: true, status: 202, json: () => Promise.resolve({ id: "op-1", status: "IN_PROGRESS" }) });
+
+    await retryAssessmentDraftGeneration("assess-1");
+
+    expect(mockApiClient).toHaveBeenCalledWith("/api/v1/assessments/assess-1/draft/retry", { method: "POST" });
+  });
+
+  it("throws RetryAssessmentDraftGenerationError with a { code, message } body on 409 OPERATION_IN_PROGRESS", async () => {
+    mockApiClient.mockResolvedValue({
+      ok: false,
+      status: 409,
+      json: () => Promise.resolve({ code: "OPERATION_IN_PROGRESS", message: "An attempt may still be running" }),
+    });
+
+    let caught: unknown;
+    try {
+      await retryAssessmentDraftGeneration("assess-1");
+    } catch (err) {
+      caught = err;
+    }
+
+    expect(caught).toBeInstanceOf(RetryAssessmentDraftGenerationError);
+    expect((caught as RetryAssessmentDraftGenerationError).body).toEqual({ code: "OPERATION_IN_PROGRESS", message: "An attempt may still be running" });
+  });
+});
+
 describe("isRecoverableDraftMutationStatus", () => {
-  it("classifies 422, 502, and 503 as recoverable", () => {
+  it("classifies 422, 502, 503, and 409 as recoverable (409 covers expected typed conflicts like STALE_REVISION)", () => {
     expect(isRecoverableDraftMutationStatus(422)).toBe(true);
     expect(isRecoverableDraftMutationStatus(502)).toBe(true);
     expect(isRecoverableDraftMutationStatus(503)).toBe(true);
+    expect(isRecoverableDraftMutationStatus(409)).toBe(true);
   });
 
-  it("classifies 500, 409, and 404 as not recoverable", () => {
+  it("classifies 500 and 404 as not recoverable", () => {
     expect(isRecoverableDraftMutationStatus(500)).toBe(false);
-    expect(isRecoverableDraftMutationStatus(409)).toBe(false);
     expect(isRecoverableDraftMutationStatus(404)).toBe(false);
   });
 });
 
-describe("updateAssessmentDraft", () => {
+describe("createAssessmentRevision", () => {
   beforeEach(() => jest.clearAllMocks());
 
-  it("PATCHes /api/v1/assessments/{assessmentId}/draft sending only the caller-provided keys", async () => {
+  it("POSTs to /api/v1/assessments/{assessmentId}/revisions with the changes and expectedRevisionId, no Idempotency-Key header", async () => {
     mockApiClient.mockResolvedValue({
       ok: true,
-      status: 200,
-      json: () => Promise.resolve({ ...sampleDraft, title: "Nuevo título", versionNumber: 1 }),
+      status: 201,
+      json: () => Promise.resolve({ ...sampleDraft, title: "Nuevo título", origin: "HUMAN_EDITED", actorId: "teacher-1" }),
     });
 
-    await updateAssessmentDraft("assess-1", { title: "Nuevo título" });
+    await createAssessmentRevision("assess-1", { title: "Nuevo título" }, "rev-1");
 
-    expect(mockApiClient).toHaveBeenCalledWith("/api/v1/assessments/assess-1/draft", {
-      method: "PATCH",
-      body: JSON.stringify({ title: "Nuevo título" }),
-    });
-    // The serialized body must not contain unspecified fields at all — not even as
-    // empty strings or nulls — since the backend treats absence as "don't change this field".
-    const [, options] = mockApiClient.mock.calls[0];
-    const sentBody = JSON.parse(options.body);
-    expect(Object.keys(sentBody)).toEqual(["title"]);
+    const [path, options] = mockApiClient.mock.calls[0];
+    expect(path).toBe("/api/v1/assessments/assess-1/revisions");
+    expect(options.method).toBe("POST");
+    expect(options.headers).toBeUndefined();
+    expect(JSON.parse(options.body)).toEqual({ title: "Nuevo título", expectedRevisionId: "rev-1" });
   });
 
-  it("sends multiple changed keys together without including unspecified ones", async () => {
-    mockApiClient.mockResolvedValue({
-      ok: true,
-      status: 200,
-      json: () => Promise.resolve(sampleDraft),
-    });
+  it("returns the new AssessmentDraftDto (origin HUMAN_EDITED) on success", async () => {
+    const updated = { ...sampleDraft, title: "Nuevo título", origin: "HUMAN_EDITED" as const, actorId: "teacher-1" };
+    mockApiClient.mockResolvedValue({ ok: true, status: 201, json: () => Promise.resolve(updated) });
 
-    await updateAssessmentDraft("assess-1", { context: "Nuevo contexto", objectives: ["Nuevo objetivo"] });
-
-    const [, options] = mockApiClient.mock.calls[0];
-    const sentBody = JSON.parse(options.body);
-    expect(sentBody).toEqual({ context: "Nuevo contexto", objectives: ["Nuevo objetivo"] });
-  });
-
-  it("returns the updated AssessmentDraftDto on success", async () => {
-    const updated = { ...sampleDraft, title: "Nuevo título" };
-    mockApiClient.mockResolvedValue({ ok: true, status: 200, json: () => Promise.resolve(updated) });
-
-    const result = await updateAssessmentDraft("assess-1", { title: "Nuevo título" });
+    const result = await createAssessmentRevision("assess-1", { title: "Nuevo título" }, "rev-1");
 
     expect(result).toEqual(updated);
   });
 
-  it("throws UpdateAssessmentDraftError carrying the ApiErrorResponse body, status, and assessmentId on 422", async () => {
-    mockApiClient.mockResolvedValue({
-      ok: false,
-      status: 422,
-      json: () => Promise.resolve({ error: "VALIDATION_FAILED", message: "El título no puede estar en blanco." }),
-    });
-
-    await expect(updateAssessmentDraft("assess-1", { title: "" })).rejects.toMatchObject({
-      status: 422,
-      body: { error: "VALIDATION_FAILED", message: "El título no puede estar en blanco." },
-      assessmentId: "assess-1",
-    });
-    await expect(updateAssessmentDraft("assess-1", { title: "" })).rejects.toBeInstanceOf(UpdateAssessmentDraftError);
-  });
-
-  it("throws UpdateAssessmentDraftError on 502/503 (agent down) distinctly logged from 500", async () => {
-    mockApiClient.mockResolvedValue({
-      ok: false,
-      status: 503,
-      json: () => Promise.resolve({ error: "AGENT_CALL_FAILED", message: "AGENT_ERROR" }),
-    });
-
-    await expect(updateAssessmentDraft("assess-1", { title: "x" })).rejects.toBeInstanceOf(UpdateAssessmentDraftError);
-  });
-
-  it("does not throw a 409 error — no draft endpoint returns one (task-07)", async () => {
-    // Confirms the error surface has no 409 branch: a 409 falls through the same
-    // generic error path as any other non-recoverable status.
+  it("throws CreateAssessmentRevisionError with a { code, message } body on 409 STALE_REVISION, detected by isStaleRevisionConflict", async () => {
     mockApiClient.mockResolvedValue({
       ok: false,
       status: 409,
-      json: () => Promise.resolve({ error: "CONFLICT", message: "should never happen" }),
+      json: () => Promise.resolve({ code: "STALE_REVISION", message: "expectedRevisionId no longer current" }),
     });
 
-    await expect(updateAssessmentDraft("assess-1", { title: "x" })).rejects.toMatchObject({ status: 409 });
-    await expect(updateAssessmentDraft("assess-1", { title: "x" })).rejects.toBeInstanceOf(UpdateAssessmentDraftError);
+    let caught: unknown;
+    try {
+      await createAssessmentRevision("assess-1", { title: "x" }, "stale-rev");
+    } catch (err) {
+      caught = err;
+    }
+
+    expect(caught).toBeInstanceOf(CreateAssessmentRevisionError);
+    expect(isStaleRevisionConflict(caught)).toBe(true);
+  });
+
+  it("throws CreateAssessmentRevisionError carrying field errors on 422", async () => {
+    mockApiClient.mockResolvedValue({
+      ok: false,
+      status: 422,
+      json: () => Promise.resolve([{ field: "title", message: "must not be blank if provided" }]),
+    });
+
+    await expect(createAssessmentRevision("assess-1", { title: "" }, "rev-1")).rejects.toBeInstanceOf(CreateAssessmentRevisionError);
   });
 });
 
 describe("regenerateAssessmentDraft", () => {
   beforeEach(() => jest.clearAllMocks());
 
-  it("POSTs to /api/v1/assessments/{assessmentId}/draft/regenerate with { adjustmentNotes }", async () => {
+  it("POSTs to /api/v1/assessments/{assessmentId}/draft/regenerate with the Idempotency-Key header and { adjustmentNotes, expectedRevisionId } body", async () => {
     const regenerated = { ...sampleDraft, versionNumber: 2 };
-    mockApiClient.mockResolvedValue({ ok: true, status: 200, json: () => Promise.resolve(regenerated) });
+    mockApiClient.mockResolvedValue({ ok: true, status: 201, json: () => Promise.resolve(regenerated) });
 
-    await regenerateAssessmentDraft("assess-1", "Hazlo más simple");
+    await regenerateAssessmentDraft("assess-1", "Hazlo más simple", "rev-1", "regen-key-1");
 
     expect(mockApiClient).toHaveBeenCalledWith("/api/v1/assessments/assess-1/draft/regenerate", {
       method: "POST",
-      body: JSON.stringify({ adjustmentNotes: "Hazlo más simple" }),
+      headers: { "Idempotency-Key": "regen-key-1" },
+      body: JSON.stringify({ adjustmentNotes: "Hazlo más simple", expectedRevisionId: "rev-1" }),
     });
   });
 
   it("returns the new AssessmentDraftDto with an incremented versionNumber", async () => {
     const regenerated = { ...sampleDraft, versionNumber: 2 };
-    mockApiClient.mockResolvedValue({ ok: true, status: 200, json: () => Promise.resolve(regenerated) });
+    mockApiClient.mockResolvedValue({ ok: true, status: 201, json: () => Promise.resolve(regenerated) });
 
-    const result = await regenerateAssessmentDraft("assess-1", "Hazlo más simple");
+    const result = await regenerateAssessmentDraft("assess-1", "Hazlo más simple", "rev-1", "regen-key-1");
 
     expect(result.versionNumber).toBe(2);
     expect(result).toEqual(regenerated);
+  });
+
+  it("throws RegenerateAssessmentDraftError with a { code, message } body on 409 STALE_REVISION, detected by isStaleRevisionConflict", async () => {
+    mockApiClient.mockResolvedValue({
+      ok: false,
+      status: 409,
+      json: () => Promise.resolve({ code: "STALE_REVISION", message: "expectedRevisionId no longer current" }),
+    });
+
+    let caught: unknown;
+    try {
+      await regenerateAssessmentDraft("assess-1", "notes", "stale-rev", "regen-key-1");
+    } catch (err) {
+      caught = err;
+    }
+
+    expect(caught).toBeInstanceOf(RegenerateAssessmentDraftError);
+    expect(isStaleRevisionConflict(caught)).toBe(true);
   });
 
   it("throws RegenerateAssessmentDraftError carrying the ApiErrorResponse body, status, and assessmentId on 422 (empty/agent-rejected notes)", async () => {
@@ -374,12 +506,12 @@ describe("regenerateAssessmentDraft", () => {
       json: () => Promise.resolve({ error: "VALIDATION_FAILED", message: "adjustmentNotes must not be blank" }),
     });
 
-    await expect(regenerateAssessmentDraft("assess-1", "")).rejects.toMatchObject({
+    await expect(regenerateAssessmentDraft("assess-1", "", "rev-1", "regen-key-1")).rejects.toMatchObject({
       status: 422,
       body: { error: "VALIDATION_FAILED", message: "adjustmentNotes must not be blank" },
       assessmentId: "assess-1",
     });
-    await expect(regenerateAssessmentDraft("assess-1", "")).rejects.toBeInstanceOf(RegenerateAssessmentDraftError);
+    await expect(regenerateAssessmentDraft("assess-1", "", "rev-1", "regen-key-1")).rejects.toBeInstanceOf(RegenerateAssessmentDraftError);
   });
 
   it("throws RegenerateAssessmentDraftError on 502 (agent down)", async () => {
@@ -389,40 +521,29 @@ describe("regenerateAssessmentDraft", () => {
       json: () => Promise.resolve({ error: "AGENT_CALL_FAILED", message: "AGENT_ERROR" }),
     });
 
-    await expect(regenerateAssessmentDraft("assess-1", "notes")).rejects.toBeInstanceOf(RegenerateAssessmentDraftError);
-  });
-
-  it("throws RegenerateAssessmentDraftError on a generic 500 without a 409 branch (task-07: no draft endpoint returns 409)", async () => {
-    mockApiClient.mockResolvedValue({
-      ok: false,
-      status: 500,
-      json: () => Promise.resolve({ error: "INTERNAL_ERROR", message: "Server error" }),
-    });
-
-    await expect(regenerateAssessmentDraft("assess-1", "notes")).rejects.toMatchObject({ status: 500 });
-    await expect(regenerateAssessmentDraft("assess-1", "notes")).rejects.toBeInstanceOf(RegenerateAssessmentDraftError);
+    await expect(regenerateAssessmentDraft("assess-1", "notes", "rev-1", "regen-key-1")).rejects.toBeInstanceOf(RegenerateAssessmentDraftError);
   });
 });
 
-describe("updateAssessmentDraft / regenerateAssessmentDraft — logging level by criticality", () => {
+describe("createAssessmentRevision / regenerateAssessmentDraft — logging level by criticality", () => {
   beforeEach(() => jest.clearAllMocks());
 
-  it("logs WARN (not ERROR) for 422/502/503 on updateAssessmentDraft", async () => {
+  it("logs WARN (not ERROR) for a 409 STALE_REVISION on createAssessmentRevision — expected, user-actionable conflict, not a failure", async () => {
     const { logger } = jest.requireMock("@/lib/logging/logger") as { logger: { warn: jest.Mock; error: jest.Mock } };
 
     mockApiClient.mockResolvedValue({
       ok: false,
-      status: 422,
-      json: () => Promise.resolve({ error: "VALIDATION_FAILED", message: "bad input" }),
+      status: 409,
+      json: () => Promise.resolve({ code: "STALE_REVISION", message: "stale" }),
     });
 
-    await expect(updateAssessmentDraft("assess-1", { title: "" })).rejects.toBeInstanceOf(UpdateAssessmentDraftError);
+    await expect(createAssessmentRevision("assess-1", { title: "x" }, "rev-1")).rejects.toBeInstanceOf(CreateAssessmentRevisionError);
 
     expect(logger.warn).toHaveBeenCalled();
     expect(logger.error).not.toHaveBeenCalled();
   });
 
-  it("logs ERROR (not WARN) for a generic 500 on updateAssessmentDraft", async () => {
+  it("logs ERROR (not WARN) for a generic 500 on createAssessmentRevision", async () => {
     const { logger } = jest.requireMock("@/lib/logging/logger") as { logger: { warn: jest.Mock; error: jest.Mock } };
 
     mockApiClient.mockResolvedValue({
@@ -431,7 +552,7 @@ describe("updateAssessmentDraft / regenerateAssessmentDraft — logging level by
       json: () => Promise.resolve({ error: "INTERNAL_ERROR", message: "Server error" }),
     });
 
-    await expect(updateAssessmentDraft("assess-1", { title: "x" })).rejects.toBeInstanceOf(UpdateAssessmentDraftError);
+    await expect(createAssessmentRevision("assess-1", { title: "x" }, "rev-1")).rejects.toBeInstanceOf(CreateAssessmentRevisionError);
 
     expect(logger.error).toHaveBeenCalled();
     expect(logger.warn).not.toHaveBeenCalled();
@@ -446,7 +567,7 @@ describe("updateAssessmentDraft / regenerateAssessmentDraft — logging level by
       json: () => Promise.resolve({ error: "AGENT_CALL_FAILED", message: "AGENT_ERROR" }),
     });
 
-    await expect(regenerateAssessmentDraft("assess-1", "notes")).rejects.toBeInstanceOf(RegenerateAssessmentDraftError);
+    await expect(regenerateAssessmentDraft("assess-1", "notes", "rev-1", "regen-key-1")).rejects.toBeInstanceOf(RegenerateAssessmentDraftError);
 
     expect(logger.warn).toHaveBeenCalled();
     expect(logger.error).not.toHaveBeenCalled();
@@ -461,7 +582,7 @@ describe("updateAssessmentDraft / regenerateAssessmentDraft — logging level by
       json: () => Promise.resolve({ error: "INTERNAL_ERROR", message: "Server error" }),
     });
 
-    await expect(regenerateAssessmentDraft("assess-1", "notes")).rejects.toBeInstanceOf(RegenerateAssessmentDraftError);
+    await expect(regenerateAssessmentDraft("assess-1", "notes", "rev-1", "regen-key-1")).rejects.toBeInstanceOf(RegenerateAssessmentDraftError);
 
     expect(logger.error).toHaveBeenCalled();
     expect(logger.warn).not.toHaveBeenCalled();

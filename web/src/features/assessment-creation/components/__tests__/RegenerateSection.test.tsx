@@ -58,4 +58,17 @@ describe("RegenerateSection", () => {
 
     expect(screen.getByRole("alert")).toHaveTextContent(/no pudimos regenerar el borrador/i);
   });
+
+  it("disables the textarea and button, and does not call onRegenerate, while disabled (stale-revision conflict blocking)", async () => {
+    const onRegenerate = jest.fn();
+    render(<RegenerateSection isRegenerating={false} fieldError={null} agentError={null} onRegenerate={onRegenerate} disabled />);
+
+    expect(screen.getByLabelText(/^Notas de ajuste/)).toBeDisabled();
+    expect(screen.getByRole("button", { name: /regenerar con ia/i })).toBeDisabled();
+
+    fireEvent.change(screen.getByLabelText(/^Notas de ajuste/), { target: { value: "Agrega casos límite" } });
+    fireEvent.click(screen.getByRole("button", { name: /regenerar con ia/i }));
+
+    await waitFor(() => expect(onRegenerate).not.toHaveBeenCalled());
+  });
 });

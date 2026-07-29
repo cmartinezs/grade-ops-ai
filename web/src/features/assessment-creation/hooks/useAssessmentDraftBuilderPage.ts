@@ -1,22 +1,30 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { loadAssessmentDraftBuilderPage } from "../loaders/loadAssessmentDraftBuilderPage";
 import {
-  updateAssessmentDraft,
+  createAssessmentRevision,
   regenerateAssessmentDraft,
+  generateAssessmentDraft,
+  retryAssessmentDraftGeneration,
+  getGenerationStatus,
+  isStaleRevisionConflict,
+  isAlreadyGeneratedConflict,
   GetAssessmentDraftError,
   GetAssessmentDraftVersionsError,
-  UpdateAssessmentDraftError,
+  GetGenerationStatusError,
+  CreateAssessmentRevisionError,
   RegenerateAssessmentDraftError,
+  RetryAssessmentDraftGenerationError,
 } from "@/lib/api/assessments";
+import { createIdempotencyKey } from "@/lib/api/idempotencyKey";
 import type {
   AssessmentDraftBuilderPageData,
   AssessmentDraftVersionViewModel,
   AssessmentDraftViewModel,
 } from "../mappers/toAssessmentDraftBuilderPageViewModel";
 import type { DraftEditableField, DraftEditableFields } from "./useDraftEditorSection";
-import type { FieldErrorResponse } from "@/types/assessment";
+import type { FieldErrorResponse, GenerationStatusValue } from "@/types/assessment";
 
 // No second consumer needs this yet — promote to a shared module once another
 // screen needs the same shape, per 04-hooks-y-logica-de-ui.md §7.
@@ -26,12 +34,16 @@ export type RemoteData<T> =
   | { status: "not-found" }
   | { status: "error"; error: string };
 
+export interface StaleRevisionConflictViewModel {
+  message: string;
+  onReload: () => void;
+}
+
 export interface AssessmentDraftBuilderPageViewModel {
   draft: AssessmentDraftViewModel;
   versions: AssessmentDraftVersionViewModel[];
   selectedVersion: number;
   isViewingHistoricalVersion: boolean;
-  aiDisclosureLabel: "generado-por-ia" | "version-actual";
   onViewVersion: (versionNumber: number) => void;
   isSaving: boolean;
   saveFieldErrors: Partial<Record<DraftEditableField, string>> | null;
@@ -41,33 +53,61 @@ export interface AssessmentDraftBuilderPageViewModel {
   regenerateFieldError: string | null;
   regenerateAgentError: string | null;
   onRegenerate: (adjustmentNotes: string) => Promise<void>;
+  staleConflict: StaleRevisionConflictViewModel | null;
 }
 
+// A generation-status-driven state (LOCAL-CONTRACTS.md § New/changed UI states) — reached
+// whenever the page loads and no current revision exists yet, instead of the old bare
+// "not found" dead end (Research 02 §5.6).
+export interface GenerationNotStartedViewModel {
+  isGenerating: boolean;
+  generateError: string | null;
+  onGenerate: () => void;
+}
+
+export interface GenerationFailedViewModel {
+  failureCode?: string;
+  isRetrying: boolean;
+  retryError: string | null;
+  onRetry: () => void;
+}
+
+export interface GenerationIndeterminateViewModel {
+  isRetrying: boolean;
+  retryError: string | null;
+  onRetry: () => void;
+}
+
+export type AssessmentDraftBuilderPageState =
+  | { status: "loading" }
+  | { status: "not-found" }
+  | { status: "error"; error: string }
+  | { status: "generation-not-started"; data: GenerationNotStartedViewModel }
+  | { status: "generation-in-progress" }
+  | { status: "generation-failed"; data: GenerationFailedViewModel }
+  | { status: "generation-indeterminate"; data: GenerationIndeterminateViewModel }
+  | { status: "ready"; data: AssessmentDraftBuilderPageViewModel };
+
 // Microcopy per docs/gradeops-ai-frontend-guidelines/15-backend-frontend-contracts.md §4 (never
-// show raw backend codes/English strings) and wireframes/draft-builder-screen.md's "Estados" table
-// (task-07's traced error surface — no 409 anywhere, see NO_PRIOR_DRAFT_MESSAGE note below).
+// show raw backend codes/English strings) and wireframes/draft-builder-screen.md's "Estados" table.
 const LOAD_ERROR_MESSAGE = "Ocurrió un error inesperado al cargar el draft. Intenta de nuevo.";
 // task-07 traced GetCurrentDraftHandler: assessment-not-found and no-draft-yet both throw the
 // same ResourceNotFoundException, producing an identical {error:"NOT_FOUND"} 404 body in both
-// cases (verified directly against GetCurrentDraftHandler.java) — the frontend cannot
-// distinguish "this assessment doesn't exist/isn't yours" from "no draft was generated yet" from
-// the response alone. Collapsed into a single not-found state rather than inventing a
-// distinction the API can't back, per this task's own Design notes ("404 → assessment not
-// found... handle it defensively").
+// cases. The generation-status call (added by this packet) disambiguates the two: if it also
+// 404s, the assessment truly doesn't exist/isn't the caller's; otherwise it reports what state
+// generation is actually in — see loadPage() below.
 export const NOT_FOUND_MESSAGE = "No encontramos esta evaluación.";
-// NoPriorDraftException (ApplicationException -> 422 {error:"APPLICATION_ERROR"}) on a save/
-// regenerate — same defensive edge case as the not-found load state above, just surfaced as a
-// section-level error since a draft was loaded successfully to get here in the first place.
 const NO_PRIOR_DRAFT_MESSAGE = "Aún no se ha generado un borrador para esta evaluación.";
 const AGENT_REJECTED_MESSAGE =
   "No pudimos regenerar el borrador con estas notas. Ajusta el texto e intenta de nuevo.";
 const AGENT_DOWN_MESSAGE = "El servicio de generación no está disponible. Intenta de nuevo en unos minutos.";
 const ADJUSTMENT_NOTES_REQUIRED_MESSAGE = "Ingresa notas de ajuste antes de regenerar.";
 const GENERIC_RETRY_MESSAGE = "Ocurrió un error inesperado. Intenta de nuevo.";
+export const STALE_REVISION_MESSAGE =
+  "La versión actual cambió mientras editabas (otra pestaña o proceso la modificó). Recarga para ver la última versión.";
+const GENERATE_ERROR_MESSAGE = "No pudimos generar el borrador. Intenta de nuevo.";
+const RETRY_ERROR_MESSAGE = "No pudimos reintentar la generación. Intenta de nuevo.";
 
-// Hibernate Validator's default @Size message is untranslated English ("must not be blank if
-// provided") — never shown to the teacher, same "no English backend strings" rule
-// useIntakeAssessmentPage.ts already follows for the brief form.
 const SAVE_FIELD_ERROR_MESSAGES: Record<DraftEditableField, string> = {
   title: "El título no puede estar vacío.",
   context: "El contexto no puede estar vacío.",
@@ -87,7 +127,7 @@ export function isDraftNotFoundError(error: unknown): boolean {
 export function translateSaveError(
   error: unknown
 ): { fieldErrors: Partial<Record<DraftEditableField, string>> | null; serverError: string | null } {
-  if (error instanceof UpdateAssessmentDraftError) {
+  if (error instanceof CreateAssessmentRevisionError) {
     if (Array.isArray(error.body)) {
       const fieldErrors: Partial<Record<DraftEditableField, string>> = {};
       for (const fieldError of error.body as FieldErrorResponse[]) {
@@ -96,7 +136,7 @@ export function translateSaveError(
       }
       return { fieldErrors, serverError: null };
     }
-    if (error.status === 422 && error.body.error === "APPLICATION_ERROR") {
+    if (error.status === 422 && "error" in error.body && error.body.error === "APPLICATION_ERROR") {
       return { fieldErrors: null, serverError: NO_PRIOR_DRAFT_MESSAGE };
     }
   }
@@ -110,23 +150,32 @@ export function translateRegenerateError(
     if (Array.isArray(error.body)) {
       return { fieldError: ADJUSTMENT_NOTES_REQUIRED_MESSAGE, agentError: null };
     }
-    if (error.status === 422 && error.body.error === "APPLICATION_ERROR") {
+    if (error.status === 422 && "error" in error.body && error.body.error === "APPLICATION_ERROR") {
       return { fieldError: null, agentError: NO_PRIOR_DRAFT_MESSAGE };
     }
-    if (error.status === 422 && error.body.error === "AGENT_CALL_FAILED") {
+    if (error.status === 422 && "error" in error.body && error.body.error === "AGENT_CALL_FAILED") {
       return { fieldError: null, agentError: AGENT_REJECTED_MESSAGE };
     }
-    if ((error.status === 502 || error.status === 503) && error.body.error === "AGENT_CALL_FAILED") {
+    if ((error.status === 502 || error.status === 503) && "error" in error.body && error.body.error === "AGENT_CALL_FAILED") {
       return { fieldError: null, agentError: AGENT_DOWN_MESSAGE };
     }
   }
   return { fieldError: null, agentError: GENERIC_RETRY_MESSAGE };
 }
 
-export function useAssessmentDraftBuilderPage(assessmentId: string): RemoteData<AssessmentDraftBuilderPageViewModel> {
-  const [pageState, setPageState] = useState<RemoteData<AssessmentDraftBuilderPageData>>({ status: "loading" });
+type InternalPageState =
+  | { status: "loading" }
+  | { status: "not-found" }
+  | { status: "error"; error: string }
+  | { status: "generation-not-started" }
+  | { status: "generation-in-progress" }
+  | { status: "generation-failed"; failureCode?: string }
+  | { status: "generation-indeterminate" }
+  | { status: "ready"; data: AssessmentDraftBuilderPageData };
+
+export function useAssessmentDraftBuilderPage(assessmentId: string): AssessmentDraftBuilderPageState {
+  const [pageState, setPageState] = useState<InternalPageState>({ status: "loading" });
   const [selectedVersion, setSelectedVersion] = useState<number | null>(null);
-  const [aiDisclosureLabel, setAiDisclosureLabel] = useState<"generado-por-ia" | "version-actual">("version-actual");
 
   const [isSaving, setIsSaving] = useState(false);
   const [saveFieldErrors, setSaveFieldErrors] = useState<Partial<Record<DraftEditableField, string>> | null>(null);
@@ -135,14 +184,64 @@ export function useAssessmentDraftBuilderPage(assessmentId: string): RemoteData<
   const [isRegenerating, setIsRegenerating] = useState(false);
   const [regenerateFieldError, setRegenerateFieldError] = useState<string | null>(null);
   const [regenerateAgentError, setRegenerateAgentError] = useState<string | null>(null);
+  // Generated once per regenerate click, not once per render — a double-click reuses the
+  // same key, satisfying the non-negotiable idempotency-key lifecycle (see
+  // LOCAL-CONTRACTS.md § Idempotency key lifecycle). Cleared on any terminal response so the
+  // next distinct click gets a fresh key.
+  const regenerateIdempotencyKeyRef = useRef<string | null>(null);
+
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [generateError, setGenerateError] = useState<string | null>(null);
+  const generateIdempotencyKeyRef = useRef<string | null>(null);
+
+  const [isRetrying, setIsRetrying] = useState(false);
+  const [retryError, setRetryError] = useState<string | null>(null);
+
+  const [staleConflict, setStaleConflict] = useState<string | null>(null);
 
   const loadPage = useCallback(async () => {
     try {
       const data = await loadAssessmentDraftBuilderPage(assessmentId);
       setPageState({ status: "ready", data });
       setSelectedVersion(data.draft.versionNumber);
+      setStaleConflict(null);
+      return;
     } catch (error) {
-      if (isDraftNotFoundError(error)) {
+      if (!isDraftNotFoundError(error)) {
+        setPageState({ status: "error", error: LOAD_ERROR_MESSAGE });
+        return;
+      }
+    }
+
+    // No current revision — resolve via generation-status (LOCAL-CONTRACTS.md § Recovery
+    // after refresh), the read model that turns "reload after a failed generation" into a
+    // recoverable path instead of the demonstrated dead end (Research 02 §5.6).
+    try {
+      const generationStatus = await getGenerationStatus(assessmentId);
+
+      if (generationStatus.currentRevisionId) {
+        // Race: a revision completed between the draft fetch above and this call.
+        const data = await loadAssessmentDraftBuilderPage(assessmentId);
+        setPageState({ status: "ready", data });
+        setSelectedVersion(data.draft.versionNumber);
+        setStaleConflict(null);
+        return;
+      }
+
+      const status: GenerationStatusValue = generationStatus.status;
+      if (status === "NOT_STARTED") {
+        setPageState({ status: "generation-not-started" });
+      } else if (status === "IN_PROGRESS") {
+        setPageState({ status: "generation-in-progress" });
+      } else if (status === "FAILED_RETRYABLE") {
+        setPageState({ status: "generation-failed", failureCode: generationStatus.failureCode });
+      } else if (status === "INDETERMINATE") {
+        setPageState({ status: "generation-indeterminate" });
+      } else {
+        setPageState({ status: "error", error: LOAD_ERROR_MESSAGE });
+      }
+    } catch (statusError) {
+      if (statusError instanceof GetGenerationStatusError && statusError.status === 404) {
         setPageState({ status: "not-found" });
         return;
       }
@@ -162,10 +261,15 @@ export function useAssessmentDraftBuilderPage(assessmentId: string): RemoteData<
     setSaveServerError(null);
     setIsSaving(true);
     try {
-      await updateAssessmentDraft(assessmentId, values);
-      await loadPage(); // refetch full page data after a successful mutation, per 06-estado-datos-y-api.md §13
-      setAiDisclosureLabel("version-actual");
+      // expectedRevisionId is always the id of the revision currently displayed, tracked from
+      // the last successful fetch — never a value invented or defaulted here.
+      await createAssessmentRevision(assessmentId, values, pageState.data.draft.draftId);
+      await loadPage();
     } catch (error) {
+      if (isStaleRevisionConflict(error)) {
+        setStaleConflict(STALE_REVISION_MESSAGE);
+        return;
+      }
       const { fieldErrors, serverError } = translateSaveError(error);
       setSaveFieldErrors(fieldErrors);
       setSaveServerError(serverError);
@@ -179,16 +283,81 @@ export function useAssessmentDraftBuilderPage(assessmentId: string): RemoteData<
     setRegenerateFieldError(null);
     setRegenerateAgentError(null);
     setIsRegenerating(true);
+    if (!regenerateIdempotencyKeyRef.current) {
+      regenerateIdempotencyKeyRef.current = createIdempotencyKey();
+    }
+    const idempotencyKey = regenerateIdempotencyKeyRef.current;
     try {
-      await regenerateAssessmentDraft(assessmentId, adjustmentNotes);
+      await regenerateAssessmentDraft(assessmentId, adjustmentNotes, pageState.data.draft.draftId, idempotencyKey);
+      regenerateIdempotencyKeyRef.current = null;
       await loadPage();
-      setAiDisclosureLabel("generado-por-ia");
     } catch (error) {
+      regenerateIdempotencyKeyRef.current = null;
+      if (isStaleRevisionConflict(error)) {
+        setStaleConflict(STALE_REVISION_MESSAGE);
+        return;
+      }
       const { fieldError, agentError } = translateRegenerateError(error);
       setRegenerateFieldError(fieldError);
       setRegenerateAgentError(agentError);
     } finally {
       setIsRegenerating(false);
+    }
+  }
+
+  async function onReloadAfterConflict() {
+    setStaleConflict(null);
+    setPageState({ status: "loading" });
+    await loadPage();
+  }
+
+  async function onGenerate() {
+    if (isGenerating) return;
+    setGenerateError(null);
+    setIsGenerating(true);
+    if (!generateIdempotencyKeyRef.current) {
+      generateIdempotencyKeyRef.current = createIdempotencyKey();
+    }
+    const idempotencyKey = generateIdempotencyKeyRef.current;
+    try {
+      await generateAssessmentDraft(assessmentId, idempotencyKey);
+      generateIdempotencyKeyRef.current = null;
+      await loadPage();
+    } catch (error) {
+      generateIdempotencyKeyRef.current = null;
+      if (isAlreadyGeneratedConflict(error)) {
+        await loadPage();
+        return;
+      }
+      setGenerateError(GENERATE_ERROR_MESSAGE);
+    } finally {
+      setIsGenerating(false);
+    }
+  }
+
+  async function onRetry() {
+    if (isRetrying) return;
+    setRetryError(null);
+    setIsRetrying(true);
+    try {
+      // Retry needs no idempotency key (Authoring Operation Contract § 3) — it targets the
+      // existing AiOperation server-side. The response does not need to be interpreted here:
+      // loadPage() re-derives the true state from generation-status regardless of outcome.
+      await retryAssessmentDraftGeneration(assessmentId);
+      await loadPage();
+    } catch (error) {
+      if (error instanceof RetryAssessmentDraftGenerationError && error.status === 409) {
+        const code = !Array.isArray(error.body) && "code" in error.body ? error.body.code : undefined;
+        if (code === "OPERATION_IN_PROGRESS") {
+          await loadPage();
+          return;
+        }
+        // NO_ACTIVE_OPERATION_TO_RETRY: "should not be reachable from the UI if state tracking
+        // is correct" (LOCAL-CONTRACTS.md) — falls through to the generic message below.
+      }
+      setRetryError(RETRY_ERROR_MESSAGE);
+    } finally {
+      setIsRetrying(false);
     }
   }
 
@@ -199,6 +368,21 @@ export function useAssessmentDraftBuilderPage(assessmentId: string): RemoteData<
   if (pageState.status === "loading") return { status: "loading" };
   if (pageState.status === "not-found") return { status: "not-found" };
   if (pageState.status === "error") return { status: "error", error: pageState.error };
+  if (pageState.status === "generation-not-started") {
+    return { status: "generation-not-started", data: { isGenerating, generateError, onGenerate } };
+  }
+  if (pageState.status === "generation-in-progress") {
+    return { status: "generation-in-progress" };
+  }
+  if (pageState.status === "generation-failed") {
+    return {
+      status: "generation-failed",
+      data: { failureCode: pageState.failureCode, isRetrying, retryError, onRetry },
+    };
+  }
+  if (pageState.status === "generation-indeterminate") {
+    return { status: "generation-indeterminate", data: { isRetrying, retryError, onRetry } };
+  }
 
   const { data } = pageState;
   const currentVersionNumber = data.draft.versionNumber;
@@ -213,7 +397,6 @@ export function useAssessmentDraftBuilderPage(assessmentId: string): RemoteData<
       versions: data.versions,
       selectedVersion: effectiveSelectedVersion,
       isViewingHistoricalVersion: effectiveSelectedVersion !== currentVersionNumber,
-      aiDisclosureLabel,
       onViewVersion,
       isSaving,
       saveFieldErrors,
@@ -223,6 +406,7 @@ export function useAssessmentDraftBuilderPage(assessmentId: string): RemoteData<
       regenerateFieldError,
       regenerateAgentError,
       onRegenerate,
+      staleConflict: staleConflict ? { message: staleConflict, onReload: onReloadAfterConflict } : null,
     },
   };
 }

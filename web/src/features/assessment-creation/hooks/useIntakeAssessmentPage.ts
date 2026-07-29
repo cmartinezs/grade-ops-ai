@@ -1,12 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import {
-  submitAssessmentBrief,
-  CreateAssessmentBriefError,
-  GenerateAssessmentDraftError,
-} from "@/lib/api/assessments";
+import { submitAssessmentBrief, CreateAssessmentBriefError, isIdempotencyKeyPayloadMismatch } from "@/lib/api/assessments";
+import { createIdempotencyKey } from "@/lib/api/idempotencyKey";
 import type { BriefFormValues } from "../schemas/briefSchema";
 
 // The backend's @NotBlank constraint has no custom message, so its 422 body carries
@@ -35,26 +32,48 @@ export interface IntakeAssessmentPageViewModel {
   handleSubmit: (values: BriefFormValues) => void;
 }
 
-const AGENT_REJECTED_MESSAGE =
-  "No pudimos generar un borrador con esta información. Ajusta el objetivo de aprendizaje o el tema e intenta de nuevo.";
-const SERVICE_UNAVAILABLE_MESSAGE =
-  "El servicio de generación de IA no está disponible en este momento. Tu evaluación quedó guardada; intenta generar el borrador más tarde.";
 const GENERIC_RETRY_MESSAGE = "Ocurrió un error inesperado. Intenta de nuevo.";
+const IDEMPOTENCY_CONFLICT_MESSAGE =
+  "Ocurrió un conflicto al enviar el formulario (un envío anterior con datos distintos sigue vigente). Intenta de nuevo.";
 
 export function useIntakeAssessmentPage(): IntakeAssessmentPageViewModel {
   const router = useRouter();
   const [state, setState] = useState<SubmitState>({ status: "idle" });
   const [fieldErrors, setFieldErrors] = useState<Partial<Record<keyof BriefFormValues, string>> | null>(null);
+  // Generated once per submit action, not once per render — a double-click or accidental
+  // resubmit before this ref clears must reuse the same key (LOCAL-CONTRACTS.md § Idempotency
+  // key lifecycle). Cleared once a terminal response (success or a definitive error) arrives,
+  // so a genuinely new attempt (e.g. resubmitting after fixing a validation error) gets a
+  // fresh key rather than colliding with the previous payload under the same key.
+  const createIdempotencyKeyRef = useRef<string | null>(null);
 
   async function handleSubmit(values: BriefFormValues) {
+    if (state.status === "submitting") return;
     setState({ status: "submitting" });
     setFieldErrors(null);
 
+    if (!createIdempotencyKeyRef.current) {
+      createIdempotencyKeyRef.current = createIdempotencyKey();
+    }
+
     try {
-      const { assessmentId } = await submitAssessmentBrief(values);
+      // submitAssessmentBrief still calls create then generate, in that order (Authoring
+      // Operation Contract § "Create and generate remain two calls"), but a generate failure
+      // no longer throws here — the assessment is already durably created and addressable, so
+      // Web always routes to the draft page and lets its own resume-on-load check (§ Recovery
+      // after refresh) resolve whatever state generation actually ended up in. This is the
+      // concrete fix for Research 02 §5.6's demonstrated dead end.
+      const { assessmentId } = await submitAssessmentBrief(values, {
+        createIdempotencyKey: createIdempotencyKeyRef.current,
+        generateIdempotencyKey: createIdempotencyKey(),
+      });
+
+      createIdempotencyKeyRef.current = null;
       setState({ status: "success" });
       router.push(`/assessments/${assessmentId}/draft`);
     } catch (err) {
+      createIdempotencyKeyRef.current = null;
+
       if (err instanceof CreateAssessmentBriefError && Array.isArray(err.body)) {
         const mapped: Partial<Record<keyof BriefFormValues, string>> = {};
         for (const fieldError of err.body) {
@@ -66,16 +85,9 @@ export function useIntakeAssessmentPage(): IntakeAssessmentPageViewModel {
         return;
       }
 
-      if (err instanceof GenerateAssessmentDraftError && err.body.message === "AGENT_REJECTED") {
-        setState({ status: "error", message: AGENT_REJECTED_MESSAGE });
-        return;
-      }
-
-      if (
-        err instanceof GenerateAssessmentDraftError &&
-        (err.body.message === "AGENT_ERROR" || err.body.message === "UNREACHABLE")
-      ) {
-        setState({ status: "error", message: SERVICE_UNAVAILABLE_MESSAGE });
+      if (isIdempotencyKeyPayloadMismatch(err)) {
+        // Do not silently mint a new key and resubmit — surface the conflict explicitly.
+        setState({ status: "error", message: IDEMPOTENCY_CONFLICT_MESSAGE });
         return;
       }
 
