@@ -20,6 +20,9 @@ import lombok.Builder;
  * @param agentExecutionId generated fresh per call, for cross-referencing this payload with
  *     whatever {@code api/} logs about the same execution
  * @param agentName constant {@code "assessment"} — this agent's name
+ * @param provider the resolved provider name that actually served the request (e.g. {@code
+ *     "gemini"}, {@code "groq"}); {@code null} if resolution never happened before failure (e.g.
+ *     {@code INVALID_COMMAND}), same nullability discipline as {@code model}
  * @param model the model that produced the response; {@code null} if the call never reached the
  *     provider (e.g. {@code INVALID_COMMAND})
  * @param promptVersion the rendered template's header-comment version (task-02)
@@ -42,6 +45,7 @@ import lombok.Builder;
 public record AgentExecutionLogPayload(
         UUID agentExecutionId,
         String agentName,
+        String provider,
         String model,
         String promptVersion,
         String inputHash,

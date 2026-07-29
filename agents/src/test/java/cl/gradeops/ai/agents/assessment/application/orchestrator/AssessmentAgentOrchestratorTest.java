@@ -106,6 +106,7 @@ class AssessmentAgentOrchestratorTest {
         // then — 3. valores esperados
         assertThat(outcome.result()).isEqualTo(result);
         assertThat(log.agentName()).isEqualTo("assessment");
+        assertThat(log.provider()).isEqualTo(PROVIDER);
         assertThat(log.model()).isEqualTo("gemini-2.0-flash");
         assertThat(log.promptVersion()).isEqualTo("// assessment-generation.v1");
         assertThat(log.estimatedInputTokens()).isEqualTo(120);
