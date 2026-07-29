@@ -8,13 +8,15 @@
 
 ```
 52920cee1a343ea58ffe1c2dfb5da758119eff79 feat(web): migrate authoring flow to idempotent, resumable, revision-aware contract
+22272b68102e99f9a2c880442a2e518af6798493 docs(web): record assessment authoring foundation handoff
+24e6842466a95cd3f09817d3a49daf345834f4a1 fix(web): generate idempotency keys with Web Crypto
 ```
 
-(This handoff commit, `docs(web): record assessment authoring foundation handoff`, follows on top of the above.)
+(This handoff update commit follows on top of the corrective commit above, recording it.)
 
 ## Branch
 
-`feat/assessment-authoring-operation-foundation-web`, pushed to origin at `52920cee1a343ea58ffe1c2dfb5da758119eff79`.
+`feat/assessment-authoring-operation-foundation-web`, pushed to origin.
 
 ## Tasks completed
 
@@ -25,7 +27,7 @@
 `cd web && npm run lint && npm run test && npm run build` → **PASS**.
 
 - Lint: clean (0 warnings/errors).
-- Tests: **171 passed, 171 total** (24 suites), up from the 153-test baseline (+18 new tests: Idempotency-Key/expectedRevisionId wiring, 202-durable-operation handling, resume-on-load states, stale-revision-conflict handling, provenance display, and the Research 02 §5.6 regression test).
+- Tests: **178 passed, 178 total** (25 suites), up from the 153-test baseline (+18 tests from the original Task 11 implementation, +7 more from the Web Crypto correction's dedicated `idempotencyKey.test.ts`).
 - Build: succeeds, all 16 routes compile and prerender.
 
 ## Routes/screens changed
@@ -44,7 +46,7 @@ Built and tested against [LOCAL-CONTRACTS.md](LOCAL-CONTRACTS.md) since the real
 3. **Initial-generate 202 body shape** — `POST .../draft`'s 202 (durable pending/failed operation) response is assumed to be `AiOperationDto { id, status, failureCode? }`, matching the shape implied for the `AiOperation` record in the Authoring Operation Contract § 2. Its `status` value is *not* constrained by Web to the `generation-status` taxonomy (which excludes `FAILED_TERMINAL`) — Web reads it only for logging, never branches UI on it directly (see #4).
 4. **Retry's success response is not interpreted** — after a successful `POST .../draft/retry` (202), Web does not parse or branch on the response body at all; it unconditionally re-runs the full load pipeline (`getAssessmentDraft` → `generation-status` if still no revision) to re-derive the true state. LOCAL-CONTRACTS.md's endpoint table gives retry's success only as bare `202`, with no documented body shape, so this sidesteps guessing one. Same treatment for a successful `generateAssessmentDraft` call from the new `generation-not-started` state's "Generar borrador" action.
 5. **`expectedRevisionId` is `AssessmentDraftDto.draftId`** — LOCAL-CONTRACTS.md describes the draft DTO as gaining `origin`/`actorId`/`reason`/`previousRevisionId` "additively," with no new distinct "revision id" field. Assumed the existing `draftId` field *is* the revision id and is what Web sends back as `expectedRevisionId` on regenerate/human-edit.
-6. **Idempotency key format** — a client-generated UUID-v4-shaped string produced via `Math.random()` (`src/lib/api/idempotencyKey.ts`), not `crypto.randomUUID()` (jsdom's test environment doesn't implement it — same constraint this codebase's existing `createCorrelationId()` already documents and avoids). Assumed the API accepts any string in that format for `Idempotency-Key`, with no stricter server-side validation.
+6. **Idempotency key format** — the client generates idempotency keys using the browser Web Crypto API (`src/lib/api/idempotencyKey.ts`). `crypto.randomUUID()` is preferred; `crypto.getRandomValues()` provides an RFC 4122 v4 fallback for environments that expose the latter but not the former. `Math.random()` is never used — it is not a cryptographically adequate source of randomness for a key that gates duplicate-Assessment/duplicate-LLM-dispatch protection. If Web Crypto is unavailable at all, key generation fails explicitly rather than falling back to a weak generator. Tests mock Web Crypto (`globalThis.crypto`) to exercise both the `randomUUID` and `getRandomValues` paths and the unavailable-crypto failure, rather than weakening the production implementation to accommodate jsdom's gaps. Assumed the API accepts any RFC 4122-shaped string for `Idempotency-Key`, with no stricter server-side validation.
 7. **Create and generate use two independently generated keys**, not one shared key reused across both calls — since they have different idempotency scopes (`teacherUid` vs `assessmentId`, per the Idempotency and Concurrency Strategy decision) and different `operationType`s.
 8. **`isRecoverableDraftMutationStatus`** (a Web-internal logging-severity helper, not a contract field) was widened to also classify 409 as WARN-not-ERROR, since `STALE_REVISION`/`ALREADY_GENERATED` are expected, user-actionable conflicts under the new contract, not incidents. This reverses task-07-era code's assumption that 409 was unreachable from any draft-mutation endpoint — that assumption is exactly what this whole cut changes.
 
@@ -57,6 +59,7 @@ None. No endpoint, state value, failure code, payload field, `expectedRevisionId
 New:
 - `src/features/assessment-creation/__tests__/resumeAfterFailedGeneration.acceptance.test.tsx` — **the single most important test in this packet**: reproduces Research 02 §5.6 end-to-end (brief created → generation fails durably → reload → Retry → succeeds), asserting `POST /api/v1/assessments` fires exactly once throughout, mocked at the `apiClient` transport boundary so the real `submitAssessmentBrief`/`createAssessmentBrief`/`generateAssessmentDraft`/`getAssessmentDraft`/`getGenerationStatus`/`retryAssessmentDraftGeneration` implementations all run.
 - `src/features/assessment-creation/testUtils/DraftBuilderPageTestWrapper.tsx` — shared test-only mirror of `page.tsx`'s render tree (not a test file itself; deliberately outside any `__tests__/` directory so Jest's default `testMatch` doesn't pick it up as an empty suite).
+- `src/lib/api/__tests__/idempotencyKey.test.ts` (added in the Web Crypto correction) — covers the `randomUUID()` path, the `getRandomValues()` RFC 4122 v4 fallback (including version/variant bit assertions), the explicit throw when Web Crypto is unavailable, a spy asserting `Math.random` is never called, and a source-text regression guard against reintroducing it. Mocks `globalThis.crypto` via `Object.defineProperty` per test and restores the original afterward.
 
 Changed (rewritten for the new contract, signatures, and error shapes): `src/lib/api/__tests__/assessments.test.ts`, `src/features/assessment-creation/hooks/__tests__/useAssessmentDraftBuilderPage.test.ts`, `src/features/assessment-creation/loaders/__tests__/loadAssessmentDraftBuilderPage.test.ts`, `src/features/assessment-creation/components/__tests__/{DraftEditorSection,RegenerateSection,VersionHistorySection}.test.tsx`, `src/app/(protected)/assessments/new/__tests__/NewAssessmentPage.test.tsx`, `src/app/(protected)/assessments/[id]/draft/page.integration.test.tsx` (now also covers: resume-on-load for all four `generation-status` values, stale-revision-conflict-blocks-and-reloads, provenance rendering).
 
