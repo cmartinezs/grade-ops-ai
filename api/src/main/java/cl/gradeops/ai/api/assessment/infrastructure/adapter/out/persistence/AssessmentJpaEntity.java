@@ -27,4 +27,11 @@ public class AssessmentJpaEntity {
 
     @Column(name = "created_at", nullable = false)
     private Instant createdAt;
+
+    @Column(name = "current_revision_id")
+    private UUID currentRevisionId;
+
+    @Version
+    @Column(name = "lock_version", nullable = false)
+    private int lockVersion;
 }

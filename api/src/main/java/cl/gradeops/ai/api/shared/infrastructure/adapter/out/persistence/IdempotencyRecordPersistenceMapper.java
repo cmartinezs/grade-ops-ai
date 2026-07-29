@@ -4,7 +4,7 @@ import cl.gradeops.ai.api.shared.application.idempotency.IdempotencyRecord;
 import cl.gradeops.ai.api.shared.application.idempotency.IdempotencyScope;
 import cl.gradeops.ai.api.shared.application.idempotency.IdempotencyScopeType;
 
-class IdempotencyRecordPersistenceMapper {
+public class IdempotencyRecordPersistenceMapper {
 
     IdempotencyRecord toDomain(IdempotencyRecordJpaEntity e) {
         IdempotencyScopeType scopeType = IdempotencyScopeType.valueOf(e.getScopeType());

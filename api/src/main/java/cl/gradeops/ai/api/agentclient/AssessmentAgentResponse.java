@@ -6,10 +6,14 @@ import java.util.UUID;
 
 /**
  * Field-for-field mirror of {@code agents/}'s {@code AssessmentExecutionResponse}
- * ({@code result} + {@code log}), verified 2026-07-13 against {@code agents/src/main/java/.../
- * assessment/infrastructure/adapter/in/web/response/AssessmentExecutionResponse.java} and the
- * {@code AgentExecutionLogPayload} it wraps. {@code Log} carries the full 13-field payload, not
- * a subset — {@code status} and {@code errorCode} are two separate fields, never conflated.
+ * ({@code result} + {@code log}), re-verified 2026-07-29 (Task 07A/07C) against Agents'
+ * {@code AgentExecutionLogPayload} — now 14 fields: {@code provider} was added, additive,
+ * between {@code agentName} and {@code model}. {@code Log} carries the full payload, not a
+ * subset — {@code status} and {@code errorCode} are two separate fields, never conflated.
+ *
+ * <p>{@code provider} nullability mirrors {@code model}'s: non-null on a successful generation
+ * or on a failure that occurred after provider resolution (e.g. {@code MALFORMED_OUTPUT}); null
+ * when the pipeline rejected the command before resolution ever ran ({@code INVALID_COMMAND}).
  */
 public record AssessmentAgentResponse(Result result, Log log) {
 
@@ -25,6 +29,7 @@ public record AssessmentAgentResponse(Result result, Log log) {
     public record Log(
             UUID agentExecutionId,
             String agentName,
+            String provider,
             String model,
             String promptVersion,
             String inputHash,

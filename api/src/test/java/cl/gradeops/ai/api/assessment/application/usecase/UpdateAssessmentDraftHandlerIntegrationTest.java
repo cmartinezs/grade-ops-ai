@@ -1,16 +1,12 @@
 package cl.gradeops.ai.api.assessment.application.usecase;
 
-import cl.gradeops.ai.api.agentclient.AssessmentAgentClient;
-import cl.gradeops.ai.api.agentclient.AssessmentAgentResponse;
-import cl.gradeops.ai.api.assessment.application.command.GenerateAssessmentDraftCommand;
 import cl.gradeops.ai.api.assessment.application.command.UpdateAssessmentDraftCommand;
 import cl.gradeops.ai.api.assessment.application.exception.NoPriorDraftException;
 import cl.gradeops.ai.api.assessment.application.result.GenerateAssessmentDraftResult;
 import cl.gradeops.ai.api.assessment.domain.model.Assessment;
 import cl.gradeops.ai.api.assessment.domain.model.AssessmentBrief;
+import cl.gradeops.ai.api.assessment.domain.model.AssessmentDraft;
 import cl.gradeops.ai.api.assessment.infrastructure.adapter.out.persistence.AgentExecutionLogJpaRepository;
-import cl.gradeops.ai.api.assessment.infrastructure.adapter.out.persistence.AgentExecutionLogPersistenceAdapter;
-import cl.gradeops.ai.api.assessment.infrastructure.adapter.out.persistence.AgentExecutionLogPersistenceMapper;
 import cl.gradeops.ai.api.assessment.infrastructure.adapter.out.persistence.AssessmentBriefJpaRepository;
 import cl.gradeops.ai.api.assessment.infrastructure.adapter.out.persistence.AssessmentBriefPersistenceAdapter;
 import cl.gradeops.ai.api.assessment.infrastructure.adapter.out.persistence.AssessmentBriefPersistenceMapper;
@@ -34,24 +30,20 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.context.TestPropertySource;
-import org.springframework.transaction.PlatformTransactionManager;
 import org.testcontainers.containers.PostgreSQLContainer;
 
-import java.time.Instant;
 import java.util.List;
-import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 /**
  * Exercises {@link UpdateAssessmentDraftHandler} with real repositories against a live
- * Postgres (Flyway-migrated through V12): generates v1, edits a field, and verifies the row id
- * and version number are unchanged, only the edited field(s) differ, and no new
- * {@code AgentExecutionLog} row was created. Requires Docker.
+ * Postgres (Flyway-migrated through V16): seeds v1 directly as a pre-existing {@code
+ * AssessmentDraft} (this handler never calls {@code agents/}, so no coordinator/agent client is
+ * needed here), edits a field, and verifies the row id and version number are unchanged, only
+ * the edited field(s) differ, and no new {@code AgentExecutionLog} row was created. Requires
+ * Docker.
  */
 @DataJpaTest
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
@@ -84,12 +76,9 @@ class UpdateAssessmentDraftHandlerIntegrationTest {
     @Autowired AgentExecutionLogJpaRepository logJpaRepository;
     @Autowired JdbcTemplate jdbcTemplate;
     @Autowired EntityManager entityManager;
-    @Autowired PlatformTransactionManager transactionManager;
 
     AssessmentPersistenceAdapter assessmentAdapter;
     AssessmentDraftPersistenceAdapter draftAdapter;
-    AssessmentAgentClient assessmentAgentClient;
-    GenerateAssessmentDraftHandler generateHandler;
     UpdateAssessmentDraftHandler updateHandler;
 
     Assessment assessment;
@@ -100,14 +89,8 @@ class UpdateAssessmentDraftHandlerIntegrationTest {
         AssessmentBriefPersistenceAdapter briefAdapter =
                 new AssessmentBriefPersistenceAdapter(briefJpaRepository, new AssessmentBriefPersistenceMapper());
         draftAdapter = new AssessmentDraftPersistenceAdapter(draftJpaRepository, new AssessmentDraftPersistenceMapper());
-        AgentExecutionLogPersistenceAdapter logAdapter =
-                new AgentExecutionLogPersistenceAdapter(logJpaRepository, new AgentExecutionLogPersistenceMapper());
-        assessmentAgentClient = mock(AssessmentAgentClient.class);
-        DraftGenerationCoordinator coordinator = new DraftGenerationCoordinator(
-                draftAdapter, logAdapter, assessmentAgentClient, transactionManager);
         OwnershipVerifier ownershipVerifier = new OwnershipVerifier();
 
-        generateHandler = new GenerateAssessmentDraftHandler(assessmentAdapter, briefAdapter, ownershipVerifier, coordinator);
         updateHandler = new UpdateAssessmentDraftHandler(assessmentAdapter, draftAdapter, ownershipVerifier);
 
         jdbcTemplate.update(
@@ -120,25 +103,20 @@ class UpdateAssessmentDraftHandlerIntegrationTest {
         entityManager.clear();
     }
 
-    private static AssessmentAgentResponse response(String title) {
-        Instant startedAt = Instant.now().minusSeconds(2);
-        Instant finishedAt = Instant.now();
-        return new AssessmentAgentResponse(
-                new AssessmentAgentResponse.Result(title, "Context", "Instructions",
-                        List.of("obj"), List.of("del"), List.of("con")),
-                new AssessmentAgentResponse.Log(UUID.randomUUID(), "assessment", "gemini-2.0-flash", "v1",
-                        "in-hash", "out-hash", 100, 200, 0.01, "COMPLETED", null, startedAt, finishedAt));
+    private GenerateAssessmentDraftResult seedV1Draft() {
+        AssessmentDraft draft = AssessmentDraft.generate(assessment.getId(), "Title v1", "Context", "Instructions",
+                List.of("obj"), List.of("del"), List.of("con"), null);
+        draftAdapter.save(draft);
+        entityManager.flush();
+        entityManager.clear();
+        return new GenerateAssessmentDraftResult(draft.getId(), draft.getTitle(), draft.getContext(),
+                draft.getInstructions(), draft.getObjectives(), draft.getDeliverables(), draft.getConstraints(),
+                draft.getVersionNumber());
     }
 
     @Test
     void shouldUpdateRowInPlaceWithoutNewVersionOrNewLog() {
-        when(assessmentAgentClient.generate(any())).thenReturn(response("Title v1"));
-        GenerateAssessmentDraftResult v1Result = generateHandler.execute(
-                new GenerateAssessmentDraftCommand(assessment.getId().value(), "uid-1"));
-
-        entityManager.flush();
-        entityManager.clear();
-
+        GenerateAssessmentDraftResult v1Result = seedV1Draft();
         long logCountBefore = logJpaRepository.count();
 
         GenerateAssessmentDraftResult editResult = updateHandler.execute(new UpdateAssessmentDraftCommand(

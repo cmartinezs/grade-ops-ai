@@ -16,7 +16,7 @@ import cl.gradeops.ai.api.shared.domain.exception.ResourceNotFoundException;
  * NO @Service — declared as @Bean in AssessmentConfig (task-05 pattern).
  *
  * <p>Unlike {@code GenerateAssessmentDraftHandler}/{@code RegenerateAssessmentDraftHandler}, this
- * handler makes no call to {@code agents/} and does not use {@link DraftGenerationCoordinator} —
+ * handler makes no call to {@code agents/} and does not use any agent-dispatch coordinator —
  * it updates the current draft's row in place (US-013), so no {@code AgentExecutionLog} is
  * produced and no new version is created. {@code assessmentDraftRepository.save(...)} is called
  * with a domain object that reuses the current draft's {@code id}, so the persistence adapter's

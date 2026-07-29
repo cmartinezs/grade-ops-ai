@@ -11,7 +11,9 @@ public class AssessmentPersistenceMapper {
             new AssessmentId(e.getId()),
             e.getTeacherUid(),
             AssessmentStatus.valueOf(e.getStatus()),
-            e.getCreatedAt()
+            e.getCreatedAt(),
+            e.getCurrentRevisionId(),
+            e.getLockVersion()
         );
     }
 
@@ -21,6 +23,8 @@ public class AssessmentPersistenceMapper {
         e.setTeacherUid(a.getTeacherUid());
         e.setStatus(a.getStatus().name());
         e.setCreatedAt(a.getCreatedAt());
+        e.setCurrentRevisionId(a.getCurrentRevisionId());
+        e.setLockVersion(a.getLockVersion());
         return e;
     }
 }

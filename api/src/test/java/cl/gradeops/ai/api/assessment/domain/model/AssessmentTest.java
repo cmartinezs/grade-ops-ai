@@ -48,6 +48,55 @@ class AssessmentTest {
     }
 
     @Test
+    void shouldDefaultToNullCurrentRevisionAndZeroLockVersionWhenCreatingNewAssessment() {
+        Assessment a = Assessment.create("uid-1");
+
+        assertThat(a.getCurrentRevisionId()).isNull();
+        assertThat(a.getLockVersion()).isZero();
+    }
+
+    @Test
+    void shouldDefaultToNullCurrentRevisionAndZeroLockVersionWhenRestoringLegacyFourArgShape() {
+        Assessment a = Assessment.restore(new AssessmentId(UUID.randomUUID()), "uid-2", AssessmentStatus.OPEN, Instant.now());
+
+        assertThat(a.getCurrentRevisionId()).isNull();
+        assertThat(a.getLockVersion()).isZero();
+    }
+
+    @Test
+    void shouldRestoreCurrentRevisionAndLockVersionVerbatimWhenRestoringFullShape() {
+        AssessmentId id = new AssessmentId(UUID.randomUUID());
+        Instant createdAt = Instant.now().minusSeconds(60);
+        UUID currentRevisionId = UUID.randomUUID();
+
+        Assessment a = Assessment.restore(id, "uid-2", AssessmentStatus.OPEN, createdAt, currentRevisionId, 3);
+
+        assertThat(a.getCurrentRevisionId()).isEqualTo(currentRevisionId);
+        assertThat(a.getLockVersion()).isEqualTo(3);
+    }
+
+    @Test
+    void shouldReturnNewInstanceWithUpdatedCurrentRevisionWhenWithCurrentRevisionCalled() {
+        Assessment a = Assessment.create("uid-1");
+
+        Assessment updated = a.withCurrentRevision(UUID.randomUUID());
+
+        assertThat(updated).isNotSameAs(a);
+        assertThat(updated.getCurrentRevisionId()).isNotNull();
+        assertThat(updated.getLockVersion()).isEqualTo(a.getLockVersion());
+        assertThat(a.getCurrentRevisionId()).isNull();
+    }
+
+    @Test
+    void shouldRejectNullRevisionIdWhenCallingWithCurrentRevision() {
+        Assessment a = Assessment.create("uid-1");
+
+        assertThatThrownBy(() -> a.withCurrentRevision(null))
+                .isInstanceOf(DomainInvariantViolationException.class)
+                .hasMessageContaining("revisionId");
+    }
+
+    @Test
     void shouldRejectNullIdWhenRestoringFromPersistence() {
         assertThatThrownBy(() -> Assessment.restore(null, "uid-1", AssessmentStatus.DRAFT, Instant.now()))
                 .isInstanceOf(DomainInvariantViolationException.class)

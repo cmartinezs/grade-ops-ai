@@ -1,15 +1,20 @@
 package cl.gradeops.ai.api.assessment.application.usecase;
 
-import cl.gradeops.ai.api.agentclient.AssessmentAgentResponse;
 import cl.gradeops.ai.api.agentclient.AssessmentCommand;
 import cl.gradeops.ai.api.assessment.application.command.GenerateAssessmentDraftCommand;
+import cl.gradeops.ai.api.assessment.application.exception.AlreadyGeneratedException;
 import cl.gradeops.ai.api.assessment.application.port.out.AssessmentBriefRepositoryPort;
 import cl.gradeops.ai.api.assessment.application.port.out.AssessmentRepositoryPort;
+import cl.gradeops.ai.api.assessment.application.port.out.AssessmentRevisionRepositoryPort;
 import cl.gradeops.ai.api.assessment.application.result.GenerateAssessmentDraftResult;
 import cl.gradeops.ai.api.assessment.domain.model.Assessment;
 import cl.gradeops.ai.api.assessment.domain.model.AssessmentBrief;
 import cl.gradeops.ai.api.assessment.domain.model.AssessmentId;
+import cl.gradeops.ai.api.assessment.domain.model.AssessmentRevision;
 import cl.gradeops.ai.api.assessment.domain.model.AssessmentStatus;
+import cl.gradeops.ai.api.shared.application.idempotency.IdempotencyGuard;
+import cl.gradeops.ai.api.shared.application.idempotency.IdempotencyRecord;
+import cl.gradeops.ai.api.shared.application.idempotency.IdempotencyScope;
 import cl.gradeops.ai.api.shared.application.security.OwnershipVerifier;
 import cl.gradeops.ai.api.shared.domain.exception.ResourceNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
@@ -23,7 +28,6 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.function.BiFunction;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -32,18 +36,20 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 /**
- * Covers only this handler's own responsibilities — loading the assessment/brief, ownership
- * enforcement, and building the {@link AssessmentCommand} — with {@link DraftGenerationCoordinator}
- * mocked. The shared "call agent, persist log + draft" logic itself is covered by
- * {@link DraftGenerationCoordinatorTest} instead (task-08 extracted it out from here).
+ * Covers only this handler's own responsibilities — ownership, idempotency (Task 06), the
+ * {@code ALREADY_GENERATED} precondition, and delegation to {@link AiOperationCoordinator} —
+ * with the coordinator mocked. The coordinator's own three-phase behavior is covered by {@link
+ * AiOperationCoordinatorTest} instead.
  */
 @ExtendWith(MockitoExtension.class)
 class GenerateAssessmentDraftHandlerTest {
 
     @Mock AssessmentRepositoryPort assessmentRepository;
     @Mock AssessmentBriefRepositoryPort assessmentBriefRepository;
+    @Mock AssessmentRevisionRepositoryPort assessmentRevisionRepository;
     @Mock OwnershipVerifier ownershipVerifier;
-    @Mock DraftGenerationCoordinator draftGenerationCoordinator;
+    @Mock IdempotencyGuard idempotencyGuard;
+    @Mock AiOperationCoordinator aiOperationCoordinator;
 
     GenerateAssessmentDraftHandler handler;
 
@@ -54,61 +60,95 @@ class GenerateAssessmentDraftHandlerTest {
 
     @BeforeEach
     void setUp() {
-        handler = new GenerateAssessmentDraftHandler(
-                assessmentRepository, assessmentBriefRepository, ownershipVerifier, draftGenerationCoordinator);
+        handler = new GenerateAssessmentDraftHandler(assessmentRepository, assessmentBriefRepository,
+                assessmentRevisionRepository, ownershipVerifier, idempotencyGuard, aiOperationCoordinator);
+    }
+
+    private static AssessmentRevision revision(AssessmentId assessmentId, String title, int versionNumber) {
+        return AssessmentRevision.generateFromAi(assessmentId, title, "Context", "Instructions",
+                List.of("obj"), List.of("del"), List.of("con"), "uid-1", UUID.randomUUID());
     }
 
     @Test
-    void shouldVerifyOwnershipAndDelegateToCoordinatorWithCommandBuiltFromBrief() {
+    void shouldCheckIdempotencyThenDelegateToCoordinatorThenRecordOnSuccess() {
         when(assessmentRepository.findById(assessmentId)).thenReturn(Optional.of(assessment));
+        when(idempotencyGuard.check(any(), eq("CREATE_INITIAL_REVISION"), eq("key-1"), any())).thenReturn(Optional.empty());
         when(assessmentBriefRepository.findByAssessmentId(assessmentId)).thenReturn(Optional.of(brief));
-        GenerateAssessmentDraftResult expected = new GenerateAssessmentDraftResult(
-                UUID.randomUUID(), "Title", "Context", "Instructions", List.of(), List.of(), List.of(), 1);
-        when(draftGenerationCoordinator.callAgentAndPersist(eq(assessmentId), any(), any())).thenReturn(expected);
+        AssessmentRevision revision = revision(assessmentId, "Title", 1);
+        when(aiOperationCoordinator.createInitialRevision(eq(assessment), any(), eq("uid-1"), eq("key-1")))
+                .thenReturn(revision);
 
-        GenerateAssessmentDraftResult result = handler.execute(new GenerateAssessmentDraftCommand(assessmentUuid, "uid-1"));
+        GenerateAssessmentDraftResult result = handler.execute(
+                new GenerateAssessmentDraftCommand(assessmentUuid, "uid-1", "key-1"));
 
-        assertThat(result).isEqualTo(expected);
+        assertThat(result.draftId()).isEqualTo(revision.getId());
+        assertThat(result.title()).isEqualTo("Title");
+        assertThat(result.versionNumber()).isEqualTo(1);
+
         verify(ownershipVerifier).verify("uid-1", "uid-1", assessmentUuid.toString());
 
+        ArgumentCaptor<IdempotencyScope> scopeCaptor = ArgumentCaptor.forClass(IdempotencyScope.class);
+        verify(idempotencyGuard).check(scopeCaptor.capture(), eq("CREATE_INITIAL_REVISION"), eq("key-1"), any());
+        assertThat(scopeCaptor.getValue()).isEqualTo(IdempotencyScope.assessment(assessmentUuid));
+
         ArgumentCaptor<AssessmentCommand> commandCaptor = ArgumentCaptor.forClass(AssessmentCommand.class);
-        verify(draftGenerationCoordinator).callAgentAndPersist(eq(assessmentId), commandCaptor.capture(), any());
-        AssessmentCommand agentCommand = commandCaptor.getValue();
-        assertThat(agentCommand.learningGoal()).isEqualTo("goal");
-        assertThat(agentCommand.topic()).isEqualTo("topic");
-        assertThat(agentCommand.level()).isEqualTo("basic");
-        assertThat(agentCommand.duration()).isEqualTo("90min");
-        assertThat(agentCommand.language()).isEqualTo("Java");
-        assertThat(agentCommand.adjustmentNotes()).isNull();
-        assertThat(agentCommand.previousDraftId()).isNull();
-        assertThat(agentCommand.previousDraft()).isNull();
+        verify(aiOperationCoordinator).createInitialRevision(eq(assessment), commandCaptor.capture(), eq("uid-1"), eq("key-1"));
+        assertThat(commandCaptor.getValue().learningGoal()).isEqualTo("goal");
+        assertThat(commandCaptor.getValue().topic()).isEqualTo("topic");
+
+        verify(idempotencyGuard).record(eq(scopeCaptor.getValue()), eq("CREATE_INITIAL_REVISION"), eq("key-1"),
+                any(), eq(revision.getId().toString()), eq(201));
     }
 
-    @SuppressWarnings("unchecked")
     @Test
-    void shouldPassADraftFactoryThatGeneratesVersionOne() {
+    void shouldReplayPriorRecordWithoutTouchingBriefOrCoordinatorWhenIdempotencyKeyAlreadyUsed() {
         when(assessmentRepository.findById(assessmentId)).thenReturn(Optional.of(assessment));
+        AssessmentRevision priorRevision = revision(assessmentId, "Prior Title", 1);
+        IdempotencyRecord priorRecord = IdempotencyRecord.create(IdempotencyScope.assessment(assessmentUuid),
+                "CREATE_INITIAL_REVISION", "key-1", "hash", priorRevision.getId().toString(), 201);
+        when(idempotencyGuard.check(any(), eq("CREATE_INITIAL_REVISION"), eq("key-1"), any()))
+                .thenReturn(Optional.of(priorRecord));
+        when(assessmentRevisionRepository.findById(priorRevision.getId())).thenReturn(Optional.of(priorRevision));
+
+        GenerateAssessmentDraftResult result = handler.execute(
+                new GenerateAssessmentDraftCommand(assessmentUuid, "uid-1", "key-1"));
+
+        assertThat(result.title()).isEqualTo("Prior Title");
+        verifyNoInteractions(assessmentBriefRepository, aiOperationCoordinator);
+    }
+
+    @Test
+    void shouldThrowAlreadyGeneratedWhenCurrentRevisionAlreadyExists() {
+        UUID existingRevisionId = UUID.randomUUID();
+        Assessment alreadyGenerated = Assessment.restore(assessmentId, "uid-1", AssessmentStatus.DRAFT,
+                Instant.now(), existingRevisionId, 1);
+        when(assessmentRepository.findById(assessmentId)).thenReturn(Optional.of(alreadyGenerated));
+        when(idempotencyGuard.check(any(), eq("CREATE_INITIAL_REVISION"), eq("key-1"), any())).thenReturn(Optional.empty());
         when(assessmentBriefRepository.findByAssessmentId(assessmentId)).thenReturn(Optional.of(brief));
 
-        handler.execute(new GenerateAssessmentDraftCommand(assessmentUuid, "uid-1"));
+        assertThatThrownBy(() -> handler.execute(new GenerateAssessmentDraftCommand(assessmentUuid, "uid-1", "key-1")))
+                .isInstanceOf(AlreadyGeneratedException.class);
 
-        @SuppressWarnings("rawtypes")
-        ArgumentCaptor<BiFunction> factoryCaptor = ArgumentCaptor.forClass(BiFunction.class);
-        verify(draftGenerationCoordinator).callAgentAndPersist(eq(assessmentId), any(), factoryCaptor.capture());
+        verifyNoInteractions(aiOperationCoordinator);
+    }
 
-        UUID logId = UUID.randomUUID();
-        @SuppressWarnings("unchecked")
-        BiFunction<AssessmentAgentResponse.Result, UUID, cl.gradeops.ai.api.assessment.domain.model.AssessmentDraft> draftFactory =
-                factoryCaptor.getValue();
-        cl.gradeops.ai.api.assessment.domain.model.AssessmentDraft draft = draftFactory.apply(
-                new AssessmentAgentResponse.Result("Title", "Context", "Instructions",
-                        List.of("obj"), List.of("del"), List.of("con")),
-                logId);
+    @Test
+    void shouldTreatLegacyAssessmentWithNullCurrentRevisionAsNotYetGenerated() {
+        // Assessment.restore's legacy 4-arg shape defaults currentRevisionId to null — this must
+        // NOT be mistaken for ALREADY_GENERATED; initial generation must proceed normally.
+        Assessment legacyAssessment = Assessment.restore(assessmentId, "uid-1", AssessmentStatus.DRAFT, Instant.now());
+        when(assessmentRepository.findById(assessmentId)).thenReturn(Optional.of(legacyAssessment));
+        when(idempotencyGuard.check(any(), eq("CREATE_INITIAL_REVISION"), eq("key-1"), any())).thenReturn(Optional.empty());
+        when(assessmentBriefRepository.findByAssessmentId(assessmentId)).thenReturn(Optional.of(brief));
+        AssessmentRevision revision = revision(assessmentId, "Title", 1);
+        when(aiOperationCoordinator.createInitialRevision(eq(legacyAssessment), any(), eq("uid-1"), eq("key-1")))
+                .thenReturn(revision);
 
-        assertThat(draft.getVersionNumber()).isEqualTo(1);
-        assertThat(draft.getPreviousVersionId()).isNull();
-        assertThat(draft.getAgentExecutionLogId()).isEqualTo(logId);
-        assertThat(draft.getTitle()).isEqualTo("Title");
+        GenerateAssessmentDraftResult result = handler.execute(
+                new GenerateAssessmentDraftCommand(assessmentUuid, "uid-1", "key-1"));
+
+        assertThat(result.title()).isEqualTo("Title");
+        verify(aiOperationCoordinator).createInitialRevision(eq(legacyAssessment), any(), eq("uid-1"), eq("key-1"));
     }
 
     @Test
@@ -117,30 +157,31 @@ class GenerateAssessmentDraftHandlerTest {
         doThrow(new ResourceNotFoundException(assessmentUuid.toString()))
                 .when(ownershipVerifier).verify("uid-1", "uid-other", assessmentUuid.toString());
 
-        assertThatThrownBy(() -> handler.execute(new GenerateAssessmentDraftCommand(assessmentUuid, "uid-other")))
+        assertThatThrownBy(() -> handler.execute(new GenerateAssessmentDraftCommand(assessmentUuid, "uid-other", "key-1")))
                 .isInstanceOf(ResourceNotFoundException.class);
 
-        verifyNoInteractions(draftGenerationCoordinator, assessmentBriefRepository);
+        verifyNoInteractions(idempotencyGuard, aiOperationCoordinator, assessmentBriefRepository);
     }
 
     @Test
     void shouldThrowNotFoundWhenAssessmentDoesNotExist() {
         when(assessmentRepository.findById(assessmentId)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> handler.execute(new GenerateAssessmentDraftCommand(assessmentUuid, "uid-1")))
+        assertThatThrownBy(() -> handler.execute(new GenerateAssessmentDraftCommand(assessmentUuid, "uid-1", "key-1")))
                 .isInstanceOf(ResourceNotFoundException.class);
 
-        verifyNoInteractions(ownershipVerifier, draftGenerationCoordinator);
+        verifyNoInteractions(ownershipVerifier, idempotencyGuard, aiOperationCoordinator);
     }
 
     @Test
     void shouldThrowNotFoundWhenBriefDoesNotExist() {
         when(assessmentRepository.findById(assessmentId)).thenReturn(Optional.of(assessment));
+        when(idempotencyGuard.check(any(), eq("CREATE_INITIAL_REVISION"), eq("key-1"), any())).thenReturn(Optional.empty());
         when(assessmentBriefRepository.findByAssessmentId(assessmentId)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> handler.execute(new GenerateAssessmentDraftCommand(assessmentUuid, "uid-1")))
+        assertThatThrownBy(() -> handler.execute(new GenerateAssessmentDraftCommand(assessmentUuid, "uid-1", "key-1")))
                 .isInstanceOf(ResourceNotFoundException.class);
 
-        verifyNoInteractions(draftGenerationCoordinator);
+        verifyNoInteractions(aiOperationCoordinator);
     }
 }

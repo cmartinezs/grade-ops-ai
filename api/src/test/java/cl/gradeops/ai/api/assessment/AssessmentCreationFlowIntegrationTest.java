@@ -4,7 +4,6 @@ import cl.gradeops.ai.api.agentclient.AgentClientException;
 import cl.gradeops.ai.api.agentclient.AssessmentAgentClient;
 import cl.gradeops.ai.api.agentclient.AssessmentAgentResponse;
 import cl.gradeops.ai.api.assessment.application.command.CreateAssessmentBriefCommand;
-import cl.gradeops.ai.api.assessment.application.command.GenerateAssessmentDraftCommand;
 import cl.gradeops.ai.api.assessment.application.command.GetCurrentDraftCommand;
 import cl.gradeops.ai.api.assessment.application.command.ListDraftVersionsCommand;
 import cl.gradeops.ai.api.assessment.application.command.RegenerateAssessmentDraftCommand;
@@ -13,14 +12,13 @@ import cl.gradeops.ai.api.assessment.application.result.AssessmentSummaryResult;
 import cl.gradeops.ai.api.assessment.application.result.CreateAssessmentBriefResult;
 import cl.gradeops.ai.api.assessment.application.result.GenerateAssessmentDraftResult;
 import cl.gradeops.ai.api.assessment.application.usecase.CreateAssessmentBriefHandler;
-import cl.gradeops.ai.api.assessment.application.usecase.DraftGenerationCoordinator;
-import cl.gradeops.ai.api.assessment.application.usecase.GenerateAssessmentDraftHandler;
 import cl.gradeops.ai.api.assessment.application.usecase.GetCurrentDraftHandler;
 import cl.gradeops.ai.api.assessment.application.usecase.ListAssessmentsHandler;
 import cl.gradeops.ai.api.assessment.application.usecase.ListDraftVersionsHandler;
 import cl.gradeops.ai.api.assessment.application.usecase.RegenerateAssessmentDraftHandler;
 import cl.gradeops.ai.api.assessment.application.usecase.UpdateAssessmentDraftHandler;
 import cl.gradeops.ai.api.assessment.domain.model.AssessmentBrief;
+import cl.gradeops.ai.api.assessment.domain.model.AssessmentDraft;
 import cl.gradeops.ai.api.assessment.domain.model.AssessmentId;
 import cl.gradeops.ai.api.assessment.infrastructure.adapter.out.persistence.AgentExecutionLogJpaEntity;
 import cl.gradeops.ai.api.assessment.infrastructure.adapter.out.persistence.AgentExecutionLogJpaRepository;
@@ -64,12 +62,22 @@ import static org.mockito.Mockito.when;
 
 /**
  * Cross-cutting, whole-story integration coverage for the assessment-creation flow, against a
- * live Postgres (Flyway-migrated through V12). Complements — does not duplicate — task-06
- * through task-10's own focused tests: those exercise one endpoint's handler in isolation, this
- * class chains all of them together the way a real teacher session would (brief → generate →
- * regenerate → edit → list → retrieve current → retrieve version history) and asserts
- * consistency at every step. Only {@link AssessmentAgentClient} is stubbed; every persistence
- * adapter, coordinator, and handler runs for real. Requires Docker.
+ * live Postgres (Flyway-migrated through V16). Complements — does not duplicate — this
+ * packet's own per-handler focused tests: those exercise one handler in isolation, this class
+ * chains several together the way a real teacher session would (brief → regenerate → edit →
+ * list → retrieve current → retrieve version history) and asserts consistency at every step.
+ *
+ * <p>Session A2 (Task 07B) pivoted {@code GenerateAssessmentDraftHandler} onto the durable
+ * {@code AssessmentRevision} model — it no longer produces an {@code AssessmentDraft} row, so
+ * it can no longer feed this chain's {@code RegenerateAssessmentDraftHandler}/{@code
+ * UpdateAssessmentDraftHandler} steps (both still {@code AssessmentDraft}-based; regenerate's
+ * own migration onto revisions is Task 09, a later session). "V1" is therefore seeded directly
+ * as a pre-existing {@code AssessmentDraft} below, simulating an assessment already generated
+ * before this cut, exactly the legacy shape Task 07B's own risk section requires the initial
+ * generation path to tolerate. {@code GenerateAssessmentDraftHandler}'s own behavior is covered
+ * separately by {@code GenerateAssessmentDraftHandlerIntegrationTest}. Only {@link
+ * AssessmentAgentClient} is stubbed; every persistence adapter and handler exercised here runs
+ * for real. Requires Docker.
  */
 @DataJpaTest
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
@@ -106,9 +114,9 @@ class AssessmentCreationFlowIntegrationTest {
 
     AssessmentAgentClient assessmentAgentClient;
     AssessmentBriefPersistenceAdapter briefAdapter;
+    AssessmentDraftPersistenceAdapter draftAdapter;
 
     CreateAssessmentBriefHandler createBriefHandler;
-    GenerateAssessmentDraftHandler generateHandler;
     RegenerateAssessmentDraftHandler regenerateHandler;
     UpdateAssessmentDraftHandler updateHandler;
     GetCurrentDraftHandler getCurrentDraftHandler;
@@ -122,19 +130,15 @@ class AssessmentCreationFlowIntegrationTest {
         AssessmentPersistenceAdapter assessmentAdapter =
                 new AssessmentPersistenceAdapter(assessmentJpaRepository, new AssessmentPersistenceMapper());
         briefAdapter = new AssessmentBriefPersistenceAdapter(briefJpaRepository, new AssessmentBriefPersistenceMapper());
-        AssessmentDraftPersistenceAdapter draftAdapter =
-                new AssessmentDraftPersistenceAdapter(draftJpaRepository, new AssessmentDraftPersistenceMapper());
+        draftAdapter = new AssessmentDraftPersistenceAdapter(draftJpaRepository, new AssessmentDraftPersistenceMapper());
         AgentExecutionLogPersistenceAdapter logAdapter =
                 new AgentExecutionLogPersistenceAdapter(logJpaRepository, new AgentExecutionLogPersistenceMapper());
         assessmentAgentClient = mock(AssessmentAgentClient.class);
-        DraftGenerationCoordinator coordinator = new DraftGenerationCoordinator(
-                draftAdapter, logAdapter, assessmentAgentClient, transactionManager);
         OwnershipVerifier ownershipVerifier = new OwnershipVerifier();
 
         createBriefHandler = new CreateAssessmentBriefHandler(assessmentAdapter, briefAdapter);
-        generateHandler = new GenerateAssessmentDraftHandler(assessmentAdapter, briefAdapter, ownershipVerifier, coordinator);
-        regenerateHandler = new RegenerateAssessmentDraftHandler(
-                assessmentAdapter, briefAdapter, draftAdapter, ownershipVerifier, coordinator);
+        regenerateHandler = new RegenerateAssessmentDraftHandler(assessmentAdapter, briefAdapter, draftAdapter,
+                logAdapter, ownershipVerifier, assessmentAgentClient, transactionManager);
         updateHandler = new UpdateAssessmentDraftHandler(assessmentAdapter, draftAdapter, ownershipVerifier);
         getCurrentDraftHandler = new GetCurrentDraftHandler(assessmentAdapter, draftAdapter, ownershipVerifier);
         listDraftVersionsHandler = new ListDraftVersionsHandler(assessmentAdapter, draftAdapter, ownershipVerifier);
@@ -145,13 +149,29 @@ class AssessmentCreationFlowIntegrationTest {
                 TEACHER_UID, "Test", "Teacher", TEACHER_UID + "@test.com");
     }
 
+    /**
+     * Seeds "V1" directly as a pre-existing {@code AssessmentDraft} — simulating an assessment
+     * generated before this cut — since {@code GenerateAssessmentDraftHandler} no longer
+     * produces a draft row for {@code RegenerateAssessmentDraftHandler} to build on.
+     */
+    private GenerateAssessmentDraftResult seedV1Draft(UUID assessmentId) {
+        AssessmentDraft draft = AssessmentDraft.generate(new AssessmentId(assessmentId), "V1", "Context V1",
+                "Instructions V1", List.of("obj-V1"), List.of("del-V1"), List.of("con-V1"), null);
+        draftAdapter.save(draft);
+        entityManager.flush();
+        entityManager.clear();
+        return new GenerateAssessmentDraftResult(draft.getId(), draft.getTitle(), draft.getContext(),
+                draft.getInstructions(), draft.getObjectives(), draft.getDeliverables(), draft.getConstraints(),
+                draft.getVersionNumber());
+    }
+
     private static AssessmentAgentResponse response(String title) {
         Instant startedAt = Instant.now().minusSeconds(2);
         Instant finishedAt = Instant.now();
         return new AssessmentAgentResponse(
                 new AssessmentAgentResponse.Result(title, "Context " + title, "Instructions " + title,
                         List.of("obj-" + title), List.of("del-" + title), List.of("con-" + title)),
-                new AssessmentAgentResponse.Log(UUID.randomUUID(), "assessment", "gemini-2.0-flash", "v1",
+                new AssessmentAgentResponse.Log(UUID.randomUUID(), "assessment", "gemini", "gemini-2.0-flash", "v1",
                         "in-hash-" + title, "out-hash-" + title, 100, 200, 0.01, "COMPLETED", null, startedAt, finishedAt));
     }
 
@@ -171,15 +191,11 @@ class AssessmentCreationFlowIntegrationTest {
         AssessmentBrief persistedBrief = briefAdapter.findByAssessmentId(new AssessmentId(assessmentId)).orElseThrow();
         assertThat(persistedBrief.getTopic()).isEqualTo("Java loops");
 
-        when(assessmentAgentClient.generate(any())).thenReturn(response("V1"));
-        GenerateAssessmentDraftResult generated = generateHandler.execute(
-                new GenerateAssessmentDraftCommand(assessmentId, TEACHER_UID));
-        entityManager.flush();
-        entityManager.clear();
+        GenerateAssessmentDraftResult generated = seedV1Draft(assessmentId);
         assertThat(generated.versionNumber()).isEqualTo(1);
         assertThat(generated.title()).isEqualTo("V1");
 
-        when(assessmentAgentClient.generate(any())).thenReturn(response("V2"));
+        when(assessmentAgentClient.generate(any(), any())).thenReturn(response("V2"));
         GenerateAssessmentDraftResult regenerated = regenerateHandler.execute(
                 new RegenerateAssessmentDraftCommand(assessmentId, TEACHER_UID, "make it harder"));
         entityManager.flush();
@@ -221,60 +237,18 @@ class AssessmentCreationFlowIntegrationTest {
     }
 
     @Test
-    void agentFailureDuringGenerationLeavesBriefIntactWithOnlyAFailureLogAndNoDraft() {
-        UUID assessmentId = createBrief();
-
-        AgentClientException agentEx = new AgentClientException(
-                AgentClientException.Reason.AGENT_REJECTED, "rejected", new RuntimeException());
-        when(assessmentAgentClient.generate(any())).thenThrow(agentEx);
-
-        assertThatThrownBy(() -> generateHandler.execute(new GenerateAssessmentDraftCommand(assessmentId, TEACHER_UID)))
-                .isSameAs(agentEx);
-
-        entityManager.flush();
-        entityManager.clear();
-
-        // The brief survives the agent failure untouched.
-        AssessmentBrief persistedBrief = briefAdapter.findByAssessmentId(new AssessmentId(assessmentId)).orElseThrow();
-        assertThat(persistedBrief.getTopic()).isEqualTo("Java loops");
-
-        // No draft was created.
-        assertThat(draftJpaRepository.findAllByAssessmentIdOrderByVersionNumberDesc(assessmentId)).isEmpty();
-
-        // Exactly one failure log was recorded for this assessment.
-        List<AgentExecutionLogJpaEntity> logs = logJpaRepository.findAll().stream()
-                .filter(l -> l.getAssessmentId().equals(assessmentId))
-                .toList();
-        assertThat(logs).hasSize(1);
-        assertThat(logs.get(0).getStatus()).isEqualTo("FAILED");
-        assertThat(logs.get(0).getErrorCode()).isEqualTo("AGENT_REJECTED");
-        assertThat(logs.get(0).getDraftId()).isNull();
-
-        // The assessment remains queryable via the dashboard listing, falling back to the
-        // brief's topic since no draft title exists yet.
-        List<AssessmentSummaryResult> summaries = listAssessmentsHandler.execute(TEACHER_UID);
-        assertThat(summaries).hasSize(1);
-        assertThat(summaries.get(0).id()).isEqualTo(assessmentId.toString());
-        assertThat(summaries.get(0).title()).isEqualTo("Java loops");
-    }
-
-    @Test
     void twoRegenerationsInARowProduceThreeDistinctRetrievableVersions() {
         UUID assessmentId = createBrief();
 
-        when(assessmentAgentClient.generate(any())).thenReturn(response("V1"));
-        GenerateAssessmentDraftResult v1 = generateHandler.execute(
-                new GenerateAssessmentDraftCommand(assessmentId, TEACHER_UID));
-        entityManager.flush();
-        entityManager.clear();
+        GenerateAssessmentDraftResult v1 = seedV1Draft(assessmentId);
 
-        when(assessmentAgentClient.generate(any())).thenReturn(response("V2"));
+        when(assessmentAgentClient.generate(any(), any())).thenReturn(response("V2"));
         GenerateAssessmentDraftResult v2 = regenerateHandler.execute(
                 new RegenerateAssessmentDraftCommand(assessmentId, TEACHER_UID, "harder"));
         entityManager.flush();
         entityManager.clear();
 
-        when(assessmentAgentClient.generate(any())).thenReturn(response("V3"));
+        when(assessmentAgentClient.generate(any(), any())).thenReturn(response("V3"));
         GenerateAssessmentDraftResult v3 = regenerateHandler.execute(
                 new RegenerateAssessmentDraftCommand(assessmentId, TEACHER_UID, "harder still"));
         entityManager.flush();
@@ -302,26 +276,23 @@ class AssessmentCreationFlowIntegrationTest {
         AssessmentDraftJpaEntity v3Entity = draftJpaRepository.findById(v3.draftId()).orElseThrow();
         assertThat(v3Entity.getPreviousVersionId()).isEqualTo(v2.draftId());
 
-        // Each of the three executions produced its own distinct AgentExecutionLog.
+        // Each of the two regenerate executions produced its own distinct AgentExecutionLog
+        // (v1 was seeded directly, without going through an agent call).
         List<AgentExecutionLogJpaEntity> logs = logJpaRepository.findAll().stream()
                 .filter(l -> l.getAssessmentId().equals(assessmentId))
                 .toList();
-        assertThat(logs).hasSize(3);
+        assertThat(logs).hasSize(2);
         assertThat(logs).extracting(AgentExecutionLogJpaEntity::getDraftId)
-                .containsExactlyInAnyOrder(v1.draftId(), v2.draftId(), v3.draftId());
+                .containsExactlyInAnyOrder(v2.draftId(), v3.draftId());
     }
 
     @Test
     void editAfterRegenerationUpdatesOnlyTheLatestVersion() {
         UUID assessmentId = createBrief();
 
-        when(assessmentAgentClient.generate(any())).thenReturn(response("V1"));
-        GenerateAssessmentDraftResult v1 = generateHandler.execute(
-                new GenerateAssessmentDraftCommand(assessmentId, TEACHER_UID));
-        entityManager.flush();
-        entityManager.clear();
+        GenerateAssessmentDraftResult v1 = seedV1Draft(assessmentId);
 
-        when(assessmentAgentClient.generate(any())).thenReturn(response("V2"));
+        when(assessmentAgentClient.generate(any(), any())).thenReturn(response("V2"));
         GenerateAssessmentDraftResult v2 = regenerateHandler.execute(
                 new RegenerateAssessmentDraftCommand(assessmentId, TEACHER_UID, "harder"));
         entityManager.flush();

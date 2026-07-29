@@ -212,12 +212,13 @@ class AssessmentControllerTest {
         when(firebaseAuth.verifyIdToken("valid-token-5", true)).thenReturn(firebaseToken);
         java.util.UUID assessmentId = java.util.UUID.randomUUID();
         java.util.UUID draftId = java.util.UUID.randomUUID();
-        when(generateAssessmentDraftUseCase.execute(new GenerateAssessmentDraftCommand(assessmentId, "uid-teacher-5")))
+        when(generateAssessmentDraftUseCase.execute(new GenerateAssessmentDraftCommand(assessmentId, "uid-teacher-5", "key-5")))
                 .thenReturn(new GenerateAssessmentDraftResult(draftId, "Title", "Context", "Instructions",
                         List.of("obj"), List.of("del"), List.of("con"), 1));
 
         mockMvc.perform(post("/api/v1/assessments/" + assessmentId + "/draft")
-                        .header("Authorization", "Bearer valid-token-5"))
+                        .header("Authorization", "Bearer valid-token-5")
+                        .header("Idempotency-Key", "key-5"))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.draftId").value(draftId.toString()))
                 .andExpect(jsonPath("$.title").value("Title"))
@@ -232,11 +233,12 @@ class AssessmentControllerTest {
         when(firebaseToken.isEmailVerified()).thenReturn(true);
         when(firebaseAuth.verifyIdToken("valid-token-6", true)).thenReturn(firebaseToken);
         java.util.UUID assessmentId = java.util.UUID.randomUUID();
-        when(generateAssessmentDraftUseCase.execute(new GenerateAssessmentDraftCommand(assessmentId, "uid-teacher-6")))
+        when(generateAssessmentDraftUseCase.execute(new GenerateAssessmentDraftCommand(assessmentId, "uid-teacher-6", "key-6")))
                 .thenThrow(new ResourceNotFoundException(assessmentId.toString()));
 
         mockMvc.perform(post("/api/v1/assessments/" + assessmentId + "/draft")
-                        .header("Authorization", "Bearer valid-token-6"))
+                        .header("Authorization", "Bearer valid-token-6")
+                        .header("Idempotency-Key", "key-6"))
                 .andExpect(status().isNotFound());
     }
 
@@ -247,11 +249,12 @@ class AssessmentControllerTest {
         when(firebaseToken.isEmailVerified()).thenReturn(true);
         when(firebaseAuth.verifyIdToken("valid-token-7", true)).thenReturn(firebaseToken);
         java.util.UUID assessmentId = java.util.UUID.randomUUID();
-        when(generateAssessmentDraftUseCase.execute(new GenerateAssessmentDraftCommand(assessmentId, "uid-teacher-7")))
+        when(generateAssessmentDraftUseCase.execute(new GenerateAssessmentDraftCommand(assessmentId, "uid-teacher-7", "key-7")))
                 .thenThrow(new AgentClientException(AgentClientException.Reason.AGENT_REJECTED, "rejected", null));
 
         mockMvc.perform(post("/api/v1/assessments/" + assessmentId + "/draft")
-                        .header("Authorization", "Bearer valid-token-7"))
+                        .header("Authorization", "Bearer valid-token-7")
+                        .header("Idempotency-Key", "key-7"))
                 .andExpect(status().isUnprocessableEntity());
     }
 
@@ -262,11 +265,12 @@ class AssessmentControllerTest {
         when(firebaseToken.isEmailVerified()).thenReturn(true);
         when(firebaseAuth.verifyIdToken("valid-token-8", true)).thenReturn(firebaseToken);
         java.util.UUID assessmentId = java.util.UUID.randomUUID();
-        when(generateAssessmentDraftUseCase.execute(new GenerateAssessmentDraftCommand(assessmentId, "uid-teacher-8")))
+        when(generateAssessmentDraftUseCase.execute(new GenerateAssessmentDraftCommand(assessmentId, "uid-teacher-8", "key-8")))
                 .thenThrow(new AgentClientException(AgentClientException.Reason.UNREACHABLE, "unreachable", null));
 
         mockMvc.perform(post("/api/v1/assessments/" + assessmentId + "/draft")
-                        .header("Authorization", "Bearer valid-token-8"))
+                        .header("Authorization", "Bearer valid-token-8")
+                        .header("Idempotency-Key", "key-8"))
                 .andExpect(status().isServiceUnavailable());
     }
 

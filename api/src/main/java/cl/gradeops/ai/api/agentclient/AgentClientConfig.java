@@ -5,6 +5,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.web.client.RestClient;
+import tools.jackson.databind.json.JsonMapper;
 
 import java.time.Duration;
 
@@ -32,7 +33,7 @@ class AgentClientConfig {
     }
 
     @Bean
-    AssessmentAgentClient assessmentAgentClient(RestClient agentsRestClient) {
-        return new AssessmentAgentClient(agentsRestClient);
+    AssessmentAgentClient assessmentAgentClient(RestClient agentsRestClient, JsonMapper jsonMapper) {
+        return new AssessmentAgentClient(agentsRestClient, jsonMapper);
     }
 }

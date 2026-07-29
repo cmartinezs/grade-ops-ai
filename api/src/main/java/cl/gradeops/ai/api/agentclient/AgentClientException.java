@@ -17,13 +17,24 @@ public class AgentClientException extends RuntimeException {
     }
 
     private final Reason reason;
+    private final AssessmentAgentErrorPayload agentError;
 
     public AgentClientException(Reason reason, String message, Throwable cause) {
+        this(reason, message, cause, null);
+    }
+
+    public AgentClientException(Reason reason, String message, Throwable cause, AssessmentAgentErrorPayload agentError) {
         super(message, cause);
         this.reason = reason;
+        this.agentError = agentError;
     }
 
     public Reason reason() {
         return reason;
+    }
+
+    /** Non-null only when the 4xx response body was parseable as {@code agents/}'s error shape. */
+    public AssessmentAgentErrorPayload agentError() {
+        return agentError;
     }
 }

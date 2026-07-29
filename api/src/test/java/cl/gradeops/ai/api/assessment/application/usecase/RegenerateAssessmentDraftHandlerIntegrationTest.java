@@ -2,11 +2,12 @@ package cl.gradeops.ai.api.assessment.application.usecase;
 
 import cl.gradeops.ai.api.agentclient.AssessmentAgentClient;
 import cl.gradeops.ai.api.agentclient.AssessmentAgentResponse;
-import cl.gradeops.ai.api.assessment.application.command.GenerateAssessmentDraftCommand;
 import cl.gradeops.ai.api.assessment.application.command.RegenerateAssessmentDraftCommand;
 import cl.gradeops.ai.api.assessment.application.result.GenerateAssessmentDraftResult;
 import cl.gradeops.ai.api.assessment.domain.model.Assessment;
 import cl.gradeops.ai.api.assessment.domain.model.AssessmentBrief;
+import cl.gradeops.ai.api.assessment.domain.model.AssessmentDraft;
+import cl.gradeops.ai.api.assessment.domain.model.AssessmentId;
 import cl.gradeops.ai.api.assessment.infrastructure.adapter.out.persistence.AgentExecutionLogJpaEntity;
 import cl.gradeops.ai.api.assessment.infrastructure.adapter.out.persistence.AgentExecutionLogJpaRepository;
 import cl.gradeops.ai.api.assessment.infrastructure.adapter.out.persistence.AgentExecutionLogPersistenceAdapter;
@@ -43,14 +44,17 @@ import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 /**
  * Exercises {@link RegenerateAssessmentDraftHandler} with real repositories against a live
- * Postgres (Flyway-migrated through V12): generates v1, then regenerates to v2, and verifies
- * v1's row is byte-for-byte unchanged, both versions are retrievable, and each version has its
- * own distinct {@code AgentExecutionLog}. Requires Docker.
+ * Postgres (Flyway-migrated through V16): seeds "v1" directly as a pre-existing {@code
+ * AssessmentDraft} (see {@link RegenerateAssessmentDraftHandler}'s javadoc — {@code
+ * GenerateAssessmentDraftHandler} no longer produces one after Task 07B's pivot), then
+ * regenerates to v2, and verifies v1's row is byte-for-byte unchanged, both versions are
+ * retrievable, and each version has its own distinct {@code AgentExecutionLog}. Requires Docker.
  */
 @DataJpaTest
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
@@ -87,8 +91,8 @@ class RegenerateAssessmentDraftHandlerIntegrationTest {
 
     AssessmentPersistenceAdapter assessmentAdapter;
     AssessmentBriefPersistenceAdapter briefAdapter;
+    AssessmentDraftPersistenceAdapter draftAdapter;
     AssessmentAgentClient assessmentAgentClient;
-    GenerateAssessmentDraftHandler generateHandler;
     RegenerateAssessmentDraftHandler regenerateHandler;
 
     Assessment assessment;
@@ -97,18 +101,14 @@ class RegenerateAssessmentDraftHandlerIntegrationTest {
     void setUp() {
         assessmentAdapter = new AssessmentPersistenceAdapter(assessmentJpaRepository, new AssessmentPersistenceMapper());
         briefAdapter = new AssessmentBriefPersistenceAdapter(briefJpaRepository, new AssessmentBriefPersistenceMapper());
-        AssessmentDraftPersistenceAdapter draftAdapter =
-                new AssessmentDraftPersistenceAdapter(draftJpaRepository, new AssessmentDraftPersistenceMapper());
+        draftAdapter = new AssessmentDraftPersistenceAdapter(draftJpaRepository, new AssessmentDraftPersistenceMapper());
         AgentExecutionLogPersistenceAdapter logAdapter =
                 new AgentExecutionLogPersistenceAdapter(logJpaRepository, new AgentExecutionLogPersistenceMapper());
         assessmentAgentClient = mock(AssessmentAgentClient.class);
-        DraftGenerationCoordinator coordinator = new DraftGenerationCoordinator(
-                draftAdapter, logAdapter, assessmentAgentClient, transactionManager);
         OwnershipVerifier ownershipVerifier = new OwnershipVerifier();
 
-        generateHandler = new GenerateAssessmentDraftHandler(assessmentAdapter, briefAdapter, ownershipVerifier, coordinator);
-        regenerateHandler = new RegenerateAssessmentDraftHandler(
-                assessmentAdapter, briefAdapter, draftAdapter, ownershipVerifier, coordinator);
+        regenerateHandler = new RegenerateAssessmentDraftHandler(assessmentAdapter, briefAdapter, draftAdapter,
+                logAdapter, ownershipVerifier, assessmentAgentClient, transactionManager);
 
         jdbcTemplate.update(
                 "INSERT INTO teacher (firebase_uid, first_name, last_name, email) VALUES (?, ?, ?, ?)",
@@ -126,22 +126,27 @@ class RegenerateAssessmentDraftHandlerIntegrationTest {
         return new AssessmentAgentResponse(
                 new AssessmentAgentResponse.Result(title, "Context", "Instructions",
                         List.of("obj"), List.of("del"), List.of("con")),
-                new AssessmentAgentResponse.Log(UUID.randomUUID(), "assessment", "gemini-2.0-flash", "v1",
+                new AssessmentAgentResponse.Log(UUID.randomUUID(), "assessment", "gemini", "gemini-2.0-flash", "v1",
                         "in-hash-" + title, "out-hash-" + title, 100, 200, 0.01, "COMPLETED", null, startedAt, finishedAt));
+    }
+
+    private GenerateAssessmentDraftResult seedV1Draft() {
+        AssessmentDraft draft = AssessmentDraft.generate(assessment.getId(), "Title v1", "Context", "Instructions",
+                List.of("obj"), List.of("del"), List.of("con"), null);
+        draftAdapter.save(draft);
+        entityManager.flush();
+        entityManager.clear();
+        return new GenerateAssessmentDraftResult(draft.getId(), draft.getTitle(), draft.getContext(),
+                draft.getInstructions(), draft.getObjectives(), draft.getDeliverables(), draft.getConstraints(),
+                draft.getVersionNumber());
     }
 
     @Test
     void shouldCreateV2WithoutAlteringV1AndEachVersionHasItsOwnLog() {
-        when(assessmentAgentClient.generate(any())).thenReturn(response("Title v1"));
-        GenerateAssessmentDraftResult v1Result = generateHandler.execute(
-                new GenerateAssessmentDraftCommand(assessment.getId().value(), "uid-1"));
-
-        entityManager.flush();
-        entityManager.clear();
-
+        GenerateAssessmentDraftResult v1Result = seedV1Draft();
         AssessmentDraftJpaEntity v1Before = draftJpaRepository.findById(v1Result.draftId()).orElseThrow();
 
-        when(assessmentAgentClient.generate(any())).thenReturn(response("Title v2"));
+        when(assessmentAgentClient.generate(any(), anyString())).thenReturn(response("Title v2"));
         GenerateAssessmentDraftResult v2Result = regenerateHandler.execute(
                 new RegenerateAssessmentDraftCommand(assessment.getId().value(), "uid-1", "make it harder"));
 
@@ -168,13 +173,12 @@ class RegenerateAssessmentDraftHandlerIntegrationTest {
         assertThat(allDrafts).hasSize(2);
         assertThat(allDrafts).extracting(AssessmentDraftJpaEntity::getVersionNumber).containsExactly(2, 1);
 
-        // Each version has its own distinct AgentExecutionLog.
-        assertThat(v2Entity.getAgentExecutionLogId()).isNotEqualTo(v1After.getAgentExecutionLogId());
+        // v2 has its own AgentExecutionLog (v1 was seeded directly, without an agent call).
+        assertThat(v2Entity.getAgentExecutionLogId()).isNotNull();
         List<AgentExecutionLogJpaEntity> logs = logJpaRepository.findAll().stream()
                 .filter(l -> l.getAssessmentId().equals(assessment.getId().value()))
                 .toList();
-        assertThat(logs).hasSize(2);
-        assertThat(logs).extracting(AgentExecutionLogJpaEntity::getDraftId)
-                .containsExactlyInAnyOrder(v1Result.draftId(), v2Result.draftId());
+        assertThat(logs).hasSize(1);
+        assertThat(logs.get(0).getDraftId()).isEqualTo(v2Result.draftId());
     }
 }

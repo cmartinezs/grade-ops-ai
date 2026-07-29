@@ -33,6 +33,7 @@ import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
@@ -75,10 +76,11 @@ public class AssessmentController {
 
     @PostMapping("/assessments/{id}/draft")
     @ResponseStatus(HttpStatus.CREATED)
-    public GenerateAssessmentDraftResponse generateDraft(@PathVariable UUID id) {
+    public GenerateAssessmentDraftResponse generateDraft(@PathVariable UUID id,
+                                                          @RequestHeader("Idempotency-Key") String idempotencyKey) {
         AuthenticatedTeacher teacher = currentTeacher();
         GenerateAssessmentDraftResult result = generateAssessmentDraftUseCase.execute(
-            new GenerateAssessmentDraftCommand(id, teacher.uid()));
+            new GenerateAssessmentDraftCommand(id, teacher.uid(), idempotencyKey));
         return toResponse(result);
     }
 
