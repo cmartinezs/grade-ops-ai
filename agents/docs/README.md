@@ -8,7 +8,7 @@ Documentation for the `grade-ops-ai-agents` service: architecture decisions and 
 
 | Entry | Purpose |
 |---|---|
-| [`adr/`](adr) | `agents/`-local architecture decision records (provider selection, env config) |
+| [`adr/`](adr) | `agents/`-local architecture decision records (provider selection, env config, Jackson 3 JSON serialization) |
 | [`guides/`](guides) | Feature-scoped implementation guides, numbered by feature (currently `002-groq-genai-provider`) |
 | [`implementation-packets/`](implementation-packets/assessment-authoring-operation-foundation/README.md) | Workspace-scoped execution packets for cross-repository implementation plans — currently the [Assessment Authoring Operation Foundation](implementation-packets/assessment-authoring-operation-foundation/README.md) packet |
 
