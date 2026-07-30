@@ -312,11 +312,11 @@ not a workaround. Renamed to `shouldUseCurrentRevisionTitleWhenRevisionExists`.
   handler** (verified: `grep -rn "^import.*AssessmentDraftRepositoryPort\|^import.*AssessmentDraftPersistenceAdapter" src/main/java` and the equivalent for `AgentExecutionLogRepositoryPort` each return exactly one hit — the adapter class's own self-referencing import — plus `AssessmentConfig`'s now-orphaned `@Bean` methods for the draft adapter). `AssessmentDraft`/`AgentExecutionLog` domain classes, their JPA entities, and the `assessment_drafts`/`agent_execution_logs` tables themselves are untouched (LOCAL-CONTRACTS.md: "not dropped in this cut"). **This is the exact, complete scope for A4's Task 12/13 cleanup** — creating `V17` (backfill/migration), deleting these eight now-dead classes plus their `AssessmentConfig` bean wiring.
   **Corrected by A3 Contract Correction (2026-07-30):** A4 does **not** drop `assessment_drafts`/
   `agent_execution_logs` — both tables are retained, read-only, for one full release after the
-  legacy-migration script (Task 06) has moved every row into `assessment_revisions`/`ai_operations`/
-  `agent_attempts`. The line above previously stated A4 would "actually drop the two tables via a
-  Flyway migration" — that claim was incorrect and is superseded by this note, not silently
-  deleted, so the correction itself stays auditable. See the addendum at the bottom of this
-  document.
+  backfill/migration script (**V17 / API A4 Task 12** — not yet executed as of this handoff) has
+  moved every row into `assessment_revisions`/`ai_operations`/`agent_attempts`. The line above
+  previously stated A4 would "actually drop the two tables via a Flyway migration" — that claim
+  was incorrect and is superseded by this note, not silently deleted, so the correction itself
+  stays auditable. See the addendum at the bottom of this document.
 - `OPERATION_IN_PROGRESS` is not exercised against a real, genuinely-still-running dispatch end
   to end (see "Conflict semantics" above) — low risk, since the same underlying state-machine
   branch is covered at the unit level and the equivalent real-DB race is covered by the
@@ -473,7 +473,10 @@ now-superseded behavior was corrected in place with an inline note, not silently
 
 **Previous declared final HEAD:** `3f820e34ec01c7eff39747be03de24ea9a98e897`
 **Correction implementation HEAD:** `13cb613` (`fix(api): align generation and retry responses with durable operation contract`)
-**Correction handoff commit:** `16ac15d` (`docs(api): amend generation status contract and correct A3 handoff`)
+**Previous correction documentation commit:** `69c7f437d09276490d4045fb0b3791c629b10ec9`
+(supersedes the `16ac15d` value this line previously recorded — that value was the pre-amend hash
+of the same commit; a commit's hash cannot honestly be written into that commit's own content, so
+recording the still-mutating hash here was a mistake this line corrects, not a mystery discrepancy)
 
 ### What changed
 
@@ -545,6 +548,73 @@ this session). After: **477/477**, 0 failures/errors/skipped.
   enforced, not silently ignored).
 - Web's `202`-handling branch for initial generation is **not** dead code after all — keep it. No
   code needs to be removed from Web because of this correction, only added.
+
+### Blockers
+
+None.
+
+---
+
+## A3 Final Idempotency Correction (2026-07-30)
+
+Executed on the same branch, on top of the A3 Contract Correction's declared final HEAD, per the
+"API A3 Final Idempotency Correction — Do Not Start A4" session prompt — no new branch, no PR, no
+merge. Closes the last idempotency-atomicity gap: the functional result of an AI dispatch (a
+revision, or a durable failure) and its `IdempotencyRecord` were written in two separate
+transactions, so a crash between them could leave a completed/failed operation with no replay
+record — risking a second, paid LLM dispatch for what should have been a no-op replay.
+
+**Starting HEAD:** `69c7f437d09276490d4045fb0b3791c629b10ec9`
+**Final idempotency correction implementation HEAD:** `4fadbdc` (`fix(api): persist AI idempotency outcomes atomically`)
+**Final metadata/handoff commit:** This document's own commit; its hash is reported in the
+external final report, not embedded here — a commit's hash cannot honestly be written into that
+commit's own content (see the corrected line above this addendum for why that matters).
+
+### What changed
+
+1. **Atomic idempotency writes** — `AiOperationCoordinator` now takes an injected `IdempotencyGuard`
+   and an optional `IdempotencyCompletionContext` (scope/operationType/idempotencyKey/payloadHash,
+   built by the caller before dispatch). The `IdempotencyRecord` is written *inside* the same Phase
+   2 transactional callback that produces the durable outcome it describes — success (`201`,
+   `resultReference` = revision id), a dispatch failure (`202` for initial generation; the real
+   original HTTP status for regenerate, derived from the failure code), or a stale-on-completion
+   race — never in a separate transaction afterward. `GenerateAssessmentDraftHandler`/
+   `RegenerateAssessmentDraftHandler` no longer call `idempotencyGuard.record(...)` themselves for
+   the dispatch path; they only build the `IdempotencyCompletionContext` and hand it to the
+   coordinator. `retryInitialRevision` passes no context at all (retry has no idempotency key of
+   its own), unchanged.
+2. **Same-key concurrency resolved without a spurious conflict** — a Phase 0
+   `uq_ai_operations_in_flight` collision now looks up the winning in-flight `AiOperation`: if it
+   carries the SAME idempotency key as the request that just lost the race, this is a genuine
+   duplicate submission, not a real conflict — reported as `OperationInProgressException`
+   (an existing code, not a new one) instead of `StaleRevisionException`. `GenerateAssessmentDraftHandler`
+   catches this alongside `AgentClientException`/`StaleOnCompletionException` and relays the
+   winner's snapshot as `202`; `RegenerateAssessmentDraftHandler` lets it propagate as
+   `409 OPERATION_IN_PROGRESS` (regenerate never returns `202`). A DIFFERENT key still gets the
+   unchanged `StaleRevisionException` behavior — this correction only changes the same-key case.
+3. **Recovery for pre-fix orphaned operations** — before dispatching, both handlers now look up the
+   latest `AiOperation` for `(assessmentId, operationType)`; if it carries the SAME idempotency key
+   and has no matching `IdempotencyRecord` (data from before this correction, or a sibling request
+   whose Phase 2 hasn't committed yet), its state is relayed instead of dispatching again: still
+   in flight → the existing snapshot (create: `202`; regenerate: `409 OPERATION_IN_PROGRESS`);
+   terminal-success → the existing revision, record backfilled; terminal-failure → the original
+   outcome, record backfilled (regenerate: the exact original exception, reconstructed — see below).
+   A different (or absent) key falls through to the normal precondition/dispatch path, unchanged.
+4. **Regenerate failure replay reconstructs the original exception** — regenerate never returns
+   `202`; a durable dispatch failure is recorded under the real HTTP status its failure code maps
+   to (`AGENT_UNAVAILABLE`→503, `AGENT_ERROR`→502, `STALE_ON_COMPLETION`→409, everything else→422),
+   via the new package-private `RegenerateFailureReplay` helper. A replay (via the idempotency
+   record or via recovery) reconstructs and throws the equivalent `AgentClientException`/
+   `StaleOnCompletionException` from the durably-stored `AgentAttempt.failureCode` — the client
+   sees the same status, and `resolvedProvider`/`resolvedModel` on the original attempt are
+   untouched (never overwritten by a replay), so "provider/model preservados" holds by
+   construction, not by re-deriving them.
+
+### Test count
+
+Before this correction: **477/477** (A3 Contract Correction's own final baseline, re-verified
+clean at the start of this session). After: **495/495**, 0 failures/errors/skipped.
+`./mvnw -f api/pom.xml clean test` → PASS.
 
 ### Blockers
 
