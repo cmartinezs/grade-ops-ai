@@ -12,20 +12,17 @@ public interface AssessmentJpaRepository extends JpaRepository<AssessmentJpaEnti
 
     /**
      * Single query (no N+1): joins each assessment with its brief (for the {@code topic}
-     * fallback) and, via a lateral join, its highest-{@code version_number} draft (for the
-     * real title) — {@code COALESCE} prefers the draft's title, falling back to the brief's
-     * topic when no draft has been generated yet.
+     * fallback) and, directly via {@code current_revision_id} — the single authoritative pointer
+     * (never {@code MAX(version_number)}-style re-derivation, per Idempotency and Concurrency
+     * Strategy ADR) — its current {@code AssessmentRevision} (for the real title). {@code
+     * COALESCE} prefers the revision's title, falling back to the brief's topic when no revision
+     * exists yet (never generated, or a pre-cut legacy assessment).
      */
     @Query(value = """
-        SELECT a.id AS id, a.status AS status, COALESCE(d.title, b.topic) AS title
+        SELECT a.id AS id, a.status AS status, COALESCE(r.title, b.topic) AS title
         FROM assessments a
         JOIN assessment_briefs b ON b.assessment_id = a.id
-        LEFT JOIN LATERAL (
-            SELECT ad.title FROM assessment_drafts ad
-            WHERE ad.assessment_id = a.id
-            ORDER BY ad.version_number DESC
-            LIMIT 1
-        ) d ON true
+        LEFT JOIN assessment_revisions r ON r.id = a.current_revision_id
         WHERE a.teacher_uid = :teacherUid
         ORDER BY a.created_at DESC
         """, nativeQuery = true)

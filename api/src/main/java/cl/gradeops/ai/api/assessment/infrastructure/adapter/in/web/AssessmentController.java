@@ -1,23 +1,34 @@
 package cl.gradeops.ai.api.assessment.infrastructure.adapter.in.web;
 
 import cl.gradeops.ai.api.assessment.application.command.CreateAssessmentBriefCommand;
+import cl.gradeops.ai.api.assessment.application.command.CreateHumanRevisionCommand;
 import cl.gradeops.ai.api.assessment.application.command.GenerateAssessmentDraftCommand;
 import cl.gradeops.ai.api.assessment.application.command.GetCurrentDraftCommand;
+import cl.gradeops.ai.api.assessment.application.command.GetGenerationStatusCommand;
 import cl.gradeops.ai.api.assessment.application.command.ListDraftVersionsCommand;
 import cl.gradeops.ai.api.assessment.application.command.RegenerateAssessmentDraftCommand;
+import cl.gradeops.ai.api.assessment.application.command.RetryGenerationCommand;
 import cl.gradeops.ai.api.assessment.application.port.in.CreateAssessmentBriefUseCase;
+import cl.gradeops.ai.api.assessment.application.port.in.CreateHumanRevisionUseCase;
 import cl.gradeops.ai.api.assessment.application.port.in.GenerateAssessmentDraftUseCase;
 import cl.gradeops.ai.api.assessment.application.port.in.GetCurrentDraftUseCase;
+import cl.gradeops.ai.api.assessment.application.port.in.GetGenerationStatusUseCase;
 import cl.gradeops.ai.api.assessment.application.port.in.ListAssessmentsUseCase;
 import cl.gradeops.ai.api.assessment.application.port.in.ListDraftVersionsUseCase;
 import cl.gradeops.ai.api.assessment.application.port.in.RegenerateAssessmentDraftUseCase;
+import cl.gradeops.ai.api.assessment.application.port.in.RetryGenerationUseCase;
 import cl.gradeops.ai.api.assessment.application.result.CreateAssessmentBriefResult;
 import cl.gradeops.ai.api.assessment.application.result.GenerateAssessmentDraftResult;
+import cl.gradeops.ai.api.assessment.application.result.GetGenerationStatusResult;
+import cl.gradeops.ai.api.assessment.application.result.RetryGenerationResult;
 import cl.gradeops.ai.api.assessment.infrastructure.adapter.in.web.request.CreateAssessmentBriefRequest;
+import cl.gradeops.ai.api.assessment.infrastructure.adapter.in.web.request.CreateHumanRevisionRequest;
 import cl.gradeops.ai.api.assessment.infrastructure.adapter.in.web.request.RegenerateAssessmentDraftRequest;
+import cl.gradeops.ai.api.assessment.infrastructure.adapter.in.web.response.AiOperationResponse;
 import cl.gradeops.ai.api.assessment.infrastructure.adapter.in.web.response.AssessmentSummaryResponse;
 import cl.gradeops.ai.api.assessment.infrastructure.adapter.in.web.response.CreateAssessmentBriefResponse;
 import cl.gradeops.ai.api.assessment.infrastructure.adapter.in.web.response.GenerateAssessmentDraftResponse;
+import cl.gradeops.ai.api.assessment.infrastructure.adapter.in.web.response.GenerationStatusResponse;
 import cl.gradeops.ai.api.shared.infrastructure.config.security.AuthenticatedTeacher;
 import cl.gradeops.ai.api.shared.infrastructure.exception.MissingAuthenticationException;
 import jakarta.validation.Valid;
@@ -48,6 +59,9 @@ public class AssessmentController {
     private final RegenerateAssessmentDraftUseCase regenerateAssessmentDraftUseCase;
     private final GetCurrentDraftUseCase getCurrentDraftUseCase;
     private final ListDraftVersionsUseCase listDraftVersionsUseCase;
+    private final CreateHumanRevisionUseCase createHumanRevisionUseCase;
+    private final RetryGenerationUseCase retryGenerationUseCase;
+    private final GetGenerationStatusUseCase getGenerationStatusUseCase;
 
     @GetMapping("/assessments")
     public List<AssessmentSummaryResponse> listAssessments() {
@@ -105,6 +119,36 @@ public class AssessmentController {
         return listDraftVersionsUseCase.execute(new ListDraftVersionsCommand(id, teacher.uid())).stream()
             .map(this::toResponse)
             .toList();
+    }
+
+    @PostMapping("/assessments/{id}/revisions")
+    @ResponseStatus(HttpStatus.CREATED)
+    public GenerateAssessmentDraftResponse createHumanRevision(@PathVariable UUID id,
+                                                                 @Valid @RequestBody CreateHumanRevisionRequest request) {
+        AuthenticatedTeacher teacher = currentTeacher();
+        GenerateAssessmentDraftResult result = createHumanRevisionUseCase.execute(new CreateHumanRevisionCommand(
+            id, teacher.uid(), request.expectedRevisionId(), request.title(), request.context(),
+            request.instructions(), request.objectives(), request.deliverables(), request.constraints(),
+            request.reason()));
+        return toResponse(result);
+    }
+
+    @PostMapping("/assessments/{id}/draft/retry")
+    @ResponseStatus(HttpStatus.ACCEPTED)
+    public AiOperationResponse retryGeneration(@PathVariable UUID id) {
+        AuthenticatedTeacher teacher = currentTeacher();
+        RetryGenerationResult result = retryGenerationUseCase.execute(new RetryGenerationCommand(id, teacher.uid()));
+        return new AiOperationResponse(result.id(), result.operationType(), result.status(),
+            result.failureCode(), result.retryable(), result.resultRevisionId());
+    }
+
+    @GetMapping("/assessments/{id}/generation-status")
+    public GenerationStatusResponse getGenerationStatus(@PathVariable UUID id) {
+        AuthenticatedTeacher teacher = currentTeacher();
+        GetGenerationStatusResult result = getGenerationStatusUseCase.execute(
+            new GetGenerationStatusCommand(id, teacher.uid()));
+        return new GenerationStatusResponse(result.operationType(), result.status(), result.failureCode(),
+            result.retryable(), result.currentRevisionId());
     }
 
     private GenerateAssessmentDraftResponse toResponse(GenerateAssessmentDraftResult result) {

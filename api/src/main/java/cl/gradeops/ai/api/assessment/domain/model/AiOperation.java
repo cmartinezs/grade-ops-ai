@@ -78,9 +78,18 @@ public class AiOperation extends AggregateRoot<UUID> {
         return op;
     }
 
-    /** PENDING/FAILED_RETRYABLE → IN_PROGRESS: initial dispatch, or a user-initiated retry. */
+    /**
+     * PENDING/FAILED_RETRYABLE → IN_PROGRESS: initial dispatch, or a user-initiated retry.
+     * IN_PROGRESS → IN_PROGRESS is also allowed — narrowly, only for retrying an operation whose
+     * sole {@code AgentAttempt} has gone orphaned/indeterminate (Authoring Operation Contract ADR
+     * § "Retry a failed generation": "If the latest is IN_PROGRESS past the indeterminate
+     * threshold → allowed"). The indeterminate-threshold check itself is the read-side handler's
+     * job, not this domain method's — this transition only states that the state machine permits
+     * it when the caller has already established that precondition.
+     */
     public AiOperation markInProgress() {
-        if (status != AiOperationStatus.PENDING && status != AiOperationStatus.FAILED_RETRYABLE) {
+        if (status != AiOperationStatus.PENDING && status != AiOperationStatus.FAILED_RETRYABLE
+                && status != AiOperationStatus.IN_PROGRESS) {
             throw new DomainInvariantViolationException("cannot transition to IN_PROGRESS from " + status);
         }
         return transitionTo(AiOperationStatus.IN_PROGRESS, resultRevisionId);

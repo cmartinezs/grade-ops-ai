@@ -4,12 +4,18 @@ import cl.gradeops.ai.api.agentclient.AssessmentAgentClient;
 import cl.gradeops.ai.api.agentclient.AssessmentAgentResponse;
 import cl.gradeops.ai.api.assessment.application.command.CreateAssessmentBriefCommand;
 import cl.gradeops.ai.api.assessment.application.command.GenerateAssessmentDraftCommand;
+import cl.gradeops.ai.api.assessment.application.command.GetCurrentDraftCommand;
+import cl.gradeops.ai.api.assessment.application.command.ListDraftVersionsCommand;
 import cl.gradeops.ai.api.assessment.application.command.RegenerateAssessmentDraftCommand;
+import cl.gradeops.ai.api.assessment.application.result.AssessmentSummaryResult;
 import cl.gradeops.ai.api.assessment.application.result.CreateAssessmentBriefResult;
 import cl.gradeops.ai.api.assessment.application.result.GenerateAssessmentDraftResult;
 import cl.gradeops.ai.api.assessment.application.usecase.AiOperationCoordinator;
 import cl.gradeops.ai.api.assessment.application.usecase.CreateAssessmentBriefHandler;
 import cl.gradeops.ai.api.assessment.application.usecase.GenerateAssessmentDraftHandler;
+import cl.gradeops.ai.api.assessment.application.usecase.GetCurrentDraftHandler;
+import cl.gradeops.ai.api.assessment.application.usecase.ListAssessmentsHandler;
+import cl.gradeops.ai.api.assessment.application.usecase.ListDraftVersionsHandler;
 import cl.gradeops.ai.api.assessment.application.usecase.RegenerateAssessmentDraftHandler;
 import cl.gradeops.ai.api.assessment.domain.model.Assessment;
 import cl.gradeops.ai.api.assessment.domain.model.AssessmentBrief;
@@ -70,14 +76,11 @@ import static org.mockito.Mockito.when;
  * <p>Session A3 (Task 09) rewrote this file onto the durable {@code AssessmentRevision} model —
  * both {@link GenerateAssessmentDraftHandler} (Session A2) and {@link
  * RegenerateAssessmentDraftHandler} (this session) now produce {@code AssessmentRevision} rows,
- * so there is no more legacy-{@code AssessmentDraft}-seeding step. {@code
- * ListAssessmentsHandler}/{@code GetCurrentDraftHandler}/{@code ListDraftVersionsHandler} are
- * deliberately **not** exercised here yet — they still read from the legacy {@code
- * AssessmentDraft} table (an existing gap Task 09 discovered but did not own; see
- * API-A3-HANDOFF.md), so calling them against a revision-based assessment would assert
- * misleadingly wrong behavior (an empty/absent result) rather than anything this session
- * actually changed. Task 10 migrates those three read handlers onto {@code AssessmentRevision}
- * and restores their coverage here.
+ * so there is no more legacy-{@code AssessmentDraft}-seeding step. Session A3 (Task 10) migrated
+ * {@link ListAssessmentsHandler}/{@link GetCurrentDraftHandler}/{@link ListDraftVersionsHandler}
+ * off the legacy {@code AssessmentDraft} table onto {@code AssessmentRevision}/{@code
+ * Assessment.currentRevisionId} — this file now exercises all three against the same
+ * revision-based assessment the write path produces, closing the gap Task 09 left open.
  *
  * <p>Session A3 (Task 08) removed {@code UpdateAssessmentDraftHandler} — human edits now create
  * an immutable {@code AssessmentRevision} via {@code CreateHumanRevisionHandler} instead (see
@@ -130,6 +133,9 @@ class AssessmentCreationFlowIntegrationTest {
     CreateAssessmentBriefHandler createBriefHandler;
     GenerateAssessmentDraftHandler generateHandler;
     RegenerateAssessmentDraftHandler regenerateHandler;
+    GetCurrentDraftHandler getCurrentDraftHandler;
+    ListDraftVersionsHandler listDraftVersionsHandler;
+    ListAssessmentsHandler listAssessmentsHandler;
 
     static final String TEACHER_UID = "uid-1";
 
@@ -157,6 +163,9 @@ class AssessmentCreationFlowIntegrationTest {
                 ownershipVerifier, idempotencyGuard, coordinator);
         regenerateHandler = new RegenerateAssessmentDraftHandler(assessmentAdapter, briefAdapter, revisionAdapter,
                 ownershipVerifier, idempotencyGuard, coordinator);
+        getCurrentDraftHandler = new GetCurrentDraftHandler(assessmentAdapter, revisionAdapter, ownershipVerifier);
+        listDraftVersionsHandler = new ListDraftVersionsHandler(assessmentAdapter, revisionAdapter, ownershipVerifier);
+        listAssessmentsHandler = new ListAssessmentsHandler(assessmentAdapter);
 
         jdbcTemplate.update(
                 "INSERT INTO teacher (firebase_uid, first_name, last_name, email) VALUES (?, ?, ?, ?)",
@@ -215,6 +224,26 @@ class AssessmentCreationFlowIntegrationTest {
         AssessmentRevisionJpaEntity v1Entity = revisionJpaRepository.findById(generated.draftId()).orElseThrow();
         assertThat(v1Entity.getTitle()).isEqualTo("V1");
         assertThat(v1Entity.getVersionNumber()).isEqualTo(1);
+
+        // GetCurrentDraftHandler reads through Assessment.currentRevisionId, not MAX(version_number).
+        GenerateAssessmentDraftResult currentDraft = getCurrentDraftHandler.execute(
+                new GetCurrentDraftCommand(assessmentId, TEACHER_UID));
+        assertThat(currentDraft.draftId()).isEqualTo(regenerated.draftId());
+        assertThat(currentDraft.title()).isEqualTo("V2");
+        assertThat(currentDraft.versionNumber()).isEqualTo(2);
+
+        // ListDraftVersionsHandler returns both revisions, newest first.
+        List<GenerateAssessmentDraftResult> versions = listDraftVersionsHandler.execute(
+                new ListDraftVersionsCommand(assessmentId, TEACHER_UID));
+        assertThat(versions).extracting(GenerateAssessmentDraftResult::versionNumber).containsExactly(2, 1);
+        assertThat(versions).extracting(GenerateAssessmentDraftResult::title).containsExactly("V2", "V1");
+
+        // ListAssessmentsHandler's dashboard summary title tracks the current revision, not the brief topic.
+        List<AssessmentSummaryResult> summaries = listAssessmentsHandler.execute(TEACHER_UID);
+        assertThat(summaries).extracting(AssessmentSummaryResult::id).contains(assessmentId.toString());
+        AssessmentSummaryResult summary = summaries.stream()
+                .filter(s -> s.id().equals(assessmentId.toString())).findFirst().orElseThrow();
+        assertThat(summary.title()).isEqualTo("V2");
     }
 
     @Test

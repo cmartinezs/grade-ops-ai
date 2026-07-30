@@ -125,6 +125,20 @@ class AiOperationTest {
     }
 
     @Test
+    void shouldAllowRetryTransitionFromInProgressBackToInProgressForAnIndeterminateOrphanedAttempt() {
+        // Task 10 / retry: an AiOperation can still be nominally IN_PROGRESS (its only AgentAttempt
+        // orphaned past the indeterminate threshold — see GetGenerationStatusHandler) and the
+        // Authoring Operation Contract ADR explicitly allows retrying it. This is a deliberate,
+        // narrow widening — not a general "IN_PROGRESS is always self-transitionable" rule.
+        AiOperation op = createOperation().markInProgress();
+
+        AiOperation retried = op.markInProgress();
+
+        assertThat(retried.getStatus()).isEqualTo(AiOperationStatus.IN_PROGRESS);
+        assertThat(retried.getId()).isEqualTo(op.getId());
+    }
+
+    @Test
     void shouldRejectTransitionToInProgressFromSucceeded() {
         AiOperation op = createOperation().markInProgress().markSucceeded(UUID.randomUUID());
 

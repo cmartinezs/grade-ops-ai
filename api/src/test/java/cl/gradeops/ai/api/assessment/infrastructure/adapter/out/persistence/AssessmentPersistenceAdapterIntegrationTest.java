@@ -3,8 +3,9 @@ package cl.gradeops.ai.api.assessment.infrastructure.adapter.out.persistence;
 import cl.gradeops.ai.api.assessment.application.result.AssessmentSummaryResult;
 import cl.gradeops.ai.api.assessment.domain.model.Assessment;
 import cl.gradeops.ai.api.assessment.domain.model.AssessmentBrief;
-import cl.gradeops.ai.api.assessment.domain.model.AssessmentDraft;
+import cl.gradeops.ai.api.assessment.domain.model.AssessmentRevision;
 import cl.gradeops.ai.api.assessment.domain.model.AssessmentStatus;
+import cl.gradeops.ai.api.assessment.domain.model.RevisionOrigin;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,8 +19,10 @@ import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.context.TestPropertySource;
 import org.testcontainers.containers.PostgreSQLContainer;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -54,18 +57,18 @@ class AssessmentPersistenceAdapterIntegrationTest {
 
     @Autowired AssessmentJpaRepository repository;
     @Autowired AssessmentBriefJpaRepository briefRepository;
-    @Autowired AssessmentDraftJpaRepository draftRepository;
+    @Autowired AssessmentRevisionJpaRepository revisionRepository;
     @Autowired JdbcTemplate jdbcTemplate;
 
     AssessmentPersistenceAdapter adapter;
     AssessmentBriefPersistenceAdapter briefAdapter;
-    AssessmentDraftPersistenceAdapter draftAdapter;
+    AssessmentRevisionPersistenceAdapter revisionAdapter;
 
     @BeforeEach
     void setUp() {
         adapter = new AssessmentPersistenceAdapter(repository, new AssessmentPersistenceMapper());
         briefAdapter = new AssessmentBriefPersistenceAdapter(briefRepository, new AssessmentBriefPersistenceMapper());
-        draftAdapter = new AssessmentDraftPersistenceAdapter(draftRepository, new AssessmentDraftPersistenceMapper());
+        revisionAdapter = new AssessmentRevisionPersistenceAdapter(revisionRepository, new AssessmentRevisionPersistenceMapper());
         jdbcTemplate.update(
                 "INSERT INTO teacher (firebase_uid, first_name, last_name, email) VALUES (?, ?, ?, ?)",
                 "uid-1", "Test", "Teacher", "uid-1@test.com");
@@ -96,16 +99,19 @@ class AssessmentPersistenceAdapterIntegrationTest {
     }
 
     @Test
-    void shouldUseCurrentDraftTitleWhenDraftExists() {
+    void shouldUseCurrentRevisionTitleWhenRevisionExists() {
         Assessment assessment = Assessment.create("uid-1");
         adapter.save(assessment);
         briefAdapter.save(AssessmentBrief.create(assessment.getId(), "goal", "Brief Topic", "basic", "90min", "Java"));
-        AssessmentDraft v1 = AssessmentDraft.generate(assessment.getId(), "Draft Title v1", "ctx", "instr",
-                List.of(), List.of(), List.of(), null);
-        draftAdapter.save(v1);
-        AssessmentDraft v2 = AssessmentDraft.regenerate(v1, "Draft Title v2", "ctx2", "instr2",
-                List.of(), List.of(), List.of(), null);
-        draftAdapter.save(v2);
+        AssessmentRevision v1 = AssessmentRevision.restore(UUID.randomUUID(), assessment.getId(), 1, null,
+                RevisionOrigin.AI_GENERATED, "uid-1", null, null,
+                "Draft Title v1", "ctx", "instr", List.of(), List.of(), List.of(), Instant.now());
+        revisionAdapter.save(v1);
+        AssessmentRevision v2 = AssessmentRevision.restore(UUID.randomUUID(), assessment.getId(), 2, v1.getId(),
+                RevisionOrigin.AI_GENERATED, "uid-1", null, null,
+                "Draft Title v2", "ctx2", "instr2", List.of(), List.of(), List.of(), Instant.now());
+        revisionAdapter.save(v2);
+        adapter.save(assessment.withCurrentRevision(v2.getId()));
 
         List<AssessmentSummaryResult> result = adapter.findAllByTeacherId("uid-1");
 

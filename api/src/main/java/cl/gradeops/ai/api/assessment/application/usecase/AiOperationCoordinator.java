@@ -127,6 +127,29 @@ public class AiOperationCoordinator {
     }
 
     /**
+     * Task 10 / retry: dispatches a new {@link AgentAttempt} under the SAME, already-existing
+     * {@code AiOperation} — never a new operation, never a new {@code Assessment} ("retries
+     * quedan asociados a la misma operación lógica"). Caller ({@link RetryGenerationHandler}) has
+     * already verified ownership and the retryability preconditions (an active FAILED_RETRYABLE
+     * operation, or a PENDING/IN_PROGRESS one past the indeterminate threshold). Scoped to {@code
+     * CREATE_INITIAL_REVISION} only — see LOCAL-CONTRACTS.md § API ↔ Web public contract; the
+     * retry endpoint's resume story is specifically about the initial-generation dead-end
+     * (Research 02 §5.6), not regenerate, which never leaves the assessment revision-less.
+     */
+    public AssessmentRevision retryInitialRevision(Assessment assessment, AiOperation existingOperation,
+                                                    AssessmentCommand agentCommand, int nextAttemptNumber) {
+        AiOperation operation = existingOperation.markInProgress();
+        String requestedBy = existingOperation.getRequestedBy();
+
+        return dispatchAndPersist(assessment, operation, nextAttemptNumber, agentCommand,
+                fresh -> fresh.getCurrentRevisionId() != null,
+                (attempt, response) -> AssessmentRevision.generateFromAi(assessment.getId(),
+                        response.result().title(), response.result().context(), response.result().instructions(),
+                        response.result().objectives(), response.result().deliverables(), response.result().constraints(),
+                        requestedBy, attempt.getId()));
+    }
+
+    /**
      * Dispatches a fresh {@link AgentAttempt} under an already-transitioned-to-{@code
      * IN_PROGRESS} {@code AiOperation} — the caller decides whether that operation is brand new
      * ({@link #createInitialRevision}/{@link #regenerateRevision}) or an existing one being

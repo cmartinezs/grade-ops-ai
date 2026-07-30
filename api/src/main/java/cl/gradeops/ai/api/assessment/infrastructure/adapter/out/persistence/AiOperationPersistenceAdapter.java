@@ -2,6 +2,8 @@ package cl.gradeops.ai.api.assessment.infrastructure.adapter.out.persistence;
 
 import cl.gradeops.ai.api.assessment.application.port.out.AiOperationRepositoryPort;
 import cl.gradeops.ai.api.assessment.domain.model.AiOperation;
+import cl.gradeops.ai.api.assessment.domain.model.AiOperationType;
+import cl.gradeops.ai.api.assessment.domain.model.AssessmentId;
 import lombok.RequiredArgsConstructor;
 
 import java.util.Optional;
@@ -21,5 +23,12 @@ public class AiOperationPersistenceAdapter implements AiOperationRepositoryPort 
     @Override
     public Optional<AiOperation> findById(UUID id) {
         return jpaRepository.findById(id).map(mapper::toDomain);
+    }
+
+    @Override
+    public Optional<AiOperation> findLatestByAssessmentIdAndOperationType(AssessmentId assessmentId, AiOperationType operationType) {
+        return jpaRepository.findFirstByAssessmentIdAndOperationTypeOrderByCreatedAtDesc(
+                        assessmentId.value(), operationType.name())
+                .map(mapper::toDomain);
     }
 }

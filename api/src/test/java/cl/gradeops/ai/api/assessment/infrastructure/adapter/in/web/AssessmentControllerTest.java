@@ -2,19 +2,30 @@ package cl.gradeops.ai.api.assessment.infrastructure.adapter.in.web;
 
 import cl.gradeops.ai.api.agentclient.AgentClientException;
 import cl.gradeops.ai.api.assessment.application.command.CreateAssessmentBriefCommand;
+import cl.gradeops.ai.api.assessment.application.command.CreateHumanRevisionCommand;
 import cl.gradeops.ai.api.assessment.application.command.GenerateAssessmentDraftCommand;
 import cl.gradeops.ai.api.assessment.application.command.GetCurrentDraftCommand;
+import cl.gradeops.ai.api.assessment.application.command.GetGenerationStatusCommand;
 import cl.gradeops.ai.api.assessment.application.command.ListDraftVersionsCommand;
 import cl.gradeops.ai.api.assessment.application.command.RegenerateAssessmentDraftCommand;
+import cl.gradeops.ai.api.assessment.application.command.RetryGenerationCommand;
+import cl.gradeops.ai.api.assessment.application.exception.NoActiveOperationToRetryException;
+import cl.gradeops.ai.api.assessment.application.exception.OperationInProgressException;
+import cl.gradeops.ai.api.assessment.application.exception.StaleRevisionException;
 import cl.gradeops.ai.api.assessment.application.port.in.CreateAssessmentBriefUseCase;
+import cl.gradeops.ai.api.assessment.application.port.in.CreateHumanRevisionUseCase;
 import cl.gradeops.ai.api.assessment.application.port.in.GenerateAssessmentDraftUseCase;
 import cl.gradeops.ai.api.assessment.application.port.in.GetCurrentDraftUseCase;
+import cl.gradeops.ai.api.assessment.application.port.in.GetGenerationStatusUseCase;
 import cl.gradeops.ai.api.assessment.application.port.in.ListAssessmentsUseCase;
 import cl.gradeops.ai.api.assessment.application.port.in.ListDraftVersionsUseCase;
 import cl.gradeops.ai.api.assessment.application.port.in.RegenerateAssessmentDraftUseCase;
+import cl.gradeops.ai.api.assessment.application.port.in.RetryGenerationUseCase;
 import cl.gradeops.ai.api.assessment.application.result.AssessmentSummaryResult;
 import cl.gradeops.ai.api.assessment.application.result.CreateAssessmentBriefResult;
 import cl.gradeops.ai.api.assessment.application.result.GenerateAssessmentDraftResult;
+import cl.gradeops.ai.api.assessment.application.result.GetGenerationStatusResult;
+import cl.gradeops.ai.api.assessment.application.result.RetryGenerationResult;
 import cl.gradeops.ai.api.assessment.domain.model.AssessmentStatus;
 import cl.gradeops.ai.api.shared.domain.exception.ResourceNotFoundException;
 import cl.gradeops.ai.api.shared.infrastructure.config.FirebaseTestConfig;
@@ -43,6 +54,7 @@ import java.util.List;
 
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -61,6 +73,9 @@ class AssessmentControllerTest {
     @MockitoBean RegenerateAssessmentDraftUseCase regenerateAssessmentDraftUseCase;
     @MockitoBean GetCurrentDraftUseCase getCurrentDraftUseCase;
     @MockitoBean ListDraftVersionsUseCase listDraftVersionsUseCase;
+    @MockitoBean CreateHumanRevisionUseCase createHumanRevisionUseCase;
+    @MockitoBean RetryGenerationUseCase retryGenerationUseCase;
+    @MockitoBean GetGenerationStatusUseCase getGenerationStatusUseCase;
     @Mock FirebaseToken firebaseToken;
 
     @BeforeEach
@@ -501,5 +516,228 @@ class AssessmentControllerTest {
                 .andExpect(status().isUnauthorized());
 
         verifyNoInteractions(listDraftVersionsUseCase);
+    }
+
+    @Test
+    void authenticated_teacher_posting_human_revision_returns_201_with_new_version() throws Exception {
+        when(firebaseToken.getUid()).thenReturn("uid-teacher-25");
+        when(firebaseToken.getEmail()).thenReturn("teacher25@school.com");
+        when(firebaseToken.isEmailVerified()).thenReturn(true);
+        when(firebaseAuth.verifyIdToken("valid-token-25", true)).thenReturn(firebaseToken);
+        java.util.UUID assessmentId = java.util.UUID.randomUUID();
+        java.util.UUID revisionId = java.util.UUID.randomUUID();
+        java.util.UUID expectedRevisionId = java.util.UUID.randomUUID();
+        when(createHumanRevisionUseCase.execute(new CreateHumanRevisionCommand(
+                assessmentId, "uid-teacher-25", expectedRevisionId, "Edited title", "Edited context",
+                "Edited instructions", List.of("obj"), List.of("del"), List.of("con"), "clarity pass")))
+                .thenReturn(new GenerateAssessmentDraftResult(revisionId, "Edited title", "Edited context",
+                        "Edited instructions", List.of("obj"), List.of("del"), List.of("con"), 2));
+
+        mockMvc.perform(post("/api/v1/assessments/" + assessmentId + "/revisions")
+                        .header("Authorization", "Bearer valid-token-25")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "expectedRevisionId": "%s",
+                                  "title": "Edited title",
+                                  "context": "Edited context",
+                                  "instructions": "Edited instructions",
+                                  "objectives": ["obj"],
+                                  "deliverables": ["del"],
+                                  "constraints": ["con"],
+                                  "reason": "clarity pass"
+                                }
+                                """.formatted(expectedRevisionId)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.draftId").value(revisionId.toString()))
+                .andExpect(jsonPath("$.versionNumber").value(2));
+    }
+
+    @Test
+    void posting_human_revision_with_stale_expected_revision_returns_409_with_code() throws Exception {
+        when(firebaseToken.getUid()).thenReturn("uid-teacher-26");
+        when(firebaseToken.getEmail()).thenReturn("teacher26@school.com");
+        when(firebaseToken.isEmailVerified()).thenReturn(true);
+        when(firebaseAuth.verifyIdToken("valid-token-26", true)).thenReturn(firebaseToken);
+        java.util.UUID assessmentId = java.util.UUID.randomUUID();
+        java.util.UUID expectedRevisionId = java.util.UUID.randomUUID();
+        when(createHumanRevisionUseCase.execute(any(CreateHumanRevisionCommand.class)))
+                .thenThrow(new StaleRevisionException(assessmentId.toString()));
+
+        mockMvc.perform(post("/api/v1/assessments/" + assessmentId + "/revisions")
+                        .header("Authorization", "Bearer valid-token-26")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "expectedRevisionId": "%s",
+                                  "title": "T", "context": "C", "instructions": "I",
+                                  "objectives": ["o"], "deliverables": ["d"], "constraints": ["c"]
+                                }
+                                """.formatted(expectedRevisionId)))
+                .andExpect(status().isConflict())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.code").value("STALE_REVISION"))
+                .andExpect(jsonPath("$.error").doesNotExist());
+    }
+
+    @Test
+    void posting_human_revision_without_expected_revision_id_returns_422_and_does_not_invoke_use_case() throws Exception {
+        when(firebaseToken.getUid()).thenReturn("uid-teacher-27");
+        when(firebaseToken.getEmail()).thenReturn("teacher27@school.com");
+        when(firebaseToken.isEmailVerified()).thenReturn(true);
+        when(firebaseAuth.verifyIdToken("valid-token-27", true)).thenReturn(firebaseToken);
+        java.util.UUID assessmentId = java.util.UUID.randomUUID();
+
+        mockMvc.perform(post("/api/v1/assessments/" + assessmentId + "/revisions")
+                        .header("Authorization", "Bearer valid-token-27")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "title": "T", "context": "C", "instructions": "I",
+                                  "objectives": ["o"], "deliverables": ["d"], "constraints": ["c"]
+                                }
+                                """))
+                .andExpect(status().isUnprocessableEntity());
+
+        verifyNoInteractions(createHumanRevisionUseCase);
+    }
+
+    @Test
+    void unauthenticated_post_human_revision_request_returns_401() throws Exception {
+        mockMvc.perform(post("/api/v1/assessments/" + java.util.UUID.randomUUID() + "/revisions")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "expectedRevisionId": "%s",
+                                  "title": "T", "context": "C", "instructions": "I",
+                                  "objectives": ["o"], "deliverables": ["d"], "constraints": ["c"]
+                                }
+                                """.formatted(java.util.UUID.randomUUID())))
+                .andExpect(status().isUnauthorized());
+
+        verifyNoInteractions(createHumanRevisionUseCase);
+    }
+
+    @Test
+    void authenticated_teacher_retrying_generation_returns_202_with_operation_snapshot() throws Exception {
+        when(firebaseToken.getUid()).thenReturn("uid-teacher-28");
+        when(firebaseToken.getEmail()).thenReturn("teacher28@school.com");
+        when(firebaseToken.isEmailVerified()).thenReturn(true);
+        when(firebaseAuth.verifyIdToken("valid-token-28", true)).thenReturn(firebaseToken);
+        java.util.UUID assessmentId = java.util.UUID.randomUUID();
+        java.util.UUID operationId = java.util.UUID.randomUUID();
+        when(retryGenerationUseCase.execute(new RetryGenerationCommand(assessmentId, "uid-teacher-28")))
+                .thenReturn(new RetryGenerationResult(operationId, "CREATE_INITIAL_REVISION",
+                        "IN_PROGRESS", null, false, null));
+
+        mockMvc.perform(post("/api/v1/assessments/" + assessmentId + "/draft/retry")
+                        .header("Authorization", "Bearer valid-token-28"))
+                .andExpect(status().isAccepted())
+                .andExpect(jsonPath("$.id").value(operationId.toString()))
+                .andExpect(jsonPath("$.operationType").value("CREATE_INITIAL_REVISION"))
+                .andExpect(jsonPath("$.status").value("IN_PROGRESS"))
+                .andExpect(jsonPath("$.retryable").value(false));
+    }
+
+    @Test
+    void retrying_generation_with_nothing_to_retry_returns_409_with_code() throws Exception {
+        when(firebaseToken.getUid()).thenReturn("uid-teacher-29");
+        when(firebaseToken.getEmail()).thenReturn("teacher29@school.com");
+        when(firebaseToken.isEmailVerified()).thenReturn(true);
+        when(firebaseAuth.verifyIdToken("valid-token-29", true)).thenReturn(firebaseToken);
+        java.util.UUID assessmentId = java.util.UUID.randomUUID();
+        when(retryGenerationUseCase.execute(new RetryGenerationCommand(assessmentId, "uid-teacher-29")))
+                .thenThrow(new NoActiveOperationToRetryException(assessmentId.toString()));
+
+        mockMvc.perform(post("/api/v1/assessments/" + assessmentId + "/draft/retry")
+                        .header("Authorization", "Bearer valid-token-29"))
+                .andExpect(status().isConflict())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.code").value("NO_ACTIVE_OPERATION_TO_RETRY"))
+                .andExpect(jsonPath("$.error").doesNotExist());
+    }
+
+    @Test
+    void retrying_generation_while_operation_in_progress_returns_409_with_code() throws Exception {
+        when(firebaseToken.getUid()).thenReturn("uid-teacher-30");
+        when(firebaseToken.getEmail()).thenReturn("teacher30@school.com");
+        when(firebaseToken.isEmailVerified()).thenReturn(true);
+        when(firebaseAuth.verifyIdToken("valid-token-30", true)).thenReturn(firebaseToken);
+        java.util.UUID assessmentId = java.util.UUID.randomUUID();
+        when(retryGenerationUseCase.execute(new RetryGenerationCommand(assessmentId, "uid-teacher-30")))
+                .thenThrow(new OperationInProgressException(assessmentId.toString()));
+
+        mockMvc.perform(post("/api/v1/assessments/" + assessmentId + "/draft/retry")
+                        .header("Authorization", "Bearer valid-token-30"))
+                .andExpect(status().isConflict())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.code").value("OPERATION_IN_PROGRESS"))
+                .andExpect(jsonPath("$.error").doesNotExist());
+    }
+
+    @Test
+    void unauthenticated_retry_request_returns_401() throws Exception {
+        mockMvc.perform(post("/api/v1/assessments/" + java.util.UUID.randomUUID() + "/draft/retry"))
+                .andExpect(status().isUnauthorized());
+
+        verifyNoInteractions(retryGenerationUseCase);
+    }
+
+    @Test
+    void authenticated_teacher_getting_generation_status_returns_200() throws Exception {
+        when(firebaseToken.getUid()).thenReturn("uid-teacher-31");
+        when(firebaseToken.getEmail()).thenReturn("teacher31@school.com");
+        when(firebaseToken.isEmailVerified()).thenReturn(true);
+        when(firebaseAuth.verifyIdToken("valid-token-31", true)).thenReturn(firebaseToken);
+        java.util.UUID assessmentId = java.util.UUID.randomUUID();
+        when(getGenerationStatusUseCase.execute(new GetGenerationStatusCommand(assessmentId, "uid-teacher-31")))
+                .thenReturn(new GetGenerationStatusResult("CREATE_INITIAL_REVISION", "INDETERMINATE",
+                        null, true, null));
+
+        mockMvc.perform(get("/api/v1/assessments/" + assessmentId + "/generation-status")
+                        .header("Authorization", "Bearer valid-token-31"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.operationType").value("CREATE_INITIAL_REVISION"))
+                .andExpect(jsonPath("$.status").value("INDETERMINATE"))
+                .andExpect(jsonPath("$.retryable").value(true))
+                .andExpect(jsonPath("$.currentRevisionId").doesNotExist());
+    }
+
+    @Test
+    void getting_generation_status_for_unknown_assessment_returns_404() throws Exception {
+        when(firebaseToken.getUid()).thenReturn("uid-teacher-32");
+        when(firebaseToken.getEmail()).thenReturn("teacher32@school.com");
+        when(firebaseToken.isEmailVerified()).thenReturn(true);
+        when(firebaseAuth.verifyIdToken("valid-token-32", true)).thenReturn(firebaseToken);
+        java.util.UUID assessmentId = java.util.UUID.randomUUID();
+        when(getGenerationStatusUseCase.execute(new GetGenerationStatusCommand(assessmentId, "uid-teacher-32")))
+                .thenThrow(new ResourceNotFoundException(assessmentId.toString()));
+
+        mockMvc.perform(get("/api/v1/assessments/" + assessmentId + "/generation-status")
+                        .header("Authorization", "Bearer valid-token-32"))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void unauthenticated_generation_status_request_returns_401() throws Exception {
+        mockMvc.perform(get("/api/v1/assessments/" + java.util.UUID.randomUUID() + "/generation-status"))
+                .andExpect(status().isUnauthorized());
+
+        verifyNoInteractions(getGenerationStatusUseCase);
+    }
+
+    @Test
+    void patching_draft_returns_405_method_not_allowed_since_in_place_edit_was_removed() throws Exception {
+        when(firebaseToken.getUid()).thenReturn("uid-teacher-33");
+        when(firebaseToken.getEmail()).thenReturn("teacher33@school.com");
+        when(firebaseToken.isEmailVerified()).thenReturn(true);
+        when(firebaseAuth.verifyIdToken("valid-token-33", true)).thenReturn(firebaseToken);
+        java.util.UUID assessmentId = java.util.UUID.randomUUID();
+
+        mockMvc.perform(patch("/api/v1/assessments/" + assessmentId + "/draft")
+                        .header("Authorization", "Bearer valid-token-33")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{}"))
+                .andExpect(status().isMethodNotAllowed());
     }
 }

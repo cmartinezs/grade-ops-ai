@@ -1,12 +1,12 @@
 package cl.gradeops.ai.api.assessment.application.usecase;
 
 import cl.gradeops.ai.api.assessment.application.command.ListDraftVersionsCommand;
-import cl.gradeops.ai.api.assessment.application.port.out.AssessmentDraftRepositoryPort;
 import cl.gradeops.ai.api.assessment.application.port.out.AssessmentRepositoryPort;
+import cl.gradeops.ai.api.assessment.application.port.out.AssessmentRevisionRepositoryPort;
 import cl.gradeops.ai.api.assessment.application.result.GenerateAssessmentDraftResult;
 import cl.gradeops.ai.api.assessment.domain.model.Assessment;
-import cl.gradeops.ai.api.assessment.domain.model.AssessmentDraft;
 import cl.gradeops.ai.api.assessment.domain.model.AssessmentId;
+import cl.gradeops.ai.api.assessment.domain.model.AssessmentRevision;
 import cl.gradeops.ai.api.assessment.domain.model.AssessmentStatus;
 import cl.gradeops.ai.api.shared.application.security.OwnershipVerifier;
 import cl.gradeops.ai.api.shared.domain.exception.ResourceNotFoundException;
@@ -29,7 +29,7 @@ import static org.mockito.Mockito.*;
 class ListDraftVersionsHandlerTest {
 
     @Mock AssessmentRepositoryPort assessmentRepository;
-    @Mock AssessmentDraftRepositoryPort assessmentDraftRepository;
+    @Mock AssessmentRevisionRepositoryPort assessmentRevisionRepository;
     @Mock OwnershipVerifier ownershipVerifier;
 
     ListDraftVersionsHandler handler;
@@ -40,17 +40,17 @@ class ListDraftVersionsHandlerTest {
 
     @BeforeEach
     void setUp() {
-        handler = new ListDraftVersionsHandler(assessmentRepository, assessmentDraftRepository, ownershipVerifier);
+        handler = new ListDraftVersionsHandler(assessmentRepository, assessmentRevisionRepository, ownershipVerifier);
     }
 
     @Test
     void shouldReturnAllVersionsNewestFirstAfterVerifyingOwnership() {
-        AssessmentDraft v1 = AssessmentDraft.generate(assessmentId, "T1", "C1", "I1",
-                List.of(), List.of(), List.of(), null);
-        AssessmentDraft v2 = AssessmentDraft.regenerate(v1, "T2", "C2", "I2",
-                List.of(), List.of(), List.of(), null);
+        AssessmentRevision v1 = AssessmentRevision.generateFromAi(assessmentId, "T1", "C1", "I1",
+                List.of(), List.of(), List.of(), "uid-1", UUID.randomUUID());
+        AssessmentRevision v2 = AssessmentRevision.regenerateFromAi(v1, "T2", "C2", "I2",
+                List.of(), List.of(), List.of(), "uid-1", "adjust", UUID.randomUUID());
         when(assessmentRepository.findById(assessmentId)).thenReturn(Optional.of(assessment));
-        when(assessmentDraftRepository.findAllByAssessmentId(assessmentId)).thenReturn(List.of(v2, v1));
+        when(assessmentRevisionRepository.findAllByAssessmentId(assessmentId)).thenReturn(List.of(v2, v1));
 
         List<GenerateAssessmentDraftResult> result = handler.execute(new ListDraftVersionsCommand(assessmentUuid, "uid-1"));
 
@@ -65,7 +65,7 @@ class ListDraftVersionsHandlerTest {
     @Test
     void shouldReturnEmptyListWhenNoDraftsExistYet() {
         when(assessmentRepository.findById(assessmentId)).thenReturn(Optional.of(assessment));
-        when(assessmentDraftRepository.findAllByAssessmentId(assessmentId)).thenReturn(List.of());
+        when(assessmentRevisionRepository.findAllByAssessmentId(assessmentId)).thenReturn(List.of());
 
         List<GenerateAssessmentDraftResult> result = handler.execute(new ListDraftVersionsCommand(assessmentUuid, "uid-1"));
 
@@ -79,7 +79,7 @@ class ListDraftVersionsHandlerTest {
         assertThatThrownBy(() -> handler.execute(new ListDraftVersionsCommand(assessmentUuid, "uid-1")))
                 .isInstanceOf(ResourceNotFoundException.class);
 
-        verifyNoInteractions(ownershipVerifier, assessmentDraftRepository);
+        verifyNoInteractions(ownershipVerifier, assessmentRevisionRepository);
     }
 
     @Test
@@ -91,6 +91,6 @@ class ListDraftVersionsHandlerTest {
         assertThatThrownBy(() -> handler.execute(new ListDraftVersionsCommand(assessmentUuid, "uid-other")))
                 .isInstanceOf(ResourceNotFoundException.class);
 
-        verifyNoInteractions(assessmentDraftRepository);
+        verifyNoInteractions(assessmentRevisionRepository);
     }
 }

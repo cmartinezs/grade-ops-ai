@@ -4,7 +4,6 @@ import cl.gradeops.ai.api.agentclient.AssessmentAgentClient;
 import cl.gradeops.ai.api.assessment.application.port.out.AgentAttemptRepositoryPort;
 import cl.gradeops.ai.api.assessment.application.port.out.AiOperationRepositoryPort;
 import cl.gradeops.ai.api.assessment.application.port.out.AssessmentBriefRepositoryPort;
-import cl.gradeops.ai.api.assessment.application.port.out.AssessmentDraftRepositoryPort;
 import cl.gradeops.ai.api.assessment.application.port.out.AssessmentRepositoryPort;
 import cl.gradeops.ai.api.assessment.application.port.out.AssessmentRevisionRepositoryPort;
 import cl.gradeops.ai.api.assessment.application.usecase.AiOperationCoordinator;
@@ -12,9 +11,11 @@ import cl.gradeops.ai.api.assessment.application.usecase.CreateAssessmentBriefHa
 import cl.gradeops.ai.api.assessment.application.usecase.CreateHumanRevisionHandler;
 import cl.gradeops.ai.api.assessment.application.usecase.GenerateAssessmentDraftHandler;
 import cl.gradeops.ai.api.assessment.application.usecase.GetCurrentDraftHandler;
+import cl.gradeops.ai.api.assessment.application.usecase.GetGenerationStatusHandler;
 import cl.gradeops.ai.api.assessment.application.usecase.ListAssessmentsHandler;
 import cl.gradeops.ai.api.assessment.application.usecase.ListDraftVersionsHandler;
 import cl.gradeops.ai.api.assessment.application.usecase.RegenerateAssessmentDraftHandler;
+import cl.gradeops.ai.api.assessment.application.usecase.RetryGenerationHandler;
 import cl.gradeops.ai.api.assessment.infrastructure.adapter.out.persistence.AgentAttemptJpaRepository;
 import cl.gradeops.ai.api.assessment.infrastructure.adapter.out.persistence.AgentAttemptPersistenceAdapter;
 import cl.gradeops.ai.api.assessment.infrastructure.adapter.out.persistence.AgentAttemptPersistenceMapper;
@@ -213,16 +214,38 @@ class AssessmentConfig {
     @Bean
     GetCurrentDraftHandler getCurrentDraftHandler(
             AssessmentRepositoryPort assessmentRepository,
-            AssessmentDraftRepositoryPort assessmentDraftRepository,
+            AssessmentRevisionRepositoryPort assessmentRevisionRepository,
             OwnershipVerifier ownershipVerifier) {
-        return new GetCurrentDraftHandler(assessmentRepository, assessmentDraftRepository, ownershipVerifier);
+        return new GetCurrentDraftHandler(assessmentRepository, assessmentRevisionRepository, ownershipVerifier);
     }
 
     @Bean
     ListDraftVersionsHandler listDraftVersionsHandler(
             AssessmentRepositoryPort assessmentRepository,
-            AssessmentDraftRepositoryPort assessmentDraftRepository,
+            AssessmentRevisionRepositoryPort assessmentRevisionRepository,
             OwnershipVerifier ownershipVerifier) {
-        return new ListDraftVersionsHandler(assessmentRepository, assessmentDraftRepository, ownershipVerifier);
+        return new ListDraftVersionsHandler(assessmentRepository, assessmentRevisionRepository, ownershipVerifier);
+    }
+
+    @Bean
+    RetryGenerationHandler retryGenerationHandler(
+            AssessmentRepositoryPort assessmentRepository,
+            AssessmentBriefRepositoryPort assessmentBriefRepository,
+            AiOperationRepositoryPort aiOperationRepository,
+            AgentAttemptRepositoryPort agentAttemptRepository,
+            OwnershipVerifier ownershipVerifier,
+            AiOperationCoordinator aiOperationCoordinator) {
+        return new RetryGenerationHandler(assessmentRepository, assessmentBriefRepository, aiOperationRepository,
+                agentAttemptRepository, ownershipVerifier, aiOperationCoordinator);
+    }
+
+    @Bean
+    GetGenerationStatusHandler getGenerationStatusHandler(
+            AssessmentRepositoryPort assessmentRepository,
+            AiOperationRepositoryPort aiOperationRepository,
+            AgentAttemptRepositoryPort agentAttemptRepository,
+            OwnershipVerifier ownershipVerifier) {
+        return new GetGenerationStatusHandler(assessmentRepository, aiOperationRepository, agentAttemptRepository,
+                ownershipVerifier);
     }
 }
