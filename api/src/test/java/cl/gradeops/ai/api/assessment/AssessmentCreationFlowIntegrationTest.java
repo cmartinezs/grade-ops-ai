@@ -157,13 +157,13 @@ class AssessmentCreationFlowIntegrationTest {
         OwnershipVerifier ownershipVerifier = new OwnershipVerifier();
 
         AiOperationCoordinator coordinator = new AiOperationCoordinator(assessmentAdapter, aiOperationAdapter,
-                agentAttemptAdapter, revisionAdapter, assessmentAgentClient, jsonMapper, transactionManager);
+                agentAttemptAdapter, revisionAdapter, assessmentAgentClient, idempotencyGuard, jsonMapper, transactionManager);
 
         createBriefHandler = new CreateAssessmentBriefHandler(assessmentAdapter, briefAdapter, idempotencyGuard, transactionManager);
         generateHandler = new GenerateAssessmentDraftHandler(assessmentAdapter, briefAdapter, revisionAdapter,
                 aiOperationAdapter, agentAttemptAdapter, ownershipVerifier, idempotencyGuard, coordinator);
         regenerateHandler = new RegenerateAssessmentDraftHandler(assessmentAdapter, briefAdapter, revisionAdapter,
-                ownershipVerifier, idempotencyGuard, coordinator);
+                aiOperationAdapter, agentAttemptAdapter, ownershipVerifier, idempotencyGuard, coordinator);
         getCurrentDraftHandler = new GetCurrentDraftHandler(assessmentAdapter, revisionAdapter, ownershipVerifier);
         listDraftVersionsHandler = new ListDraftVersionsHandler(assessmentAdapter, revisionAdapter, ownershipVerifier);
         listAssessmentsHandler = new ListAssessmentsHandler(assessmentAdapter);

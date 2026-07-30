@@ -138,7 +138,7 @@ class RetryGenerationHandlerIntegrationTest {
         OwnershipVerifier ownershipVerifier = new OwnershipVerifier();
 
         AiOperationCoordinator coordinator = new AiOperationCoordinator(assessmentAdapter, aiOperationAdapter,
-                agentAttemptAdapter, revisionAdapter, assessmentAgentClient, jsonMapper, transactionManager);
+                agentAttemptAdapter, revisionAdapter, assessmentAgentClient, idempotencyGuard, jsonMapper, transactionManager);
 
         generateHandler = new GenerateAssessmentDraftHandler(assessmentAdapter, briefAdapter, revisionAdapter,
                 aiOperationAdapter, agentAttemptAdapter, ownershipVerifier, idempotencyGuard, coordinator);

@@ -4,10 +4,14 @@ import cl.gradeops.ai.api.agentclient.AssessmentAgentClient;
 import cl.gradeops.ai.api.agentclient.AssessmentAgentResponse;
 import cl.gradeops.ai.api.assessment.application.command.GenerateAssessmentDraftCommand;
 import cl.gradeops.ai.api.assessment.application.command.RegenerateAssessmentDraftCommand;
+import cl.gradeops.ai.api.assessment.application.exception.OperationInProgressException;
 import cl.gradeops.ai.api.assessment.application.exception.StaleOnCompletionException;
 import cl.gradeops.ai.api.assessment.application.exception.StaleRevisionException;
 import cl.gradeops.ai.api.assessment.application.result.GenerateAssessmentDraftOutcome;
 import cl.gradeops.ai.api.assessment.application.result.GenerateAssessmentDraftResult;
+import cl.gradeops.ai.api.assessment.domain.model.AgentAttempt;
+import cl.gradeops.ai.api.assessment.domain.model.AiOperation;
+import cl.gradeops.ai.api.assessment.domain.model.AiOperationType;
 import cl.gradeops.ai.api.assessment.domain.model.Assessment;
 import cl.gradeops.ai.api.assessment.domain.model.AssessmentBrief;
 import cl.gradeops.ai.api.assessment.domain.model.AssessmentRevision;
@@ -65,6 +69,8 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.clearInvocations;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
@@ -138,12 +144,12 @@ class RegenerateAssessmentDraftHandlerIntegrationTest {
         OwnershipVerifier ownershipVerifier = new OwnershipVerifier();
 
         AiOperationCoordinator coordinator = new AiOperationCoordinator(assessmentAdapter, aiOperationAdapter,
-                agentAttemptAdapter, revisionAdapter, assessmentAgentClient, jsonMapper, transactionManager);
+                agentAttemptAdapter, revisionAdapter, assessmentAgentClient, idempotencyGuard, jsonMapper, transactionManager);
 
         generateHandler = new GenerateAssessmentDraftHandler(assessmentAdapter, briefAdapter, revisionAdapter,
                 aiOperationAdapter, agentAttemptAdapter, ownershipVerifier, idempotencyGuard, coordinator);
         regenerateHandler = new RegenerateAssessmentDraftHandler(assessmentAdapter, briefAdapter, revisionAdapter,
-                ownershipVerifier, idempotencyGuard, coordinator);
+                aiOperationAdapter, agentAttemptAdapter, ownershipVerifier, idempotencyGuard, coordinator);
 
         jdbcTemplate.update(
                 "INSERT INTO teacher (firebase_uid, first_name, last_name, email) VALUES (?, ?, ?, ?)",
@@ -244,6 +250,143 @@ class RegenerateAssessmentDraftHandlerIntegrationTest {
         assertThat(replayed.draftId()).isEqualTo(first.draftId());
         assertThat(replayed.title()).isEqualTo(first.title());
         verifyNoInteractions(assessmentAgentClient);
+    }
+
+    @Test
+    void shouldReplayAFailedRegenerationByReconstructingTheOriginalExceptionWithoutRedispatching() {
+        GenerateAssessmentDraftResult v1 = generateV1();
+
+        when(assessmentAgentClient.generate(any(), anyString()))
+                .thenThrow(new cl.gradeops.ai.api.agentclient.AgentClientException(
+                        cl.gradeops.ai.api.agentclient.AgentClientException.Reason.UNREACHABLE, "unreachable", null));
+        assertThatThrownBy(() -> regenerateHandler.execute(new RegenerateAssessmentDraftCommand(
+                assessment.getId().value(), "uid-1", "make it harder", v1.draftId(), "same-failing-regen-key")))
+                .isInstanceOf(cl.gradeops.ai.api.agentclient.AgentClientException.class);
+        entityManager.flush();
+        entityManager.clear();
+        clearInvocations(assessmentAgentClient);
+
+        // Same key, same payload, after a durable failure — must reproduce the exact same
+        // exception (A3 Final Idempotency Correction § 3.4), never redispatch to agents/.
+        assertThatThrownBy(() -> regenerateHandler.execute(new RegenerateAssessmentDraftCommand(
+                assessment.getId().value(), "uid-1", "make it harder", v1.draftId(), "same-failing-regen-key")))
+                .isInstanceOf(cl.gradeops.ai.api.agentclient.AgentClientException.class)
+                .satisfies(ex -> assertThat(((cl.gradeops.ai.api.agentclient.AgentClientException) ex).reason())
+                        .isEqualTo(cl.gradeops.ai.api.agentclient.AgentClientException.Reason.UNREACHABLE));
+        verifyNoInteractions(assessmentAgentClient);
+        assertThat(revisionJpaRepository.findAllByAssessmentIdOrderByVersionNumberDesc(assessment.getId().value()))
+                .hasSize(1);
+    }
+
+    @Test
+    void shouldRecoverAndBackfillTheMissingRecordForAPreFixOrphanedFailedRegenerateOperation() {
+        // A3 Final Idempotency Correction § 5: simulates data written by the PREVIOUS (non-atomic)
+        // implementation — a durable, FAILED_RETRYABLE AiOperation/AgentAttempt for a regenerate
+        // that never got an IdempotencyRecord. A fresh request with the SAME key must reconstruct
+        // and throw the original failure, backfill the missing record, never redispatch.
+        GenerateAssessmentDraftResult v1 = generateV1();
+        clearInvocations(assessmentAgentClient);
+
+        AiOperationPersistenceAdapter aiOperationAdapter =
+                new AiOperationPersistenceAdapter(aiOperationJpaRepository, new AiOperationPersistenceMapper());
+        AgentAttemptPersistenceAdapter agentAttemptAdapter =
+                new AgentAttemptPersistenceAdapter(agentAttemptJpaRepository, new AgentAttemptPersistenceMapper());
+        AiOperation orphanedOperation = AiOperation.create(assessment.getId(), AiOperationType.REGENERATE_REVISION,
+                        "uid-1", "orphaned-regen-key", v1.draftId())
+                .markInProgress().markFailedRetryable();
+        aiOperationAdapter.save(orphanedOperation);
+        AgentAttempt orphanedAttempt = AgentAttempt.dispatch(orphanedOperation.getId(), 1, "assessment", "v1", "corr-orphan")
+                .markFailed("AGENT_UNAVAILABLE", null, null, null);
+        agentAttemptAdapter.save(orphanedAttempt);
+        entityManager.flush();
+        entityManager.clear();
+
+        assertThatThrownBy(() -> regenerateHandler.execute(new RegenerateAssessmentDraftCommand(
+                assessment.getId().value(), "uid-1", "make it harder", v1.draftId(), "orphaned-regen-key")))
+                .isInstanceOf(cl.gradeops.ai.api.agentclient.AgentClientException.class)
+                .satisfies(ex -> assertThat(((cl.gradeops.ai.api.agentclient.AgentClientException) ex).reason())
+                        .isEqualTo(cl.gradeops.ai.api.agentclient.AgentClientException.Reason.UNREACHABLE));
+
+        verifyNoInteractions(assessmentAgentClient);
+        assertThat(idempotencyRecordJpaRepository.findAll()).anySatisfy(record ->
+                assertThat(record.getResultReference()).isEqualTo(orphanedOperation.getId().toString()));
+    }
+
+    @Test
+    void shouldAllowExactlyOneDispatchWhenTwoConcurrentRegenerationsShareTheSameIdempotencyKey() throws Exception {
+        String teacherUid = "uid-concurrent-regen-samekey-" + UUID.randomUUID();
+        jdbcTemplate.update(
+                "INSERT INTO teacher (firebase_uid, first_name, last_name, email) VALUES (?, ?, ?, ?)",
+                teacherUid, "Test", "Teacher", teacherUid + "@test.com");
+        Assessment concurrentAssessment = Assessment.create(teacherUid);
+        assessmentAdapter.save(concurrentAssessment);
+        briefAdapter.save(AssessmentBrief.create(concurrentAssessment.getId(), "goal", "topic", "basic", "90min", "Java"));
+        AssessmentRevision v1 = AssessmentRevision.restore(UUID.randomUUID(), concurrentAssessment.getId(), 1, null,
+                cl.gradeops.ai.api.assessment.domain.model.RevisionOrigin.AI_GENERATED, teacherUid, null, null,
+                "Title v1", "Context v1", "Instructions v1", List.of("obj1"), List.of("del1"), List.of("con1"),
+                Instant.now());
+        revisionAdapter.save(v1);
+        assessmentAdapter.save(concurrentAssessment.withCurrentRevision(v1.getId()));
+        entityManager.flush();
+        entityManager.clear();
+
+        when(assessmentAgentClient.generate(any(), anyString())).thenAnswer(inv -> response("V2-samekey"));
+
+        TestTransaction.flagForCommit();
+        TestTransaction.end();
+
+        int threadCount = 2;
+        ExecutorService executor = Executors.newFixedThreadPool(threadCount);
+        CountDownLatch ready = new CountDownLatch(threadCount);
+        CountDownLatch go = new CountDownLatch(1);
+        try {
+            Callable<Object> attempt = () -> {
+                ready.countDown();
+                go.await();
+                try {
+                    return regenerateHandler.execute(new RegenerateAssessmentDraftCommand(
+                            concurrentAssessment.getId().value(), teacherUid, "concurrent edit", v1.getId(),
+                            "same-concurrent-regen-key"));
+                } catch (RuntimeException ex) {
+                    return ex;
+                }
+            };
+
+            List<Future<Object>> futures = new ArrayList<>();
+            for (int i = 0; i < threadCount; i++) {
+                futures.add(executor.submit(attempt));
+            }
+            assertThat(ready.await(5, TimeUnit.SECONDS)).isTrue();
+            go.countDown();
+
+            List<Object> results = new ArrayList<>();
+            for (Future<Object> f : futures) {
+                results.add(f.get(15, TimeUnit.SECONDS));
+            }
+
+            // A3 Final Idempotency Correction § 6: a same-key race must never surface as
+            // STALE_REVISION — the loser sees either the already-available result or a 409
+            // OPERATION_IN_PROGRESS, depending on exactly when it observes the winner's state.
+            assertThat(results.stream().filter(StaleRevisionException.class::isInstance).count())
+                    .withFailMessage("STALE_REVISION must never appear for a same-key concurrent regenerate race")
+                    .isEqualTo(0);
+            assertThat(results).allSatisfy(r -> assertThat(r)
+                    .isInstanceOfAny(GenerateAssessmentDraftResult.class, OperationInProgressException.class));
+
+            verify(assessmentAgentClient, times(1)).generate(any(), anyString());
+            assertThat(revisionJpaRepository.findAllByAssessmentIdOrderByVersionNumberDesc(concurrentAssessment.getId().value()))
+                    .hasSize(2);
+        } finally {
+            executor.shutdown();
+            jdbcTemplate.update("DELETE FROM idempotency_records WHERE assessment_id = ?", concurrentAssessment.getId().value());
+            jdbcTemplate.update("DELETE FROM assessments WHERE id = ?", concurrentAssessment.getId().value());
+            jdbcTemplate.update("DELETE FROM assessment_briefs WHERE assessment_id = ?", concurrentAssessment.getId().value());
+            jdbcTemplate.update("DELETE FROM teacher WHERE firebase_uid = ?", teacherUid);
+            jdbcTemplate.update("DELETE FROM assessment_briefs WHERE assessment_id = ?", assessment.getId().value());
+            jdbcTemplate.update("DELETE FROM assessments WHERE id = ?", assessment.getId().value());
+            jdbcTemplate.update("DELETE FROM teacher WHERE firebase_uid = ?", "uid-1");
+            TestTransaction.start();
+        }
     }
 
     @Test

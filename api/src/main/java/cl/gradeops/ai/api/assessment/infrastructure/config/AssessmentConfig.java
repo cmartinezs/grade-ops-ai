@@ -174,10 +174,11 @@ class AssessmentConfig {
             AgentAttemptRepositoryPort agentAttemptRepository,
             AssessmentRevisionRepositoryPort assessmentRevisionRepository,
             AssessmentAgentClient assessmentAgentClient,
+            IdempotencyGuard idempotencyGuard,
             JsonMapper jsonMapper,
             PlatformTransactionManager transactionManager) {
         return new AiOperationCoordinator(assessmentRepository, aiOperationRepository, agentAttemptRepository,
-                assessmentRevisionRepository, assessmentAgentClient, jsonMapper, transactionManager);
+                assessmentRevisionRepository, assessmentAgentClient, idempotencyGuard, jsonMapper, transactionManager);
     }
 
     @Bean
@@ -200,11 +201,14 @@ class AssessmentConfig {
             AssessmentRepositoryPort assessmentRepository,
             AssessmentBriefRepositoryPort assessmentBriefRepository,
             AssessmentRevisionRepositoryPort assessmentRevisionRepository,
+            AiOperationRepositoryPort aiOperationRepository,
+            AgentAttemptRepositoryPort agentAttemptRepository,
             OwnershipVerifier ownershipVerifier,
             IdempotencyGuard idempotencyGuard,
             AiOperationCoordinator aiOperationCoordinator) {
         return new RegenerateAssessmentDraftHandler(assessmentRepository, assessmentBriefRepository,
-                assessmentRevisionRepository, ownershipVerifier, idempotencyGuard, aiOperationCoordinator);
+                assessmentRevisionRepository, aiOperationRepository, agentAttemptRepository, ownershipVerifier,
+                idempotencyGuard, aiOperationCoordinator);
     }
 
     @Bean

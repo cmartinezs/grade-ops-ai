@@ -16,6 +16,8 @@ import cl.gradeops.ai.api.assessment.domain.model.AiOperation;
 import cl.gradeops.ai.api.assessment.domain.model.AiOperationType;
 import cl.gradeops.ai.api.assessment.domain.model.Assessment;
 import cl.gradeops.ai.api.assessment.domain.model.AssessmentRevision;
+import cl.gradeops.ai.api.shared.application.idempotency.IdempotencyCompletionContext;
+import cl.gradeops.ai.api.shared.application.idempotency.IdempotencyGuard;
 import cl.gradeops.ai.api.shared.domain.exception.ResourceNotFoundException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
@@ -24,6 +26,7 @@ import org.springframework.transaction.support.TransactionTemplate;
 import tools.jackson.databind.json.JsonMapper;
 
 import java.math.BigDecimal;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
@@ -34,25 +37,41 @@ import java.util.function.Predicate;
 /**
  * The durable, three-phase {@code AiOperation}/{@code AgentAttempt}/{@code AssessmentRevision}
  * write path (Durable AI Operation Model ADR) shared by every AI-dispatch operation this packet
- * defines: initial generation ({@link #createInitialRevision}, Task 07B/Session A2) and
- * regenerate ({@link #regenerateRevision}, Task 09/Session A3). Durable evidence (the {@code
- * AiOperation}/{@code AgentAttempt} pair) is committed in Phase 0, in its own transaction,
- * <strong>before</strong> the HTTP call to {@code agents/} — the entire point of this class: a
- * crash between provider success and API persistence must never lose all evidence the call ever
- * happened.
+ * defines: initial generation ({@link #createInitialRevision}, Task 07B/Session A2), regenerate
+ * ({@link #regenerateRevision}, Task 09/Session A3), and retry ({@link #retryInitialRevision},
+ * Task 10). Durable evidence (the {@code AiOperation}/{@code AgentAttempt} pair) is committed in
+ * Phase 0, in its own transaction, <strong>before</strong> the HTTP call to {@code agents/} — the
+ * entire point of this class: a crash between provider success and API persistence must never
+ * lose all evidence the call ever happened.
  *
- * <p>The two callers differ only in: what {@code AiOperationType}/{@code expectedRevisionId} the
- * durable {@code AiOperation} record carries, what counts as "stale" at Phase 2 (no current
- * revision yet, vs. current revision no longer matching what was expected), and how the
- * resulting {@link AssessmentRevision} is built (first version vs. chained onto a specific
- * predecessor). {@link #dispatchAndPersist} captures everything else exactly once.
+ * <p>A3 Final Idempotency Correction: the {@link IdempotencyCompletionContext} a caller supplies
+ * (non-null for {@link #createInitialRevision}/{@link #regenerateRevision}, {@code null} for
+ * {@link #retryInitialRevision} — retry never carries its own idempotency key) is recorded as an
+ * {@code IdempotencyRecord} <strong>inside the very same Phase 2 transaction</strong> that
+ * produces the durable outcome it describes (success, dispatch failure, or stale-on-completion) —
+ * never in a separate transaction afterward. This closes the crash window where Phase 2 could
+ * commit a functional result while the process died before a caller-side {@code
+ * idempotencyGuard.record(...)} call ran, leaving a replay unrecognizable and risking a second,
+ * paid LLM dispatch for what should have been a no-op replay.
+ *
+ * <p>The two AI-dispatch callers differ only in: what {@code AiOperationType}/{@code
+ * expectedRevisionId} the durable {@code AiOperation} record carries, what counts as "stale" at
+ * Phase 2 (no current revision yet, vs. current revision no longer matching what was expected),
+ * how the resulting {@link AssessmentRevision} is built (first version vs. chained onto a specific
+ * predecessor), and what HTTP status a durable failure is recorded/replayed under (initial
+ * generation always {@code 202}; regenerate derives the original status from the failure code via
+ * {@link RegenerateFailureReplay}, since it never returns {@code 202}). {@link #dispatchAndPersist}
+ * captures everything else exactly once.
  *
  * <p>Phase 0's own insert can also lose a race: {@code uq_ai_operations_in_flight} rejects a
  * second {@code PENDING}/{@code IN_PROGRESS} {@code AiOperation} row for the same {@code
- * (assessmentId, operationType)}, so two truly concurrent dispatches for the same assessment (a
- * real scenario for regenerate, where two distinct idempotency keys legitimately race) surface as
- * a caught {@code DataIntegrityViolationException}, reported as {@code STALE_REVISION} — no
- * partial evidence survives for the loser since the whole Phase 0 transaction rolls back.
+ * (assessmentId, operationType)}. {@link #resolvePhase0Conflict} distinguishes two structurally
+ * different reasons this can happen: the winner holds the <em>same</em> idempotency key as the
+ * loser (a genuine duplicate submission of the same logical request — never a real conflict, so
+ * it is reported as {@link OperationInProgressException}, letting the caller relay the winner's
+ * in-flight/completed state instead of a spurious staleness error) or a <em>different</em> key
+ * (two distinct, legitimately racing requests — reported via the caller-supplied {@code
+ * phase0ConflictException}, unchanged from before this correction).
  *
  * <p>Phase 2's CAS write is a single transaction on the happy path. A true concurrent race can
  * only be detected by Hibernate's optimistic lock at flush/commit time, which happens after this
@@ -70,6 +89,7 @@ public class AiOperationCoordinator {
     private final AgentAttemptRepositoryPort agentAttemptRepository;
     private final AssessmentRevisionRepositoryPort assessmentRevisionRepository;
     private final AssessmentAgentClient assessmentAgentClient;
+    private final IdempotencyGuard idempotencyGuard;
     private final JsonMapper jsonMapper;
     private final TransactionTemplate transactionTemplate;
 
@@ -78,6 +98,7 @@ public class AiOperationCoordinator {
                                    AgentAttemptRepositoryPort agentAttemptRepository,
                                    AssessmentRevisionRepositoryPort assessmentRevisionRepository,
                                    AssessmentAgentClient assessmentAgentClient,
+                                   IdempotencyGuard idempotencyGuard,
                                    JsonMapper jsonMapper,
                                    PlatformTransactionManager transactionManager) {
         this.assessmentRepository = assessmentRepository;
@@ -85,6 +106,7 @@ public class AiOperationCoordinator {
         this.agentAttemptRepository = agentAttemptRepository;
         this.assessmentRevisionRepository = assessmentRevisionRepository;
         this.assessmentAgentClient = assessmentAgentClient;
+        this.idempotencyGuard = idempotencyGuard;
         this.jsonMapper = jsonMapper;
         this.transactionTemplate = new TransactionTemplate(transactionManager);
     }
@@ -95,7 +117,8 @@ public class AiOperationCoordinator {
      * call happens in between) — Phase 2 re-reads it fresh inside its own transaction.
      */
     public AssessmentRevision createInitialRevision(Assessment assessment, AssessmentCommand agentCommand,
-                                                     String requestedBy, String idempotencyKey) {
+                                                     String requestedBy, String idempotencyKey,
+                                                     IdempotencyCompletionContext idempotencyContext) {
         AiOperation operation = AiOperation.create(assessment.getId(), AiOperationType.CREATE_INITIAL_REVISION,
                 requestedBy, idempotencyKey, null).markInProgress();
 
@@ -105,7 +128,7 @@ public class AiOperationCoordinator {
                         response.result().title(), response.result().context(), response.result().instructions(),
                         response.result().objectives(), response.result().deliverables(), response.result().constraints(),
                         requestedBy, attempt.getId()),
-                StaleRevisionException::new);
+                StaleRevisionException::new, idempotencyContext);
     }
 
     /**
@@ -116,7 +139,7 @@ public class AiOperationCoordinator {
      */
     public AssessmentRevision regenerateRevision(Assessment assessment, AssessmentRevision expectedRevision,
                                                   AssessmentCommand agentCommand, String requestedBy, String reason,
-                                                  String idempotencyKey) {
+                                                  String idempotencyKey, IdempotencyCompletionContext idempotencyContext) {
         UUID expectedRevisionId = expectedRevision.getId();
         AiOperation operation = AiOperation.create(assessment.getId(), AiOperationType.REGENERATE_REVISION,
                 requestedBy, idempotencyKey, expectedRevisionId).markInProgress();
@@ -127,7 +150,7 @@ public class AiOperationCoordinator {
                         response.result().title(), response.result().context(), response.result().instructions(),
                         response.result().objectives(), response.result().deliverables(), response.result().constraints(),
                         requestedBy, reason, attempt.getId()),
-                StaleRevisionException::new);
+                StaleRevisionException::new, idempotencyContext);
     }
 
     /**
@@ -138,7 +161,9 @@ public class AiOperationCoordinator {
      * operation, or a PENDING/IN_PROGRESS one past the indeterminate threshold). Scoped to {@code
      * CREATE_INITIAL_REVISION} only — see LOCAL-CONTRACTS.md § API ↔ Web public contract; the
      * retry endpoint's resume story is specifically about the initial-generation dead-end
-     * (Research 02 §5.6), not regenerate, which never leaves the assessment revision-less.
+     * (Research 02 §5.6), not regenerate, which never leaves the assessment revision-less. Retry
+     * has no {@code Idempotency-Key} of its own, so no {@link IdempotencyCompletionContext} is
+     * ever recorded for it — {@code null} is passed through unconditionally.
      */
     public AssessmentRevision retryInitialRevision(Assessment assessment, AiOperation existingOperation,
                                                     AssessmentCommand agentCommand, int nextAttemptNumber) {
@@ -151,7 +176,7 @@ public class AiOperationCoordinator {
                         response.result().title(), response.result().context(), response.result().instructions(),
                         response.result().objectives(), response.result().deliverables(), response.result().constraints(),
                         requestedBy, attempt.getId()),
-                OperationInProgressException::new);
+                OperationInProgressException::new, null);
     }
 
     /**
@@ -160,25 +185,12 @@ public class AiOperationCoordinator {
      * ({@link #createInitialRevision}/{@link #regenerateRevision}) or an existing one being
      * retried, and what {@code attemptNumber} this dispatch is. {@code operation} is not yet
      * saved; Phase 0 persists it alongside the new attempt in one transaction.
-     *
-     * <p>{@code phase0ConflictException} distinguishes the two, structurally different Phase 0
-     * insert collisions callers can hit (A3 Contract Correction § Correction 4): {@link
-     * #createInitialRevision}/{@link #regenerateRevision} always insert a brand-new {@code
-     * AiOperation} row (a fresh id each call), so their only possible Phase 0 collision is on
-     * {@code uq_ai_operations_in_flight} — reported as {@link StaleRevisionException}, unchanged.
-     * {@link #retryInitialRevision} reuses an existing operation id (an {@code UPDATE}, never an
-     * {@code INSERT} on {@code ai_operations}, so it cannot hit that partial unique index) — its
-     * only possible Phase 0 collision is two concurrent retries computing the same {@code
-     * nextAttemptNumber} and racing to insert it, colliding on {@code agent_attempts}' own {@code
-     * UNIQUE(ai_operation_id, attempt_number)} — reported as {@link OperationInProgressException}
-     * (an already-defined, existing failure code — no new one is introduced), since that is
-     * exactly what the collision means: another attempt is concurrently in flight for this
-     * operation.
      */
     private AssessmentRevision dispatchAndPersist(Assessment assessment, AiOperation operation, int attemptNumber,
             AssessmentCommand agentCommand, Predicate<Assessment> staleAtCompletion,
             BiFunction<AgentAttempt, AssessmentAgentResponse, AssessmentRevision> revisionFactory,
-            Function<String, RuntimeException> phase0ConflictException) {
+            Function<String, RuntimeException> phase0ConflictException,
+            IdempotencyCompletionContext idempotencyContext) {
         String correlationId = UUID.randomUUID().toString();
         AtomicReference<AgentAttempt> attemptRef = new AtomicReference<>();
 
@@ -192,12 +204,12 @@ public class AiOperationCoordinator {
                 attemptRef.set(attempt);
             });
         } catch (DataIntegrityViolationException ex) {
-            // Two truly concurrent dispatches reach Phase 0 before either commits — see this
-            // method's javadoc for which constraint fires (and therefore which exception is
-            // thrown) depending on whether `operation` is new or reused. No AiOperation/
-            // AgentAttempt row survives for the loser (the whole Phase 0 transaction rolled
-            // back); no agents/ call is ever made for it.
-            throw phase0ConflictException.apply(assessment.getId().value().toString());
+            // Two truly concurrent dispatches reach Phase 0 before either commits — see
+            // resolvePhase0Conflict's javadoc for how a same-key collision (no real conflict) is
+            // told apart from a different-key one (a genuine race). No AiOperation/AgentAttempt
+            // row survives for the loser (the whole Phase 0 transaction rolled back); no agents/
+            // call is ever made for it.
+            throw resolvePhase0Conflict(assessment, operation, phase0ConflictException);
         }
 
         AgentAttempt attempt = attemptRef.get();
@@ -206,16 +218,39 @@ public class AiOperationCoordinator {
         try {
             response = assessmentAgentClient.generate(agentCommand, correlationId);
         } catch (AgentClientException ex) {
-            persistDispatchFailure(operation, attempt, ex);
+            persistDispatchFailure(operation, attempt, ex, idempotencyContext);
             throw ex;
         }
 
-        return runPhase2(assessment, operation, attempt, response, staleAtCompletion, revisionFactory);
+        return runPhase2(assessment, operation, attempt, response, staleAtCompletion, revisionFactory, idempotencyContext);
+    }
+
+    /**
+     * A Phase-0 unique-constraint collision on {@code (assessmentId, operationType)} always means
+     * exactly one other {@code AiOperation} is currently {@code PENDING}/{@code IN_PROGRESS} for
+     * this pair — {@code findLatestByAssessmentIdAndOperationType} therefore finds that winner
+     * (our own insert never committed). If it carries the SAME idempotency key as the request that
+     * just lost the race, this is not a conflict at all — it is the same logical request arriving
+     * twice (a genuine concurrent duplicate submission, or a client retry racing its own earlier
+     * attempt) — so it is reported as {@link OperationInProgressException}, letting the caller
+     * relay the winner's current (possibly by-now-completed) state instead of a spurious
+     * staleness error. A DIFFERENT key means two distinct, legitimately racing requests — the
+     * caller-supplied {@code phase0ConflictException} (unchanged behavior) applies.
+     */
+    private RuntimeException resolvePhase0Conflict(Assessment assessment, AiOperation operation,
+            Function<String, RuntimeException> phase0ConflictException) {
+        Optional<AiOperation> winner = aiOperationRepository
+                .findLatestByAssessmentIdAndOperationType(assessment.getId(), operation.getOperationType());
+        if (winner.isPresent() && winner.get().getIdempotencyKey().equals(operation.getIdempotencyKey())) {
+            return new OperationInProgressException(assessment.getId().value().toString());
+        }
+        return phase0ConflictException.apply(assessment.getId().value().toString());
     }
 
     private AssessmentRevision runPhase2(Assessment assessment, AiOperation operation, AgentAttempt attempt,
             AssessmentAgentResponse response, Predicate<Assessment> staleAtCompletion,
-            BiFunction<AgentAttempt, AssessmentAgentResponse, AssessmentRevision> revisionFactory) {
+            BiFunction<AgentAttempt, AssessmentAgentResponse, AssessmentRevision> revisionFactory,
+            IdempotencyCompletionContext idempotencyContext) {
         String structuredResultJson = jsonMapper.writeValueAsString(response.result());
         AtomicBoolean staleAtReadTime = new AtomicBoolean(false);
         AtomicReference<AssessmentRevision> revisionRef = new AtomicReference<>();
@@ -243,15 +278,20 @@ public class AiOperationCoordinator {
 
                 assessmentRepository.save(fresh.withCurrentRevision(revision.getId()));
 
+                // A3 Final Idempotency Correction § 3.1/3.3: the IdempotencyRecord is written
+                // inside this same transaction — if this write fails, everything above rolls back
+                // together, so a durable success is never left without its replay record.
+                recordIdempotencyCompletion(idempotencyContext, revision.getId().toString(), 201);
+
                 revisionRef.set(revision);
             });
         } catch (ObjectOptimisticLockingFailureException ex) {
-            persistStaleOnCompletion(operation, attempt, response, structuredResultJson);
+            persistStaleOnCompletion(operation, attempt, response, structuredResultJson, idempotencyContext);
             throw new StaleOnCompletionException(assessment.getId().value().toString());
         }
 
         if (staleAtReadTime.get()) {
-            persistStaleOnCompletion(operation, attempt, response, structuredResultJson);
+            persistStaleOnCompletion(operation, attempt, response, structuredResultJson, idempotencyContext);
             throw new StaleOnCompletionException(assessment.getId().value().toString());
         }
 
@@ -265,15 +305,18 @@ public class AiOperationCoordinator {
      * because no revision was created from this response.
      */
     private void persistStaleOnCompletion(AiOperation operation, AgentAttempt attempt, AssessmentAgentResponse response,
-                                           String structuredResultJson) {
+                                           String structuredResultJson, IdempotencyCompletionContext idempotencyContext) {
         transactionTemplate.executeWithoutResult(status -> {
             agentAttemptRepository.save(attempt.markFailed("STALE_ON_COMPLETION",
                     response.log().provider(), response.log().model(), structuredResultJson));
             aiOperationRepository.save(operation.markFailedTerminal());
+            recordIdempotencyCompletion(idempotencyContext, operation.getId().toString(),
+                    failureResponseStatus(idempotencyContext, "STALE_ON_COMPLETION"));
         });
     }
 
-    private void persistDispatchFailure(AiOperation operation, AgentAttempt attempt, AgentClientException ex) {
+    private void persistDispatchFailure(AiOperation operation, AgentAttempt attempt, AgentClientException ex,
+                                         IdempotencyCompletionContext idempotencyContext) {
         String failureCode = mapFailureCode(ex);
         boolean retryable = isRetryable(failureCode);
         String resolvedProvider = resolvedProviderFrom(ex);
@@ -282,7 +325,31 @@ public class AiOperationCoordinator {
             agentAttemptRepository.save(attempt.markFailed(failureCode, resolvedProvider, resolvedModel, null));
             AiOperation failed = retryable ? operation.markFailedRetryable() : operation.markFailedTerminal();
             aiOperationRepository.save(failed);
+            recordIdempotencyCompletion(idempotencyContext, operation.getId().toString(),
+                    failureResponseStatus(idempotencyContext, failureCode));
         });
+    }
+
+    /** No-op when {@code context} is {@code null} (retry never carries an idempotency key). */
+    private void recordIdempotencyCompletion(IdempotencyCompletionContext context, String resultReference, int responseStatus) {
+        if (context == null) {
+            return;
+        }
+        idempotencyGuard.record(context.scope(), context.operationType(), context.idempotencyKey(),
+                context.requestPayloadHash(), resultReference, responseStatus);
+    }
+
+    /**
+     * Initial generation always replays a durable failure as {@code 202} (the same status
+     * {@link GenerateAssessmentDraftHandler} returns for a fresh dispatch failure). Regenerate
+     * never returns {@code 202} — it derives the original failure's real HTTP status from the
+     * failure code via {@link RegenerateFailureReplay}, so a replay can reproduce that same status.
+     */
+    private static int failureResponseStatus(IdempotencyCompletionContext context, String failureCode) {
+        if (context != null && AiOperationType.CREATE_INITIAL_REVISION.name().equals(context.operationType())) {
+            return 202;
+        }
+        return RegenerateFailureReplay.httpStatus(failureCode);
     }
 
     /** Per LOCAL-CONTRACTS.md § Canonical failure-code taxonomy — no generic synonyms. */

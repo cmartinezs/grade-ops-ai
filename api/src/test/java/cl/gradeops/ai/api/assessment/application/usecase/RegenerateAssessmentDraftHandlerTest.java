@@ -2,16 +2,23 @@ package cl.gradeops.ai.api.assessment.application.usecase;
 
 import cl.gradeops.ai.api.agentclient.AssessmentCommand;
 import cl.gradeops.ai.api.assessment.application.command.RegenerateAssessmentDraftCommand;
+import cl.gradeops.ai.api.assessment.application.exception.OperationInProgressException;
 import cl.gradeops.ai.api.assessment.application.exception.StaleRevisionException;
+import cl.gradeops.ai.api.assessment.application.port.out.AgentAttemptRepositoryPort;
+import cl.gradeops.ai.api.assessment.application.port.out.AiOperationRepositoryPort;
 import cl.gradeops.ai.api.assessment.application.port.out.AssessmentBriefRepositoryPort;
 import cl.gradeops.ai.api.assessment.application.port.out.AssessmentRepositoryPort;
 import cl.gradeops.ai.api.assessment.application.port.out.AssessmentRevisionRepositoryPort;
 import cl.gradeops.ai.api.assessment.application.result.GenerateAssessmentDraftResult;
+import cl.gradeops.ai.api.assessment.domain.model.AgentAttempt;
+import cl.gradeops.ai.api.assessment.domain.model.AiOperation;
+import cl.gradeops.ai.api.assessment.domain.model.AiOperationType;
 import cl.gradeops.ai.api.assessment.domain.model.Assessment;
 import cl.gradeops.ai.api.assessment.domain.model.AssessmentBrief;
 import cl.gradeops.ai.api.assessment.domain.model.AssessmentId;
 import cl.gradeops.ai.api.assessment.domain.model.AssessmentRevision;
 import cl.gradeops.ai.api.assessment.domain.model.AssessmentStatus;
+import cl.gradeops.ai.api.shared.application.idempotency.IdempotencyCompletionContext;
 import cl.gradeops.ai.api.shared.application.idempotency.IdempotencyGuard;
 import cl.gradeops.ai.api.shared.application.idempotency.IdempotencyRecord;
 import cl.gradeops.ai.api.shared.application.idempotency.IdempotencyScope;
@@ -49,6 +56,8 @@ class RegenerateAssessmentDraftHandlerTest {
     @Mock AssessmentRepositoryPort assessmentRepository;
     @Mock AssessmentBriefRepositoryPort assessmentBriefRepository;
     @Mock AssessmentRevisionRepositoryPort assessmentRevisionRepository;
+    @Mock AiOperationRepositoryPort aiOperationRepository;
+    @Mock AgentAttemptRepositoryPort agentAttemptRepository;
     @Mock OwnershipVerifier ownershipVerifier;
     @Mock IdempotencyGuard idempotencyGuard;
     @Mock AiOperationCoordinator aiOperationCoordinator;
@@ -68,7 +77,8 @@ class RegenerateAssessmentDraftHandlerTest {
     @BeforeEach
     void setUp() {
         handler = new RegenerateAssessmentDraftHandler(assessmentRepository, assessmentBriefRepository,
-                assessmentRevisionRepository, ownershipVerifier, idempotencyGuard, aiOperationCoordinator);
+                assessmentRevisionRepository, aiOperationRepository, agentAttemptRepository, ownershipVerifier,
+                idempotencyGuard, aiOperationCoordinator);
     }
 
     private RegenerateAssessmentDraftCommand command(UUID expectedRevisionId) {
@@ -77,7 +87,7 @@ class RegenerateAssessmentDraftHandlerTest {
     }
 
     @Test
-    void shouldCheckIdempotencyThenStalenessThenDelegateToCoordinatorThenRecordOnSuccess() {
+    void shouldCheckIdempotencyThenStalenessThenDelegateToCoordinatorWithAnIdempotencyCompletionContext() {
         when(assessmentRepository.findById(assessmentId)).thenReturn(Optional.of(assessment));
         when(idempotencyGuard.check(any(), eq("REGENERATE_REVISION"), eq("key-1"), any())).thenReturn(Optional.empty());
         when(assessmentBriefRepository.findByAssessmentId(assessmentId)).thenReturn(Optional.of(brief));
@@ -86,7 +96,7 @@ class RegenerateAssessmentDraftHandlerTest {
                 "Instructions v2", List.of("obj2"), List.of("del2"), List.of("con2"),
                 "uid-1", "make it harder", UUID.randomUUID());
         when(aiOperationCoordinator.regenerateRevision(eq(assessment), eq(currentRevision), any(), eq("uid-1"),
-                eq("make it harder"), eq("key-1"))).thenReturn(v2);
+                eq("make it harder"), eq("key-1"), any())).thenReturn(v2);
 
         GenerateAssessmentDraftResult result = handler.execute(command(currentRevisionId));
 
@@ -102,13 +112,18 @@ class RegenerateAssessmentDraftHandlerTest {
         assertThat(scopeCaptor.getValue()).isEqualTo(IdempotencyScope.assessment(assessmentUuid));
 
         ArgumentCaptor<AssessmentCommand> agentCommandCaptor = ArgumentCaptor.forClass(AssessmentCommand.class);
+        ArgumentCaptor<IdempotencyCompletionContext> contextCaptor = ArgumentCaptor.forClass(IdempotencyCompletionContext.class);
         verify(aiOperationCoordinator).regenerateRevision(eq(assessment), eq(currentRevision),
-                agentCommandCaptor.capture(), eq("uid-1"), eq("make it harder"), eq("key-1"));
+                agentCommandCaptor.capture(), eq("uid-1"), eq("make it harder"), eq("key-1"), contextCaptor.capture());
         assertThat(agentCommandCaptor.getValue().adjustmentNotes()).isEqualTo("make it harder");
         assertThat(agentCommandCaptor.getValue().previousDraftId()).isEqualTo(currentRevisionId.toString());
 
-        verify(idempotencyGuard).record(eq(scopeCaptor.getValue()), eq("REGENERATE_REVISION"), eq("key-1"),
-                any(), eq(v2.getId().toString()), eq(201));
+        // A3 Final Idempotency Correction: the handler no longer writes the IdempotencyRecord
+        // itself — the coordinator writes it atomically with the durable outcome instead.
+        assertThat(contextCaptor.getValue().scope()).isEqualTo(scopeCaptor.getValue());
+        assertThat(contextCaptor.getValue().operationType()).isEqualTo("REGENERATE_REVISION");
+        assertThat(contextCaptor.getValue().idempotencyKey()).isEqualTo("key-1");
+        verify(idempotencyGuard, never()).record(any(), any(), any(), any(), any(), any());
     }
 
     @Test
@@ -144,11 +159,11 @@ class RegenerateAssessmentDraftHandlerTest {
         when(assessmentRevisionRepository.findById(currentRevisionId)).thenReturn(Optional.of(currentRevision));
         AssessmentRevision v2 = AssessmentRevision.regenerateFromAi(currentRevision, "T2", "C2", "I2",
                 List.of(), List.of(), List.of(), "uid-1", "make it harder", UUID.randomUUID());
-        when(aiOperationCoordinator.regenerateRevision(any(), any(), any(), any(), any(), any())).thenReturn(v2);
+        when(aiOperationCoordinator.regenerateRevision(any(), any(), any(), any(), any(), any(), any())).thenReturn(v2);
 
         handler.execute(command(currentRevisionId));
 
-        verify(aiOperationCoordinator).regenerateRevision(any(), any(), any(), any(), eq("make it harder"), any());
+        verify(aiOperationCoordinator).regenerateRevision(any(), any(), any(), any(), eq("make it harder"), any(), any());
     }
 
     @Test
@@ -165,6 +180,95 @@ class RegenerateAssessmentDraftHandlerTest {
         GenerateAssessmentDraftResult result = handler.execute(command(currentRevisionId));
 
         assertThat(result.title()).isEqualTo("Prior Title");
+        verifyNoInteractions(assessmentBriefRepository, aiOperationCoordinator);
+    }
+
+    @Test
+    void shouldThrowOperationInProgressWithoutDispatchingWhenAMatchingKeyOperationIsAlreadyInFlight() {
+        // A3 Final Idempotency Correction § 5/6: no IdempotencyRecord exists yet for this key, but
+        // an AiOperation with the SAME key is already PENDING/IN_PROGRESS. Regenerate never
+        // returns 202 — this must surface as 409 OPERATION_IN_PROGRESS, never a redispatch.
+        when(assessmentRepository.findById(assessmentId)).thenReturn(Optional.of(assessment));
+        when(idempotencyGuard.check(any(), eq("REGENERATE_REVISION"), eq("key-1"), any())).thenReturn(Optional.empty());
+        AiOperation inFlight = AiOperation.create(assessmentId, AiOperationType.REGENERATE_REVISION, "uid-1",
+                "key-1", currentRevisionId).markInProgress();
+        when(aiOperationRepository.findLatestByAssessmentIdAndOperationType(assessmentId, AiOperationType.REGENERATE_REVISION))
+                .thenReturn(Optional.of(inFlight));
+
+        assertThatThrownBy(() -> handler.execute(command(currentRevisionId)))
+                .isInstanceOf(OperationInProgressException.class);
+
+        verifyNoInteractions(aiOperationCoordinator, assessmentBriefRepository);
+        verify(idempotencyGuard, never()).record(any(), any(), any(), any(), any(), any());
+    }
+
+    @Test
+    void shouldReplaySuccessAndBackfillTheMissingRecordWhenAMatchingKeyOperationAlreadySucceeded() {
+        // A pre-fix orphaned AiOperation: SUCCEEDED, matching key, but no IdempotencyRecord ever
+        // got written for it. Must replay the existing revision, backfill the record, never
+        // redispatch to agents/.
+        when(assessmentRepository.findById(assessmentId)).thenReturn(Optional.of(assessment));
+        when(idempotencyGuard.check(any(), eq("REGENERATE_REVISION"), eq("key-1"), any())).thenReturn(Optional.empty());
+        AssessmentRevision priorRevision = AssessmentRevision.regenerateFromAi(currentRevision, "Orphaned V2", "C",
+                "I", List.of(), List.of(), List.of(), "uid-1", "make it harder", UUID.randomUUID());
+        AiOperation succeeded = AiOperation.create(assessmentId, AiOperationType.REGENERATE_REVISION, "uid-1",
+                "key-1", currentRevisionId).markInProgress().markSucceeded(priorRevision.getId());
+        when(aiOperationRepository.findLatestByAssessmentIdAndOperationType(assessmentId, AiOperationType.REGENERATE_REVISION))
+                .thenReturn(Optional.of(succeeded));
+        when(assessmentRevisionRepository.findById(priorRevision.getId())).thenReturn(Optional.of(priorRevision));
+
+        GenerateAssessmentDraftResult result = handler.execute(command(currentRevisionId));
+
+        assertThat(result.title()).isEqualTo("Orphaned V2");
+        verifyNoInteractions(aiOperationCoordinator, assessmentBriefRepository);
+        verify(idempotencyGuard).record(any(), eq("REGENERATE_REVISION"), eq("key-1"),
+                any(), eq(priorRevision.getId().toString()), eq(201));
+    }
+
+    @Test
+    void shouldReconstructAndThrowTheOriginalFailureWhenAMatchingKeyOperationAlreadyFailed() {
+        // A pre-fix orphaned AiOperation: FAILED_RETRYABLE, matching key, no IdempotencyRecord.
+        // Must reconstruct and throw the SAME exception the original dispatch would have thrown
+        // (never a generic error), backfill the record, never redispatch.
+        when(assessmentRepository.findById(assessmentId)).thenReturn(Optional.of(assessment));
+        when(idempotencyGuard.check(any(), eq("REGENERATE_REVISION"), eq("key-1"), any())).thenReturn(Optional.empty());
+        AiOperation failed = AiOperation.create(assessmentId, AiOperationType.REGENERATE_REVISION, "uid-1",
+                "key-1", currentRevisionId).markInProgress().markFailedRetryable();
+        when(aiOperationRepository.findLatestByAssessmentIdAndOperationType(assessmentId, AiOperationType.REGENERATE_REVISION))
+                .thenReturn(Optional.of(failed));
+        AgentAttempt failedAttempt = AgentAttempt.dispatch(failed.getId(), 1, "assessment", "v1", "corr-1")
+                .markFailed("AGENT_UNAVAILABLE", null, null, null);
+        when(agentAttemptRepository.findAllByAiOperationId(failed.getId())).thenReturn(List.of(failedAttempt));
+
+        assertThatThrownBy(() -> handler.execute(command(currentRevisionId)))
+                .isInstanceOf(cl.gradeops.ai.api.agentclient.AgentClientException.class)
+                .satisfies(ex -> assertThat(((cl.gradeops.ai.api.agentclient.AgentClientException) ex).reason())
+                        .isEqualTo(cl.gradeops.ai.api.agentclient.AgentClientException.Reason.UNREACHABLE));
+
+        verifyNoInteractions(aiOperationCoordinator, assessmentBriefRepository);
+        verify(idempotencyGuard).record(any(), eq("REGENERATE_REVISION"), eq("key-1"),
+                any(), eq(failed.getId().toString()), eq(503));
+    }
+
+    @Test
+    void shouldReplayAFailureRecordByReconstructingTheOriginalExceptionRatherThanRedispatching() {
+        when(assessmentRepository.findById(assessmentId)).thenReturn(Optional.of(assessment));
+        AiOperation failed = AiOperation.create(assessmentId, AiOperationType.REGENERATE_REVISION, "uid-1",
+                "key-1", currentRevisionId).markInProgress().markFailedRetryable();
+        IdempotencyRecord priorRecord = IdempotencyRecord.create(IdempotencyScope.assessment(assessmentUuid),
+                "REGENERATE_REVISION", "key-1", "hash", failed.getId().toString(), 422);
+        when(idempotencyGuard.check(any(), eq("REGENERATE_REVISION"), eq("key-1"), any()))
+                .thenReturn(Optional.of(priorRecord));
+        when(aiOperationRepository.findById(failed.getId())).thenReturn(Optional.of(failed));
+        AgentAttempt failedAttempt = AgentAttempt.dispatch(failed.getId(), 1, "assessment", "v1", "corr-1")
+                .markFailed("MALFORMED_OUTPUT", "gemini", "gemini-2.0-flash", null);
+        when(agentAttemptRepository.findAllByAiOperationId(failed.getId())).thenReturn(List.of(failedAttempt));
+
+        assertThatThrownBy(() -> handler.execute(command(currentRevisionId)))
+                .isInstanceOf(cl.gradeops.ai.api.agentclient.AgentClientException.class)
+                .satisfies(ex -> assertThat(((cl.gradeops.ai.api.agentclient.AgentClientException) ex).reason())
+                        .isEqualTo(cl.gradeops.ai.api.agentclient.AgentClientException.Reason.AGENT_REJECTED));
+
         verifyNoInteractions(assessmentBriefRepository, aiOperationCoordinator);
     }
 

@@ -3,6 +3,7 @@ package cl.gradeops.ai.api.assessment.application.usecase;
 import cl.gradeops.ai.api.agentclient.AgentClientException;
 import cl.gradeops.ai.api.agentclient.AssessmentAgentClient;
 import cl.gradeops.ai.api.agentclient.AssessmentAgentResponse;
+import cl.gradeops.ai.api.agentclient.AssessmentCommand;
 import cl.gradeops.ai.api.assessment.application.command.GenerateAssessmentDraftCommand;
 import cl.gradeops.ai.api.assessment.application.exception.AlreadyGeneratedException;
 import cl.gradeops.ai.api.assessment.application.result.GenerateAssessmentDraftOutcome;
@@ -10,7 +11,10 @@ import cl.gradeops.ai.api.assessment.application.result.GenerateAssessmentDraftR
 import cl.gradeops.ai.api.assessment.domain.model.Assessment;
 import cl.gradeops.ai.api.assessment.domain.model.AssessmentBrief;
 import cl.gradeops.ai.api.assessment.domain.model.AgentAttemptStatus;
+import cl.gradeops.ai.api.assessment.domain.model.AiOperation;
 import cl.gradeops.ai.api.assessment.domain.model.AiOperationStatus;
+import cl.gradeops.ai.api.assessment.domain.model.AiOperationType;
+import cl.gradeops.ai.api.assessment.domain.model.AssessmentRevision;
 import cl.gradeops.ai.api.assessment.infrastructure.adapter.out.persistence.AgentAttemptJpaEntity;
 import cl.gradeops.ai.api.assessment.infrastructure.adapter.out.persistence.AgentAttemptJpaRepository;
 import cl.gradeops.ai.api.assessment.infrastructure.adapter.out.persistence.AgentAttemptPersistenceAdapter;
@@ -28,7 +32,9 @@ import cl.gradeops.ai.api.assessment.infrastructure.adapter.out.persistence.Asse
 import cl.gradeops.ai.api.assessment.infrastructure.adapter.out.persistence.AssessmentRevisionJpaRepository;
 import cl.gradeops.ai.api.assessment.infrastructure.adapter.out.persistence.AssessmentRevisionPersistenceAdapter;
 import cl.gradeops.ai.api.assessment.infrastructure.adapter.out.persistence.AssessmentRevisionPersistenceMapper;
+import cl.gradeops.ai.api.shared.application.idempotency.IdempotencyCompletionContext;
 import cl.gradeops.ai.api.shared.application.idempotency.IdempotencyGuard;
+import cl.gradeops.ai.api.shared.application.idempotency.IdempotencyScope;
 import cl.gradeops.ai.api.shared.application.security.OwnershipVerifier;
 import cl.gradeops.ai.api.shared.infrastructure.adapter.out.persistence.IdempotencyRecordJpaRepository;
 import cl.gradeops.ai.api.shared.infrastructure.adapter.out.persistence.IdempotencyRecordPersistenceAdapter;
@@ -44,14 +50,23 @@ import org.springframework.boot.jdbc.test.autoconfigure.AutoConfigureTestDatabas
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.test.context.TestPropertySource;
+import org.springframework.test.context.transaction.TestTransaction;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.testcontainers.containers.PostgreSQLContainer;
 import tools.jackson.databind.json.JsonMapper;
 
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.Callable;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -131,7 +146,7 @@ class GenerateAssessmentDraftHandlerIntegrationTest {
         JsonMapper jsonMapper = JsonMapper.builder().build();
 
         AiOperationCoordinator coordinator = new AiOperationCoordinator(assessmentAdapter, aiOperationAdapter,
-                agentAttemptAdapter, revisionAdapter, assessmentAgentClient, jsonMapper, transactionManager);
+                agentAttemptAdapter, revisionAdapter, assessmentAgentClient, idempotencyGuard, jsonMapper, transactionManager);
 
         handler = new GenerateAssessmentDraftHandler(assessmentAdapter, briefAdapter, revisionAdapter,
                 aiOperationAdapter, agentAttemptAdapter, new OwnershipVerifier(), idempotencyGuard, coordinator);
@@ -292,5 +307,163 @@ class GenerateAssessmentDraftHandlerIntegrationTest {
 
         assertThat(result).isNotNull();
         assertThat(result.versionNumber()).isEqualTo(1);
+    }
+
+    @Test
+    void shouldRecoverAndBackfillTheMissingRecordForAPreFixOrphanedSucceededOperation() {
+        // A3 Final Idempotency Correction § 5: simulates data written by the PREVIOUS (non-atomic)
+        // implementation — a durable AiOperation/AgentAttempt/AssessmentRevision that succeeded,
+        // with NO IdempotencyRecord ever written for it (the exact crash-window gap this
+        // correction closes). A fresh request with the SAME key must replay it, backfill the
+        // missing record, and never call agents/ again.
+        AiOperationPersistenceAdapter aiOperationAdapter =
+                new AiOperationPersistenceAdapter(aiOperationJpaRepository, new AiOperationPersistenceMapper());
+        AgentAttemptPersistenceAdapter agentAttemptAdapter =
+                new AgentAttemptPersistenceAdapter(agentAttemptJpaRepository, new AgentAttemptPersistenceMapper());
+        AssessmentRevisionPersistenceAdapter revisionAdapter =
+                new AssessmentRevisionPersistenceAdapter(revisionJpaRepository, new AssessmentRevisionPersistenceMapper());
+
+        AiOperation orphanedOperation = AiOperation.create(assessment.getId(), AiOperationType.CREATE_INITIAL_REVISION,
+                "uid-1", "orphaned-key", null).markInProgress();
+        aiOperationAdapter.save(orphanedOperation);
+        cl.gradeops.ai.api.assessment.domain.model.AgentAttempt orphanedAttempt =
+                cl.gradeops.ai.api.assessment.domain.model.AgentAttempt.dispatch(
+                                orphanedOperation.getId(), 1, "assessment", "v1", "corr-orphan")
+                        .markCompleted("gemini", "gemini-2.0-flash", null, 100, 200, null, "{}");
+        agentAttemptAdapter.save(orphanedAttempt);
+        AssessmentRevision orphanedRevision = AssessmentRevision.generateFromAi(assessment.getId(),
+                "Orphaned", "Context", "Instructions", List.of("obj"), List.of("del"), List.of("con"),
+                "uid-1", orphanedAttempt.getId());
+        revisionAdapter.save(orphanedRevision);
+        assessmentAdapter.save(assessment.withCurrentRevision(orphanedRevision.getId()));
+        aiOperationAdapter.save(orphanedOperation.markSucceeded(orphanedRevision.getId()));
+        entityManager.flush();
+        entityManager.clear();
+
+        GenerateAssessmentDraftOutcome outcome = handler.execute(
+                new GenerateAssessmentDraftCommand(assessment.getId().value(), "uid-1", "orphaned-key"));
+
+        assertThat(outcome).isInstanceOf(GenerateAssessmentDraftOutcome.RevisionCreated.class);
+        var result = ((GenerateAssessmentDraftOutcome.RevisionCreated) outcome).revision();
+        assertThat(result.draftId()).isEqualTo(orphanedRevision.getId());
+        verifyNoInteractions(assessmentAgentClient);
+
+        assertThat(idempotencyRecordJpaRepository.findAll()).anySatisfy(record ->
+                assertThat(record.getResultReference()).isEqualTo(orphanedRevision.getId().toString()));
+    }
+
+    @Test
+    void shouldAllowExactlyOneDispatchWhenTwoConcurrentInitialGenerationRequestsShareTheSameIdempotencyKey() throws Exception {
+        String teacherUid = "uid-concurrent-gen-samekey-" + UUID.randomUUID();
+        jdbcTemplate.update(
+                "INSERT INTO teacher (firebase_uid, first_name, last_name, email) VALUES (?, ?, ?, ?)",
+                teacherUid, "Test", "Teacher", teacherUid + "@test.com");
+        Assessment concurrentAssessment = Assessment.create(teacherUid);
+        assessmentAdapter.save(concurrentAssessment);
+        briefAdapter.save(AssessmentBrief.create(concurrentAssessment.getId(), "goal", "topic", "basic", "90min", "Java"));
+        entityManager.flush();
+        entityManager.clear();
+
+        when(assessmentAgentClient.generate(any(), anyString())).thenAnswer(inv -> successResponse());
+
+        TestTransaction.flagForCommit();
+        TestTransaction.end();
+
+        int threadCount = 2;
+        ExecutorService executor = Executors.newFixedThreadPool(threadCount);
+        CountDownLatch ready = new CountDownLatch(threadCount);
+        CountDownLatch go = new CountDownLatch(1);
+        try {
+            Callable<GenerateAssessmentDraftOutcome> attempt = () -> {
+                ready.countDown();
+                go.await();
+                return handler.execute(new GenerateAssessmentDraftCommand(
+                        concurrentAssessment.getId().value(), teacherUid, "same-concurrent-gen-key"));
+            };
+
+            List<Future<GenerateAssessmentDraftOutcome>> futures = new ArrayList<>();
+            for (int i = 0; i < threadCount; i++) {
+                futures.add(executor.submit(attempt));
+            }
+            assertThat(ready.await(5, TimeUnit.SECONDS)).isTrue();
+            go.countDown();
+
+            List<GenerateAssessmentDraftOutcome> results = new ArrayList<>();
+            for (Future<GenerateAssessmentDraftOutcome> f : futures) {
+                results.add(f.get(15, TimeUnit.SECONDS));
+            }
+
+            // Neither request ever throws — a same-key race is never a real conflict, only the
+            // dispatch itself is exclusive (A3 Final Idempotency Correction § 6).
+            assertThat(results).hasSize(2).doesNotContainNull();
+            verify(assessmentAgentClient, times(1)).generate(any(), anyString());
+            assertThat(aiOperationJpaRepository.findAll().stream()
+                    .filter(op -> op.getAssessmentId().equals(concurrentAssessment.getId().value())).count())
+                    .isEqualTo(1);
+        } finally {
+            executor.shutdown();
+            jdbcTemplate.update("DELETE FROM idempotency_records WHERE assessment_id = ?", concurrentAssessment.getId().value());
+            jdbcTemplate.update("DELETE FROM assessments WHERE id = ?", concurrentAssessment.getId().value());
+            jdbcTemplate.update("DELETE FROM assessment_briefs WHERE assessment_id = ?", concurrentAssessment.getId().value());
+            jdbcTemplate.update("DELETE FROM teacher WHERE firebase_uid = ?", teacherUid);
+            jdbcTemplate.update("DELETE FROM assessment_briefs WHERE assessment_id = ?", assessment.getId().value());
+            jdbcTemplate.update("DELETE FROM assessments WHERE id = ?", assessment.getId().value());
+            jdbcTemplate.update("DELETE FROM teacher WHERE firebase_uid = ?", "uid-1");
+            TestTransaction.start();
+        }
+    }
+
+    @Test
+    void shouldRollBackTheEntireSuccessfulOutcomeWhenTheIdempotencyRecordWriteFailsInTheSamePhase2Transaction() throws Exception {
+        // A3 Final Idempotency Correction § 7 "Atomicidad de éxito", proven against a REAL
+        // Postgres transaction (not mocks). Drives the coordinator directly (bypassing the
+        // handler's own idempotencyGuard.check(), which would otherwise short-circuit to a
+        // replay) so a conflicting IdempotencyRecord can be pre-seeded under the exact tuple the
+        // coordinator's own Phase 2 write will try to insert. The resulting real UNIQUE-constraint
+        // violation must roll back the revision/attempt-completion/operation-success/CAS write
+        // issued in the same transactional callback — not leave a half-applied success.
+        AiOperationPersistenceAdapter aiOperationAdapter =
+                new AiOperationPersistenceAdapter(aiOperationJpaRepository, new AiOperationPersistenceMapper());
+        AgentAttemptPersistenceAdapter agentAttemptAdapter =
+                new AgentAttemptPersistenceAdapter(agentAttemptJpaRepository, new AgentAttemptPersistenceMapper());
+        AssessmentRevisionPersistenceAdapter revisionAdapter =
+                new AssessmentRevisionPersistenceAdapter(revisionJpaRepository, new AssessmentRevisionPersistenceMapper());
+        IdempotencyRecordPersistenceAdapter idempotencyAdapter = new IdempotencyRecordPersistenceAdapter(
+                idempotencyRecordJpaRepository, new IdempotencyRecordPersistenceMapper());
+        IdempotencyGuard localIdempotencyGuard = new IdempotencyGuard(idempotencyAdapter);
+        AiOperationCoordinator coordinator = new AiOperationCoordinator(assessmentAdapter, aiOperationAdapter,
+                agentAttemptAdapter, revisionAdapter, assessmentAgentClient, localIdempotencyGuard,
+                JsonMapper.builder().build(), transactionManager);
+        IdempotencyScope scope = IdempotencyScope.assessment(assessment.getId().value());
+
+        TestTransaction.flagForCommit();
+        TestTransaction.end();
+        try {
+            // Real, physically-committed pre-seed of a conflicting record under the exact tuple
+            // the coordinator will try to insert at Phase 2 completion.
+            localIdempotencyGuard.record(scope, "CREATE_INITIAL_REVISION", "conflict-key", "irrelevant-hash",
+                    UUID.randomUUID().toString(), 201);
+
+            when(assessmentAgentClient.generate(any(), anyString())).thenReturn(successResponse());
+            IdempotencyCompletionContext context = new IdempotencyCompletionContext(
+                    scope, "CREATE_INITIAL_REVISION", "conflict-key", "irrelevant-hash");
+
+            assertThatThrownBy(() -> coordinator.createInitialRevision(assessment,
+                    new AssessmentCommand("goal", "topic", "basic", "90min", "Java", null, null, null, null, null),
+                    "uid-1", "conflict-key", context))
+                    .isInstanceOf(DataIntegrityViolationException.class);
+
+            assertThat(revisionJpaRepository.findAllByAssessmentIdOrderByVersionNumberDesc(assessment.getId().value()))
+                    .isEmpty();
+            Assessment reloaded = assessmentAdapter.findById(assessment.getId()).orElseThrow();
+            assertThat(reloaded.getCurrentRevisionId()).isNull();
+        } finally {
+            jdbcTemplate.update("DELETE FROM idempotency_records WHERE assessment_id = ?", assessment.getId().value());
+            jdbcTemplate.update("DELETE FROM ai_operations WHERE assessment_id = ?", assessment.getId().value());
+            jdbcTemplate.update("DELETE FROM assessment_briefs WHERE assessment_id = ?", assessment.getId().value());
+            jdbcTemplate.update("DELETE FROM assessments WHERE id = ?", assessment.getId().value());
+            jdbcTemplate.update("DELETE FROM teacher WHERE firebase_uid = ?", "uid-1");
+            TestTransaction.start();
+        }
     }
 }
