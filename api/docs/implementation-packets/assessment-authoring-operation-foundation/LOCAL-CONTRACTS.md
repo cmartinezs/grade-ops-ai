@@ -240,7 +240,38 @@ Read the agents/ response payload directly for `INVALID_COMMAND`/`MALFORMED_OUTP
 |---|---|
 | `AiOperation.status` | `PENDING`, `IN_PROGRESS`, `SUCCEEDED`, `FAILED_RETRYABLE`, `FAILED_TERMINAL` |
 | `AgentAttempt.status` | `DISPATCHED`, `COMPLETED`, `FAILED` |
-| `GET .../generation-status` response `status` | `NOT_STARTED`, `IN_PROGRESS`, `FAILED_RETRYABLE`, `INDETERMINATE` (plus implicit success via `currentRevisionId` non-null) |
+| `GET .../generation-status` response `status` | `NOT_STARTED`, `IN_PROGRESS`, `FAILED_RETRYABLE`, `FAILED_TERMINAL`, `INDETERMINATE`, `SUCCEEDED` — **six explicit values, see amendment below** |
+
+### Amendment (2026-07-30): `SUCCEEDED` and `FAILED_TERMINAL` made explicit
+
+This row originally read `NOT_STARTED`, `IN_PROGRESS`, `FAILED_RETRYABLE`, `INDETERMINATE` "plus
+implicit success via `currentRevisionId` non-null" — a four-value sketch with no honest
+representation for a terminal, non-retryable failure. Session A3 discovered this gap while
+implementing `GetGenerationStatusHandler`: an `AiOperation` in `FAILED_TERMINAL` status (e.g.
+`AGENT_REJECTED`, `INVALID_COMMAND`) has no truthful four-value mapping — reporting it as
+`FAILED_RETRYABLE` would tell the client to retry when it must not, and reporting it as
+`NOT_STARTED` would hide that a real, failed attempt exists. Using an incorrect status is worse
+than widening the read model by two values, so this amendment makes `SUCCEEDED` and
+`FAILED_TERMINAL` first-class, explicit members of the response taxonomy instead of one implicit
+special case and one unrepresentable case. Every name is spelled exactly as `AiOperation.status`
+spells it; no synonym is introduced. Full rationale:
+[Authoring Operation Contract § Amendment
+(2026-07-30)](../../../../docs/99-decisions/2026-07-28-authoring-operation-contract.md#amendment-2026-07-30-generation-status-six-value-taxonomy).
+**Session D (Web) must update its `GenerationStatusValue` (or equivalent) to accept `SUCCEEDED`
+and `FAILED_TERMINAL`** — Web already resolves `SUCCEEDED` via `currentRevisionId` being
+non-null, so that part needs no behavior change, but Web has no rendering path today for a
+terminal, non-retryable failure and must add a dedicated (non-retryable) view for it.
+
+### Per-value semantics
+
+```text
+SUCCEEDED:        currentRevisionId non-null, retryable false
+FAILED_TERMINAL:   failureCode present when available, currentRevisionId null, retryable false
+FAILED_RETRYABLE:  failureCode present, currentRevisionId null, retryable true
+IN_PROGRESS:       retryable false
+INDETERMINATE:     retryable true
+NOT_STARTED:       no operation and no revision, retryable false
+```
 
 ## Orphaned in-flight detection (no scheduler)
 

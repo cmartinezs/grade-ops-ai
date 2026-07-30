@@ -166,26 +166,41 @@ response DTOs in play; there is no separate "revision DTO" — `draftId` is genu
 `AssessmentRevision.id`.
 
 ## Status codes
+
+**Corrected by A3 Contract Correction (2026-07-30) — see the addendum at the bottom of this
+document.** This table and the note below it originally documented `POST .../draft` as
+201-or-typed-error-only, never `202`. That was wrong: it resolved a real ambiguity in the
+Authoring Operation Contract ADR in the wrong direction (see the superseded note, kept below for
+audit history). The table now reflects the corrected, current behavior.
+
 | Endpoint | Success | Typed errors |
 |---|---|---|
-| `POST /assessments/{id}/draft` (unchanged, A2) | 201 | 404, 409 ALREADY_GENERATED, 409 IDEMPOTENCY_KEY_PAYLOAD_MISMATCH, 400 MISSING_HEADER, 422 (agent rejected), 502/503 (agent transport) |
-| `POST /assessments/{id}/draft/regenerate` | 201 | 404, 409 STALE_REVISION, 409 IDEMPOTENCY_KEY_PAYLOAD_MISMATCH, 400 MISSING_HEADER, 422, 502/503 |
+| `POST /assessments/{id}/draft` | 201 (`RevisionCreated`), or **202** (`OperationAccepted` — a durable `AiOperation`/`AgentAttempt` was recorded but the dispatch failed: `AGENT_UNAVAILABLE`/`AGENT_ERROR`/`AGENT_REJECTED`/`INVALID_COMMAND`/`MALFORMED_OUTPUT`) | 404, 409 ALREADY_GENERATED, 409 IDEMPOTENCY_KEY_PAYLOAD_MISMATCH, 400 MISSING_HEADER |
+| `POST /assessments/{id}/draft/regenerate` | 201 (unaffected by this correction — regenerate never leaves the assessment revision-less, so it keeps its 201-or-typed-error contract) | 404, 409 STALE_REVISION, 409 IDEMPOTENCY_KEY_PAYLOAD_MISMATCH, 400 MISSING_HEADER, 422, 502/503 |
 | `POST /assessments/{id}/draft/retry` | **202 always** | 404, 409 NO_ACTIVE_OPERATION_TO_RETRY, 409 OPERATION_IN_PROGRESS |
 | `GET /assessments/{id}/generation-status` | 200 always | 404 |
 | `POST /assessments/{id}/revisions` | 201 | 404, 409 STALE_REVISION, 422 (validation) |
 | `GET /assessments/{id}/draft` | 200 | 404 (no revision yet) |
 | `GET /assessments/{id}/draft/versions` | 200 (possibly empty list — never 404 for zero revisions on an owned assessment) | 404 (assessment not found/owned) |
+| `POST /api/v1/assessments` | 201 | 400 MISSING_HEADER, 409 IDEMPOTENCY_KEY_PAYLOAD_MISMATCH (both new in the correction) |
 | `PATCH /assessments/{id}/draft` | — | **405** (path exists, method doesn't) |
 
-**Note on generate/regenerate's "202" possibility:** LOCAL-CONTRACTS.md's endpoint table lists
-`201 or 202` for generate. This implementation only ever returns `201` (success) or a typed
-error status from generate/regenerate — never `202`. This is a deliberate, documented
-resolution of a real ambiguity in the Authoring Operation Contract ADR (its prose mentions a
-`202`-for-durable-failure path, but its own Typed Error Codes table marks response codes for
-generate/regenerate as "(unchanged)," and its Open Consequences section explicitly defers
-"`202` not implemented now"). Retry is the **only** endpoint that actually returns `202` in
-this codebase. **This directly affects Web C alignment item 3 below — flagged as
-REQUIRES WEB ADJUSTMENT IN D.**
+**Superseded note (kept for audit history, no longer accurate — see correction above):** "Note
+on generate/regenerate's '202' possibility: LOCAL-CONTRACTS.md's endpoint table lists `201 or
+202` for generate. This implementation only ever returns `201` (success) or a typed error status
+from generate/regenerate — never `202`. This is a deliberate, documented resolution of a real
+ambiguity in the Authoring Operation Contract ADR (its prose mentions a `202`-for-durable-failure
+path, but its own Typed Error Codes table marks response codes for generate/regenerate as
+'(unchanged),' and its Open Consequences section explicitly defers '`202` not implemented
+now'). Retry is the only endpoint that actually returns `202` in this codebase. This directly
+affects Web C alignment item 3 below — flagged as REQUIRES WEB ADJUSTMENT IN D." This
+resolution favored the ADR's own Typed Error Codes table and Open Consequences section over its
+prose; the correction determined the prose (`POST .../draft` § "On failure ... 202 Accepted")
+was in fact the intended, authoritative behavior for initial generation specifically (not
+regenerate), and implements it accordingly. `422`/`502`/`503` no longer appear for generate,
+since every dispatch failure now returns `202` with a typed `failureCode` in the body instead of
+a bare HTTP error status — 422/502/503 remain reachable only from regenerate, unaffected by this
+correction.
 
 ## Conflict semantics
 All five typed 409s use the exact same body shape, `ApiConflictErrorResponse`:
@@ -294,7 +309,14 @@ not a workaround. Renamed to `shouldUseCurrentRevisionTitleWhenRevisionExists`.
   `AssessmentDraftPersistenceMapper` and `AgentExecutionLogRepositoryPort`/
   `AgentExecutionLogPersistenceAdapter`/`AgentExecutionLogJpaRepository`/
   `AgentExecutionLogPersistenceMapper`** are now confirmed **unreferenced by any application
-  handler** (verified: `grep -rn "^import.*AssessmentDraftRepositoryPort\|^import.*AssessmentDraftPersistenceAdapter" src/main/java` and the equivalent for `AgentExecutionLogRepositoryPort` each return exactly one hit — the adapter class's own self-referencing import — plus `AssessmentConfig`'s now-orphaned `@Bean` methods for the draft adapter). `AssessmentDraft`/`AgentExecutionLog` domain classes, their JPA entities, and the `assessment_drafts`/`agent_execution_logs` tables themselves are untouched (LOCAL-CONTRACTS.md: "not dropped in this cut"). **This is the exact, complete scope for A4's Task 12/13 cleanup** — deleting these eight now-dead classes plus their `AssessmentConfig` bean wiring, and (Task 13) actually dropping the two tables via a Flyway migration once the legacy-migration script (Task 06, already run) is confirmed to have moved every row into `assessment_revisions`.
+  handler** (verified: `grep -rn "^import.*AssessmentDraftRepositoryPort\|^import.*AssessmentDraftPersistenceAdapter" src/main/java` and the equivalent for `AgentExecutionLogRepositoryPort` each return exactly one hit — the adapter class's own self-referencing import — plus `AssessmentConfig`'s now-orphaned `@Bean` methods for the draft adapter). `AssessmentDraft`/`AgentExecutionLog` domain classes, their JPA entities, and the `assessment_drafts`/`agent_execution_logs` tables themselves are untouched (LOCAL-CONTRACTS.md: "not dropped in this cut"). **This is the exact, complete scope for A4's Task 12/13 cleanup** — creating `V17` (backfill/migration), deleting these eight now-dead classes plus their `AssessmentConfig` bean wiring.
+  **Corrected by A3 Contract Correction (2026-07-30):** A4 does **not** drop `assessment_drafts`/
+  `agent_execution_logs` — both tables are retained, read-only, for one full release after the
+  legacy-migration script (Task 06) has moved every row into `assessment_revisions`/`ai_operations`/
+  `agent_attempts`. The line above previously stated A4 would "actually drop the two tables via a
+  Flyway migration" — that claim was incorrect and is superseded by this note, not silently
+  deleted, so the correction itself stays auditable. See the addendum at the bottom of this
+  document.
 - `OPERATION_IN_PROGRESS` is not exercised against a real, genuinely-still-running dispatch end
   to end (see "Conflict semantics" above) — low risk, since the same underlying state-machine
   branch is covered at the unit level and the equivalent real-DB race is covered by the
@@ -308,6 +330,9 @@ not a workaround. Renamed to `shouldUseCurrentRevisionTitleWhenRevisionExists`.
   scopes — true for the scopes themselves (`TEACHER` vs `ASSESSMENT`), but the create leg is
   currently unenforced server-side. Flagging for A4 or a dedicated fix; not blocking, since an
   unenforced-but-sent header is harmless.
+  **RESOLVED by A3 Contract Correction (2026-07-30):** `Idempotency-Key` is now required and
+  enforced on `POST /api/v1/assessments` — see the addendum at the bottom of this document. This
+  bullet is left in place, not deleted, as the historical record of the gap the correction closed.
 
 ## Blockers
 None.
@@ -343,15 +368,21 @@ this A3 session prompt > the Web handoff's own assumptions.
    needed.
 
 3. **Initial-generate's `202` body is `AiOperationDto { id, status, failureCode? }`** —
-   **REQUIRES WEB ADJUSTMENT IN D.** As documented above under "Status codes," `POST
-   .../draft` and `POST .../draft/regenerate` **never return `202`** in this implementation —
-   only `201` (success) or a typed error status. The `202`-handling branch Web built for
-   generate/regenerate is unreachable against the real API; it is not harmful (dead code, not a
-   parse-time crash — Web would simply never receive a `202` from those two endpoints), but
-   Session D should remove or clearly mark that branch as retry-only. Retry's own `202` body
-   *does* roughly match the assumed shape (`id`, `status`, `failureCode`) plus two additional
-   fields this implementation adds (`operationType`, `retryable`, `resultRevisionId`) — harmless
-   for Web since item 4 means it never parses this body regardless.
+   **CONFIRMED after A3 Contract Correction (2026-07-30).** At original A3 handoff time, `POST
+   .../draft` and `POST .../draft/regenerate` never returned `202` — only `201` or a typed error
+   status — and this section originally flagged Web's `202`-handling branch for generate as
+   unreachable dead code, recommending Session D remove or mark it retry-only. **That
+   recommendation is now reversed and Web's original assumption was correct**: the Authoring
+   Operation Contract ADR's prose (`POST .../draft` § "On failure ... 202 Accepted") was the
+   authoritative source, and the correction implements it — `POST .../draft` now returns `202`
+   with an `AiOperationResponse`-shaped body (`id`, `operationType`, `status`, `failureCode`,
+   `retryable`, `resultRevisionId`) whenever a durable `AiOperation`/`AgentAttempt` was recorded
+   but the dispatch itself failed (`AGENT_UNAVAILABLE`/`AGENT_ERROR`/`AGENT_REJECTED`/
+   `INVALID_COMMAND`/`MALFORMED_OUTPUT`), success still returns `201`. **Regenerate is
+   unaffected** — it still only returns `201` or a typed error, since it never leaves an
+   assessment revision-less to begin with (only initial generation can). Session D does **not**
+   need to remove Web's generate-`202` branch after all; only regenerate's `202` branch (if Web
+   built one) remains genuinely unreachable.
 
 4. **Retry's success response is not interpreted; Web always re-polls afterward** —
    **CONFIRMED**, and this is exactly what makes item 3's shape mismatch harmless for retry
@@ -371,25 +402,36 @@ this A3 session prompt > the Web handoff's own assumptions.
    lookup.
 
 7. **Create-assessment and generate-draft use two independently generated keys, since they
-   have different idempotency scopes** — **CONFIRMED in scope semantics**
-   (`GenerateAssessmentDraftHandler` uses `IdempotencyScope.assessment(assessmentId)`; the
-   create-assessment-brief step would need `IdempotencyScope.teacher(teacherUid)` if it enforced
-   one at all), **but see the residual risk noted above**: create-assessment-brief's endpoint
-   does not currently require or validate an `Idempotency-Key` header server-side at all. Web
-   sending one anyway is harmless (ignored), so Web's own behavior needs no change — flagging
-   only because Web's stated *rationale* ("different scopes") is not fully backed by current
-   server enforcement on the create leg.
+   have different idempotency scopes** — **CONFIRMED after A3 Contract Correction (2026-07-30).**
+   At original A3 handoff time this was "confirmed in scope semantics but not server-enforced" —
+   `POST /api/v1/assessments` accepted no `Idempotency-Key` header at all server-side. The
+   correction closes that gap: `Idempotency-Key` is now `@RequestHeader`-required on
+   `POST /api/v1/assessments`, enforced via `IdempotencyScope.teacher(teacherUid)` +
+   `CREATE_ASSESSMENT_BRIEF` (hash over `learningGoal`/`topic`/`level`/`duration`/`language`),
+   fully independent from generate-draft's `IdempotencyScope.assessment(assessmentId)` +
+   `CREATE_INITIAL_REVISION`. Web's original rationale ("different scopes") is now fully backed
+   by real server enforcement on both legs, not just the create leg's own scope semantics.
 
 8. **`isRecoverableDraftMutationStatus` widened to treat 409 as WARN, not ERROR** —
    **CONFIRMED** (Web-internal logging concern, no API surface implication) — consistent with
    this contract's actual design: `STALE_REVISION`/`ALREADY_GENERATED`/etc. are expected,
    user-actionable conflicts, not incidents.
 
-**Summary for Session D:** 6 of 8 assumptions CONFIRMED outright; 1 (#7) confirmed in outcome
-with a noted server-side enforcement gap unrelated to Web's own code; 1 (#3) requires a Web-side
-adjustment (remove/mark-dead the generate/regenerate `202`-parsing branch — retry is the only
-real `202` producer, and Web already treats retry's body as opaque, so no functional break, just
-a correctness cleanup).
+9. **New instruction, not a Web C assumption — added by A3 Contract Correction (2026-07-30):**
+   Session D must extend `GenerationStatusValue` (or equivalent) with `SUCCEEDED` and
+   `FAILED_TERMINAL`, and render `FAILED_TERMINAL` as a non-retryable failure view distinct from
+   `FAILED_RETRYABLE`. Web already resolves `SUCCEEDED` via `currentRevisionId` being non-null,
+   so that value needs no new rendering path — only `FAILED_TERMINAL` is genuinely new for Web.
+   See [LOCAL-CONTRACTS.md § Amendment (2026-07-30)](LOCAL-CONTRACTS.md#amendment-2026-07-30-succeeded-and-failed_terminal-made-explicit).
+
+**Summary for Session D (updated 2026-07-30):** All 8 original Web C assumptions are now
+CONFIRMED — items 3 and 7 flipped from their original A3 verdicts (REQUIRES WEB ADJUSTMENT / gap
+noted) to CONFIRMED once the A3 Contract Correction closed the underlying gaps (initial-generate
+`202`, create-assessment idempotency enforcement). Session D has one new, additive instruction
+(#9, generation-status taxonomy) that was not part of Web's original 8 assumptions. Net effect
+for Web: **no code needs to be removed** (the generate-`202`-handling branch Web already built is
+not dead code after all); Web needs to **add** a `FAILED_TERMINAL` rendering path and send
+`Idempotency-Key` on create (if it does not already).
 
 ## Provider/model post-resolution failure fix (A2-inherited gap, closed in Task 09)
 `AgentAttempt.markFailed` was widened from a 1-arg `(failureCode)` signature to
@@ -419,6 +461,94 @@ construction. `RetryGenerationHandler`/`GetGenerationStatusHandler` themselves h
 transaction open around their own read/coordinate calls — verified via the existing
 no-transaction-during-HTTP test coverage inherited from A2's `AiOperationCoordinatorTest`,
 still green.
+
+---
+
+## A3 Contract Correction (2026-07-30)
+
+Executed on the same branch, on top of A3's declared final HEAD, per
+`CLAUDE-API-A3-CORRECTION-PROMPT` — no new branch, no PR, no merge. Corrects five contract
+deviations found after A3's original declared completion; every section above that described
+now-superseded behavior was corrected in place with an inline note, not silently rewritten.
+
+**Previous declared final HEAD:** `3f820e34ec01c7eff39747be03de24ea9a98e897`
+**Correction implementation HEAD:** `13cb613` (`fix(api): align generation and retry responses with durable operation contract`)
+**Correction handoff commit:** `16ac15d` (`docs(api): amend generation status contract and correct A3 handoff`)
+
+### What changed
+
+1. **Create-assessment idempotency applied** — `POST /api/v1/assessments` now requires
+   `Idempotency-Key`, enforced via `IdempotencyGuard` (`IdempotencyScope.teacher(teacherUid)`,
+   operation `CREATE_ASSESSMENT_BRIEF`, hash over `learningGoal`/`topic`/`level`/`duration`/
+   `language`). Same key + same payload replays the original `assessmentId`; same key + different
+   payload → `409 IDEMPOTENCY_KEY_PAYLOAD_MISMATCH`; missing header → `400`. The
+   Assessment/AssessmentBrief/IdempotencyRecord triad is written atomically in one
+   `TransactionTemplate`-wrapped transaction (`CreateAssessmentBriefHandler`), so a genuinely
+   failed creation leaves no idempotency record. A concurrent duplicate request racing on the
+   same key/payload is resolved via `idempotency_records`' own unique constraint: the loser's
+   transaction rolls back entirely and it replays the winner's committed record instead of
+   surfacing the raw constraint violation — exactly one `Assessment` results either way.
+2. **Generate 201/202 real** — `POST /assessments/{id}/draft` now returns `201` with the new
+   `AssessmentRevision` on success, or `202` with an `AiOperationResponse`-shaped body
+   (`GenerateAssessmentDraftOutcome.OperationAccepted`) whenever the coordinator's Phase 0 already
+   durably recorded an `AiOperation`/`AgentAttempt` pair before the dispatch itself failed
+   (`AGENT_UNAVAILABLE`, `AGENT_ERROR`, `AGENT_REJECTED`, `INVALID_COMMAND`, `MALFORMED_OUTPUT`,
+   or a `STALE_ON_COMPLETION` terminal race outcome). The idempotency record is written for both
+   outcomes (with the outcome's own `responseStatus`, `201` or `202`), so a replay of the same key
+   after a `202` returns the same operation snapshot without dispatching a new `AgentAttempt`.
+   Regenerate is **unchanged** — `201` or a typed error only, never `202`, since it never leaves
+   the assessment revision-less.
+3. **Six-value `generation-status` taxonomy formalized** — the read model already returned
+   `SUCCEEDED`/`FAILED_TERMINAL` explicitly in the code shipped with the original A3 session (see
+   "Status codes" above, and `GetGenerationStatusHandler`'s own javadoc); this correction's real
+   work was documenting that deliberately, as a closed six-value set, in the ADR and both contract
+   packets, rather than leaving it as an unstated implementation detail contradicting
+   LOCAL-CONTRACTS.md's original four-value sketch. Amended:
+   `docs/99-decisions/2026-07-28-authoring-operation-contract.md`,
+   `docs/implementation-packets/assessment-authoring-operation-foundation/03-cross-workspace-api-contracts.md`,
+   `api/docs/implementation-packets/assessment-authoring-operation-foundation/LOCAL-CONTRACTS.md`
+   — each with a dated, clearly-labeled amendment section, not a silent rewrite. Added exhaustive
+   MVC-level contract tests for all six states (previously only `INDETERMINATE` was tested at the
+   controller layer; the other five were unit-tested at the handler level only).
+4. **Concurrent retry race corrected** — two concurrent retries of the same `FAILED_RETRYABLE`
+   operation used to both surface as `409 STALE_REVISION` (via a generic Phase-0
+   `DataIntegrityViolationException` → `StaleRevisionException` mapping shared with
+   create/regenerate). `AiOperationCoordinator.dispatchAndPersist` now takes a
+   `phase0ConflictException` supplier: `createInitialRevision`/`regenerateRevision` still map
+   their Phase-0 collision (always `uq_ai_operations_in_flight`, since they always insert a
+   brand-new `AiOperation` row) to `StaleRevisionException`; `retryInitialRevision` maps its
+   Phase-0 collision (always `agent_attempts`' `UNIQUE(ai_operation_id, attempt_number)`, since it
+   reuses an existing operation id and can never hit the in-flight index) to
+   `OperationInProgressException` — an existing failure code, no new one introduced. Winner: `202`.
+   Loser: `409 { "code": "OPERATION_IN_PROGRESS", "message": "..." }`. Verified for real against
+   Postgres by `RetryGenerationHandlerIntegrationTest.shouldAllowExactlyOneOfTwoConcurrentRetriesOfTheSameFailedOperation`,
+   updated to assert `OperationInProgressException` (never `StaleRevisionException`) for the loser.
+5. **Legacy tables retained, not dropped** — `API-A3-HANDOFF.md`'s "Known residual risks" section
+   previously stated A4 would "actually drop the two tables via a Flyway migration." Corrected in
+   place above: A4's real scope is `V17` (backfill), deleting the eight dead legacy classes and
+   their `AssessmentConfig` wiring — `assessment_drafts`/`agent_execution_logs` remain, read-only,
+   for one full release.
+
+### Test count
+
+Before this correction: **456/456** (A3's own final baseline, re-verified clean at the start of
+this session). After: **477/477**, 0 failures/errors/skipped.
+`./mvnw -f api/pom.xml clean test` → PASS.
+
+### Web adjustments remaining for Session D
+
+- Add a `FAILED_TERMINAL` rendering path to `GenerationStatusValue` (non-retryable, distinct from
+  `FAILED_RETRYABLE`); `SUCCEEDED` needs no change (Web already resolves it via
+  `currentRevisionId`).
+- Send `Idempotency-Key` on `POST /api/v1/assessments` if not already sent (Web's own handoff
+  assumption #7 already implied it would; this correction makes the header genuinely required and
+  enforced, not silently ignored).
+- Web's `202`-handling branch for initial generation is **not** dead code after all — keep it. No
+  code needs to be removed from Web because of this correction, only added.
+
+### Blockers
+
+None.
 
 ---
 

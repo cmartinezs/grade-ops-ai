@@ -52,9 +52,27 @@ The only status values that exist in this cut are the ones below. **A generic fo
 |---|---|---|
 | `AiOperation.status` | `PENDING`, `IN_PROGRESS`, `SUCCEEDED`, `FAILED_RETRYABLE`, `FAILED_TERMINAL` | API |
 | `AgentAttempt.status` | `DISPATCHED`, `COMPLETED`, `FAILED` | API |
-| `GET .../generation-status` response `status` (read model, computed) | `NOT_STARTED`, `IN_PROGRESS`, `FAILED_RETRYABLE`, `INDETERMINATE` (plus implicit `SUCCEEDED`, signaled by `currentRevisionId` being non-null rather than a separate status string) | API |
+| `GET .../generation-status` response `status` (read model, computed) | `NOT_STARTED`, `IN_PROGRESS`, `FAILED_RETRYABLE`, `FAILED_TERMINAL`, `INDETERMINATE`, `SUCCEEDED` — **six explicit values, see amendment below** | API |
 
 `FAILED_TERMINAL` (not `FAILED_FINAL`), `IN_PROGRESS`/`DISPATCHED` (not `RUNNING`/`DISPATCHING`) are the only spellings any workspace may use. Web must render exactly these values, never invent a client-side synonym.
+
+### Amendment (2026-07-30): `SUCCEEDED` and `FAILED_TERMINAL` made explicit
+
+This section originally listed the `generation-status` read model as four values
+(`NOT_STARTED`/`IN_PROGRESS`/`FAILED_RETRYABLE`/`INDETERMINATE`) "plus implicit `SUCCEEDED`,
+signaled by `currentRevisionId`." Session A3 (API implementation) found this sketch has no honest
+value for a terminal, non-retryable failure (`AiOperation.status = FAILED_TERMINAL`) — mapping
+that case onto `FAILED_RETRYABLE` or `NOT_STARTED` would misinform Web about retryability rather
+than merely omit detail. The table above is corrected to the **closed, six-value set** the API
+actually returns; full rationale and the authoritative per-value semantics are in
+[Authoring Operation Contract § Amendment (2026-07-30)](../../99-decisions/2026-07-28-authoring-operation-contract.md#amendment-2026-07-30-generation-status-six-value-taxonomy)
+and [LOCAL-CONTRACTS.md § Canonical status
+taxonomy](../../../api/docs/implementation-packets/assessment-authoring-operation-foundation/LOCAL-CONTRACTS.md#canonical-status-taxonomy).
+Every value is still spelled exactly as `AiOperation.status` spells it — no synonym is introduced.
+**Session D must update Web's `GenerationStatusValue` (or equivalent) to accept `SUCCEEDED` and
+`FAILED_TERMINAL` explicitly** — `SUCCEEDED` needs no behavior change (Web already resolves
+success via `currentRevisionId`), but Web currently has no rendering path for a terminal,
+non-retryable failure and must add one.
 
 ## Canonical failure-code taxonomy
 

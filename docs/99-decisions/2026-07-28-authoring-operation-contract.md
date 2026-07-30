@@ -157,6 +157,44 @@ The generation call stays **synchronous with durable state** in this cut: the HT
 - A general-purpose `/ai-operations/{id}` resource, once a second agent needs the same status-polling shape.
 - Rate limiting / abuse protection on retry is not addressed here (pilot-scale, single-tenant-per-teacher risk is low); flagged for the release that introduces multi-teacher/institutional load.
 
+## Amendment (2026-07-30): `generation-status` six-value taxonomy
+
+Session A3 (API implementation) discovered a real gap while building `GET .../generation-status`
+against this ADR's four-value sketch (`NOT_STARTED`, `IN_PROGRESS`, `FAILED_RETRYABLE`,
+`INDETERMINATE`, "plus implicit `SUCCEEDED`"): that sketch has **no honest representation for a
+terminal, non-retryable failure** (`AiOperation.status = FAILED_TERMINAL` — e.g. `AGENT_REJECTED`,
+`INVALID_COMMAND`). Forcing such an operation to report as `FAILED_RETRYABLE` would tell Web the
+client should retry when it must not; forcing it to `NOT_STARTED` would hide that a generation
+attempt happened and failed at all. Both are actively misleading, not neutral omissions.
+
+This amendment formalizes the read model as the **closed, six-value set** the API actually
+returns, superseding the four-value-plus-implicit sketch above without erasing it (kept for
+historical context — this is the corrected, authoritative version):
+
+```text
+GET .../generation-status status:
+NOT_STARTED | IN_PROGRESS | FAILED_RETRYABLE | FAILED_TERMINAL | INDETERMINATE | SUCCEEDED
+```
+
+- `SUCCEEDED` and `FAILED_TERMINAL` are now **explicit** members of the response taxonomy, not an
+  "implicit" special case inferred solely from `currentRevisionId`.
+- Every name is spelled exactly as `AiOperation.status` spells it (`SUCCEEDED`, `FAILED_TERMINAL`)
+  — no synonym, abbreviation, or renamed value is introduced by this amendment or by the read
+  model itself.
+- Rationale ordering: an honest, slightly larger read model is strictly preferable to a smaller
+  model that must lie about retryability to fit a predetermined enum size.
+- **Session D (Web) must update `GenerationStatusValue` (or equivalent) to accept `SUCCEEDED` and
+  `FAILED_TERMINAL` as first-class values.** Web already resolves success via `currentRevisionId`
+  being non-null rather than by reading `status === "SUCCEEDED"` directly, so that part requires
+  no behavior change — but Web must add a non-retryable, terminal-failure view for
+  `FAILED_TERMINAL` (distinct from the retryable `FAILED_RETRYABLE` view it already has); today
+  Web has no rendering path for a terminal failure at all.
+
+Full semantics per value: [03 — Cross-Workspace API Contracts § Canonical status
+taxonomy](../implementation-packets/assessment-authoring-operation-foundation/03-cross-workspace-api-contracts.md#canonical-status-taxonomy)
+and [LOCAL-CONTRACTS.md § Canonical status
+taxonomy](../../api/docs/implementation-packets/assessment-authoring-operation-foundation/LOCAL-CONTRACTS.md#canonical-status-taxonomy).
+
 ## Related Decisions
 
 - [Assessment Authoring Model](2026-07-28-assessment-authoring-model.md)
