@@ -158,7 +158,7 @@ class AssessmentCreationFlowIntegrationTest {
         AiOperationCoordinator coordinator = new AiOperationCoordinator(assessmentAdapter, aiOperationAdapter,
                 agentAttemptAdapter, revisionAdapter, assessmentAgentClient, jsonMapper, transactionManager);
 
-        createBriefHandler = new CreateAssessmentBriefHandler(assessmentAdapter, briefAdapter);
+        createBriefHandler = new CreateAssessmentBriefHandler(assessmentAdapter, briefAdapter, idempotencyGuard, transactionManager);
         generateHandler = new GenerateAssessmentDraftHandler(assessmentAdapter, briefAdapter, revisionAdapter,
                 ownershipVerifier, idempotencyGuard, coordinator);
         regenerateHandler = new RegenerateAssessmentDraftHandler(assessmentAdapter, briefAdapter, revisionAdapter,
@@ -184,7 +184,7 @@ class AssessmentCreationFlowIntegrationTest {
 
     private UUID createBrief() {
         CreateAssessmentBriefResult result = createBriefHandler.execute(new CreateAssessmentBriefCommand(
-                TEACHER_UID, "Evaluate loops", "Java loops", "basic", "90min", "Java"));
+                TEACHER_UID, "Evaluate loops", "Java loops", "basic", "90min", "Java", "brief-key"));
         entityManager.flush();
         entityManager.clear();
         return UUID.fromString(result.assessmentId());

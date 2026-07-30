@@ -6,5 +6,6 @@ public record CreateAssessmentBriefCommand(
     String topic,
     String level,
     String duration,
-    String language
+    String language,
+    String idempotencyKey
 ) {}

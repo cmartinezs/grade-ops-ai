@@ -95,8 +95,11 @@ class AssessmentConfig {
     @Bean
     CreateAssessmentBriefHandler createAssessmentBriefHandler(
             AssessmentRepositoryPort assessmentRepository,
-            AssessmentBriefRepositoryPort assessmentBriefRepository) {
-        return new CreateAssessmentBriefHandler(assessmentRepository, assessmentBriefRepository);
+            AssessmentBriefRepositoryPort assessmentBriefRepository,
+            IdempotencyGuard idempotencyGuard,
+            PlatformTransactionManager transactionManager) {
+        return new CreateAssessmentBriefHandler(assessmentRepository, assessmentBriefRepository,
+                idempotencyGuard, transactionManager);
     }
 
     @Bean

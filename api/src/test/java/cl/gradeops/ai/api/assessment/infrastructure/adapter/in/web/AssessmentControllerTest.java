@@ -153,11 +153,12 @@ class AssessmentControllerTest {
         when(firebaseToken.isEmailVerified()).thenReturn(true);
         when(firebaseAuth.verifyIdToken("valid-token-3", true)).thenReturn(firebaseToken);
         when(createAssessmentBriefUseCase.execute(new CreateAssessmentBriefCommand(
-                "uid-teacher-3", "Evaluate loops", "Java loops", "basic", "90min", "Java")))
+                "uid-teacher-3", "Evaluate loops", "Java loops", "basic", "90min", "Java", "brief-key-3")))
                 .thenReturn(new CreateAssessmentBriefResult("assess-new-1"));
 
         mockMvc.perform(post("/api/v1/assessments")
                         .header("Authorization", "Bearer valid-token-3")
+                        .header("Idempotency-Key", "brief-key-3")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
@@ -181,6 +182,7 @@ class AssessmentControllerTest {
 
         mockMvc.perform(post("/api/v1/assessments")
                         .header("Authorization", "Bearer valid-token-4")
+                        .header("Idempotency-Key", "brief-key-4")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
@@ -194,6 +196,59 @@ class AssessmentControllerTest {
                 .andExpect(status().isUnprocessableEntity());
 
         verifyNoInteractions(createAssessmentBriefUseCase);
+    }
+
+    @Test
+    void posting_brief_without_idempotency_key_header_returns_400_and_does_not_invoke_use_case() throws Exception {
+        when(firebaseToken.getUid()).thenReturn("uid-teacher-34");
+        when(firebaseToken.getEmail()).thenReturn("teacher34@school.com");
+        when(firebaseToken.isEmailVerified()).thenReturn(true);
+        when(firebaseAuth.verifyIdToken("valid-token-34", true)).thenReturn(firebaseToken);
+
+        mockMvc.perform(post("/api/v1/assessments")
+                        .header("Authorization", "Bearer valid-token-34")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "learningGoal": "Evaluate loops",
+                                  "topic": "Java loops",
+                                  "level": "basic",
+                                  "duration": "90min",
+                                  "language": "Java"
+                                }
+                                """))
+                .andExpect(status().isBadRequest());
+
+        verifyNoInteractions(createAssessmentBriefUseCase);
+    }
+
+    @Test
+    void posting_brief_with_reused_key_and_different_payload_returns_409_with_code() throws Exception {
+        when(firebaseToken.getUid()).thenReturn("uid-teacher-35");
+        when(firebaseToken.getEmail()).thenReturn("teacher35@school.com");
+        when(firebaseToken.isEmailVerified()).thenReturn(true);
+        when(firebaseAuth.verifyIdToken("valid-token-35", true)).thenReturn(firebaseToken);
+        when(createAssessmentBriefUseCase.execute(new CreateAssessmentBriefCommand(
+                "uid-teacher-35", "Evaluate loops", "Java loops", "basic", "90min", "Java", "brief-key-35")))
+                .thenThrow(new cl.gradeops.ai.api.shared.application.idempotency.IdempotencyKeyPayloadMismatchException("brief-key-35"));
+
+        mockMvc.perform(post("/api/v1/assessments")
+                        .header("Authorization", "Bearer valid-token-35")
+                        .header("Idempotency-Key", "brief-key-35")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "learningGoal": "Evaluate loops",
+                                  "topic": "Java loops",
+                                  "level": "basic",
+                                  "duration": "90min",
+                                  "language": "Java"
+                                }
+                                """))
+                .andExpect(status().isConflict())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.code").value("IDEMPOTENCY_KEY_PAYLOAD_MISMATCH"))
+                .andExpect(jsonPath("$.error").doesNotExist());
     }
 
     @Test

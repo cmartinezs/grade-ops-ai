@@ -75,11 +75,12 @@ public class AssessmentController {
 
     @PostMapping("/assessments")
     @ResponseStatus(HttpStatus.CREATED)
-    public CreateAssessmentBriefResponse createAssessmentBrief(@Valid @RequestBody CreateAssessmentBriefRequest request) {
+    public CreateAssessmentBriefResponse createAssessmentBrief(@RequestHeader("Idempotency-Key") String idempotencyKey,
+                                                                 @Valid @RequestBody CreateAssessmentBriefRequest request) {
         AuthenticatedTeacher teacher = currentTeacher();
         CreateAssessmentBriefResult result = createAssessmentBriefUseCase.execute(new CreateAssessmentBriefCommand(
             teacher.uid(), request.learningGoal(), request.topic(),
-            request.level(), request.duration(), request.language()));
+            request.level(), request.duration(), request.language(), idempotencyKey));
         return new CreateAssessmentBriefResponse(result.assessmentId());
     }
 
