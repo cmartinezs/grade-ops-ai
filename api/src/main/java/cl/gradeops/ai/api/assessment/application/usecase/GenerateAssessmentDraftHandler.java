@@ -88,20 +88,13 @@ public class GenerateAssessmentDraftHandler implements GenerateAssessmentDraftUs
         idempotencyGuard.record(scope, OPERATION_TYPE, command.idempotencyKey(), payloadHash,
                 revision.getId().toString(), 201);
 
-        return toResult(revision);
+        return GenerateAssessmentDraftResult.fromRevision(revision);
     }
 
     private GenerateAssessmentDraftResult replay(IdempotencyRecord record) {
         UUID revisionId = UUID.fromString(record.getResultReference());
         AssessmentRevision revision = assessmentRevisionRepository.findById(revisionId)
                 .orElseThrow(() -> new ResourceNotFoundException(revisionId.toString()));
-        return toResult(revision);
-    }
-
-    private static GenerateAssessmentDraftResult toResult(AssessmentRevision revision) {
-        return new GenerateAssessmentDraftResult(
-                revision.getId(), revision.getTitle(), revision.getContext(), revision.getInstructions(),
-                revision.getObjectives(), revision.getDeliverables(), revision.getConstraints(),
-                revision.getVersionNumber());
+        return GenerateAssessmentDraftResult.fromRevision(revision);
     }
 }

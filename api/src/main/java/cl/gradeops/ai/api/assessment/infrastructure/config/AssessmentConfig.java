@@ -2,7 +2,6 @@ package cl.gradeops.ai.api.assessment.infrastructure.config;
 
 import cl.gradeops.ai.api.agentclient.AssessmentAgentClient;
 import cl.gradeops.ai.api.assessment.application.port.out.AgentAttemptRepositoryPort;
-import cl.gradeops.ai.api.assessment.application.port.out.AgentExecutionLogRepositoryPort;
 import cl.gradeops.ai.api.assessment.application.port.out.AiOperationRepositoryPort;
 import cl.gradeops.ai.api.assessment.application.port.out.AssessmentBriefRepositoryPort;
 import cl.gradeops.ai.api.assessment.application.port.out.AssessmentDraftRepositoryPort;
@@ -193,14 +192,12 @@ class AssessmentConfig {
     RegenerateAssessmentDraftHandler regenerateAssessmentDraftHandler(
             AssessmentRepositoryPort assessmentRepository,
             AssessmentBriefRepositoryPort assessmentBriefRepository,
-            AssessmentDraftRepositoryPort assessmentDraftRepository,
-            AgentExecutionLogRepositoryPort agentExecutionLogRepository,
+            AssessmentRevisionRepositoryPort assessmentRevisionRepository,
             OwnershipVerifier ownershipVerifier,
-            AssessmentAgentClient assessmentAgentClient,
-            PlatformTransactionManager transactionManager) {
+            IdempotencyGuard idempotencyGuard,
+            AiOperationCoordinator aiOperationCoordinator) {
         return new RegenerateAssessmentDraftHandler(assessmentRepository, assessmentBriefRepository,
-                assessmentDraftRepository, agentExecutionLogRepository, ownershipVerifier,
-                assessmentAgentClient, transactionManager);
+                assessmentRevisionRepository, ownershipVerifier, idempotencyGuard, aiOperationCoordinator);
     }
 
     @Bean

@@ -235,6 +235,67 @@ class AiOperationCoordinatorTest {
     }
 
     @Test
+    void shouldPersistResolvedProviderAndModelWhenDispatchFailureOccursAfterProviderResolution() {
+        // MALFORMED_OUTPUT means agents/ resolved a provider, called the LLM, and only then failed
+        // to produce well-formed output — the log it returns alongside the error carries that
+        // resolved provider/model, per Agents' documented nullability contract (see
+        // API-A2-HANDOFF.md: "provider non-null on success or on a failure after provider
+        // resolution (e.g. MALFORMED_OUTPUT)"). This must survive onto the persisted AgentAttempt,
+        // not be discarded the way it was before this fix.
+        AssessmentAgentResponse.Log logAfterResolution = new AssessmentAgentResponse.Log(UUID.randomUUID(),
+                "assessment", "gemini", "gemini-2.0-flash", "v1", null, null, null, null, null,
+                "FAILED", "MALFORMED_OUTPUT", Instant.now(), Instant.now());
+        AssessmentAgentErrorPayload agentError = new AssessmentAgentErrorPayload(
+                "MALFORMED_OUTPUT", "bad output", logAfterResolution, "agents-corr-3");
+        AgentClientException agentEx = new AgentClientException(
+                AgentClientException.Reason.AGENT_REJECTED, "rejected", new RuntimeException(), agentError);
+        when(assessmentAgentClient.generate(any(), anyString())).thenThrow(agentEx);
+
+        assertThatThrownBy(() -> coordinator.createInitialRevision(assessment, agentCommand, "uid-1", "key-1"))
+                .isSameAs(agentEx);
+
+        verify(agentAttemptRepository).save(argThat(a ->
+                a.getStatus() == AgentAttemptStatus.FAILED
+                        && "MALFORMED_OUTPUT".equals(a.getFailureCode())
+                        && "gemini".equals(a.getResolvedProvider())
+                        && "gemini-2.0-flash".equals(a.getResolvedModel())));
+    }
+
+    @Test
+    void shouldLeaveProviderAndModelNullWhenDispatchFailureOccursBeforeProviderResolution() {
+        // UNREACHABLE is a transport-level failure — the call never reached agents/, so no
+        // provider was ever resolved; null is the correct, honest value here, not a regression.
+        AgentClientException agentEx = new AgentClientException(
+                AgentClientException.Reason.UNREACHABLE, "unreachable", new RuntimeException());
+        when(assessmentAgentClient.generate(any(), anyString())).thenThrow(agentEx);
+
+        assertThatThrownBy(() -> coordinator.createInitialRevision(assessment, agentCommand, "uid-1", "key-1"))
+                .isSameAs(agentEx);
+
+        verify(agentAttemptRepository).save(argThat(a ->
+                a.getStatus() == AgentAttemptStatus.FAILED
+                        && a.getResolvedProvider() == null && a.getResolvedModel() == null));
+    }
+
+    @Test
+    void shouldPersistResolvedProviderAndModelOnStaleOnCompletionSinceTheAgentCallItselfSucceeded() {
+        Assessment racedAssessment = assessment.withCurrentRevision(UUID.randomUUID());
+        when(assessmentRepository.findById(assessment.getId())).thenReturn(Optional.of(racedAssessment));
+        when(assessmentAgentClient.generate(any(), anyString())).thenReturn(successResponse());
+
+        assertThatThrownBy(() -> coordinator.createInitialRevision(assessment, agentCommand, "uid-1", "key-1"))
+                .isInstanceOf(StaleOnCompletionException.class);
+
+        // successResponse()'s Log carries provider="gemini"/model="gemini-2.0-flash" — the agent
+        // call itself succeeded; only the CAS write lost the race. That provider/model must not
+        // be discarded just because no revision was created from the response.
+        verify(agentAttemptRepository).save(argThat(a ->
+                "STALE_ON_COMPLETION".equals(a.getFailureCode())
+                        && "gemini".equals(a.getResolvedProvider())
+                        && "gemini-2.0-flash".equals(a.getResolvedModel())));
+    }
+
+    @Test
     void shouldMarkStaleOnCompletionAndPreserveStructuredResultWhenCurrentRevisionMovedBeforePhase2() {
         Assessment racedAssessment = assessment.withCurrentRevision(UUID.randomUUID());
         when(assessmentRepository.findById(assessment.getId())).thenReturn(Optional.of(racedAssessment));

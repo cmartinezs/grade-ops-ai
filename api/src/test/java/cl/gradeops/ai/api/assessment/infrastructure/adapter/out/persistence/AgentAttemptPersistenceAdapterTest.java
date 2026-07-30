@@ -135,7 +135,7 @@ class AgentAttemptPersistenceAdapterTest {
     @Test
     void shouldRoundTripFailedAttemptRetainingStructuredResult() {
         AgentAttempt attempt = AgentAttempt.dispatch(aiOperationId, 1, "assessment-agent", "v1", "corr-1")
-                .markFailed("STALE_ON_COMPLETION", "{\"partial\":true}");
+                .markFailed("STALE_ON_COMPLETION", "gemini", "gemini-2.0-flash", "{\"partial\":true}");
 
         agentAttemptAdapter.save(attempt);
         entityManager.flush();
@@ -152,7 +152,7 @@ class AgentAttemptPersistenceAdapterTest {
     @Test
     void shouldRetainAllAttemptsOrderedByAttemptNumberDescWhenFindingAllByAiOperationId() {
         AgentAttempt first = AgentAttempt.dispatch(aiOperationId, 1, "assessment-agent", "v1", "corr-1")
-                .markFailed("AGENT_ERROR", null);
+                .markFailed("AGENT_ERROR", null, null, null);
         agentAttemptAdapter.save(first);
         AgentAttempt second = AgentAttempt.dispatch(aiOperationId, 2, "assessment-agent", "v1", "corr-2");
         agentAttemptAdapter.save(second);

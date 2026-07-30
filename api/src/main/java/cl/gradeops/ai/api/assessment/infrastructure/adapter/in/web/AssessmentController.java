@@ -82,10 +82,12 @@ public class AssessmentController {
     @PostMapping("/assessments/{id}/draft/regenerate")
     @ResponseStatus(HttpStatus.CREATED)
     public GenerateAssessmentDraftResponse regenerateDraft(@PathVariable UUID id,
+                                                             @RequestHeader("Idempotency-Key") String idempotencyKey,
                                                              @Valid @RequestBody RegenerateAssessmentDraftRequest request) {
         AuthenticatedTeacher teacher = currentTeacher();
         GenerateAssessmentDraftResult result = regenerateAssessmentDraftUseCase.execute(
-            new RegenerateAssessmentDraftCommand(id, teacher.uid(), request.adjustmentNotes()));
+            new RegenerateAssessmentDraftCommand(id, teacher.uid(), request.adjustmentNotes(),
+                request.expectedRevisionId(), idempotencyKey));
         return toResponse(result);
     }
 

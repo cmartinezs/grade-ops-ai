@@ -97,7 +97,7 @@ class AgentAttemptTest {
     void shouldTransitionFromDispatchedToFailedRetainingStructuredResult() {
         AgentAttempt a = dispatchFirstAttempt();
 
-        AgentAttempt failed = a.markFailed("STALE_ON_COMPLETION", "{\"partial\":true}");
+        AgentAttempt failed = a.markFailed("STALE_ON_COMPLETION", null, null, "{\"partial\":true}");
 
         assertThat(failed.getStatus()).isEqualTo(AgentAttemptStatus.FAILED);
         assertThat(failed.getFailureCode()).isEqualTo("STALE_ON_COMPLETION");
@@ -106,10 +106,48 @@ class AgentAttemptTest {
     }
 
     @Test
+    void shouldRetainResolvedProviderAndModelWhenMarkingFailedAfterProviderResolution() {
+        AgentAttempt a = dispatchFirstAttempt();
+
+        AgentAttempt failed = a.markFailed("MALFORMED_OUTPUT", "gemini", "gemini-2.0-flash", null);
+
+        assertThat(failed.getResolvedProvider()).isEqualTo("gemini");
+        assertThat(failed.getResolvedModel()).isEqualTo("gemini-2.0-flash");
+    }
+
+    @Test
+    void shouldAllowNullResolvedProviderAndModelWhenMarkingFailedBeforeProviderResolution() {
+        AgentAttempt a = dispatchFirstAttempt();
+
+        AgentAttempt failed = a.markFailed("AGENT_UNAVAILABLE", null, null, null);
+
+        assertThat(failed.getResolvedProvider()).isNull();
+        assertThat(failed.getResolvedModel()).isNull();
+    }
+
+    @Test
+    void shouldRejectBlankResolvedProviderWhenMarkingFailedIfProvided() {
+        AgentAttempt a = dispatchFirstAttempt();
+
+        assertThatThrownBy(() -> a.markFailed("MALFORMED_OUTPUT", " ", "gemini-2.0-flash", null))
+                .isInstanceOf(DomainInvariantViolationException.class)
+                .hasMessageContaining("resolvedProvider");
+    }
+
+    @Test
+    void shouldRejectBlankResolvedModelWhenMarkingFailedIfProvided() {
+        AgentAttempt a = dispatchFirstAttempt();
+
+        assertThatThrownBy(() -> a.markFailed("MALFORMED_OUTPUT", "gemini", " ", null))
+                .isInstanceOf(DomainInvariantViolationException.class)
+                .hasMessageContaining("resolvedModel");
+    }
+
+    @Test
     void shouldRejectBlankFailureCodeWhenMarkingFailed() {
         AgentAttempt a = dispatchFirstAttempt();
 
-        assertThatThrownBy(() -> a.markFailed(" ", null))
+        assertThatThrownBy(() -> a.markFailed(" ", null, null, null))
                 .isInstanceOf(DomainInvariantViolationException.class)
                 .hasMessageContaining("failureCode");
     }
@@ -120,17 +158,17 @@ class AgentAttemptTest {
 
         assertThatThrownBy(() -> a.markCompleted("groq", "llama-3", null, null, null, null, null))
                 .isInstanceOf(DomainInvariantViolationException.class);
-        assertThatThrownBy(() -> a.markFailed("AGENT_ERROR", null))
+        assertThatThrownBy(() -> a.markFailed("AGENT_ERROR", null, null, null))
                 .isInstanceOf(DomainInvariantViolationException.class);
     }
 
     @Test
     void shouldRejectAnyTransitionFromFailed() {
-        AgentAttempt a = dispatchFirstAttempt().markFailed("AGENT_ERROR", null);
+        AgentAttempt a = dispatchFirstAttempt().markFailed("AGENT_ERROR", null, null, null);
 
         assertThatThrownBy(() -> a.markCompleted("groq", "llama-3", null, null, null, null, null))
                 .isInstanceOf(DomainInvariantViolationException.class);
-        assertThatThrownBy(() -> a.markFailed("AGENT_ERROR", null))
+        assertThatThrownBy(() -> a.markFailed("AGENT_ERROR", null, null, null))
                 .isInstanceOf(DomainInvariantViolationException.class);
     }
 

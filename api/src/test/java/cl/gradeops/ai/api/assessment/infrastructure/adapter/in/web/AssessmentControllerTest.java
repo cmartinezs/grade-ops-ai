@@ -6,7 +6,6 @@ import cl.gradeops.ai.api.assessment.application.command.GenerateAssessmentDraft
 import cl.gradeops.ai.api.assessment.application.command.GetCurrentDraftCommand;
 import cl.gradeops.ai.api.assessment.application.command.ListDraftVersionsCommand;
 import cl.gradeops.ai.api.assessment.application.command.RegenerateAssessmentDraftCommand;
-import cl.gradeops.ai.api.assessment.application.exception.NoPriorDraftException;
 import cl.gradeops.ai.api.assessment.application.port.in.CreateAssessmentBriefUseCase;
 import cl.gradeops.ai.api.assessment.application.port.in.GenerateAssessmentDraftUseCase;
 import cl.gradeops.ai.api.assessment.application.port.in.GetCurrentDraftUseCase;
@@ -286,17 +285,19 @@ class AssessmentControllerTest {
         when(firebaseAuth.verifyIdToken("valid-token-9", true)).thenReturn(firebaseToken);
         java.util.UUID assessmentId = java.util.UUID.randomUUID();
         java.util.UUID draftId = java.util.UUID.randomUUID();
+        java.util.UUID expectedRevisionId = java.util.UUID.randomUUID();
         when(regenerateAssessmentDraftUseCase.execute(new RegenerateAssessmentDraftCommand(
-                assessmentId, "uid-teacher-9", "make it harder")))
+                assessmentId, "uid-teacher-9", "make it harder", expectedRevisionId, "regen-key-9")))
                 .thenReturn(new GenerateAssessmentDraftResult(draftId, "Title v2", "Context", "Instructions",
                         List.of("obj"), List.of("del"), List.of("con"), 2));
 
         mockMvc.perform(post("/api/v1/assessments/" + assessmentId + "/draft/regenerate")
                         .header("Authorization", "Bearer valid-token-9")
+                        .header("Idempotency-Key", "regen-key-9")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
-                                { "adjustmentNotes": "make it harder" }
-                                """))
+                                { "adjustmentNotes": "make it harder", "expectedRevisionId": "%s" }
+                                """.formatted(expectedRevisionId)))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.draftId").value(draftId.toString()))
                 .andExpect(jsonPath("$.title").value("Title v2"))
@@ -304,23 +305,28 @@ class AssessmentControllerTest {
     }
 
     @Test
-    void posting_draft_regeneration_without_prior_draft_returns_422() throws Exception {
+    void posting_draft_regeneration_with_stale_expected_revision_returns_409_with_code() throws Exception {
         when(firebaseToken.getUid()).thenReturn("uid-teacher-10");
         when(firebaseToken.getEmail()).thenReturn("teacher10@school.com");
         when(firebaseToken.isEmailVerified()).thenReturn(true);
         when(firebaseAuth.verifyIdToken("valid-token-10", true)).thenReturn(firebaseToken);
         java.util.UUID assessmentId = java.util.UUID.randomUUID();
+        java.util.UUID expectedRevisionId = java.util.UUID.randomUUID();
         when(regenerateAssessmentDraftUseCase.execute(new RegenerateAssessmentDraftCommand(
-                assessmentId, "uid-teacher-10", "make it harder")))
-                .thenThrow(new NoPriorDraftException(assessmentId.toString()));
+                assessmentId, "uid-teacher-10", "make it harder", expectedRevisionId, "regen-key-10")))
+                .thenThrow(new cl.gradeops.ai.api.assessment.application.exception.StaleRevisionException(assessmentId.toString()));
 
         mockMvc.perform(post("/api/v1/assessments/" + assessmentId + "/draft/regenerate")
                         .header("Authorization", "Bearer valid-token-10")
+                        .header("Idempotency-Key", "regen-key-10")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
-                                { "adjustmentNotes": "make it harder" }
-                                """))
-                .andExpect(status().isUnprocessableEntity());
+                                { "adjustmentNotes": "make it harder", "expectedRevisionId": "%s" }
+                                """.formatted(expectedRevisionId)))
+                .andExpect(status().isConflict())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.code").value("STALE_REVISION"))
+                .andExpect(jsonPath("$.error").doesNotExist());
     }
 
     @Test
@@ -333,9 +339,30 @@ class AssessmentControllerTest {
 
         mockMvc.perform(post("/api/v1/assessments/" + assessmentId + "/draft/regenerate")
                         .header("Authorization", "Bearer valid-token-11")
+                        .header("Idempotency-Key", "regen-key-11")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
-                                { "adjustmentNotes": "" }
+                                { "adjustmentNotes": "", "expectedRevisionId": "%s" }
+                                """.formatted(java.util.UUID.randomUUID())))
+                .andExpect(status().isUnprocessableEntity());
+
+        verifyNoInteractions(regenerateAssessmentDraftUseCase);
+    }
+
+    @Test
+    void posting_draft_regeneration_without_expected_revision_id_returns_422_and_does_not_invoke_use_case() throws Exception {
+        when(firebaseToken.getUid()).thenReturn("uid-teacher-23");
+        when(firebaseToken.getEmail()).thenReturn("teacher23@school.com");
+        when(firebaseToken.isEmailVerified()).thenReturn(true);
+        when(firebaseAuth.verifyIdToken("valid-token-23", true)).thenReturn(firebaseToken);
+        java.util.UUID assessmentId = java.util.UUID.randomUUID();
+
+        mockMvc.perform(post("/api/v1/assessments/" + assessmentId + "/draft/regenerate")
+                        .header("Authorization", "Bearer valid-token-23")
+                        .header("Idempotency-Key", "regen-key-23")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                { "adjustmentNotes": "make it harder" }
                                 """))
                 .andExpect(status().isUnprocessableEntity());
 
@@ -343,12 +370,32 @@ class AssessmentControllerTest {
     }
 
     @Test
-    void unauthenticated_draft_regeneration_request_returns_401() throws Exception {
-        mockMvc.perform(post("/api/v1/assessments/" + java.util.UUID.randomUUID() + "/draft/regenerate")
+    void posting_draft_regeneration_without_idempotency_key_header_returns_400() throws Exception {
+        when(firebaseToken.getUid()).thenReturn("uid-teacher-24");
+        when(firebaseToken.getEmail()).thenReturn("teacher24@school.com");
+        when(firebaseToken.isEmailVerified()).thenReturn(true);
+        when(firebaseAuth.verifyIdToken("valid-token-24", true)).thenReturn(firebaseToken);
+        java.util.UUID assessmentId = java.util.UUID.randomUUID();
+
+        mockMvc.perform(post("/api/v1/assessments/" + assessmentId + "/draft/regenerate")
+                        .header("Authorization", "Bearer valid-token-24")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
-                                { "adjustmentNotes": "make it harder" }
-                                """))
+                                { "adjustmentNotes": "make it harder", "expectedRevisionId": "%s" }
+                                """.formatted(java.util.UUID.randomUUID())))
+                .andExpect(status().isBadRequest());
+
+        verifyNoInteractions(regenerateAssessmentDraftUseCase);
+    }
+
+    @Test
+    void unauthenticated_draft_regeneration_request_returns_401() throws Exception {
+        mockMvc.perform(post("/api/v1/assessments/" + java.util.UUID.randomUUID() + "/draft/regenerate")
+                        .header("Idempotency-Key", "regen-key-unauth")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                { "adjustmentNotes": "make it harder", "expectedRevisionId": "%s" }
+                                """.formatted(java.util.UUID.randomUUID())))
                 .andExpect(status().isUnauthorized());
 
         verifyNoInteractions(regenerateAssessmentDraftUseCase);

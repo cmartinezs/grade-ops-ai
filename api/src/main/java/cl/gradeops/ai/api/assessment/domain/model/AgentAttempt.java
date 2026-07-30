@@ -118,15 +118,31 @@ public class AgentAttempt extends AggregateRoot<UUID> {
         return a;
     }
 
-    /** DISPATCHED → FAILED, retaining {@code structuredResult} when a response arrived before the failure. */
-    public AgentAttempt markFailed(String failureCode, String structuredResult) {
+    /**
+     * DISPATCHED → FAILED, retaining {@code structuredResult} when a response arrived before the
+     * failure. {@code resolvedProvider}/{@code resolvedModel} are {@code null} for a failure that
+     * occurred before a provider was ever resolved (e.g. transport-level {@code
+     * AGENT_UNAVAILABLE}, or agents-side {@code INVALID_COMMAND}); they must be supplied,
+     * non-blank, when the caller knows a provider was resolved before the failure (e.g. {@code
+     * MALFORMED_OUTPUT}, or a late-arriving successful response that failed only the CAS check at
+     * persist time — {@code STALE_ON_COMPLETION}). This is a widened signature, not a second
+     * overload, so no call site can accidentally keep discarding known provider/model evidence.
+     */
+    public AgentAttempt markFailed(String failureCode, String resolvedProvider, String resolvedModel,
+                                    String structuredResult) {
         if (status != AgentAttemptStatus.DISPATCHED) {
             throw new DomainInvariantViolationException("cannot transition to FAILED from " + status);
         }
         if (failureCode == null || failureCode.isBlank())
             throw new DomainInvariantViolationException("failureCode must not be blank");
+        if (resolvedProvider != null && resolvedProvider.isBlank())
+            throw new DomainInvariantViolationException("resolvedProvider must not be blank if provided");
+        if (resolvedModel != null && resolvedModel.isBlank())
+            throw new DomainInvariantViolationException("resolvedModel must not be blank if provided");
         AgentAttempt a = copy();
         a.failureCode = failureCode;
+        a.resolvedProvider = resolvedProvider;
+        a.resolvedModel = resolvedModel;
         a.structuredResult = structuredResult;
         a.status = AgentAttemptStatus.FAILED;
         a.completedAt = Instant.now();

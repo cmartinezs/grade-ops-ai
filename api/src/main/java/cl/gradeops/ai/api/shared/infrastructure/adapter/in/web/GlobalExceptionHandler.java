@@ -21,6 +21,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingRequestHeaderException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -147,6 +148,12 @@ public class GlobalExceptionHandler {
                 .map(e -> new FieldErrorResponse(e.getField(), e.getDefaultMessage()))
                 .toList();
         return ResponseEntity.status(HttpStatus.UNPROCESSABLE_CONTENT).body(errors);
+    }
+
+    @ExceptionHandler(MissingRequestHeaderException.class)
+    public ResponseEntity<ApiErrorResponse> handleMissingHeader(MissingRequestHeaderException ex) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(ApiErrorResponse.of("MISSING_HEADER", ex.getHeaderName()));
     }
 
     @ExceptionHandler(MissingServletRequestParameterException.class)
