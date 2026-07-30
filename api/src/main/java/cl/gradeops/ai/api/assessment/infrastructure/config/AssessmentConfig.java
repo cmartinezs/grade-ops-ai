@@ -10,12 +10,12 @@ import cl.gradeops.ai.api.assessment.application.port.out.AssessmentRepositoryPo
 import cl.gradeops.ai.api.assessment.application.port.out.AssessmentRevisionRepositoryPort;
 import cl.gradeops.ai.api.assessment.application.usecase.AiOperationCoordinator;
 import cl.gradeops.ai.api.assessment.application.usecase.CreateAssessmentBriefHandler;
+import cl.gradeops.ai.api.assessment.application.usecase.CreateHumanRevisionHandler;
 import cl.gradeops.ai.api.assessment.application.usecase.GenerateAssessmentDraftHandler;
 import cl.gradeops.ai.api.assessment.application.usecase.GetCurrentDraftHandler;
 import cl.gradeops.ai.api.assessment.application.usecase.ListAssessmentsHandler;
 import cl.gradeops.ai.api.assessment.application.usecase.ListDraftVersionsHandler;
 import cl.gradeops.ai.api.assessment.application.usecase.RegenerateAssessmentDraftHandler;
-import cl.gradeops.ai.api.assessment.application.usecase.UpdateAssessmentDraftHandler;
 import cl.gradeops.ai.api.assessment.infrastructure.adapter.out.persistence.AgentAttemptJpaRepository;
 import cl.gradeops.ai.api.assessment.infrastructure.adapter.out.persistence.AgentAttemptPersistenceAdapter;
 import cl.gradeops.ai.api.assessment.infrastructure.adapter.out.persistence.AgentAttemptPersistenceMapper;
@@ -204,11 +204,13 @@ class AssessmentConfig {
     }
 
     @Bean
-    UpdateAssessmentDraftHandler updateAssessmentDraftHandler(
+    CreateHumanRevisionHandler createHumanRevisionHandler(
             AssessmentRepositoryPort assessmentRepository,
-            AssessmentDraftRepositoryPort assessmentDraftRepository,
-            OwnershipVerifier ownershipVerifier) {
-        return new UpdateAssessmentDraftHandler(assessmentRepository, assessmentDraftRepository, ownershipVerifier);
+            AssessmentRevisionRepositoryPort assessmentRevisionRepository,
+            OwnershipVerifier ownershipVerifier,
+            PlatformTransactionManager transactionManager) {
+        return new CreateHumanRevisionHandler(assessmentRepository, assessmentRevisionRepository,
+                ownershipVerifier, transactionManager);
     }
 
     @Bean

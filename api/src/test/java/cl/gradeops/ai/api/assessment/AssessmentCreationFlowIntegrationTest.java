@@ -7,7 +7,6 @@ import cl.gradeops.ai.api.assessment.application.command.CreateAssessmentBriefCo
 import cl.gradeops.ai.api.assessment.application.command.GetCurrentDraftCommand;
 import cl.gradeops.ai.api.assessment.application.command.ListDraftVersionsCommand;
 import cl.gradeops.ai.api.assessment.application.command.RegenerateAssessmentDraftCommand;
-import cl.gradeops.ai.api.assessment.application.command.UpdateAssessmentDraftCommand;
 import cl.gradeops.ai.api.assessment.application.result.AssessmentSummaryResult;
 import cl.gradeops.ai.api.assessment.application.result.CreateAssessmentBriefResult;
 import cl.gradeops.ai.api.assessment.application.result.GenerateAssessmentDraftResult;
@@ -16,7 +15,6 @@ import cl.gradeops.ai.api.assessment.application.usecase.GetCurrentDraftHandler;
 import cl.gradeops.ai.api.assessment.application.usecase.ListAssessmentsHandler;
 import cl.gradeops.ai.api.assessment.application.usecase.ListDraftVersionsHandler;
 import cl.gradeops.ai.api.assessment.application.usecase.RegenerateAssessmentDraftHandler;
-import cl.gradeops.ai.api.assessment.application.usecase.UpdateAssessmentDraftHandler;
 import cl.gradeops.ai.api.assessment.domain.model.AssessmentBrief;
 import cl.gradeops.ai.api.assessment.domain.model.AssessmentDraft;
 import cl.gradeops.ai.api.assessment.domain.model.AssessmentId;
@@ -69,15 +67,23 @@ import static org.mockito.Mockito.when;
  *
  * <p>Session A2 (Task 07B) pivoted {@code GenerateAssessmentDraftHandler} onto the durable
  * {@code AssessmentRevision} model — it no longer produces an {@code AssessmentDraft} row, so
- * it can no longer feed this chain's {@code RegenerateAssessmentDraftHandler}/{@code
- * UpdateAssessmentDraftHandler} steps (both still {@code AssessmentDraft}-based; regenerate's
- * own migration onto revisions is Task 09, a later session). "V1" is therefore seeded directly
- * as a pre-existing {@code AssessmentDraft} below, simulating an assessment already generated
- * before this cut, exactly the legacy shape Task 07B's own risk section requires the initial
- * generation path to tolerate. {@code GenerateAssessmentDraftHandler}'s own behavior is covered
- * separately by {@code GenerateAssessmentDraftHandlerIntegrationTest}. Only {@link
- * AssessmentAgentClient} is stubbed; every persistence adapter and handler exercised here runs
- * for real. Requires Docker.
+ * it can no longer feed this chain's {@code RegenerateAssessmentDraftHandler} step (still
+ * {@code AssessmentDraft}-based this session; regenerate's own migration onto revisions is
+ * Task 09, a later session in the same packet). "V1" is therefore seeded directly as a
+ * pre-existing {@code AssessmentDraft} below, simulating an assessment already generated before
+ * this cut, exactly the legacy shape Task 07B's own risk section requires the initial generation
+ * path to tolerate. {@code GenerateAssessmentDraftHandler}'s own behavior is covered separately
+ * by {@code GenerateAssessmentDraftHandlerIntegrationTest}. Only {@link AssessmentAgentClient} is
+ * stubbed; every persistence adapter and handler exercised here runs for real. Requires Docker.
+ *
+ * <p>Session A3 (Task 08) removed {@code UpdateAssessmentDraftHandler} — human edits now create
+ * an immutable {@code AssessmentRevision} via {@code CreateHumanRevisionHandler}, which requires
+ * an {@code Assessment.currentRevisionId} to exist (not applicable to this file's still-legacy,
+ * {@code AssessmentDraft}-seeded chain). This file's own "edit preserves id/version" coverage
+ * was therefore deleted outright, not adapted — TEST-PLAN.md's regression guard #2. A
+ * revision-based whole-story equivalent (generate → regenerate → human-edit, all via {@code
+ * AssessmentRevision}) is added by Task 09/10 once regenerate and the read handlers also move
+ * onto the revision model.
  */
 @DataJpaTest
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
@@ -118,7 +124,6 @@ class AssessmentCreationFlowIntegrationTest {
 
     CreateAssessmentBriefHandler createBriefHandler;
     RegenerateAssessmentDraftHandler regenerateHandler;
-    UpdateAssessmentDraftHandler updateHandler;
     GetCurrentDraftHandler getCurrentDraftHandler;
     ListDraftVersionsHandler listDraftVersionsHandler;
     ListAssessmentsHandler listAssessmentsHandler;
@@ -139,7 +144,6 @@ class AssessmentCreationFlowIntegrationTest {
         createBriefHandler = new CreateAssessmentBriefHandler(assessmentAdapter, briefAdapter);
         regenerateHandler = new RegenerateAssessmentDraftHandler(assessmentAdapter, briefAdapter, draftAdapter,
                 logAdapter, ownershipVerifier, assessmentAgentClient, transactionManager);
-        updateHandler = new UpdateAssessmentDraftHandler(assessmentAdapter, draftAdapter, ownershipVerifier);
         getCurrentDraftHandler = new GetCurrentDraftHandler(assessmentAdapter, draftAdapter, ownershipVerifier);
         listDraftVersionsHandler = new ListDraftVersionsHandler(assessmentAdapter, draftAdapter, ownershipVerifier);
         listAssessmentsHandler = new ListAssessmentsHandler(assessmentAdapter);
@@ -203,34 +207,25 @@ class AssessmentCreationFlowIntegrationTest {
         assertThat(regenerated.versionNumber()).isEqualTo(2);
         assertThat(regenerated.title()).isEqualTo("V2");
 
-        GenerateAssessmentDraftResult edited = updateHandler.execute(new UpdateAssessmentDraftCommand(
-                assessmentId, TEACHER_UID, "V2 edited", null, null, null, null, null));
-        entityManager.flush();
-        entityManager.clear();
-        // Editing does not create a new version: same draft id and version number as v2.
-        assertThat(edited.draftId()).isEqualTo(regenerated.draftId());
-        assertThat(edited.versionNumber()).isEqualTo(2);
-        assertThat(edited.title()).isEqualTo("V2 edited");
-
-        // Dashboard listing reflects the assessment with the latest (edited) title.
+        // Dashboard listing reflects the assessment with the latest (regenerated) title.
         List<AssessmentSummaryResult> summaries = listAssessmentsHandler.execute(TEACHER_UID);
         assertThat(summaries).hasSize(1);
         assertThat(summaries.get(0).id()).isEqualTo(assessmentId.toString());
-        assertThat(summaries.get(0).title()).isEqualTo("V2 edited");
+        assertThat(summaries.get(0).title()).isEqualTo("V2");
 
-        // Retrieve current draft matches the edited state.
+        // Retrieve current draft matches the regenerated state.
         GenerateAssessmentDraftResult current = getCurrentDraftHandler.execute(
                 new GetCurrentDraftCommand(assessmentId, TEACHER_UID));
-        assertThat(current.draftId()).isEqualTo(edited.draftId());
+        assertThat(current.draftId()).isEqualTo(regenerated.draftId());
         assertThat(current.versionNumber()).isEqualTo(2);
-        assertThat(current.title()).isEqualTo("V2 edited");
+        assertThat(current.title()).isEqualTo("V2");
 
-        // Version history lists both versions, newest first, v1 untouched by the edit.
+        // Version history lists both versions, newest first.
         List<GenerateAssessmentDraftResult> versions = listDraftVersionsHandler.execute(
                 new ListDraftVersionsCommand(assessmentId, TEACHER_UID));
         assertThat(versions).hasSize(2);
         assertThat(versions.get(0).versionNumber()).isEqualTo(2);
-        assertThat(versions.get(0).title()).isEqualTo("V2 edited");
+        assertThat(versions.get(0).title()).isEqualTo("V2");
         assertThat(versions.get(1).versionNumber()).isEqualTo(1);
         assertThat(versions.get(1).title()).isEqualTo("V1");
         assertThat(versions.get(1).draftId()).isEqualTo(generated.draftId());
@@ -286,38 +281,4 @@ class AssessmentCreationFlowIntegrationTest {
                 .containsExactlyInAnyOrder(v2.draftId(), v3.draftId());
     }
 
-    @Test
-    void editAfterRegenerationUpdatesOnlyTheLatestVersion() {
-        UUID assessmentId = createBrief();
-
-        GenerateAssessmentDraftResult v1 = seedV1Draft(assessmentId);
-
-        when(assessmentAgentClient.generate(any(), any())).thenReturn(response("V2"));
-        GenerateAssessmentDraftResult v2 = regenerateHandler.execute(
-                new RegenerateAssessmentDraftCommand(assessmentId, TEACHER_UID, "harder"));
-        entityManager.flush();
-        entityManager.clear();
-
-        GenerateAssessmentDraftResult edited = updateHandler.execute(new UpdateAssessmentDraftCommand(
-                assessmentId, TEACHER_UID, "V2 edited by teacher", null, null, null, null, null));
-        entityManager.flush();
-        entityManager.clear();
-
-        // The edit landed on v2's row in place — same id, same version number.
-        assertThat(edited.draftId()).isEqualTo(v2.draftId());
-        assertThat(edited.versionNumber()).isEqualTo(2);
-        assertThat(edited.title()).isEqualTo("V2 edited by teacher");
-
-        // v1 is completely untouched by the edit.
-        AssessmentDraftJpaEntity v1Entity = draftJpaRepository.findById(v1.draftId()).orElseThrow();
-        assertThat(v1Entity.getTitle()).isEqualTo("V1");
-        assertThat(v1Entity.getVersionNumber()).isEqualTo(1);
-
-        // Still exactly two versions — the edit did not create a third.
-        List<GenerateAssessmentDraftResult> versions = listDraftVersionsHandler.execute(
-                new ListDraftVersionsCommand(assessmentId, TEACHER_UID));
-        assertThat(versions).hasSize(2);
-        assertThat(versions.get(0).title()).isEqualTo("V2 edited by teacher");
-        assertThat(versions.get(1).title()).isEqualTo("V1");
-    }
 }

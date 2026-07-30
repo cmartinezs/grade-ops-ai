@@ -3,6 +3,7 @@ package cl.gradeops.ai.api.shared.infrastructure.adapter.in.web;
 import cl.gradeops.ai.api.agentclient.AgentClientException;
 import cl.gradeops.ai.api.assessment.application.exception.AlreadyGeneratedException;
 import cl.gradeops.ai.api.assessment.application.exception.StaleOnCompletionException;
+import cl.gradeops.ai.api.assessment.application.exception.StaleRevisionException;
 import cl.gradeops.ai.api.auth.domain.exception.InvalidResetCodeException;
 import cl.gradeops.ai.api.auth.domain.exception.PasswordMismatchException;
 import cl.gradeops.ai.api.auth.domain.exception.ResetCodeEmailMismatchException;
@@ -71,21 +72,27 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(AlreadyGeneratedException.class)
-    public ResponseEntity<ApiErrorResponse> handleAlreadyGenerated(AlreadyGeneratedException ex) {
+    public ResponseEntity<ApiConflictErrorResponse> handleAlreadyGenerated(AlreadyGeneratedException ex) {
         return ResponseEntity.status(HttpStatus.CONFLICT)
-                .body(ApiErrorResponse.of("ALREADY_GENERATED", ex.getMessage()));
+                .body(ApiConflictErrorResponse.of("ALREADY_GENERATED", ex.getMessage()));
     }
 
     @ExceptionHandler(StaleOnCompletionException.class)
-    public ResponseEntity<ApiErrorResponse> handleStaleOnCompletion(StaleOnCompletionException ex) {
+    public ResponseEntity<ApiConflictErrorResponse> handleStaleOnCompletion(StaleOnCompletionException ex) {
         return ResponseEntity.status(HttpStatus.CONFLICT)
-                .body(ApiErrorResponse.of("STALE_ON_COMPLETION", ex.getMessage()));
+                .body(ApiConflictErrorResponse.of("STALE_ON_COMPLETION", ex.getMessage()));
+    }
+
+    @ExceptionHandler(StaleRevisionException.class)
+    public ResponseEntity<ApiConflictErrorResponse> handleStaleRevision(StaleRevisionException ex) {
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(ApiConflictErrorResponse.of("STALE_REVISION", ex.getMessage()));
     }
 
     @ExceptionHandler(IdempotencyKeyPayloadMismatchException.class)
-    public ResponseEntity<ApiErrorResponse> handleIdempotencyKeyPayloadMismatch(IdempotencyKeyPayloadMismatchException ex) {
+    public ResponseEntity<ApiConflictErrorResponse> handleIdempotencyKeyPayloadMismatch(IdempotencyKeyPayloadMismatchException ex) {
         return ResponseEntity.status(HttpStatus.CONFLICT)
-                .body(ApiErrorResponse.of("IDEMPOTENCY_KEY_PAYLOAD_MISMATCH", ex.getMessage()));
+                .body(ApiConflictErrorResponse.of("IDEMPOTENCY_KEY_PAYLOAD_MISMATCH", ex.getMessage()));
     }
 
     @ExceptionHandler(AgentClientException.class)

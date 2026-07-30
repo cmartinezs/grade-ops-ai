@@ -6,7 +6,6 @@ import cl.gradeops.ai.api.assessment.application.command.GenerateAssessmentDraft
 import cl.gradeops.ai.api.assessment.application.command.GetCurrentDraftCommand;
 import cl.gradeops.ai.api.assessment.application.command.ListDraftVersionsCommand;
 import cl.gradeops.ai.api.assessment.application.command.RegenerateAssessmentDraftCommand;
-import cl.gradeops.ai.api.assessment.application.command.UpdateAssessmentDraftCommand;
 import cl.gradeops.ai.api.assessment.application.exception.NoPriorDraftException;
 import cl.gradeops.ai.api.assessment.application.port.in.CreateAssessmentBriefUseCase;
 import cl.gradeops.ai.api.assessment.application.port.in.GenerateAssessmentDraftUseCase;
@@ -14,7 +13,6 @@ import cl.gradeops.ai.api.assessment.application.port.in.GetCurrentDraftUseCase;
 import cl.gradeops.ai.api.assessment.application.port.in.ListAssessmentsUseCase;
 import cl.gradeops.ai.api.assessment.application.port.in.ListDraftVersionsUseCase;
 import cl.gradeops.ai.api.assessment.application.port.in.RegenerateAssessmentDraftUseCase;
-import cl.gradeops.ai.api.assessment.application.port.in.UpdateAssessmentDraftUseCase;
 import cl.gradeops.ai.api.assessment.application.result.AssessmentSummaryResult;
 import cl.gradeops.ai.api.assessment.application.result.CreateAssessmentBriefResult;
 import cl.gradeops.ai.api.assessment.application.result.GenerateAssessmentDraftResult;
@@ -46,7 +44,6 @@ import java.util.List;
 
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -63,7 +60,6 @@ class AssessmentControllerTest {
     @MockitoBean CreateAssessmentBriefUseCase createAssessmentBriefUseCase;
     @MockitoBean GenerateAssessmentDraftUseCase generateAssessmentDraftUseCase;
     @MockitoBean RegenerateAssessmentDraftUseCase regenerateAssessmentDraftUseCase;
-    @MockitoBean UpdateAssessmentDraftUseCase updateAssessmentDraftUseCase;
     @MockitoBean GetCurrentDraftUseCase getCurrentDraftUseCase;
     @MockitoBean ListDraftVersionsUseCase listDraftVersionsUseCase;
     @Mock FirebaseToken firebaseToken;
@@ -356,139 +352,6 @@ class AssessmentControllerTest {
                 .andExpect(status().isUnauthorized());
 
         verifyNoInteractions(regenerateAssessmentDraftUseCase);
-    }
-
-    @Test
-    void authenticated_teacher_patching_draft_returns_200_with_updated_field() throws Exception {
-        when(firebaseToken.getUid()).thenReturn("uid-teacher-12");
-        when(firebaseToken.getEmail()).thenReturn("teacher12@school.com");
-        when(firebaseToken.isEmailVerified()).thenReturn(true);
-        when(firebaseAuth.verifyIdToken("valid-token-12", true)).thenReturn(firebaseToken);
-        java.util.UUID assessmentId = java.util.UUID.randomUUID();
-        java.util.UUID draftId = java.util.UUID.randomUUID();
-        when(updateAssessmentDraftUseCase.execute(new UpdateAssessmentDraftCommand(
-                assessmentId, "uid-teacher-12", "New title", null, null, null, null, null)))
-                .thenReturn(new GenerateAssessmentDraftResult(draftId, "New title", "Context", "Instructions",
-                        List.of("obj"), List.of("del"), List.of("con"), 1));
-
-        mockMvc.perform(patch("/api/v1/assessments/" + assessmentId + "/draft")
-                        .header("Authorization", "Bearer valid-token-12")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
-                                { "title": "New title" }
-                                """))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.draftId").value(draftId.toString()))
-                .andExpect(jsonPath("$.title").value("New title"))
-                .andExpect(jsonPath("$.versionNumber").value(1));
-    }
-
-    @Test
-    void patching_draft_without_prior_draft_returns_422() throws Exception {
-        when(firebaseToken.getUid()).thenReturn("uid-teacher-13");
-        when(firebaseToken.getEmail()).thenReturn("teacher13@school.com");
-        when(firebaseToken.isEmailVerified()).thenReturn(true);
-        when(firebaseAuth.verifyIdToken("valid-token-13", true)).thenReturn(firebaseToken);
-        java.util.UUID assessmentId = java.util.UUID.randomUUID();
-        when(updateAssessmentDraftUseCase.execute(new UpdateAssessmentDraftCommand(
-                assessmentId, "uid-teacher-13", "New title", null, null, null, null, null)))
-                .thenThrow(new NoPriorDraftException(assessmentId.toString()));
-
-        mockMvc.perform(patch("/api/v1/assessments/" + assessmentId + "/draft")
-                        .header("Authorization", "Bearer valid-token-13")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
-                                { "title": "New title" }
-                                """))
-                .andExpect(status().isUnprocessableEntity());
-    }
-
-    @Test
-    void patching_draft_for_unknown_assessment_returns_404() throws Exception {
-        when(firebaseToken.getUid()).thenReturn("uid-teacher-14");
-        when(firebaseToken.getEmail()).thenReturn("teacher14@school.com");
-        when(firebaseToken.isEmailVerified()).thenReturn(true);
-        when(firebaseAuth.verifyIdToken("valid-token-14", true)).thenReturn(firebaseToken);
-        java.util.UUID assessmentId = java.util.UUID.randomUUID();
-        when(updateAssessmentDraftUseCase.execute(new UpdateAssessmentDraftCommand(
-                assessmentId, "uid-teacher-14", "New title", null, null, null, null, null)))
-                .thenThrow(new ResourceNotFoundException(assessmentId.toString()));
-
-        mockMvc.perform(patch("/api/v1/assessments/" + assessmentId + "/draft")
-                        .header("Authorization", "Bearer valid-token-14")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
-                                { "title": "New title" }
-                                """))
-                .andExpect(status().isNotFound());
-    }
-
-    @Test
-    void patching_draft_with_blank_title_returns_422_and_does_not_invoke_use_case() throws Exception {
-        when(firebaseToken.getUid()).thenReturn("uid-teacher-15");
-        when(firebaseToken.getEmail()).thenReturn("teacher15@school.com");
-        when(firebaseToken.isEmailVerified()).thenReturn(true);
-        when(firebaseAuth.verifyIdToken("valid-token-15", true)).thenReturn(firebaseToken);
-
-        mockMvc.perform(patch("/api/v1/assessments/" + java.util.UUID.randomUUID() + "/draft")
-                        .header("Authorization", "Bearer valid-token-15")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
-                                { "title": "" }
-                                """))
-                .andExpect(status().isUnprocessableEntity());
-
-        verifyNoInteractions(updateAssessmentDraftUseCase);
-    }
-
-    @Test
-    void patching_draft_with_blank_objective_element_returns_422_and_does_not_invoke_use_case() throws Exception {
-        when(firebaseToken.getUid()).thenReturn("uid-teacher-16");
-        when(firebaseToken.getEmail()).thenReturn("teacher16@school.com");
-        when(firebaseToken.isEmailVerified()).thenReturn(true);
-        when(firebaseAuth.verifyIdToken("valid-token-16", true)).thenReturn(firebaseToken);
-
-        mockMvc.perform(patch("/api/v1/assessments/" + java.util.UUID.randomUUID() + "/draft")
-                        .header("Authorization", "Bearer valid-token-16")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
-                                { "objectives": ["valid", ""] }
-                                """))
-                .andExpect(status().isUnprocessableEntity());
-
-        verifyNoInteractions(updateAssessmentDraftUseCase);
-    }
-
-    @Test
-    void patching_draft_with_only_null_fields_does_not_trigger_validation_errors() throws Exception {
-        when(firebaseToken.getUid()).thenReturn("uid-teacher-17");
-        when(firebaseToken.getEmail()).thenReturn("teacher17@school.com");
-        when(firebaseToken.isEmailVerified()).thenReturn(true);
-        when(firebaseAuth.verifyIdToken("valid-token-17", true)).thenReturn(firebaseToken);
-        java.util.UUID assessmentId = java.util.UUID.randomUUID();
-        java.util.UUID draftId = java.util.UUID.randomUUID();
-        when(updateAssessmentDraftUseCase.execute(new UpdateAssessmentDraftCommand(
-                assessmentId, "uid-teacher-17", null, null, null, null, null, null)))
-                .thenReturn(new GenerateAssessmentDraftResult(draftId, "Title", "Context", "Instructions",
-                        List.of("obj"), List.of("del"), List.of("con"), 1));
-
-        mockMvc.perform(patch("/api/v1/assessments/" + assessmentId + "/draft")
-                        .header("Authorization", "Bearer valid-token-17")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{}"))
-                .andExpect(status().isOk());
-    }
-
-    @Test
-    void unauthenticated_draft_patch_request_returns_401() throws Exception {
-        mockMvc.perform(patch("/api/v1/assessments/" + java.util.UUID.randomUUID() + "/draft")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
-                                { "title": "New title" }
-                                """))
-                .andExpect(status().isUnauthorized());
-
-        verifyNoInteractions(updateAssessmentDraftUseCase);
     }
 
     @Test
