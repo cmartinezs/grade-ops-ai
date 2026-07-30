@@ -1,12 +1,19 @@
 package cl.gradeops.ai.api.assessment.application.usecase;
 
+import cl.gradeops.ai.api.agentclient.AgentClientException;
 import cl.gradeops.ai.api.agentclient.AssessmentCommand;
 import cl.gradeops.ai.api.assessment.application.command.GenerateAssessmentDraftCommand;
 import cl.gradeops.ai.api.assessment.application.exception.AlreadyGeneratedException;
+import cl.gradeops.ai.api.assessment.application.exception.StaleOnCompletionException;
+import cl.gradeops.ai.api.assessment.application.port.out.AgentAttemptRepositoryPort;
+import cl.gradeops.ai.api.assessment.application.port.out.AiOperationRepositoryPort;
 import cl.gradeops.ai.api.assessment.application.port.out.AssessmentBriefRepositoryPort;
 import cl.gradeops.ai.api.assessment.application.port.out.AssessmentRepositoryPort;
 import cl.gradeops.ai.api.assessment.application.port.out.AssessmentRevisionRepositoryPort;
-import cl.gradeops.ai.api.assessment.application.result.GenerateAssessmentDraftResult;
+import cl.gradeops.ai.api.assessment.application.result.GenerateAssessmentDraftOutcome;
+import cl.gradeops.ai.api.assessment.domain.model.AgentAttempt;
+import cl.gradeops.ai.api.assessment.domain.model.AiOperation;
+import cl.gradeops.ai.api.assessment.domain.model.AiOperationType;
 import cl.gradeops.ai.api.assessment.domain.model.Assessment;
 import cl.gradeops.ai.api.assessment.domain.model.AssessmentBrief;
 import cl.gradeops.ai.api.assessment.domain.model.AssessmentId;
@@ -37,8 +44,10 @@ import static org.mockito.Mockito.*;
 
 /**
  * Covers only this handler's own responsibilities — ownership, idempotency (Task 06), the
- * {@code ALREADY_GENERATED} precondition, and delegation to {@link AiOperationCoordinator} —
- * with the coordinator mocked. The coordinator's own three-phase behavior is covered by {@link
+ * {@code ALREADY_GENERATED} precondition, delegation to {@link AiOperationCoordinator}, and (A3
+ * Contract Correction § Correction 2) translating a dispatch failure into a {@code 202}
+ * {@code OperationAccepted} outcome instead of letting it propagate — with the coordinator
+ * mocked. The coordinator's own three-phase behavior is covered by {@link
  * AiOperationCoordinatorTest} instead.
  */
 @ExtendWith(MockitoExtension.class)
@@ -47,6 +56,8 @@ class GenerateAssessmentDraftHandlerTest {
     @Mock AssessmentRepositoryPort assessmentRepository;
     @Mock AssessmentBriefRepositoryPort assessmentBriefRepository;
     @Mock AssessmentRevisionRepositoryPort assessmentRevisionRepository;
+    @Mock AiOperationRepositoryPort aiOperationRepository;
+    @Mock AgentAttemptRepositoryPort agentAttemptRepository;
     @Mock OwnershipVerifier ownershipVerifier;
     @Mock IdempotencyGuard idempotencyGuard;
     @Mock AiOperationCoordinator aiOperationCoordinator;
@@ -61,12 +72,22 @@ class GenerateAssessmentDraftHandlerTest {
     @BeforeEach
     void setUp() {
         handler = new GenerateAssessmentDraftHandler(assessmentRepository, assessmentBriefRepository,
-                assessmentRevisionRepository, ownershipVerifier, idempotencyGuard, aiOperationCoordinator);
+                assessmentRevisionRepository, aiOperationRepository, agentAttemptRepository,
+                ownershipVerifier, idempotencyGuard, aiOperationCoordinator);
     }
 
     private static AssessmentRevision revision(AssessmentId assessmentId, String title, int versionNumber) {
         return AssessmentRevision.generateFromAi(assessmentId, title, "Context", "Instructions",
                 List.of("obj"), List.of("del"), List.of("con"), "uid-1", UUID.randomUUID());
+    }
+
+    private static AiOperation failedOperation(cl.gradeops.ai.api.assessment.domain.model.AiOperationStatus status) {
+        AiOperation inProgress = AiOperation.create(new AssessmentId(UUID.randomUUID()), AiOperationType.CREATE_INITIAL_REVISION,
+                        "uid-1", "key-1", null)
+                .markInProgress();
+        return status == cl.gradeops.ai.api.assessment.domain.model.AiOperationStatus.FAILED_RETRYABLE
+                ? inProgress.markFailedRetryable()
+                : inProgress.markFailedTerminal();
     }
 
     @Test
@@ -78,9 +99,11 @@ class GenerateAssessmentDraftHandlerTest {
         when(aiOperationCoordinator.createInitialRevision(eq(assessment), any(), eq("uid-1"), eq("key-1")))
                 .thenReturn(revision);
 
-        GenerateAssessmentDraftResult result = handler.execute(
+        GenerateAssessmentDraftOutcome outcome = handler.execute(
                 new GenerateAssessmentDraftCommand(assessmentUuid, "uid-1", "key-1"));
 
+        assertThat(outcome).isInstanceOf(GenerateAssessmentDraftOutcome.RevisionCreated.class);
+        var result = ((GenerateAssessmentDraftOutcome.RevisionCreated) outcome).revision();
         assertThat(result.draftId()).isEqualTo(revision.getId());
         assertThat(result.title()).isEqualTo("Title");
         assertThat(result.versionNumber()).isEqualTo(1);
@@ -110,10 +133,86 @@ class GenerateAssessmentDraftHandlerTest {
                 .thenReturn(Optional.of(priorRecord));
         when(assessmentRevisionRepository.findById(priorRevision.getId())).thenReturn(Optional.of(priorRevision));
 
-        GenerateAssessmentDraftResult result = handler.execute(
+        GenerateAssessmentDraftOutcome outcome = handler.execute(
                 new GenerateAssessmentDraftCommand(assessmentUuid, "uid-1", "key-1"));
 
+        var result = ((GenerateAssessmentDraftOutcome.RevisionCreated) outcome).revision();
         assertThat(result.title()).isEqualTo("Prior Title");
+        verifyNoInteractions(assessmentBriefRepository, aiOperationCoordinator);
+    }
+
+    @Test
+    void shouldReturnOperationAcceptedWhenTheCoordinatorThrowsAgentClientException() {
+        when(assessmentRepository.findById(assessmentId)).thenReturn(Optional.of(assessment));
+        when(idempotencyGuard.check(any(), eq("CREATE_INITIAL_REVISION"), eq("key-1"), any())).thenReturn(Optional.empty());
+        when(assessmentBriefRepository.findByAssessmentId(assessmentId)).thenReturn(Optional.of(brief));
+        AgentClientException agentEx = new AgentClientException(
+                AgentClientException.Reason.UNREACHABLE, "unreachable", new RuntimeException());
+        when(aiOperationCoordinator.createInitialRevision(eq(assessment), any(), eq("uid-1"), eq("key-1")))
+                .thenThrow(agentEx);
+        AiOperation failedOp = failedOperation(cl.gradeops.ai.api.assessment.domain.model.AiOperationStatus.FAILED_RETRYABLE);
+        when(aiOperationRepository.findLatestByAssessmentIdAndOperationType(assessmentId, AiOperationType.CREATE_INITIAL_REVISION))
+                .thenReturn(Optional.of(failedOp));
+        AgentAttempt failedAttempt = AgentAttempt.dispatch(failedOp.getId(), 1, "assessment", "v1", "corr-1")
+                .markFailed("AGENT_UNAVAILABLE", null, null, null);
+        when(agentAttemptRepository.findAllByAiOperationId(failedOp.getId())).thenReturn(List.of(failedAttempt));
+
+        GenerateAssessmentDraftOutcome outcome = handler.execute(
+                new GenerateAssessmentDraftCommand(assessmentUuid, "uid-1", "key-1"));
+
+        assertThat(outcome).isInstanceOf(GenerateAssessmentDraftOutcome.OperationAccepted.class);
+        var operation = ((GenerateAssessmentDraftOutcome.OperationAccepted) outcome).operation();
+        assertThat(operation.id()).isEqualTo(failedOp.getId());
+        assertThat(operation.status()).isEqualTo("FAILED_RETRYABLE");
+        assertThat(operation.failureCode()).isEqualTo("AGENT_UNAVAILABLE");
+        assertThat(operation.retryable()).isTrue();
+
+        verify(idempotencyGuard).record(any(), eq("CREATE_INITIAL_REVISION"), eq("key-1"),
+                any(), eq(failedOp.getId().toString()), eq(202));
+    }
+
+    @Test
+    void shouldReturnOperationAcceptedWhenTheCoordinatorThrowsStaleOnCompletion() {
+        when(assessmentRepository.findById(assessmentId)).thenReturn(Optional.of(assessment));
+        when(idempotencyGuard.check(any(), eq("CREATE_INITIAL_REVISION"), eq("key-1"), any())).thenReturn(Optional.empty());
+        when(assessmentBriefRepository.findByAssessmentId(assessmentId)).thenReturn(Optional.of(brief));
+        when(aiOperationCoordinator.createInitialRevision(eq(assessment), any(), eq("uid-1"), eq("key-1")))
+                .thenThrow(new StaleOnCompletionException(assessmentUuid.toString()));
+        AiOperation failedOp = failedOperation(cl.gradeops.ai.api.assessment.domain.model.AiOperationStatus.FAILED_TERMINAL);
+        when(aiOperationRepository.findLatestByAssessmentIdAndOperationType(assessmentId, AiOperationType.CREATE_INITIAL_REVISION))
+                .thenReturn(Optional.of(failedOp));
+        AgentAttempt failedAttempt = AgentAttempt.dispatch(failedOp.getId(), 1, "assessment", "v1", "corr-1")
+                .markFailed("STALE_ON_COMPLETION", "gemini", "gemini-2.0-flash", null);
+        when(agentAttemptRepository.findAllByAiOperationId(failedOp.getId())).thenReturn(List.of(failedAttempt));
+
+        GenerateAssessmentDraftOutcome outcome = handler.execute(
+                new GenerateAssessmentDraftCommand(assessmentUuid, "uid-1", "key-1"));
+
+        var operation = ((GenerateAssessmentDraftOutcome.OperationAccepted) outcome).operation();
+        assertThat(operation.status()).isEqualTo("FAILED_TERMINAL");
+        assertThat(operation.failureCode()).isEqualTo("STALE_ON_COMPLETION");
+        assertThat(operation.retryable()).isFalse();
+    }
+
+    @Test
+    void shouldReplayA202RecordAsOperationAcceptedWithoutTouchingBriefOrCoordinator() {
+        when(assessmentRepository.findById(assessmentId)).thenReturn(Optional.of(assessment));
+        AiOperation failedOp = failedOperation(cl.gradeops.ai.api.assessment.domain.model.AiOperationStatus.FAILED_RETRYABLE);
+        IdempotencyRecord priorRecord = IdempotencyRecord.create(IdempotencyScope.assessment(assessmentUuid),
+                "CREATE_INITIAL_REVISION", "key-1", "hash", failedOp.getId().toString(), 202);
+        when(idempotencyGuard.check(any(), eq("CREATE_INITIAL_REVISION"), eq("key-1"), any()))
+                .thenReturn(Optional.of(priorRecord));
+        when(aiOperationRepository.findById(failedOp.getId())).thenReturn(Optional.of(failedOp));
+        AgentAttempt failedAttempt = AgentAttempt.dispatch(failedOp.getId(), 1, "assessment", "v1", "corr-1")
+                .markFailed("AGENT_UNAVAILABLE", null, null, null);
+        when(agentAttemptRepository.findAllByAiOperationId(failedOp.getId())).thenReturn(List.of(failedAttempt));
+
+        GenerateAssessmentDraftOutcome outcome = handler.execute(
+                new GenerateAssessmentDraftCommand(assessmentUuid, "uid-1", "key-1"));
+
+        assertThat(outcome).isInstanceOf(GenerateAssessmentDraftOutcome.OperationAccepted.class);
+        var operation = ((GenerateAssessmentDraftOutcome.OperationAccepted) outcome).operation();
+        assertThat(operation.id()).isEqualTo(failedOp.getId());
         verifyNoInteractions(assessmentBriefRepository, aiOperationCoordinator);
     }
 
@@ -144,9 +243,10 @@ class GenerateAssessmentDraftHandlerTest {
         when(aiOperationCoordinator.createInitialRevision(eq(legacyAssessment), any(), eq("uid-1"), eq("key-1")))
                 .thenReturn(revision);
 
-        GenerateAssessmentDraftResult result = handler.execute(
+        GenerateAssessmentDraftOutcome outcome = handler.execute(
                 new GenerateAssessmentDraftCommand(assessmentUuid, "uid-1", "key-1"));
 
+        var result = ((GenerateAssessmentDraftOutcome.RevisionCreated) outcome).revision();
         assertThat(result.title()).isEqualTo("Title");
         verify(aiOperationCoordinator).createInitialRevision(eq(legacyAssessment), any(), eq("uid-1"), eq("key-1"));
     }

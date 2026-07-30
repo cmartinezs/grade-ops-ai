@@ -6,6 +6,7 @@ import cl.gradeops.ai.api.assessment.application.command.GenerateAssessmentDraft
 import cl.gradeops.ai.api.assessment.application.command.RegenerateAssessmentDraftCommand;
 import cl.gradeops.ai.api.assessment.application.exception.StaleOnCompletionException;
 import cl.gradeops.ai.api.assessment.application.exception.StaleRevisionException;
+import cl.gradeops.ai.api.assessment.application.result.GenerateAssessmentDraftOutcome;
 import cl.gradeops.ai.api.assessment.application.result.GenerateAssessmentDraftResult;
 import cl.gradeops.ai.api.assessment.domain.model.Assessment;
 import cl.gradeops.ai.api.assessment.domain.model.AssessmentBrief;
@@ -140,7 +141,7 @@ class RegenerateAssessmentDraftHandlerIntegrationTest {
                 agentAttemptAdapter, revisionAdapter, assessmentAgentClient, jsonMapper, transactionManager);
 
         generateHandler = new GenerateAssessmentDraftHandler(assessmentAdapter, briefAdapter, revisionAdapter,
-                ownershipVerifier, idempotencyGuard, coordinator);
+                aiOperationAdapter, agentAttemptAdapter, ownershipVerifier, idempotencyGuard, coordinator);
         regenerateHandler = new RegenerateAssessmentDraftHandler(assessmentAdapter, briefAdapter, revisionAdapter,
                 ownershipVerifier, idempotencyGuard, coordinator);
 
@@ -166,8 +167,8 @@ class RegenerateAssessmentDraftHandlerIntegrationTest {
 
     private GenerateAssessmentDraftResult generateV1() {
         when(assessmentAgentClient.generate(any(), anyString())).thenReturn(response("V1"));
-        GenerateAssessmentDraftResult v1 = generateHandler.execute(
-                new GenerateAssessmentDraftCommand(assessment.getId().value(), "uid-1", "gen-key-1"));
+        GenerateAssessmentDraftResult v1 = ((GenerateAssessmentDraftOutcome.RevisionCreated) generateHandler.execute(
+                new GenerateAssessmentDraftCommand(assessment.getId().value(), "uid-1", "gen-key-1"))).revision();
         entityManager.flush();
         entityManager.clear();
         return v1;

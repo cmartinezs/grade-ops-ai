@@ -9,6 +9,7 @@ import cl.gradeops.ai.api.assessment.application.command.ListDraftVersionsComman
 import cl.gradeops.ai.api.assessment.application.command.RegenerateAssessmentDraftCommand;
 import cl.gradeops.ai.api.assessment.application.result.AssessmentSummaryResult;
 import cl.gradeops.ai.api.assessment.application.result.CreateAssessmentBriefResult;
+import cl.gradeops.ai.api.assessment.application.result.GenerateAssessmentDraftOutcome;
 import cl.gradeops.ai.api.assessment.application.result.GenerateAssessmentDraftResult;
 import cl.gradeops.ai.api.assessment.application.usecase.AiOperationCoordinator;
 import cl.gradeops.ai.api.assessment.application.usecase.CreateAssessmentBriefHandler;
@@ -160,7 +161,7 @@ class AssessmentCreationFlowIntegrationTest {
 
         createBriefHandler = new CreateAssessmentBriefHandler(assessmentAdapter, briefAdapter, idempotencyGuard, transactionManager);
         generateHandler = new GenerateAssessmentDraftHandler(assessmentAdapter, briefAdapter, revisionAdapter,
-                ownershipVerifier, idempotencyGuard, coordinator);
+                aiOperationAdapter, agentAttemptAdapter, ownershipVerifier, idempotencyGuard, coordinator);
         regenerateHandler = new RegenerateAssessmentDraftHandler(assessmentAdapter, briefAdapter, revisionAdapter,
                 ownershipVerifier, idempotencyGuard, coordinator);
         getCurrentDraftHandler = new GetCurrentDraftHandler(assessmentAdapter, revisionAdapter, ownershipVerifier);
@@ -199,8 +200,8 @@ class AssessmentCreationFlowIntegrationTest {
         assertThat(persistedBrief.getTopic()).isEqualTo("Java loops");
 
         when(assessmentAgentClient.generate(any(), anyString())).thenReturn(response("V1"));
-        GenerateAssessmentDraftResult generated = generateHandler.execute(
-                new GenerateAssessmentDraftCommand(assessmentId, TEACHER_UID, "gen-key"));
+        GenerateAssessmentDraftResult generated = ((GenerateAssessmentDraftOutcome.RevisionCreated) generateHandler.execute(
+                new GenerateAssessmentDraftCommand(assessmentId, TEACHER_UID, "gen-key"))).revision();
         entityManager.flush();
         entityManager.clear();
         assertThat(generated.versionNumber()).isEqualTo(1);
@@ -251,8 +252,8 @@ class AssessmentCreationFlowIntegrationTest {
         UUID assessmentId = createBrief();
 
         when(assessmentAgentClient.generate(any(), anyString())).thenReturn(response("V1"));
-        GenerateAssessmentDraftResult v1 = generateHandler.execute(
-                new GenerateAssessmentDraftCommand(assessmentId, TEACHER_UID, "gen-key"));
+        GenerateAssessmentDraftResult v1 = ((GenerateAssessmentDraftOutcome.RevisionCreated) generateHandler.execute(
+                new GenerateAssessmentDraftCommand(assessmentId, TEACHER_UID, "gen-key"))).revision();
         entityManager.flush();
         entityManager.clear();
 

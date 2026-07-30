@@ -1,8 +1,8 @@
 package cl.gradeops.ai.api.assessment.application.port.in;
 
 import cl.gradeops.ai.api.assessment.application.command.GenerateAssessmentDraftCommand;
-import cl.gradeops.ai.api.assessment.application.result.GenerateAssessmentDraftResult;
+import cl.gradeops.ai.api.assessment.application.result.GenerateAssessmentDraftOutcome;
 
 public interface GenerateAssessmentDraftUseCase {
-    GenerateAssessmentDraftResult execute(GenerateAssessmentDraftCommand command);
+    GenerateAssessmentDraftOutcome execute(GenerateAssessmentDraftCommand command);
 }

@@ -4,6 +4,7 @@ import cl.gradeops.ai.api.agentclient.AgentClientException;
 import cl.gradeops.ai.api.agentclient.AssessmentAgentClient;
 import cl.gradeops.ai.api.agentclient.AssessmentAgentResponse;
 import cl.gradeops.ai.api.agentclient.AssessmentCommand;
+import cl.gradeops.ai.api.assessment.application.exception.OperationInProgressException;
 import cl.gradeops.ai.api.assessment.application.exception.StaleOnCompletionException;
 import cl.gradeops.ai.api.assessment.application.exception.StaleRevisionException;
 import cl.gradeops.ai.api.assessment.application.port.out.AgentAttemptRepositoryPort;
@@ -27,6 +28,7 @@ import java.util.UUID;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiFunction;
+import java.util.function.Function;
 import java.util.function.Predicate;
 
 /**
@@ -102,7 +104,8 @@ public class AiOperationCoordinator {
                 (attempt, response) -> AssessmentRevision.generateFromAi(assessment.getId(),
                         response.result().title(), response.result().context(), response.result().instructions(),
                         response.result().objectives(), response.result().deliverables(), response.result().constraints(),
-                        requestedBy, attempt.getId()));
+                        requestedBy, attempt.getId()),
+                StaleRevisionException::new);
     }
 
     /**
@@ -123,7 +126,8 @@ public class AiOperationCoordinator {
                 (attempt, response) -> AssessmentRevision.regenerateFromAi(expectedRevision,
                         response.result().title(), response.result().context(), response.result().instructions(),
                         response.result().objectives(), response.result().deliverables(), response.result().constraints(),
-                        requestedBy, reason, attempt.getId()));
+                        requestedBy, reason, attempt.getId()),
+                StaleRevisionException::new);
     }
 
     /**
@@ -146,7 +150,8 @@ public class AiOperationCoordinator {
                 (attempt, response) -> AssessmentRevision.generateFromAi(assessment.getId(),
                         response.result().title(), response.result().context(), response.result().instructions(),
                         response.result().objectives(), response.result().deliverables(), response.result().constraints(),
-                        requestedBy, attempt.getId()));
+                        requestedBy, attempt.getId()),
+                OperationInProgressException::new);
     }
 
     /**
@@ -155,10 +160,25 @@ public class AiOperationCoordinator {
      * ({@link #createInitialRevision}/{@link #regenerateRevision}) or an existing one being
      * retried, and what {@code attemptNumber} this dispatch is. {@code operation} is not yet
      * saved; Phase 0 persists it alongside the new attempt in one transaction.
+     *
+     * <p>{@code phase0ConflictException} distinguishes the two, structurally different Phase 0
+     * insert collisions callers can hit (A3 Contract Correction § Correction 4): {@link
+     * #createInitialRevision}/{@link #regenerateRevision} always insert a brand-new {@code
+     * AiOperation} row (a fresh id each call), so their only possible Phase 0 collision is on
+     * {@code uq_ai_operations_in_flight} — reported as {@link StaleRevisionException}, unchanged.
+     * {@link #retryInitialRevision} reuses an existing operation id (an {@code UPDATE}, never an
+     * {@code INSERT} on {@code ai_operations}, so it cannot hit that partial unique index) — its
+     * only possible Phase 0 collision is two concurrent retries computing the same {@code
+     * nextAttemptNumber} and racing to insert it, colliding on {@code agent_attempts}' own {@code
+     * UNIQUE(ai_operation_id, attempt_number)} — reported as {@link OperationInProgressException}
+     * (an already-defined, existing failure code — no new one is introduced), since that is
+     * exactly what the collision means: another attempt is concurrently in flight for this
+     * operation.
      */
     private AssessmentRevision dispatchAndPersist(Assessment assessment, AiOperation operation, int attemptNumber,
             AssessmentCommand agentCommand, Predicate<Assessment> staleAtCompletion,
-            BiFunction<AgentAttempt, AssessmentAgentResponse, AssessmentRevision> revisionFactory) {
+            BiFunction<AgentAttempt, AssessmentAgentResponse, AssessmentRevision> revisionFactory,
+            Function<String, RuntimeException> phase0ConflictException) {
         String correlationId = UUID.randomUUID().toString();
         AtomicReference<AgentAttempt> attemptRef = new AtomicReference<>();
 
@@ -172,14 +192,12 @@ public class AiOperationCoordinator {
                 attemptRef.set(attempt);
             });
         } catch (DataIntegrityViolationException ex) {
-            // Two truly concurrent dispatches for the same (assessmentId, operationType) both
-            // reach Phase 0 before either commits — uq_ai_operations_in_flight is the DB-level
-            // backstop for exactly this (Idempotency and Concurrency Strategy ADR), narrowing but
-            // not eliminating the residual pre-check-to-commit race. No AiOperation/AgentAttempt
-            // row survives for the loser (the whole Phase 0 transaction rolled back), no agents/
-            // call is ever made for it, so this is reported identically to a pre-dispatch
-            // STALE_REVISION conflict, not a new failure mode.
-            throw new StaleRevisionException(assessment.getId().value().toString());
+            // Two truly concurrent dispatches reach Phase 0 before either commits — see this
+            // method's javadoc for which constraint fires (and therefore which exception is
+            // thrown) depending on whether `operation` is new or reused. No AiOperation/
+            // AgentAttempt row survives for the loser (the whole Phase 0 transaction rolled
+            // back); no agents/ call is ever made for it.
+            throw phase0ConflictException.apply(assessment.getId().value().toString());
         }
 
         AgentAttempt attempt = attemptRef.get();

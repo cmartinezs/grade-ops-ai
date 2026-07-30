@@ -5,7 +5,9 @@ import cl.gradeops.ai.api.agentclient.AssessmentAgentClient;
 import cl.gradeops.ai.api.agentclient.AssessmentAgentErrorPayload;
 import cl.gradeops.ai.api.agentclient.AssessmentAgentResponse;
 import cl.gradeops.ai.api.agentclient.AssessmentCommand;
+import cl.gradeops.ai.api.assessment.application.exception.OperationInProgressException;
 import cl.gradeops.ai.api.assessment.application.exception.StaleOnCompletionException;
+import cl.gradeops.ai.api.assessment.application.exception.StaleRevisionException;
 import cl.gradeops.ai.api.assessment.application.port.out.AgentAttemptRepositoryPort;
 import cl.gradeops.ai.api.assessment.application.port.out.AiOperationRepositoryPort;
 import cl.gradeops.ai.api.assessment.application.port.out.AssessmentRepositoryPort;
@@ -24,6 +26,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InOrder;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.TransactionStatus;
@@ -325,6 +328,36 @@ class AiOperationCoordinatorTest {
         verify(agentAttemptRepository).save(argThat(a ->
                 a.getStatus() == AgentAttemptStatus.FAILED && "STALE_ON_COMPLETION".equals(a.getFailureCode())));
         verify(aiOperationRepository).save(argThat(op -> op.getStatus() == AiOperationStatus.FAILED_TERMINAL));
+    }
+
+    @Test
+    void shouldTranslatePhase0InFlightCollisionToStaleRevisionForInitialGeneration() {
+        // A3 Contract Correction § Correction 4: createInitialRevision/regenerateRevision always
+        // insert a brand-new AiOperation row, so their only possible Phase 0 collision is
+        // uq_ai_operations_in_flight — this must remain STALE_REVISION, never reinterpreted as
+        // OPERATION_IN_PROGRESS just because that constraint-violation exception type is generic.
+        doThrow(new DataIntegrityViolationException("duplicate in-flight ai_operations row"))
+                .when(aiOperationRepository).save(any());
+
+        assertThatThrownBy(() -> coordinator.createInitialRevision(assessment, agentCommand, "uid-1", "key-1"))
+                .isInstanceOf(StaleRevisionException.class);
+
+        verifyNoInteractions(assessmentAgentClient);
+    }
+
+    @Test
+    void shouldTranslatePhase0AgentAttemptCollisionToOperationInProgressForRetry() {
+        AiOperation existingOperation = AiOperation.create(assessment.getId(),
+                        cl.gradeops.ai.api.assessment.domain.model.AiOperationType.CREATE_INITIAL_REVISION,
+                        "uid-1", "key-1", null)
+                .markInProgress().markFailedRetryable();
+        doThrow(new DataIntegrityViolationException("duplicate agent_attempts(ai_operation_id, attempt_number)"))
+                .when(agentAttemptRepository).save(any());
+
+        assertThatThrownBy(() -> coordinator.retryInitialRevision(assessment, existingOperation, agentCommand, 2))
+                .isInstanceOf(OperationInProgressException.class);
+
+        verifyNoInteractions(assessmentAgentClient);
     }
 
     @Test

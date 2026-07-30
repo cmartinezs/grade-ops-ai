@@ -5,6 +5,7 @@ import cl.gradeops.ai.api.agentclient.AssessmentAgentClient;
 import cl.gradeops.ai.api.agentclient.AssessmentAgentResponse;
 import cl.gradeops.ai.api.assessment.application.command.GenerateAssessmentDraftCommand;
 import cl.gradeops.ai.api.assessment.application.exception.AlreadyGeneratedException;
+import cl.gradeops.ai.api.assessment.application.result.GenerateAssessmentDraftOutcome;
 import cl.gradeops.ai.api.assessment.application.result.GenerateAssessmentDraftResult;
 import cl.gradeops.ai.api.assessment.domain.model.Assessment;
 import cl.gradeops.ai.api.assessment.domain.model.AssessmentBrief;
@@ -56,9 +57,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.clearInvocations;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 /**
@@ -131,7 +134,7 @@ class GenerateAssessmentDraftHandlerIntegrationTest {
                 agentAttemptAdapter, revisionAdapter, assessmentAgentClient, jsonMapper, transactionManager);
 
         handler = new GenerateAssessmentDraftHandler(assessmentAdapter, briefAdapter, revisionAdapter,
-                new OwnershipVerifier(), idempotencyGuard, coordinator);
+                aiOperationAdapter, agentAttemptAdapter, new OwnershipVerifier(), idempotencyGuard, coordinator);
 
         jdbcTemplate.update(
                 "INSERT INTO teacher (firebase_uid, first_name, last_name, email) VALUES (?, ?, ?, ?)",
@@ -157,8 +160,9 @@ class GenerateAssessmentDraftHandlerIntegrationTest {
     void shouldCreateRevisionAndCasUpdateAssessmentCurrentRevisionOnSuccess() {
         when(assessmentAgentClient.generate(any(), anyString())).thenReturn(successResponse());
 
-        GenerateAssessmentDraftResult result = handler.execute(
+        GenerateAssessmentDraftOutcome outcome = handler.execute(
                 new GenerateAssessmentDraftCommand(assessment.getId().value(), "uid-1", "key-1"));
+        GenerateAssessmentDraftResult result = ((GenerateAssessmentDraftOutcome.RevisionCreated) outcome).revision();
 
         entityManager.flush();
         entityManager.clear();
@@ -183,26 +187,34 @@ class GenerateAssessmentDraftHandlerIntegrationTest {
     }
 
     @Test
-    void shouldPersistDurableEvidenceEvenWhenTheAgentCallFails() {
+    void shouldPersistDurableEvidenceAndReturnOperationAcceptedWhenTheAgentCallFails() {
         AgentClientException agentEx = new AgentClientException(
                 AgentClientException.Reason.UNREACHABLE, "unreachable", new RuntimeException());
         when(assessmentAgentClient.generate(any(), anyString())).thenThrow(agentEx);
 
-        assertThatThrownBy(() -> handler.execute(
-                new GenerateAssessmentDraftCommand(assessment.getId().value(), "uid-1", "key-1")))
-                .isSameAs(agentEx);
+        GenerateAssessmentDraftOutcome outcome = handler.execute(
+                new GenerateAssessmentDraftCommand(assessment.getId().value(), "uid-1", "key-1"));
+
+        assertThat(outcome).isInstanceOf(GenerateAssessmentDraftOutcome.OperationAccepted.class);
+        var operation = ((GenerateAssessmentDraftOutcome.OperationAccepted) outcome).operation();
+        assertThat(operation.status()).isEqualTo("FAILED_RETRYABLE");
+        assertThat(operation.failureCode()).isEqualTo("AGENT_UNAVAILABLE");
+        assertThat(operation.retryable()).isTrue();
+        assertThat(operation.resultRevisionId()).isNull();
 
         entityManager.flush();
         entityManager.clear();
 
-        // Phase 0's evidence survives even though the call to agents/ itself failed — this is
-        // the durability-before-dispatch property the previous shared coordinator never had.
-        AiOperationJpaEntity operation = aiOperationJpaRepository.findAll().stream()
+        // Phase 0's evidence survives even though the call to agents/ itself failed, and it was
+        // durably recorded BEFORE this method returned a 202 — this is the durability-before-
+        // dispatch property the previous shared coordinator never had.
+        AiOperationJpaEntity persistedOperation = aiOperationJpaRepository.findAll().stream()
                 .filter(op -> op.getAssessmentId().equals(assessment.getId().value())).findFirst().orElseThrow();
-        assertThat(operation.getStatus()).isEqualTo(AiOperationStatus.FAILED_RETRYABLE.name());
+        assertThat(persistedOperation.getId()).isEqualTo(operation.id());
+        assertThat(persistedOperation.getStatus()).isEqualTo(AiOperationStatus.FAILED_RETRYABLE.name());
 
         AgentAttemptJpaEntity attempt = agentAttemptJpaRepository
-                .findAllByAiOperationIdOrderByAttemptNumberDesc(operation.getId()).get(0);
+                .findAllByAiOperationIdOrderByAttemptNumberDesc(persistedOperation.getId()).get(0);
         assertThat(attempt.getStatus()).isEqualTo(AgentAttemptStatus.FAILED.name());
         assertThat(attempt.getFailureCode()).isEqualTo("AGENT_UNAVAILABLE");
 
@@ -214,17 +226,42 @@ class GenerateAssessmentDraftHandlerIntegrationTest {
     void shouldReplayIdempotentRequestWithoutCallingTheAgentASecondTime() {
         when(assessmentAgentClient.generate(any(), anyString())).thenReturn(successResponse());
 
-        GenerateAssessmentDraftResult first = handler.execute(
+        GenerateAssessmentDraftOutcome firstOutcome = handler.execute(
                 new GenerateAssessmentDraftCommand(assessment.getId().value(), "uid-1", "same-key"));
+        GenerateAssessmentDraftResult first = ((GenerateAssessmentDraftOutcome.RevisionCreated) firstOutcome).revision();
         entityManager.flush();
         entityManager.clear();
 
-        GenerateAssessmentDraftResult replayed = handler.execute(
+        GenerateAssessmentDraftOutcome replayedOutcome = handler.execute(
                 new GenerateAssessmentDraftCommand(assessment.getId().value(), "uid-1", "same-key"));
+        GenerateAssessmentDraftResult replayed = ((GenerateAssessmentDraftOutcome.RevisionCreated) replayedOutcome).revision();
 
         assertThat(replayed.draftId()).isEqualTo(first.draftId());
         assertThat(replayed.title()).isEqualTo(first.title());
         verify(assessmentAgentClient, times(1)).generate(any(), anyString());
+    }
+
+    @Test
+    void shouldReplayA202WithoutDispatchingASecondAgentAttempt() {
+        AgentClientException agentEx = new AgentClientException(
+                AgentClientException.Reason.UNREACHABLE, "unreachable", new RuntimeException());
+        when(assessmentAgentClient.generate(any(), anyString())).thenThrow(agentEx);
+
+        GenerateAssessmentDraftOutcome firstOutcome = handler.execute(
+                new GenerateAssessmentDraftCommand(assessment.getId().value(), "uid-1", "same-fail-key"));
+        var firstOperation = ((GenerateAssessmentDraftOutcome.OperationAccepted) firstOutcome).operation();
+        entityManager.flush();
+        entityManager.clear();
+        clearInvocations(assessmentAgentClient);
+
+        GenerateAssessmentDraftOutcome replayedOutcome = handler.execute(
+                new GenerateAssessmentDraftCommand(assessment.getId().value(), "uid-1", "same-fail-key"));
+        var replayedOperation = ((GenerateAssessmentDraftOutcome.OperationAccepted) replayedOutcome).operation();
+
+        assertThat(replayedOperation.id()).isEqualTo(firstOperation.id());
+        verifyNoInteractions(assessmentAgentClient);
+        assertThat(agentAttemptJpaRepository.findAllByAiOperationIdOrderByAttemptNumberDesc(firstOperation.id()))
+                .hasSize(1);
     }
 
     @Test
@@ -249,8 +286,9 @@ class GenerateAssessmentDraftHandlerIntegrationTest {
         assertThat(assessment.getCurrentRevisionId()).isNull();
         when(assessmentAgentClient.generate(any(), anyString())).thenReturn(successResponse());
 
-        GenerateAssessmentDraftResult result = handler.execute(
+        GenerateAssessmentDraftOutcome outcome = handler.execute(
                 new GenerateAssessmentDraftCommand(assessment.getId().value(), "uid-1", "key-1"));
+        GenerateAssessmentDraftResult result = ((GenerateAssessmentDraftOutcome.RevisionCreated) outcome).revision();
 
         assertThat(result).isNotNull();
         assertThat(result.versionNumber()).isEqualTo(1);

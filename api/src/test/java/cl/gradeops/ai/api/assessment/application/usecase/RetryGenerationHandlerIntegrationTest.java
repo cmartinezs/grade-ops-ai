@@ -6,7 +6,9 @@ import cl.gradeops.ai.api.agentclient.AssessmentAgentResponse;
 import cl.gradeops.ai.api.assessment.application.command.GenerateAssessmentDraftCommand;
 import cl.gradeops.ai.api.assessment.application.command.RetryGenerationCommand;
 import cl.gradeops.ai.api.assessment.application.exception.NoActiveOperationToRetryException;
+import cl.gradeops.ai.api.assessment.application.exception.OperationInProgressException;
 import cl.gradeops.ai.api.assessment.application.exception.StaleRevisionException;
+import cl.gradeops.ai.api.assessment.application.result.GenerateAssessmentDraftOutcome;
 import cl.gradeops.ai.api.assessment.application.result.GenerateAssessmentDraftResult;
 import cl.gradeops.ai.api.assessment.application.result.RetryGenerationResult;
 import cl.gradeops.ai.api.assessment.domain.model.Assessment;
@@ -139,7 +141,7 @@ class RetryGenerationHandlerIntegrationTest {
                 agentAttemptAdapter, revisionAdapter, assessmentAgentClient, jsonMapper, transactionManager);
 
         generateHandler = new GenerateAssessmentDraftHandler(assessmentAdapter, briefAdapter, revisionAdapter,
-                ownershipVerifier, idempotencyGuard, coordinator);
+                aiOperationAdapter, agentAttemptAdapter, ownershipVerifier, idempotencyGuard, coordinator);
         retryHandler = new RetryGenerationHandler(assessmentAdapter, briefAdapter, aiOperationAdapter,
                 agentAttemptAdapter, ownershipVerifier, coordinator);
 
@@ -168,9 +170,9 @@ class RetryGenerationHandlerIntegrationTest {
         when(assessmentAgentClient.generate(any(), anyString()))
                 .thenThrow(new AgentClientException(AgentClientException.Reason.UNREACHABLE, "connection refused", null));
 
-        assertThatThrownBy(() -> generateHandler.execute(
-                new GenerateAssessmentDraftCommand(assessment.getId().value(), "uid-1", "gen-key-1")))
-                .isInstanceOf(AgentClientException.class);
+        GenerateAssessmentDraftOutcome outcome = generateHandler.execute(
+                new GenerateAssessmentDraftCommand(assessment.getId().value(), "uid-1", "gen-key-1"));
+        assertThat(outcome).isInstanceOf(GenerateAssessmentDraftOutcome.OperationAccepted.class);
         entityManager.flush();
         entityManager.clear();
     }
@@ -276,7 +278,14 @@ class RetryGenerationHandlerIntegrationTest {
             }
 
             long successCount = results.stream().filter(RetryGenerationResult.class::isInstance).count();
-            long conflictCount = results.stream().filter(StaleRevisionException.class::isInstance).count();
+            // A3 Contract Correction § Correction 4: the loser's Phase 0 insert collides on
+            // agent_attempts' UNIQUE(ai_operation_id, attempt_number) — an operation-already-
+            // in-flight condition, not a stale expectedRevisionId (retry never sends one) — so it
+            // must surface as 409 OPERATION_IN_PROGRESS, never STALE_REVISION.
+            long conflictCount = results.stream().filter(OperationInProgressException.class::isInstance).count();
+            assertThat(results.stream().filter(StaleRevisionException.class::isInstance).count())
+                    .withFailMessage("STALE_REVISION must never appear as a retry conflict outcome")
+                    .isEqualTo(0);
 
             assertThat(successCount)
                     .withFailMessage(() -> "results were: " + results.stream()

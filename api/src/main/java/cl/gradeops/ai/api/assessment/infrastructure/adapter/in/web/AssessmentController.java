@@ -18,6 +18,7 @@ import cl.gradeops.ai.api.assessment.application.port.in.ListDraftVersionsUseCas
 import cl.gradeops.ai.api.assessment.application.port.in.RegenerateAssessmentDraftUseCase;
 import cl.gradeops.ai.api.assessment.application.port.in.RetryGenerationUseCase;
 import cl.gradeops.ai.api.assessment.application.result.CreateAssessmentBriefResult;
+import cl.gradeops.ai.api.assessment.application.result.GenerateAssessmentDraftOutcome;
 import cl.gradeops.ai.api.assessment.application.result.GenerateAssessmentDraftResult;
 import cl.gradeops.ai.api.assessment.application.result.GetGenerationStatusResult;
 import cl.gradeops.ai.api.assessment.application.result.RetryGenerationResult;
@@ -34,6 +35,7 @@ import cl.gradeops.ai.api.shared.infrastructure.exception.MissingAuthenticationE
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -85,13 +87,17 @@ public class AssessmentController {
     }
 
     @PostMapping("/assessments/{id}/draft")
-    @ResponseStatus(HttpStatus.CREATED)
-    public GenerateAssessmentDraftResponse generateDraft(@PathVariable UUID id,
-                                                          @RequestHeader("Idempotency-Key") String idempotencyKey) {
+    public ResponseEntity<?> generateDraft(@PathVariable UUID id,
+                                            @RequestHeader("Idempotency-Key") String idempotencyKey) {
         AuthenticatedTeacher teacher = currentTeacher();
-        GenerateAssessmentDraftResult result = generateAssessmentDraftUseCase.execute(
+        GenerateAssessmentDraftOutcome outcome = generateAssessmentDraftUseCase.execute(
             new GenerateAssessmentDraftCommand(id, teacher.uid(), idempotencyKey));
-        return toResponse(result);
+        return switch (outcome) {
+            case GenerateAssessmentDraftOutcome.RevisionCreated created ->
+                ResponseEntity.status(HttpStatus.CREATED).body(toResponse(created.revision()));
+            case GenerateAssessmentDraftOutcome.OperationAccepted accepted ->
+                ResponseEntity.status(HttpStatus.ACCEPTED).body(toResponse(accepted.operation()));
+        };
     }
 
     @PostMapping("/assessments/{id}/draft/regenerate")
@@ -139,8 +145,7 @@ public class AssessmentController {
     public AiOperationResponse retryGeneration(@PathVariable UUID id) {
         AuthenticatedTeacher teacher = currentTeacher();
         RetryGenerationResult result = retryGenerationUseCase.execute(new RetryGenerationCommand(id, teacher.uid()));
-        return new AiOperationResponse(result.id(), result.operationType(), result.status(),
-            result.failureCode(), result.retryable(), result.resultRevisionId());
+        return toResponse(result);
     }
 
     @GetMapping("/assessments/{id}/generation-status")
@@ -150,6 +155,11 @@ public class AssessmentController {
             new GetGenerationStatusCommand(id, teacher.uid()));
         return new GenerationStatusResponse(result.operationType(), result.status(), result.failureCode(),
             result.retryable(), result.currentRevisionId());
+    }
+
+    private AiOperationResponse toResponse(RetryGenerationResult result) {
+        return new AiOperationResponse(result.id(), result.operationType(), result.status(),
+            result.failureCode(), result.retryable(), result.resultRevisionId());
     }
 
     private GenerateAssessmentDraftResponse toResponse(GenerateAssessmentDraftResult result) {

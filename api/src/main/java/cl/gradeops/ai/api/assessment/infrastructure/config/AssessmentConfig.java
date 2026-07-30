@@ -185,11 +185,14 @@ class AssessmentConfig {
             AssessmentRepositoryPort assessmentRepository,
             AssessmentBriefRepositoryPort assessmentBriefRepository,
             AssessmentRevisionRepositoryPort assessmentRevisionRepository,
+            AiOperationRepositoryPort aiOperationRepository,
+            AgentAttemptRepositoryPort agentAttemptRepository,
             OwnershipVerifier ownershipVerifier,
             IdempotencyGuard idempotencyGuard,
             AiOperationCoordinator aiOperationCoordinator) {
         return new GenerateAssessmentDraftHandler(assessmentRepository, assessmentBriefRepository,
-                assessmentRevisionRepository, ownershipVerifier, idempotencyGuard, aiOperationCoordinator);
+                assessmentRevisionRepository, aiOperationRepository, agentAttemptRepository, ownershipVerifier,
+                idempotencyGuard, aiOperationCoordinator);
     }
 
     @Bean
