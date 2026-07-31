@@ -19,18 +19,12 @@ import cl.gradeops.ai.api.assessment.application.usecase.RetryGenerationHandler;
 import cl.gradeops.ai.api.assessment.infrastructure.adapter.out.persistence.AgentAttemptJpaRepository;
 import cl.gradeops.ai.api.assessment.infrastructure.adapter.out.persistence.AgentAttemptPersistenceAdapter;
 import cl.gradeops.ai.api.assessment.infrastructure.adapter.out.persistence.AgentAttemptPersistenceMapper;
-import cl.gradeops.ai.api.assessment.infrastructure.adapter.out.persistence.AgentExecutionLogJpaRepository;
-import cl.gradeops.ai.api.assessment.infrastructure.adapter.out.persistence.AgentExecutionLogPersistenceAdapter;
-import cl.gradeops.ai.api.assessment.infrastructure.adapter.out.persistence.AgentExecutionLogPersistenceMapper;
 import cl.gradeops.ai.api.assessment.infrastructure.adapter.out.persistence.AiOperationJpaRepository;
 import cl.gradeops.ai.api.assessment.infrastructure.adapter.out.persistence.AiOperationPersistenceAdapter;
 import cl.gradeops.ai.api.assessment.infrastructure.adapter.out.persistence.AiOperationPersistenceMapper;
 import cl.gradeops.ai.api.assessment.infrastructure.adapter.out.persistence.AssessmentBriefJpaRepository;
 import cl.gradeops.ai.api.assessment.infrastructure.adapter.out.persistence.AssessmentBriefPersistenceAdapter;
 import cl.gradeops.ai.api.assessment.infrastructure.adapter.out.persistence.AssessmentBriefPersistenceMapper;
-import cl.gradeops.ai.api.assessment.infrastructure.adapter.out.persistence.AssessmentDraftJpaRepository;
-import cl.gradeops.ai.api.assessment.infrastructure.adapter.out.persistence.AssessmentDraftPersistenceAdapter;
-import cl.gradeops.ai.api.assessment.infrastructure.adapter.out.persistence.AssessmentDraftPersistenceMapper;
 import cl.gradeops.ai.api.assessment.infrastructure.adapter.out.persistence.AssessmentJpaRepository;
 import cl.gradeops.ai.api.assessment.infrastructure.adapter.out.persistence.AssessmentPersistenceAdapter;
 import cl.gradeops.ai.api.assessment.infrastructure.adapter.out.persistence.AssessmentPersistenceMapper;
@@ -76,18 +70,6 @@ class AssessmentConfig {
     }
 
     @Bean
-    AssessmentDraftPersistenceMapper assessmentDraftPersistenceMapper() {
-        return new AssessmentDraftPersistenceMapper();
-    }
-
-    @Bean
-    AssessmentDraftPersistenceAdapter assessmentDraftPersistenceAdapter(
-            AssessmentDraftJpaRepository jpaRepository,
-            AssessmentDraftPersistenceMapper mapper) {
-        return new AssessmentDraftPersistenceAdapter(jpaRepository, mapper);
-    }
-
-    @Bean
     ListAssessmentsHandler listAssessmentsHandler(AssessmentRepositoryPort assessmentRepository) {
         return new ListAssessmentsHandler(assessmentRepository);
     }
@@ -100,18 +82,6 @@ class AssessmentConfig {
             PlatformTransactionManager transactionManager) {
         return new CreateAssessmentBriefHandler(assessmentRepository, assessmentBriefRepository,
                 idempotencyGuard, transactionManager);
-    }
-
-    @Bean
-    AgentExecutionLogPersistenceMapper agentExecutionLogPersistenceMapper() {
-        return new AgentExecutionLogPersistenceMapper();
-    }
-
-    @Bean
-    AgentExecutionLogPersistenceAdapter agentExecutionLogPersistenceAdapter(
-            AgentExecutionLogJpaRepository jpaRepository,
-            AgentExecutionLogPersistenceMapper mapper) {
-        return new AgentExecutionLogPersistenceAdapter(jpaRepository, mapper);
     }
 
     @Bean

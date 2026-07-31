@@ -14,7 +14,7 @@ This guide covers the PostgreSQL schema, Flyway migration conventions, JPA entit
 
 ## Current schema
 
-The current API schema is managed by Flyway migrations V1-V12. It includes teacher/auth records, assessment draft persistence, and agent execution evidence.
+The current API schema is managed by Flyway migrations V1-V17. It includes teacher/auth records, the assessment authoring model (revisions, durable AI operations, idempotency), and the legacy tables that model superseded (see [Legacy authoring tables](#legacy-authoring-tables-read-only) below).
 
 | Migration | Summary |
 | --- | --- |
@@ -28,8 +28,13 @@ The current API schema is managed by Flyway migrations V1-V12. It includes teach
 | `V8__add_index_prc_created_at.sql` | Adds reset-code cleanup index. |
 | `V9__add_assessments.sql` | Adds `assessments`. |
 | `V10__add_assessment_briefs.sql` | Adds `assessment_briefs`. |
-| `V11__add_assessment_drafts.sql` | Adds versioned `assessment_drafts`. |
-| `V12__add_agent_execution_logs.sql` | Adds `agent_execution_logs` and links drafts to the generating execution. |
+| `V11__add_assessment_drafts.sql` | Adds versioned `assessment_drafts`. **Superseded — read-only, see below.** |
+| `V12__add_agent_execution_logs.sql` | Adds `agent_execution_logs`. **Superseded — read-only, see below.** |
+| `V13__add_agent_attempts_and_ai_operations.sql` | Adds `ai_operations`/`agent_attempts` — the durable AI dispatch model. |
+| `V14__add_assessment_revisions.sql` | Adds `assessment_revisions` — immutable content snapshots, replaces `assessment_drafts` as the write path. |
+| `V15__add_assessment_current_revision.sql` | Adds `assessments.current_revision_id`/`lock_version`. |
+| `V16__add_idempotency_records.sql` | Adds `idempotency_records`. |
+| `V17__backfill_legacy_authoring_data.sql` | One-time backfill of every `assessment_drafts`/`agent_execution_logs` row into `assessment_revisions`/`ai_operations`/`agent_attempts`, plus `assessment_revisions.provenance_complete`. |
 
 ### `teacher` table — V1-V4
 
@@ -103,8 +108,11 @@ Assessment persistence follows the same hexagonal pattern:
 | --- | --- |
 | `Assessment` | `assessment/infrastructure/adapter/out/persistence/Assessment*` |
 | `AssessmentBrief` | `AssessmentBrief*` |
-| `AssessmentDraft` | `AssessmentDraft*` |
-| `AgentExecutionLog` | `AgentExecutionLog*` |
+| `AssessmentRevision` | `AssessmentRevision*` |
+| `AiOperation` | `AiOperation*` |
+| `AgentAttempt` | `AgentAttempt*` |
+
+`AssessmentDraft`/`AgentExecutionLog` domain classes and their adapters were removed (API session A4, Task 13) once every legacy row was backfilled into `AssessmentRevision`/`AiOperation`/`AgentAttempt` by `V17__backfill_legacy_authoring_data.sql`. The `assessment_drafts`/`agent_execution_logs` **tables** themselves were not dropped — see [Legacy authoring tables](#legacy-authoring-tables-read-only).
 
 ---
 
@@ -222,12 +230,23 @@ class AuthControllerTest { ... }
 
 | Table | Purpose |
 |-------|---------|
-| `assessments` | Assessment aggregate owned by a teacher and current workflow status. |
+| `assessments` | Assessment aggregate owned by a teacher and current workflow status. `current_revision_id`/`lock_version` (V15) point at the authoritative current `assessment_revisions` row under CAS. |
 | `assessment_briefs` | Teacher intake fields: learning goal, topic, level, duration, language. |
-| `assessment_drafts` | Versioned AI/user-edited assessment drafts with JSONB objectives, deliverables, and constraints. |
-| `agent_execution_logs` | Provider/model/prompt/cost/status evidence for assessment draft agent calls. |
+| `assessment_revisions` | **Authoritative** immutable content snapshots — `origin` (`AI_GENERATED`/`HUMAN_EDITED`/`LEGACY_UNKNOWN`), `actor_id`, `reason`, `previous_revision_id` chain, `provenance_complete`. Replaces `assessment_drafts` as the write path (V14). |
+| `ai_operations` | **Authoritative** durable record of every generate/regenerate dispatch intent, independent of retries. |
+| `agent_attempts` | **Authoritative** one row per concrete dispatch under an `ai_operations` row: resolved provider/model, cost, tokens, failure code. |
+| `idempotency_records` | Replay records for idempotency-key-guarded mutations (24h retention, no cleanup job yet). |
 
-`assessment_drafts.agent_execution_log_id` links the produced draft to the execution that generated it. The log row can exist without a draft on failure paths.
+### Legacy authoring tables (read-only)
+
+| Table | Status |
+|-------|--------|
+| `assessment_drafts` | **Deprecated, read-only.** No application code reads or writes it (Java domain/adapter classes removed in API session A4, Task 13). Retained one release as an audit fallback per the [Assessment Authoring Model ADR](../99-decisions/2026-07-28-assessment-authoring-model.md). |
+| `agent_execution_logs` | **Deprecated, read-only.** Same retention/removal status as `assessment_drafts`. |
+
+Every row in both tables was migrated by `V17__backfill_legacy_authoring_data.sql` into `assessment_revisions`/`ai_operations`/`agent_attempts` — unconditionally labeled `origin = LEGACY_UNKNOWN`, `provenance_complete = false`, `actor_id = NULL` (the legacy schema has no edit-timestamp column, so no row can be honestly labeled `AI_GENERATED` with confidence). **New writes to either legacy table are prohibited** — there is no code path left that can produce one. Physical `DROP TABLE` is deferred to a future, unscheduled release, once the backfilled data has been spot-checked in the target environment (see [06 — Database Migration](../implementation-plans/assessment-authoring-operation-foundation/06-database-migration.md)).
+
+`assessment_drafts.agent_execution_log_id` links a legacy draft row to the execution that generated it; a legacy log row can exist without a draft on failure paths.
 
 ## Planned schema (future releases)
 
