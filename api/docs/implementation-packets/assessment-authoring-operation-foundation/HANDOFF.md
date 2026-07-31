@@ -2,7 +2,18 @@
 
 # API-HANDOFF — Assessment Authoring Operation Foundation (Final, Consolidated)
 
-**Status:** Complete. Filled in by **Session A4** as the last commit on `feat/assessment-authoring-operation-foundation-api`, alongside [API-A4-HANDOFF.md](API-A4-HANDOFF.md). Committed as `docs(api): record final consolidated handoff for sessions A1-A4`. **Parent:** [README](README.md) · **Prev:** [TEST-PLAN](TEST-PLAN.md)
+**Status:** Complete, including a same-branch Migration Integrity Correction applied after this
+ document's first version was committed (see [API-A4-HANDOFF.md](API-A4-HANDOFF.md) for the
+ correction's own detail). Filled in by **Session A4** as the last commit on
+ `feat/assessment-authoring-operation-foundation-api`, alongside [API-A4-HANDOFF.md](API-A4-HANDOFF.md).
+
+**Metadata strategy:** this document distinguishes **Final implementation HEAD** (the last commit
+ that changes application/migration/test code) from **Final documentation/handoff commit** (this
+ file's own commit, which necessarily cannot record its own hash — it is reported externally, in
+ the session's final report to the user, not inside this file). Earlier in this packet's history a
+ handoff document's "HEAD" field pointed at a Task-N implementation commit that was not actually
+ the final pushed commit at the time (corrected below) — this split exists specifically to prevent
+ that class of error from recurring. **Parent:** [README](README.md) · **Prev:** [TEST-PLAN](TEST-PLAN.md)
 
 **This is the API packet's single authoritative handoff — the one Session D reads.** API execution is split into four sequential, recoverable sessions on one branch ([A1](CLAUDE-API-A1-PROMPT.md), [A2](CLAUDE-API-A2-PROMPT.md), [A3](CLAUDE-API-A3-PROMPT.md), [A4](CLAUDE-API-A4-PROMPT.md)), each producing its own intermediate handoff ([API-A1-HANDOFF.md](API-A1-HANDOFF.md), [API-A2-HANDOFF.md](API-A2-HANDOFF.md), [API-A3-HANDOFF.md](API-A3-HANDOFF.md), [API-A4-HANDOFF.md](API-A4-HANDOFF.md)) as a per-session recovery/gate record. This file does not replace those — it **summarizes** them into one cross-session view so Session D does not have to read four separate documents and reconstruct the sequence itself.
 
@@ -12,7 +23,10 @@ Format required by [09 — Session Handoff Protocol](../../../../docs/implementa
 # API Handoff — Assessment Authoring Operation Foundation (Sessions A1-A4)
 
 ## Branch
-feat/assessment-authoring-operation-foundation-api, pushed to origin at 3225d37e9e85f0c101adbbf1cf84f4566dad0308
+feat/assessment-authoring-operation-foundation-api. **Final implementation HEAD: 6719afd**
+ (Migration Integrity Correction). This document's own commit — the final documentation/handoff
+ commit — is necessarily later than 6719afd and is reported externally in the session's final
+ report, per the metadata-strategy note above.
 
 ## Session summary
 A1 — Schema and Inert Domain             — HEAD 2d6d408c99253fbf230214a02d48cf0955932834 — PASS (370/370)
@@ -23,9 +37,17 @@ A3 — Authoring Mutations and Public API  — HEAD be9cf6214791940d5e3445061e79
     three sequential, recoverable corrections on the same branch, all folded into "A3" here since
     none started a new numbered session)
 A4 — Backfill, Cleanup and Final Handoff — HEAD 3225d37e9e85f0c101adbbf1cf84f4566dad0308 — PASS (457/457)
+   (original A4 scope; its own consolidated-handoff commit, d2d0e8bea1ed0370e2ccf0bb10528b41131a6ad0,
+    is what this document originally recorded as final — see the Migration Integrity Correction row
+    below for why that turned out not to be the actual final state)
+A4 Migration Integrity Correction        — HEAD 6719afd — PASS (463/463)
+   (same session, same branch, not a new numbered session — see [API-A4-HANDOFF.md](API-A4-HANDOFF.md)
+    for the full defect description and fix; corrects assessment_drafts.previous_version_id being
+    trusted as authoritative for the migrated previous_revision_id/expected_revision_id chain)
 Confirmed: no gap in the commit sequence across sessions — each session's starting commit matches
  the prior session's recorded final HEAD (A2 started at A1's f85c489; A3 started at A2's 14fb8f0;
- A4 started at A3's be9cf62, verified directly via `git rev-parse HEAD` at this session's preflight).
+ A4 started at A3's be9cf62, verified directly via `git rev-parse HEAD` at this session's preflight;
+ the Migration Integrity Correction started at A4's own d2d0e8b, verified the same way).
 
 ## Commits (full list, all four sessions, in order)
 1352d3a feat(api): add durable ai_operations/agent_attempts schema                              (A1, Task 01)
@@ -48,7 +70,12 @@ ad265c3 feat(api): add retry/generation-status/revisions endpoints, remove in-pl
 be9cf62 docs(api): finalize A3 idempotency guarantees and handoff metadata                        (A3 Final Idempotency Correction)
 e3be4cc feat(api): backfill legacy assessment_drafts/agent_execution_logs into revision/operation model (A4, Task 12)
 3225d37 refactor(api): remove superseded AssessmentDraft/AgentExecutionLog code paths             (A4, Task 13)
-<pending> docs(api): record final consolidated handoff for sessions A1-A4                         (A4)
+d2d0e8b docs(api): record final consolidated handoff for sessions A1-A4                           (A4)
+6719afd fix(api): normalize legacy revision chains during V17 backfill                            (A4 Migration Integrity Correction)
+<pending> docs(api): correct A4 migration guarantees and integration handoff                      (A4 Migration Integrity Correction)
+
+Total: 23 commits (21 through d2d0e8b, plus 2 for this correction: 6719afd and the pending
+ documentation commit this file itself becomes part of).
 
 ## Tasks completed
 01 — Done (A1, 1352d3a). V13: ai_operations/agent_attempts + uq_ai_operations_in_flight.
@@ -63,7 +90,10 @@ e3be4cc feat(api): backfill legacy assessment_drafts/agent_execution_logs into r
 09 — Done (A3, 248770c). Regenerate requires expectedRevisionId, persists reason, routes through
  the Task 07B coordinator.
 10 — Done (A3, ad265c3). Retry/generation-status/revisions endpoints; PATCH .../draft removed.
-12 — Done (A4, e3be4cc). V17 backfill + provenance_complete column, TDD.
+12 — Done (A4, e3be4cc, corrected by 6719afd). V17 backfill + provenance_complete column, TDD.
+ The original version trusted `assessment_drafts.previous_version_id` as authoritative for the
+ migrated revision chain; the correction reconstructs `previous_revision_id`/`expected_revision_id`
+ structurally instead — see [API-A4-HANDOFF.md](API-A4-HANDOFF.md).
 13 — Done (A4, 3225d37). Eight dead legacy classes + AssessmentConfig wiring + seven exclusive
  test classes removed; database guide updated.
 
@@ -71,6 +101,10 @@ e3be4cc feat(api): backfill legacy assessment_drafts/agent_execution_logs into r
 V13, V14, V15, V16, V17 — all applied cleanly, in order, alongside V1-V12 untouched (confirmed by
  `AssessmentAuthoringSchemaMigrationTest` for V13-V16 and `LegacyAuthoringBackfillMigrationTest`
  for V17, both passing at final HEAD). V17 additionally adds `assessment_revisions.provenance_complete`.
+ **V17 was corrected in place** (commit 6719afd) — no `V18` was created, since V17 had not yet been
+ deployed to any shared/integrated environment when the defect was found. A developer's local,
+ persistent database that already applied the pre-correction V17 must be recreated or have Flyway
+ repaired **on that local environment only**; never `flyway repair` against a shared environment.
 
 ## Endpoints (final state)
 | Endpoint | Status | Session introduced/changed |
@@ -102,13 +136,14 @@ No other field, table, taxonomy, or contract value differs from LOCAL-CONTRACTS.
  of the four sessions.
 
 ## Test results
-`./mvnw -f api/pom.xml clean test` → **PASS**, final count **457/457**, 0 failures/errors/skipped.
+`./mvnw -f api/pom.xml clean test` → **PASS**, final count **463/463**, 0 failures/errors/skipped.
 Progression across the whole packet: **289** (pre-work baseline) → **370** (A1) → **405** (A2) →
  **456** (A3 original) → **477** (A3 Contract Correction) → **495** (A3 Final Idempotency
- Correction) → **505** (A4 Task 12, +10 migration tests) → **457** (A4 Task 13 final — a net
- decrease of 48 is expected and correct here: Task 13 deletes dead legacy code and its seven
- exclusive test classes, adding no new tests of its own, per its own "no tests to write first"
- acceptance criterion).
+ Correction) → **505** (A4 Task 12, +10 migration tests) → **457** (A4 Task 13 — a net decrease of
+ 48 is expected and correct here: Task 13 deletes dead legacy code and its seven exclusive test
+ classes, adding no new tests of its own, per its own "no tests to write first" acceptance
+ criterion) → **463** (A4 Migration Integrity Correction, final — +6 revision-chain-normalization
+ tests, `LegacyAuthoringBackfillMigrationTest` growing from 10 to 16 methods).
 
 ## Legacy migration outcome
 Every `assessment_drafts` row → one `assessment_revisions` row: `origin = LEGACY_UNKNOWN`,
@@ -118,10 +153,18 @@ Every `assessment_drafts` row → one `assessment_revisions` row: `origin = LEGA
  one `ai_operations` + one `agent_attempts` row, single-attempt, `operationType` inferred from the
  linked draft's `version_number`, status derived from whether the log actually produced a
  persisted draft (via the draft's own `agent_execution_log_id`, the authoritative single-write
- field — not the log's own, second-write `draft_id` cross-reference). Verified by
- `LegacyAuthoringBackfillMigrationTest` (10/10 PASS) against fixture data covering all 8 mandated
- scenarios plus 2 discoveries (see [API-A4-HANDOFF.md](API-A4-HANDOFF.md) for full detail and the
- exact schema-column mapping used). No real legacy production/staging data existed in this branch's
+ field — not the log's own, second-write `draft_id` cross-reference). `previous_revision_id` and
+ `ai_operations.expected_revision_id` are reconstructed structurally from
+ `(assessment_id, version_number)` — never copied from the legacy
+ `assessment_drafts.previous_version_id` column, which only guarantees "references some
+ `assessment_drafts` row," not "same assessment, exactly one version back" (Migration Integrity
+ Correction, commit 6719afd; see [API-A4-HANDOFF.md](API-A4-HANDOFF.md) for the full defect
+ description). A non-normalizable legacy version chain (a gap with no same-assessment predecessor)
+ fails the whole migration atomically rather than fabricating, skipping, or partially applying it.
+ Verified by `LegacyAuthoringBackfillMigrationTest` (**16/16 PASS**) against fixture data covering
+ all 8 originally-mandated scenarios, 2 discoveries, and 6 revision-chain-normalization cases added
+ by the correction (see [API-A4-HANDOFF.md](API-A4-HANDOFF.md) for full detail and the exact
+ schema-column mapping used). No real legacy production/staging data existed in this branch's
  database at any point this cut — row-count confirmation against a real target dataset is
  Session D/deployment's responsibility, flagged under "Integration instructions" below.
 
@@ -162,7 +205,12 @@ Every `assessment_drafts` row → one `assessment_revisions` row: `origin = LEGA
 - No cleanup job exists for expired `idempotency_records` rows (24h retention is a data column,
   not enforced deletion) — explicitly deferred past this cut (A1).
 - V17's correctness against a real, non-trivial legacy dataset (row counts, performance) is
-  unverified — only fixture data was available this cut (A4).
+  unverified — only fixture data was available this cut (A4). The revision-chain-normalization
+  correction (6719afd) reduces but does not eliminate this risk: fixture data was engineered to
+  cover cross-assessment links, skipped versions, null links, and an irrecoverable gap, but a real
+  dataset could still contain a pattern not anticipated by these fixtures — if V17 raises the new
+  gap-validation exception against real data, that is the migration correctly refusing to guess,
+  not a bug to work around; the underlying legacy data needs manual review in that case.
 
 ## Blockers
 None.
@@ -184,6 +232,15 @@ None.
   retryable, distinct from `FAILED_RETRYABLE`); confirm `Idempotency-Key` is sent on
   `POST /api/v1/assessments`; keep Web's existing `202`-handling branch for initial generation (it
   is not dead code after all, per the A3 Contract Correction).
+- **Web must add `LEGACY_UNKNOWN` to its `AssessmentRevisionOrigin` type union** (A4 Migration
+  Integrity Correction, mandatory — not optional cleanup). Web currently only models
+  `"AI_GENERATED" | "HUMAN_EDITED"`, but once V17 runs, `GET /api/v1/assessments/{id}/draft` and
+  `GET .../draft/versions` can return a revision with `origin = "LEGACY_UNKNOWN"`, `actorId = null`,
+  `reason = null`. Session D must: widen the type union to include it; add a neutral rendering path
+  for unknown provenance (never presented as AI-generated or human-edited — this is a distinct,
+  disclosed "we don't know" state, not a fallback to either known state); add mapper/component
+  tests covering it; keep the literal `"LEGACY_UNKNOWN"` string canonical, unrenamed, on the Web
+  side too.
 - **Agents contract HEAD:** `feat/assessment-authoring-operation-foundation-agents` at
   `5542d7c2b8b8c72142840087625b4fdd7dcb0bc2`, fixture SHA-256
   `9f961eac2228508d01fc50fe177f2701ecd2fa34f234fdb38ab28ea1c62fb696` (A2).
