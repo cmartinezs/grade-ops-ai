@@ -8,13 +8,15 @@ import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
 import org.springframework.boot.flyway.autoconfigure.FlywayAutoConfiguration;
 import org.springframework.boot.jdbc.test.autoconfigure.AutoConfigureTestDatabase;
 import org.springframework.core.io.ClassPathResource;
+import org.springframework.core.io.support.EncodedResource;
+import org.springframework.jdbc.core.ConnectionCallback;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.datasource.init.ScriptUtils;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.context.TestPropertySource;
 import org.testcontainers.containers.PostgreSQLContainer;
 
-import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.sql.Timestamp;
 import java.time.Instant;
@@ -22,6 +24,7 @@ import java.util.List;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 /**
  * Task 12: proves the V17 legacy backfill migrates every {@code assessment_drafts}/
@@ -34,13 +37,17 @@ import static org.assertj.core.api.Assertions.assertThat;
  * <p>Context startup applies every migration, V13-V17 included, in the normal order — V17 runs
  * once here against empty legacy tables, a harmless no-op (exactly what a real deploy against a
  * legacy-free database would also do). Each test then seeds its own legacy fixtures and drives
- * V17's actual backfill logic itself via {@link #applyBackfill()}, which re-executes V17's own
- * SQL file directly on the test's own {@link JdbcTemplate} connection — this deliberately
- * bypasses both Flyway's history bookkeeping (already "applied") and the cross-connection
- * visibility problem a separate Flyway-managed connection would have with this test's
- * transactionally-scoped fixture rows. This also happens to be exactly the kind of raw,
- * bookkeeping-independent re-run the idempotency requirement (safe to execute twice) needs
- * proving against.
+ * V17's actual backfill logic itself via {@link #applyBackfill()}, which re-executes V17's own,
+ * unmodified SQL file directly on the test's own {@link JdbcTemplate} connection via
+ * {@link ScriptUtils} — this deliberately bypasses both Flyway's history bookkeeping (already
+ * "applied") and the cross-connection visibility problem a separate Flyway-managed connection
+ * would have with this test's transactionally-scoped fixture rows. This also happens to be
+ * exactly the kind of raw, bookkeeping-independent re-run the idempotency requirement (safe to
+ * execute twice) needs proving against. {@link ScriptUtils#EOF_STATEMENT_SEPARATOR} is used
+ * deliberately instead of splitting on {@code ";"} client-side: it makes Spring treat the whole
+ * file as a single JDBC statement, which PostgreSQL's own server-side simple-query parser then
+ * splits and executes — the only way to correctly support {@code DO $$ ... $$} blocks (which
+ * contain semicolons themselves) without hand-rolling a PL/pgSQL-aware parser.
  */
 @DataJpaTest
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
@@ -76,28 +83,22 @@ class LegacyAuthoringBackfillMigrationTest {
                 "uid-1", "Test", "Teacher", "uid-1@test.com");
     }
 
-    /** Re-executes V17's own SQL file directly, on this test's own connection/transaction. */
+    /**
+     * Re-executes V17's own, unmodified SQL file directly, on this test's own
+     * connection/transaction. No client-side statement splitting is performed - the whole file
+     * is handed to PostgreSQL as one multi-statement simple-query batch, so {@code DO $$ ... $$}
+     * blocks (and any semicolons inside them) are parsed correctly server-side.
+     */
     void applyBackfill() {
-        String sql;
-        try {
-            sql = new ClassPathResource("db/migration/V17__backfill_legacy_authoring_data.sql")
-                    .getContentAsString(StandardCharsets.UTF_8);
-        } catch (IOException e) {
-            throw new IllegalStateException(e);
-        }
-        // Strip "--" line comments first - a comment may itself contain a literal ";", which
-        // would otherwise be mistaken for a statement terminator by the naive split below.
-        StringBuilder withoutComments = new StringBuilder();
-        for (String line : sql.split("\n")) {
-            int commentStart = line.indexOf("--");
-            withoutComments.append(commentStart >= 0 ? line.substring(0, commentStart) : line).append('\n');
-        }
-        for (String statement : withoutComments.toString().split(";")) {
-            String trimmed = statement.strip();
-            if (!trimmed.isEmpty()) {
-                jdbcTemplate.execute(trimmed);
-            }
-        }
+        EncodedResource resource = new EncodedResource(
+                new ClassPathResource("db/migration/V17__backfill_legacy_authoring_data.sql"),
+                StandardCharsets.UTF_8);
+        jdbcTemplate.execute((ConnectionCallback<Object>) connection -> {
+            ScriptUtils.executeSqlScript(connection, resource, false, false,
+                    ScriptUtils.DEFAULT_COMMENT_PREFIX, ScriptUtils.EOF_STATEMENT_SEPARATOR,
+                    ScriptUtils.DEFAULT_BLOCK_COMMENT_START_DELIMITER, ScriptUtils.DEFAULT_BLOCK_COMMENT_END_DELIMITER);
+            return null;
+        });
     }
 
     UUID insertAssessment(String teacherUid) {
@@ -458,5 +459,192 @@ class LegacyAuthoringBackfillMigrationTest {
                 "SELECT provenance_complete FROM assessment_revisions WHERE id = ?", Boolean.class, legacyDraftId);
         assertThat(normalDefault).isTrue();
         assertThat(legacyValue).isFalse();
+    }
+
+    // --- Migration integrity correction: assessment_drafts.previous_version_id only guarantees
+    // "points at some assessment_drafts row" - never "same assessment" nor "exactly one version
+    // back". The cases below prove the backfilled previous_revision_id/expected_revision_id are
+    // always reconstructed from the structural (assessment_id, version_number) chain instead.
+
+    // Case A: a reparable null legacy link - v2's own previous_version_id was never set, but the
+    // structural chain (same assessment, version_number - 1) makes the correct predecessor
+    // unambiguous.
+    @Test
+    void shouldRepairANullLegacyPreviousVersionLinkUsingTheStructuralVersionChain() {
+        UUID assessmentId = insertAssessment("uid-1");
+        Instant t0 = Instant.now().minusSeconds(600);
+
+        UUID log1 = insertLegacyLog(assessmentId, null, "COMPLETED", null, t0, t0.plusSeconds(30));
+        UUID draft1 = insertLegacyDraft(assessmentId, 1, null, log1);
+        linkLogToDraft(log1, draft1);
+
+        UUID log2 = insertLegacyLog(assessmentId, null, "COMPLETED", null, t0.plusSeconds(120), t0.plusSeconds(150));
+        UUID draft2 = insertLegacyDraft(assessmentId, 2, null, log2);
+        linkLogToDraft(log2, draft2);
+
+        applyBackfill();
+
+        UUID migratedPrevious = jdbcTemplate.queryForObject(
+                "SELECT previous_revision_id FROM assessment_revisions WHERE id = ?", UUID.class, draft2);
+        assertThat(migratedPrevious).isEqualTo(draft1);
+    }
+
+    // Case B: a cross-assessment legacy link - v2's legacy previous_version_id points at a
+    // different assessment's version 1 (structurally possible: the legacy FK only requires the
+    // target to exist in assessment_drafts, not to belong to the same assessment). The migrated
+    // chain must never carry this over.
+    @Test
+    void shouldIgnoreACrossAssessmentLegacyPreviousVersionLinkAndUseTheSameAssessmentPredecessor() {
+        UUID assessmentA = insertAssessment("uid-1");
+        UUID assessmentB = insertAssessment("uid-1");
+        Instant t0 = Instant.now().minusSeconds(600);
+
+        UUID logA1 = insertLegacyLog(assessmentA, null, "COMPLETED", null, t0, t0.plusSeconds(30));
+        UUID draftA1 = insertLegacyDraft(assessmentA, 1, null, logA1);
+        linkLogToDraft(logA1, draftA1);
+
+        UUID logB1 = insertLegacyLog(assessmentB, null, "COMPLETED", null, t0, t0.plusSeconds(30));
+        UUID draftB1 = insertLegacyDraft(assessmentB, 1, null, logB1);
+        linkLogToDraft(logB1, draftB1);
+
+        UUID logA2 = insertLegacyLog(assessmentA, null, "COMPLETED", null, t0.plusSeconds(120), t0.plusSeconds(150));
+        UUID draftA2 = insertLegacyDraft(assessmentA, 2, draftB1, logA2);
+        linkLogToDraft(logA2, draftA2);
+
+        applyBackfill();
+
+        UUID migratedPrevious = jdbcTemplate.queryForObject(
+                "SELECT previous_revision_id FROM assessment_revisions WHERE id = ?", UUID.class, draftA2);
+        assertThat(migratedPrevious).isEqualTo(draftA1);
+        assertThat(migratedPrevious).isNotEqualTo(draftB1);
+    }
+
+    // Case C: a legacy link that skips a version - v3's legacy previous_version_id points at v1
+    // directly, but the structural predecessor is v2. The migrated chain must use v2.
+    @Test
+    void shouldCorrectALegacyPreviousVersionLinkThatSkipsAVersion() {
+        UUID assessmentId = insertAssessment("uid-1");
+        Instant t0 = Instant.now().minusSeconds(600);
+
+        UUID log1 = insertLegacyLog(assessmentId, null, "COMPLETED", null, t0, t0.plusSeconds(30));
+        UUID draft1 = insertLegacyDraft(assessmentId, 1, null, log1);
+        linkLogToDraft(log1, draft1);
+
+        UUID log2 = insertLegacyLog(assessmentId, null, "COMPLETED", null, t0.plusSeconds(120), t0.plusSeconds(150));
+        UUID draft2 = insertLegacyDraft(assessmentId, 2, draft1, log2);
+        linkLogToDraft(log2, draft2);
+
+        UUID log3 = insertLegacyLog(assessmentId, null, "COMPLETED", null, t0.plusSeconds(240), t0.plusSeconds(270));
+        UUID draft3 = insertLegacyDraft(assessmentId, 3, draft1, log3);
+        linkLogToDraft(log3, draft3);
+
+        applyBackfill();
+
+        UUID migratedPrevious = jdbcTemplate.queryForObject(
+                "SELECT previous_revision_id FROM assessment_revisions WHERE id = ?", UUID.class, draft3);
+        assertThat(migratedPrevious).isEqualTo(draft2);
+    }
+
+    // Case D: an irrecoverable gap - v3 exists with no v2 at all for the same assessment. The
+    // migration must fail explicitly and atomically: no fabricated v2, no falling back to v1, no
+    // partially-committed rows for this or any other table.
+    @Test
+    void shouldFailAtomicallyWhenALegacyVersionChainHasAnUnrecoverableGap() {
+        UUID assessmentId = insertAssessment("uid-1");
+        Instant t0 = Instant.now().minusSeconds(600);
+
+        UUID log1 = insertLegacyLog(assessmentId, null, "COMPLETED", null, t0, t0.plusSeconds(30));
+        UUID draft1 = insertLegacyDraft(assessmentId, 1, null, log1);
+        linkLogToDraft(log1, draft1);
+
+        UUID log3 = insertLegacyLog(assessmentId, null, "COMPLETED", null, t0.plusSeconds(240), t0.plusSeconds(270));
+        UUID draft3 = insertLegacyDraft(assessmentId, 3, draft1, log3);
+        linkLogToDraft(log3, draft3);
+
+        jdbcTemplate.execute("SAVEPOINT before_backfill");
+        assertThatThrownBy(this::applyBackfill)
+                .rootCause()
+                .hasMessageContaining("non-normalizable");
+        jdbcTemplate.execute("ROLLBACK TO SAVEPOINT before_backfill");
+
+        Integer revisionCount = jdbcTemplate.queryForObject(
+                "SELECT COUNT(*) FROM assessment_revisions WHERE assessment_id = ?", Integer.class, assessmentId);
+        Integer operationCount = jdbcTemplate.queryForObject(
+                "SELECT COUNT(*) FROM ai_operations WHERE assessment_id = ?", Integer.class, assessmentId);
+        Integer attemptCount = jdbcTemplate.queryForObject(
+                "SELECT COUNT(*) FROM agent_attempts WHERE id IN (?, ?)", Integer.class, log1, log3);
+        assertThat(revisionCount).isZero();
+        assertThat(operationCount).isZero();
+        assertThat(attemptCount).isZero();
+
+        UUID currentRevisionId = jdbcTemplate.queryForObject(
+                "SELECT current_revision_id FROM assessments WHERE id = ?", UUID.class, assessmentId);
+        assertThat(currentRevisionId).isNull();
+    }
+
+    // Case E: expected_revision_id on migrated operations - REGENERATE_REVISION operations must
+    // point at the predecessor revision (version_number - 1, same assessment); CREATE_INITIAL_REVISION
+    // operations must keep it null.
+    @Test
+    void shouldSetExpectedRevisionIdForRegeneratedOperationsAndLeaveItNullForInitialOnes() {
+        UUID assessmentId = insertAssessment("uid-1");
+        Instant t0 = Instant.now().minusSeconds(600);
+
+        UUID log1 = insertLegacyLog(assessmentId, null, "COMPLETED", null, t0, t0.plusSeconds(30));
+        UUID draft1 = insertLegacyDraft(assessmentId, 1, null, log1);
+        linkLogToDraft(log1, draft1);
+
+        UUID log2 = insertLegacyLog(assessmentId, null, "COMPLETED", null, t0.plusSeconds(120), t0.plusSeconds(150));
+        UUID draft2 = insertLegacyDraft(assessmentId, 2, draft1, log2);
+        linkLogToDraft(log2, draft2);
+
+        applyBackfill();
+
+        UUID op1 = agentAttemptOperationId(log1);
+        UUID op2 = agentAttemptOperationId(log2);
+
+        var operation1 = jdbcTemplate.queryForMap("SELECT * FROM ai_operations WHERE id = ?", op1);
+        var operation2 = jdbcTemplate.queryForMap("SELECT * FROM ai_operations WHERE id = ?", op2);
+
+        assertThat(operation1.get("operation_type")).isEqualTo("CREATE_INITIAL_REVISION");
+        assertThat(operation1.get("expected_revision_id")).isNull();
+
+        assertThat(operation2.get("operation_type")).isEqualTo("REGENERATE_REVISION");
+        assertThat(operation2.get("expected_revision_id")).isEqualTo(draft1);
+    }
+
+    // Case F: a second execution, after chain normalization and expected_revision_id backfill
+    // have already run once, must leave both untouched - proving the new steps are idempotent
+    // too, not just the original ones.
+    @Test
+    void shouldLeaveNormalizedChainsAndExpectedRevisionIdsUnchangedOnASecondExecution() {
+        UUID assessmentId = insertAssessment("uid-1");
+        Instant t0 = Instant.now().minusSeconds(600);
+
+        UUID log1 = insertLegacyLog(assessmentId, null, "COMPLETED", null, t0, t0.plusSeconds(30));
+        UUID draft1 = insertLegacyDraft(assessmentId, 1, null, log1);
+        linkLogToDraft(log1, draft1);
+
+        UUID log2 = insertLegacyLog(assessmentId, null, "COMPLETED", null, t0.plusSeconds(120), t0.plusSeconds(150));
+        UUID draft2 = insertLegacyDraft(assessmentId, 2, null, log2);
+        linkLogToDraft(log2, draft2);
+
+        applyBackfill();
+
+        UUID previousBefore = jdbcTemplate.queryForObject(
+                "SELECT previous_revision_id FROM assessment_revisions WHERE id = ?", UUID.class, draft2);
+        UUID op2 = agentAttemptOperationId(log2);
+        UUID expectedBefore = jdbcTemplate.queryForObject(
+                "SELECT expected_revision_id FROM ai_operations WHERE id = ?", UUID.class, op2);
+
+        applyBackfill();
+
+        UUID previousAfter = jdbcTemplate.queryForObject(
+                "SELECT previous_revision_id FROM assessment_revisions WHERE id = ?", UUID.class, draft2);
+        UUID expectedAfter = jdbcTemplate.queryForObject(
+                "SELECT expected_revision_id FROM ai_operations WHERE id = ?", UUID.class, op2);
+
+        assertThat(previousAfter).isEqualTo(previousBefore).isEqualTo(draft1);
+        assertThat(expectedAfter).isEqualTo(expectedBefore).isEqualTo(draft1);
     }
 }
