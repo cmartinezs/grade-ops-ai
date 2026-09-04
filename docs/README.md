@@ -44,6 +44,14 @@ GradeOps compares planned, taught, assessed, demonstrated, and action layers wit
 
 The repository contains an existing vertical slice and historical programming-focused contracts. The approved target is defined by [the 2026-07-27 redesign decision](99-decisions/2026-07-27-assessment-operations-product-redesign.md). Existing code must be classified as reusable, adaptable, incompatible, absent, or obsolete before migration planning. Do not infer that a target capability is implemented merely because it is documented here.
 
+## Behavioral reference implementation
+
+[`cmartinezs/academic-grading-with-ai`](https://github.com/cmartinezs/academic-grading-with-ai) is the active agentic reference implementation / living behavioral prototype for GradeOps AI. It operates with provider agents, prompts, Markdown context, rubrics/statements and raw academic artifacts, and intentionally carries more contextual/model-mediated behavior than the GradeOps target.
+
+GradeOps progressively extracts validated recurring behavior from that workspace into explicit domain models, typed contracts, deterministic or bounded workflows, persisted lifecycle state, reproducible evidence, approval gates and audited agent execution.
+
+See [Academic Grading With AI as Behavioral Reference Implementation](99-decisions/2026-09-04-academic-grading-with-ai-reference-implementation.md).
+
 ## Documentation Map
 
 - [Project](00-project/README.md) — vision, problem, solution, roadmap and costs.
